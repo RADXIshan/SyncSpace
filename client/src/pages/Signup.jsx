@@ -5,14 +5,19 @@ import { Link } from "react-router";
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(true);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  }
+
   return (
     <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100">
       <div className="hidden md:flex w-[55%] h-full items-center justify-center overflow-hidden p-6">
         <img src={formpage} alt="Signup Illustration" className="w-full h-full object-cover rounded-3xl shadow-lg" />
       </div>
       <div className="w-full md:w-[45%] flex items-center justify-center p-8">
-        <form className="p-8 w-full max-w-md">
-          <h2 className="text-4xl font-bold mb-8 text-center text-purple-700">Signup</h2>
+        <form className="p-8 w-full max-w-md" onSubmit={handleSubmit}>
+          <h2 className="text-5xl font-bold mb-8 text-center text-purple-700">Signup</h2>
           <div className="mb-4">
             <label htmlFor="firstName" className="block mb-2 text-m font-medium text-gray-700">First Name</label>
             <input type="text" id="firstName" name="firstName" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" />
@@ -27,7 +32,7 @@ const Signup = () => {
           </div>
           <div className="mb-6 relative">
             <label htmlFor="password" className="block mb-2 text-m font-medium text-gray-700">Password</label>
-            <input type={showPassword ? "text" : "password"} id="password" name="password" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 pr-10" />
+            <input type={showPassword ? "password" : "text"} id="password" name="password" className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 pr-10" />
             <button type="button" className="absolute right-3 top-10.5 text-gray-500 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>

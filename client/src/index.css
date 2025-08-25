@@ -3,6 +3,9 @@
 
 *{
   font-family: "Montserrat", sans-serif;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
 @theme {

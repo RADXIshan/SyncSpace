@@ -22,6 +22,7 @@ export const signup = (req, res) => {
     }
     // TODO: Check if user already exists
     res.json({ message: user });
+    console.log(user);
 }
 
 export const login = (req, res) => {
@@ -29,5 +30,22 @@ export const login = (req, res) => {
     if(!email?.trim() || !password) {
         return res.status(400).json({ message: "All fields are required" });
     }
-    res.json({ message: "Login route" });
+    // TODO: Check if user exists
+    res.json({ message: "Login Successful", user: { email } });
+    console.log(req.body);
 }
+
+export const forgotPassword = (req, res) => {
+    const { email } = req.body;
+    if (!email?.trim()) {
+        return res.status(400).json({ message: "Email is required" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    // TODO: Implement actual email service integration
+    return res.json({ message: `Password reset link sent to ${email}` });
+};

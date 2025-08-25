@@ -1,13 +1,35 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(true);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const validateEmail = (val) => !/^\S+@\S+\.\S+$/.test(val);
+
+  const handleChange = (e) => {
+    const val = e.target.value;
+    setEmail(val);
+    setError(validateEmail(val));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: integrate with backend to send reset link
-    console.log("Reset link sent to:", email);
+    if (error) return;
+    setLoading(true);
+    try {
+      await axios.post("http://localhost:3000/api/auth/forgot-password", { email });
+      toast.success("Reset link sent! Check your email.");
+      navigate("/login");
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -17,7 +39,7 @@ const ForgotPassword = () => {
           className="bg-white rounded-3xl shadow-lg p-8 sm:p-10 w-full max-w-md"
           onSubmit={handleSubmit}
         >
-          <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-center text-purple-700">
+          <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-center text-secondary">
             Forgot Password
           </h2>
           <p className="mb-6 text-center text-gray-600">
@@ -32,14 +54,14 @@ const ForgotPassword = () => {
               id="email"
               name="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${error ? "border-secondary focus:border-red-400" : "focus:border-secondary"}`}
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+            className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" disabled={loading || error}
           >
             Send Reset Link
           </button>

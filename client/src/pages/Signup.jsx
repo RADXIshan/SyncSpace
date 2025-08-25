@@ -28,7 +28,6 @@ const Signup = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    // simple field-level validation
     let invalid = false;
     if (name === "email") {
       invalid = !/^\S+@\S+\.\S+$/.test(value);

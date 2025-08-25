@@ -75,7 +75,7 @@ const VerifyMail = () => {
           className="bg-white rounded-3xl shadow-lg p-6 sm:p-8 w-full max-w-xs sm:max-w-sm md:max-w-md"
           onSubmit={handleSubmit}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center text-purple-700">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center text-secondary">
             Verify Email
           </h2>
           <p className="mb-6 text-center text-gray-600">
@@ -98,7 +98,7 @@ const VerifyMail = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95"
+            className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95"
           >
             Verify
           </button>

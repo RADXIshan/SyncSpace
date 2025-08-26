@@ -70,7 +70,7 @@ const VerifyMail = () => {
 
     setLoading(true);
     try {
-      await axios.post("http://localhost:3000/api/auth/verify-mail", { code });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/verify-mail`, { code });
       toast.success("Email verified successfully");
       navigate("/home", {
         state: { message: "Welcome!" },

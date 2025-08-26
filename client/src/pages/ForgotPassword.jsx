@@ -22,7 +22,7 @@ const ForgotPassword = () => {
     if (error) return;
     setLoading(true);
     try {
-      await axios.post("http://localhost:3000/api/auth/forgot-password", { email });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/forgot-password`, { email });
       toast.success("Reset link sent! Check your email.");
       navigate("/login");
     } catch (err) {

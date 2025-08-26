@@ -49,7 +49,7 @@ const Signup = () => {
       password: formData.password,
     };
     try {
-      await axios.post("http://localhost:3000/api/auth/signup", payload);
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/signup`, payload);
       navigate("/verify-email", {
         state: {
           message: "Account created successfully. Please verify your email.",

@@ -1,12 +1,16 @@
-import formpage from "../assets/formpage.jpg"
+import formpage from "../assets/formpage.jpg";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(true);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({ email: true, password: true });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,8 +25,26 @@ const Login = () => {
     setErrors((prev) => ({ ...prev, [name]: invalid }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    const payload = {
+      email: formData.email,
+      password: formData.password,
+    };
+    try {
+      await axios.post("http://localhost:3000/api/auth/login", payload);
+      navigate("/home", {
+        state: {
+          message: "Login Successful",
+        },
+      });
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message);
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -48,7 +70,7 @@ const Login = () => {
             <Link to="/forgot-password" className="text-purple-600 hover:underline transition ease-in-out duration-300">Forgot password?</Link>
           </div>
           <div className="mb-6">
-            <button type="submit" className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" disabled={Object.values(errors).some(Boolean)}>Login</button>
+            <button type="submit" className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" disabled={Object.values(errors).some(Boolean) || loading}>Login</button>
           </div>
           <p className="mb-6 text-center text-gray-600">Don't have an account? <Link to="/signup" className="text-purple-600 hover:underline transition ease-in-out duration-300">Signup</Link></p>
         </form>

@@ -27,13 +27,43 @@ export const signup = (req, res) => {
 
 export const login = (req, res) => {
     const { email, password } = req.body;
-    if(!email?.trim() || !password) {
-        return res.status(400).json({ message: "All fields are required" });
+
+    if (!email?.trim() || !password) {
+        return res.status(400).json({ error: "All fields are required" });
     }
-    // TODO: Check if user exists
-    res.json({ message: "Login Successful", user: { email } });
-    console.log(req.body);
-}
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    if (password.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters long" });
+    }
+
+    // TODO: Replace with real user lookup and password verification logic
+    // For now, assume success
+    return res.json({ message: "Login Successful", user: { email } });
+};
+
+export const verifyMail = (req, res) => {
+    const { code } = req.body;
+
+    // Ensure a code was provided
+    if (!code) {
+        return res.status(400).json({ error: "Verification code is required" });
+    }
+
+    // Basic validation: 6-digit numeric code
+    const codeRegex = /^\d{6}$/;
+    if (!codeRegex.test(code)) {
+        return res.status(400).json({ error: "Invalid verification code format" });
+    }
+
+    // TODO: Compare with code stored in DB / cache for the current user
+    // For prototype, assume any valid 6-digit code succeeds
+    return res.json({ message: "Email verified successfully" });
+};
 
 export const forgotPassword = (req, res) => {
     const { email } = req.body;

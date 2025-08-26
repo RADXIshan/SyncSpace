@@ -1,9 +1,13 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const VerifyMail = () => {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputs = useRef([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e, idx) => {
     const raw = e.target.value;
@@ -56,11 +60,27 @@ const VerifyMail = () => {
     if (inputs.current[nextIndex]) inputs.current[nextIndex].focus();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const code = otp.join("");
-    console.log("Submitted OTP:", code);
-    // TODO: integrate with backend verification endpoint
+    if (code.length !== 6) {
+      toast.error("Please enter a 6-digit code");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post("http://localhost:3000/api/auth/verify-mail", { code });
+      toast.success("Email verified successfully");
+      navigate("/home", {
+        state: { message: "Welcome!" },
+      });
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message);
+      console.error("Verify error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResend = () => {
@@ -98,7 +118,7 @@ const VerifyMail = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95"
+            className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed" disabled={loading}
           >
             Verify
           </button>

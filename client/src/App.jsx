@@ -7,7 +7,7 @@ import Landing from "./pages/Landing";
 import VerifyMail from "./pages/VerifyMail";
 import ForgotPassword from "./pages/ForgotPassword";
 
-const App = () => {
+const App = () => {  
   return (
     <div>
       <Toaster />

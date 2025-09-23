@@ -33,7 +33,7 @@ const Login = () => {
       password: formData.password,
     };
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, payload);
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, payload, { withCredentials: true });
       navigate("/home", {
         state: {
           message: "Login Successful",

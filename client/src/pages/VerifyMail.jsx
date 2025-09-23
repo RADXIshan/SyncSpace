@@ -9,83 +9,80 @@ const VerifyMail = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Handle input change
   const handleChange = (e, idx) => {
-    const raw = e.target.value;
-    const value = raw.replace(/[^0-9]/g, "");
+    const raw = e.target.value.replace(/[^0-9]/g, ""); // only digits
     const newOtp = [...otp];
 
-    // If user pressed backspace (value becomes empty), clear current box
-    if (value === "") {
+    if (!raw) {
       newOtp[idx] = "";
       setOtp(newOtp);
-      // move focus to previous box if exists
-      if (idx > 0) inputs.current[idx - 1].focus();
+      if (idx > 0) inputs.current[idx - 1]?.focus();
       return;
     }
 
-    // Accept only the first digit if multiple characters are pasted
-    newOtp[idx] = value[0];
+    newOtp[idx] = raw[0]; // only first digit if multiple pasted
     setOtp(newOtp);
 
-    // move to next input automatically
-    if (idx < 5 && inputs.current[idx + 1]) {
-      inputs.current[idx + 1].focus();
-    }
+    if (idx < 5) inputs.current[idx + 1]?.focus();
   };
 
+  // Handle backspace key
   const handleKeyDown = (e, idx) => {
-    if (e.key === "Backspace" && idx > 0 && otp[idx] === "") {
-      // If current box is already empty, move focus to previous box
-      inputs.current[idx - 1].focus();
+    if (e.key === "Backspace" && !otp[idx] && idx > 0) {
+      inputs.current[idx - 1]?.focus();
     }
   };
 
-  // Paste handler: distribute first six digits across inputs
+  // Handle paste
   const handlePaste = (e) => {
     e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/[^0-9]/g, "")
-      .slice(0, 6);
-
+    const pasted = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 6);
     if (!pasted) return;
+
     const newOtp = Array(6).fill("");
-    for (let i = 0; i < pasted.length; i++) {
-      newOtp[i] = pasted[i];
-    }
+    for (let i = 0; i < pasted.length; i++) newOtp[i] = pasted[i];
     setOtp(newOtp);
 
-    // focus next empty input or the last one if filled
     const nextIndex = pasted.length >= 6 ? 5 : pasted.length;
-    if (inputs.current[nextIndex]) inputs.current[nextIndex].focus();
+    inputs.current[nextIndex]?.focus();
   };
 
+  // Submit OTP
+  // In your handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
     const code = otp.join("");
+  
     if (code.length !== 6) {
-      toast.error("Please enter a 6-digit code");
+      toast.error("Please enter a 6-digit OTP");
       return;
     }
-
+  
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/verify-mail`, { code });
+      // Get token from localStorage if you stored it there during signup
+      const token = localStorage.getItem("token");
+      
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/auth/verify-mail`,
+        { otp: code, token }, 
+        { withCredentials: true }
+      );
+  
       toast.success("Email verified successfully");
-      navigate("/home", {
-        state: { message: "Welcome!" },
-      });
+      navigate("/home", { state: { message: "Welcome!" } });
     } catch (err) {
-      toast.error(err.response?.data?.error || err.response?.data?.message || err.message);
-      console.error("Verify error:", err);
+      toast.error(err.response?.data?.message || "Failed to verify OTP");
+      console.error("OTP verify error:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Resend OTP placeholder
   const handleResend = () => {
-    console.log("Resend verification email");
-    // TODO: trigger resend email endpoint
+    console.log("Resend OTP endpoint should be called here");
   };
 
   return (
@@ -101,6 +98,7 @@ const VerifyMail = () => {
           <p className="mb-6 text-center text-gray-600">
             Enter the 6‑digit code we've sent to your email
           </p>
+
           <div className="flex justify-center gap-2 sm:gap-3 md:gap-2 mb-8">
             {otp.map((digit, idx) => (
               <input
@@ -116,14 +114,17 @@ const VerifyMail = () => {
               />
             ))}
           </div>
+
           <button
             type="submit"
-            className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed" disabled={loading}
+            disabled={loading}
+            className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 disabled:opacity-60 cursor-pointer"
           >
-            Verify
+            {loading ? "Verifying..." : "Verify"}
           </button>
+
           <p className="mt-6 text-center text-gray-600">
-            Didn't get the code? {" "}
+            Didn't get the code?{" "}
             <button
               type="button"
               onClick={handleResend}
@@ -132,9 +133,10 @@ const VerifyMail = () => {
               Resend
             </button>
           </p>
+
           <p className="mt-4 text-center text-gray-600">
-            <Link to="/login" className="text-purple-600 hover:underline">
-              Back to Login
+            <Link to="/signup" className="text-purple-600 hover:underline">
+              Back to Signup
             </Link>
           </p>
         </form>

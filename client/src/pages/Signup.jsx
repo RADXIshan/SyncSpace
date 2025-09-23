@@ -46,7 +46,17 @@ const Signup = () => {
       password: formData.password,
     };
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/signup`, payload);
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/auth/signup`, 
+        payload, 
+        { withCredentials: true }
+      );
+      
+      // Store token in localStorage
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+      }
+      
       navigate("/verify-email", {
         state: {
           message: "Account created successfully. Please verify your email.",

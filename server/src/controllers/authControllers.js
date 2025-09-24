@@ -200,7 +200,7 @@ export const verifyMail = async(req, res) => {
         return res.status(401).json({ message: "User not found" });
     }
 
-    if (user.otp !== otp) {
+    if (user.otp?.toString() !== otp.toString()) {
         return res.status(401).json({ message: "Invalid OTP" });
     }
 

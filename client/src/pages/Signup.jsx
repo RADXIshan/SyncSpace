@@ -56,7 +56,7 @@ const Signup = () => {
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
       }
-      
+      toast.success("Account created successfully. Please verify your email.");
       navigate("/verify-email", {
         state: {
           message: "Account created successfully. Please verify your email.",

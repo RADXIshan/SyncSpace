@@ -236,14 +236,14 @@ export const deleteUser = async (req, res) => {
     }
 };
 
-export const logout = (_, res) => {
-    try {
-        res.clearCookie("jwt");
-        res.status(200).json({ success: true, message: "Logout successful" });
-    } catch (error) {
-        console.error("Error logging out:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+export const logout = async (_, res) => {
+  try {
+    res.clearCookie("jwt", { httpOnly: true, secure: true });
+    res.status(200).json({ success: true, message: "Logout successful" });
+  } catch (error) {
+    console.error("Error logging out:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const authUser = async (req, res) => {

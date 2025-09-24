@@ -8,16 +8,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const checkAuth = async () => {
-    try {
+  try {
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/auth/getMe`,
         {},
         { withCredentials: true }
       );
-      setUser(response.data.user);
+      setUser(response.data.user);  // Ensure user state is updated
     } catch (error) {
       console.error("Authentication check failed:", error);
-      setUser(null);
+      setUser(null);  // Update state to null if authentication fails
     } finally {
       setLoading(false);
     }
@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
         { withCredentials: true }
       );
       setUser(null);
+      localStorage.removeItem("token"); // Clear token from localStorage
     } catch (error) {
       console.error("Logout failed:", error);
     }

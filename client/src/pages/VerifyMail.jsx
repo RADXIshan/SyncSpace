@@ -2,12 +2,14 @@ import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
 
 const VerifyMail = () => {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const inputs = useRef([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
 
   // Handle input change
   const handleChange = (e, idx) => {
@@ -71,7 +73,8 @@ const VerifyMail = () => {
       );
   
       toast.success("Email verified successfully");
-      navigate("/home", { state: { message: "Welcome!" } });
+      await checkAuth();
+      navigate("/home/dashboard", { state: { message: "Welcome!" } });
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to verify OTP");
       console.error("OTP verify error:", err);

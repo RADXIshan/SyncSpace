@@ -9,9 +9,10 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
   try {
+      const token = localStorage.getItem("token");
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/auth/getMe`,
-        {},
+        { token }, // send token as fallback if cookie is missing
         { withCredentials: true }
       );
       setUser(response.data.user);  // Ensure user state is updated

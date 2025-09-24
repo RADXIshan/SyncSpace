@@ -247,7 +247,8 @@ export const logout = async (_, res) => {
 };
 
 export const authUser = async (req, res) => {
-    const authToken = req.cookies.jwt;
+    // Prefer cookie but fall back to token sent in body/header
+    const authToken = req.cookies.jwt || req.body.token || req.headers.authorization?.split(" ")[1];
     if (!authToken) {
         return res.status(401).json({ message: "No token provided" });
     }

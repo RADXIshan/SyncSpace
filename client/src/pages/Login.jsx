@@ -35,7 +35,11 @@ const Login = () => {
       password: formData.password,
     };
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, payload, { withCredentials: true });
+      const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, payload, { withCredentials: true });
+      // Persist token for fallback authentication
+      if(res.data?.token){
+        localStorage.setItem("token", res.data.token);
+      }
       await checkAuth();
       navigate("/home", {
         state: {

@@ -6,6 +6,7 @@ import Signup from "./pages/Signup";
 import Landing from "./pages/Landing";
 import VerifyMail from "./pages/VerifyMail";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -20,6 +21,7 @@ const App = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify-email" element={<VerifyMail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:email" element={<ResetPassword />} />
           <Route 
             path="/home/*" 
             element={

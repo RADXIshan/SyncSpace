@@ -76,7 +76,6 @@ const Sidebar = () => {
           </div>
           <div className="ml-3">
             <p className="font-medium">{user?.name || 'User Name'}</p>
-            <p className="text-sm text-gray-400">{user?.email || 'user@example.com'}</p>
           </div>
         </div>
         

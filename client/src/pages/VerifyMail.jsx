@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -9,7 +9,9 @@ const VerifyMail = () => {
   const inputs = useRef([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { checkAuth, user } = useAuth();
+  const email = location.state?.email || user?.email;
 
   // Handle input change
   const handleChange = (e, idx) => {
@@ -86,7 +88,7 @@ const VerifyMail = () => {
   // Resend OTP placeholder
   const handleResend = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/resend-otp`, { email: user.email }, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/resend-otp`, { email }, { withCredentials: true });
       toast.success("OTP resent successfully");
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to resend OTP");

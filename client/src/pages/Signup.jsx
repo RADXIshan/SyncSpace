@@ -59,6 +59,7 @@ const Signup = () => {
       toast.success("Account created successfully. Please verify your email.");
       navigate("/verify-email", {
         state: {
+          email: formData.email,
           message: "Account created successfully. Please verify your email.",
         },
       });

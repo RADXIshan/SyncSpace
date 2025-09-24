@@ -245,3 +245,25 @@ export const logout = (_, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+export const authUser = async (req, res) => {
+    const authToken = req.cookies.jwt;
+    if (!authToken) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    let userId;
+    try {
+        const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
+        userId = decoded.userId;
+    } catch (error) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+
+    const [user] = await sql`SELECT user_id, name, email FROM users WHERE user_id = ${userId}`;
+    if (!user) {
+        return res.status(401).json({ message: "User not found" });
+    }
+
+    return res.json({ user });
+}

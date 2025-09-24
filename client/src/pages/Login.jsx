@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(true);
@@ -11,6 +12,7 @@ const Login = () => {
   const [errors, setErrors] = useState({ email: true, password: true });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,6 +36,7 @@ const Login = () => {
     };
     try {
       await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, payload, { withCredentials: true });
+      await checkAuth();
       navigate("/home", {
         state: {
           message: "Login Successful",

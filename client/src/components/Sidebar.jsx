@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router';
-import { Home, Calendar, Users, Settings, LogOut } from 'lucide-react';
+import { Home, Calendar, Users, Settings, LogOut , Plus} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-hot-toast';
@@ -12,8 +12,8 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   const navItems = [
-    { name: 'Dashboard', icon: <Home size={20} />, path: '/home/dashboard' },
-    { name: 'Calendar', icon: <Calendar size={20} />, path: '/home/calendar' },
+    { name: 'Dashboard', icon: <Home size={22} />, path: '/home/dashboard' },
+    { name: 'Calendar', icon: <Calendar size={22} />, path: '/home/calendar' },
   ];
 
   const isActive = (itemPath) => {
@@ -57,13 +57,13 @@ const Sidebar = () => {
         </nav>
         
         <div className="px-2 mt-6 space-y-1">
-          <button className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors">
-            <span className="mr-3"><Users size={20} /></span>
+          <button className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
+            <span className="mr-3"><Users size={22} /></span>
             <span>Join Organization</span>
           </button>
           
-          <button className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors">
-            <span className="mr-3"><Users size={20} /></span>
+          <button className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
+            <span className="mr-3"><Plus size={22} /></span>
             <span>Create Organization</span>
           </button>
         </div>
@@ -72,7 +72,7 @@ const Sidebar = () => {
       <div className="p-4 border-t border-gray-700">
         <div className="flex items-center mb-4">
           <div className="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
-            <span className="text-lg font-medium">U</span>
+            <span className="text-lg font-medium">{user?.name?.charAt(0) || 'U'}</span>
           </div>
           <div className="ml-3">
             <p className="font-medium">{user?.name || 'User Name'}</p>
@@ -92,7 +92,7 @@ const Sidebar = () => {
             <span>Settings</span>
           </Link>
           
-          <button onClick={handleLogout} className="w-full flex items-center px-4 py-2 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
+          <button onClick={handleLogout} className="w-full flex items-center px-4 py-2 text-left rounded-md hover:bg-red-500 transition-colors cursor-pointer">
             <span className="mr-3"><LogOut size={18} /></span>
             <span>Logout</span>
           </button>

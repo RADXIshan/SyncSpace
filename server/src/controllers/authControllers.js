@@ -306,10 +306,103 @@ export const resendOtp = async (req, res) => {
     return res.json({ message: `OTP sent to ${email}` });
 }
 
+export const updateProfile = async (req, res) => {
+    const authToken = req.cookies.jwt || req.body.token || req.headers.authorization?.split(" ")[1];
+    if (!authToken) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    let userId;
+    try {
+        const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
+        userId = decoded.userId;
+    } catch (error) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+
+    const { name, email, password, photo } = req.body;
+
+    // Build dynamic update object
+    const updates = {};
+    if (name) updates.name = name;
+    if (email) updates.email = email;
+    if (photo) {
+        // Convert base64 (or data URL) to Buffer suitable for Postgres bytea
+        try {
+            const base64Data = photo.includes(',') ? photo.split(',')[1] : photo; // remove data URL prefix if present
+            const photoBuffer = Buffer.from(base64Data, 'base64');
+            updates.photo = photoBuffer;
+        } catch (err) {
+            console.error('Failed to process profile image:', err);
+            return res.status(400).json({ message: 'Invalid image format' });
+        }
+    }
+
+    try {
+        if (password) {
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+            if (!passwordRegex.test(password)) {
+                return res.status(400).json({ error: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character" });
+            }
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updates.password = hashedPassword;
+        }
+
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email.trim())) {
+                return res.status(400).json({ error: "Invalid email format" });
+            }
+            // Ensure email uniqueness
+            const [existing] = await sql`SELECT user_id FROM users WHERE email = ${email} AND user_id <> ${userId}`;
+            if (existing) {
+                return res.status(400).json({ error: "Email already in use" });
+            }
+        }
+
+        // If nothing to update
+        if (Object.keys(updates).length === 0) {
+            return res.status(400).json({ message: "No fields to update" });
+        }
+
+        // Build dynamic SET clause and values for parameterized query
+        const setClauses = [];
+        const values = [];
+        let paramIndex = 2; // $1 will be userId
+        for (const [col, val] of Object.entries(updates)) {
+            setClauses.push(`${col} = $${paramIndex}`);
+            values.push(val);
+            paramIndex += 1;
+        }
+
+        const query = `UPDATE users SET ${setClauses.join(', ')} WHERE user_id = $1`;
+        await sql.query(query, [userId, ...values]);
+
+        res.status(200).json({ success: true, message: "Profile updated successfully" });
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 export const deleteUser = async (req, res) => {
-    const { userId } = req.body;
+    // Derive user from JWT rather than trusting body input
+    const authToken = req.cookies.jwt || req.body.token || req.headers.authorization?.split(" ")[1];
+    if (!authToken) {
+        return res.status(401).json({ message: "No token provided" });
+    }
+
+    let userId;
+    try {
+        const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
+        userId = decoded.userId;
+    } catch (error) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+
     try {
         await sql`DELETE FROM users WHERE user_id = ${userId}`;
+        res.clearCookie("jwt", { httpOnly: true, secure: true });
         res.status(200).json({ success: true, message: "User deleted successfully" });
     } catch (error) {
         console.error("Error deleting user:", error);

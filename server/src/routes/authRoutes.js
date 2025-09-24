@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { signup, login, logout, deleteUser, verifyMail, forgotPassword, authUser, resetPassword, resendOtp } from "../controllers/authControllers.js";
+import { signup, login, logout, deleteUser, verifyMail, forgotPassword, authUser, resetPassword, resendOtp, updateProfile } from "../controllers/authControllers.js";
 
 const router = Router();
 
@@ -10,7 +10,8 @@ router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:email", resetPassword);
 router.post("/resend-otp", resendOtp);
 router.post("/logout", logout);
-router.post("/delete", deleteUser);
+router.delete("/delete", deleteUser);
 router.post("/getMe", authUser);
+router.patch("/updateProfile", updateProfile);
 
 export default router;

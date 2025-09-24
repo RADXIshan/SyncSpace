@@ -1,4 +1,3 @@
-import React from 'react'
 import { Routes, Route, Navigate } from 'react-router'
 import Sidebar from '../components/Sidebar'
 import Dashboard from '../components/Dashboard'

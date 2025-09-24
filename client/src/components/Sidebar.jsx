@@ -8,7 +8,7 @@ import axios from 'axios';
 const Sidebar = () => {
   const location = useLocation();
   const path = location.pathname;
-  const { checkAuth, logout } = useAuth();
+  const { user, checkAuth, logout } = useAuth();
   const navigate = useNavigate();
 
   const navItems = [
@@ -75,8 +75,8 @@ const Sidebar = () => {
             <span className="text-lg font-medium">U</span>
           </div>
           <div className="ml-3">
-            <p className="font-medium">User Name</p>
-            <p className="text-sm text-gray-400">user@example.com</p>
+            <p className="font-medium">{user?.name || 'User Name'}</p>
+            <p className="text-sm text-gray-400">{user?.email || 'user@example.com'}</p>
           </div>
         </div>
         

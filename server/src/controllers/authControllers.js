@@ -256,6 +256,56 @@ export const resetPassword = async (req, res) => {
     return res.json({ message: "Password reset successful" });
 };
 
+export const resendOtp = async (req, res) => {
+    const { email } = req.body;
+    if (!email?.trim()) {
+        return res.status(400).json({ message: "Email is required" });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    const [user] = await sql`SELECT user_id FROM users WHERE email = ${email}`;
+    if (!user) {
+        return res.status(401).json({ message: "User not found" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    await sql`UPDATE users SET otp = ${otp} WHERE email = ${email}`;
+
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.APP_PASSWORD,
+        },
+    });
+
+    const confirmationMail = {
+        from: {
+            name: "Ishan Roy",
+            address: "trickster10ishan@gmail.com"
+        },
+        to: email,
+        subject: "SyncSpace OTP Resend",
+        html: generateOtpEmail(email,otp),
+    };    
+
+    try {
+        await transporter.sendMail(confirmationMail);
+    } catch (error) {
+        console.error("Error sending email:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+
+    return res.json({ message: `OTP sent to ${email}` });
+}
+
 export const deleteUser = async (req, res) => {
     const { userId } = req.body;
     try {

@@ -9,7 +9,7 @@ const VerifyMail = () => {
   const inputs = useRef([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { checkAuth } = useAuth();
+  const { checkAuth, user } = useAuth();
 
   // Handle input change
   const handleChange = (e, idx) => {
@@ -84,8 +84,14 @@ const VerifyMail = () => {
   };
 
   // Resend OTP placeholder
-  const handleResend = () => {
-    console.log("Resend OTP endpoint should be called here");
+  const handleResend = async () => {
+    try {
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/resend-otp`, { email: user.email }, { withCredentials: true });
+      toast.success("OTP resent successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to resend OTP");
+      console.error("Resend OTP error:", err);
+    }
   };
 
   return (

@@ -21,12 +21,14 @@ const ForgotPassword = () => {
     e.preventDefault();
     if (error) return;
     setLoading(true);
+    let toastId;
     try {
+      toastId = toast.loading("Sending reset link...");
       await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/forgot-password`, { email });
-      toast.success("Reset link sent! Check your email.");
+      toast.success("Reset link sent! Check your email.", { id: toastId });
       navigate("/login");
     } catch (err) {
-      toast.error(err.response?.data?.error || err.response?.data?.message || err.message);
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
     } finally {
       setLoading(false);
     }

@@ -22,14 +22,16 @@ const Sidebar = () => {
 
 
  const handleLogout = async () => {
+    let toastId;
     try {
+      toastId = toast.loading("Logging out...");
       await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/logout`);
       await logout();
       await checkAuth();
-      toast.success("Logged out successfully");
+      toast.success("Logged out successfully", { id: toastId });
       navigate("/login", { state: { message: "Logged out successfully" } });
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to log out");
+      toast.error(err?.response?.data?.message || "Failed to log out", { id: toastId });
     }
   };
 

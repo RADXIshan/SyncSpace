@@ -92,7 +92,9 @@ const Settings = ({ onClose }) => {
 
   const handleSave = async () => {
     setLoading(true);
+    let toastId;
     try {
+      toastId = toast.loading("Updating profile...");
       const token = localStorage.getItem("token");
       const form = new FormData();
 
@@ -104,6 +106,7 @@ const Settings = ({ onClose }) => {
       if (photoFile) form.append("profilePicture", photoFile);
 
       if ([...form.keys()].length === 0) {
+        toast.dismiss(toastId);
         toast("No changes to update");
         setEditMode(false);
         return;
@@ -116,19 +119,20 @@ const Settings = ({ onClose }) => {
           withCredentials: true,
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "multipart/form-type",
           },
         }
       );
 
-      toast.success("Profile updated successfully");
+      toast.success("Profile updated successfully", { id: toastId });
       await checkAuth();
       setEditMode(false);
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
         err.response?.data?.message ||
-        err.message
+        err.message,
+        { id: toastId }
       );
     } finally {
       setLoading(false);
@@ -152,20 +156,23 @@ const Settings = ({ onClose }) => {
       return;
 
     setLoading(true);
+    let toastId;
     try {
+      toastId = toast.loading("Deleting account...");
       const token = localStorage.getItem("token");
       await axios.delete(`${import.meta.env.VITE_BASE_URL}/api/auth/delete`, {
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
 
-      toast.success("Account deleted");
+      toast.success("Account deleted", { id: toastId });
       window.location.href = "/";
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
         err.response?.data?.message ||
-        err.message
+        err.message,
+        { id: toastId }
       );
     } finally {
       setLoading(false);

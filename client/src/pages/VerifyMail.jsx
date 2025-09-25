@@ -64,7 +64,9 @@ const VerifyMail = () => {
     }
   
     setLoading(true);
+    let toastId;
     try {
+      toastId = toast.loading("Verifying email...");
       // Get token from localStorage if you stored it there during signup
       const token = localStorage.getItem("token");
       
@@ -74,11 +76,11 @@ const VerifyMail = () => {
         { withCredentials: true }
       );
   
-      toast.success("Email verified successfully");
+      toast.success("Email verified successfully", { id: toastId });
       await checkAuth();
       navigate("/home/dashboard", { state: { message: "Welcome!" } });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to verify OTP");
+      toast.error(err.response?.data?.message || "Failed to verify OTP", { id: toastId });
       console.error("OTP verify error:", err);
     } finally {
       setLoading(false);
@@ -87,11 +89,13 @@ const VerifyMail = () => {
 
   // Resend OTP placeholder
   const handleResend = async () => {
+    let toastId;
     try {
+      toastId = toast.loading("Resending OTP...");
       await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/resend-otp`, { email }, { withCredentials: true });
-      toast.success("OTP resent successfully");
+      toast.success("OTP resent successfully", { id: toastId });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to resend OTP");
+      toast.error(err.response?.data?.message || "Failed to resend OTP", { id: toastId });
       console.error("Resend OTP error:", err);
     }
   };

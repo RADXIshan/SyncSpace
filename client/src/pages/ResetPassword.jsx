@@ -39,12 +39,14 @@ const ResetPassword = () => {
     e.preventDefault();
     if (Object.values(errors).some(Boolean)) return;
     setLoading(true);
+    let toastId;
     try {
+      toastId = toast.loading("Resetting password...");
       await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/reset-password/${email}`, { password: formData.password });
-      toast.success("Password reset successful! Please login with your new password.");
+      toast.success("Password reset successful! Please login with your new password.", { id: toastId });
       navigate("/login");
     } catch (err) {
-      toast.error(err.response?.data?.error || err.response?.data?.message || err.message);
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
     } finally {
       setLoading(false);
     }

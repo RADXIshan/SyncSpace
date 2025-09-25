@@ -34,7 +34,9 @@ const Login = () => {
       email: formData.email,
       password: formData.password,
     };
+    let toastId;
     try {
+      toastId = toast.loading("Logging in...");
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, payload, { withCredentials: true });
       // Persist token for fallback authentication
       if(res.data?.token){
@@ -46,9 +48,9 @@ const Login = () => {
           message: "Login Successful",
         },
       });
-      toast.success("Login Successful");
+      toast.success("Login Successful", { id: toastId });
     } catch (err) {
-      toast.error(err.response?.data?.error || err.response?.data?.message || err.message);
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
       console.error("Login error:", err);
     } finally {
       setLoading(false);

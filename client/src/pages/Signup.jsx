@@ -45,7 +45,9 @@ const Signup = () => {
       email: formData.email,
       password: formData.password,
     };
+    let toastId;
     try {
+      toastId = toast.loading("Signing up...");
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/auth/signup`, 
         payload, 
@@ -56,7 +58,7 @@ const Signup = () => {
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
       }
-      toast.success("Account created successfully. Please verify your email.");
+      toast.success("Account created successfully. Please verify your email.", { id: toastId });
       navigate("/verify-email", {
         state: {
           email: formData.email,
@@ -64,7 +66,7 @@ const Signup = () => {
         },
       });
     } catch (err) {
-      toast.error(err.response?.data?.error || err.response?.data?.message || err.message);
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
       console.error("Signup error:", err);
     } finally {
       setLoading(false);

@@ -12,9 +12,17 @@ const Calendar = () => {
 
   // Fetch events from backend
   useEffect(() => {
+    let toastId;
+    toastId = toast.loading("Fetching events...");
     axios.get(`${import.meta.env.VITE_BASE_URL}/api/events`)
-      .then(res => setEvents(res.data))
-      .catch(err => console.error(err));
+      .then(res => {
+        setEvents(res.data);
+        toast.success("Events loaded successfully", { id: toastId });
+      })
+      .catch(err => {
+        console.error(err);
+        toast.error("Failed to load events", { id: toastId });
+      });
   }, []);
 
   // Handle adding new event
@@ -26,9 +34,17 @@ const Calendar = () => {
         start: info.dateStr,
         end: info.dateStr
       };
+      let toastId;
+      toastId = toast.loading("Adding event...");
       axios.post(`${import.meta.env.VITE_BASE_URL}/api/events`, newEvent)
-        .then(res => setEvents([...events, res.data]))
-        .catch(err => console.error(err));
+        .then(res => {
+          setEvents([...events, res.data]);
+          toast.success("Event added successfully", { id: toastId });
+        })
+        .catch(err => {
+          console.error(err);
+          toast.error("Failed to add event", { id: toastId });
+        });
     }
   };
 

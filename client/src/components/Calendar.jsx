@@ -5,6 +5,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction"; 
 import axios from "axios";
 import { Info, X } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const Calendar = () => {
   const [events, setEvents] = useState([]);

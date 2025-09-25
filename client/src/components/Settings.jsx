@@ -19,15 +19,13 @@ const Settings = ({ onClose }) => {
 
   const [photoFile, setPhotoFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // ✅ default hidden
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Handle text inputs
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Convert blob → base64
   const blobToBase64 = (blob) => {
     return new Promise((resolve, reject) => {
       const r2 = new FileReader();
@@ -37,7 +35,6 @@ const Settings = ({ onClose }) => {
     });
   };
 
-  // Handle photo input + compress
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -80,10 +77,8 @@ const Settings = ({ onClose }) => {
     fr.readAsDataURL(file);
   };
 
-  // Toggle edit mode
   const toggleEdit = () => {
     if (editMode) {
-      // Revert changes if cancelling
       setFormData({
         name: user?.name || "",
         email: user?.email || "",
@@ -95,13 +90,10 @@ const Settings = ({ onClose }) => {
     setEditMode(!editMode);
   };
 
-  // Save changes
   const handleSave = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token"); // ✅ properly defined
-
-      // Use FormData for potentially sending a file
+      const token = localStorage.getItem("token");
       const form = new FormData();
 
       if (formData.name && formData.name !== user?.name)
@@ -109,13 +101,8 @@ const Settings = ({ onClose }) => {
       if (formData.email && formData.email !== user?.email)
         form.append("email", formData.email);
       if (formData.password) form.append("password", formData.password);
+      if (photoFile) form.append("profilePicture", photoFile);
 
-      // Append file if user selected a new one
-      if (photoFile) {
-        form.append("profilePicture", photoFile);
-      }
-
-      // If nothing to update
       if ([...form.keys()].length === 0) {
         toast("No changes to update");
         setEditMode(false);
@@ -140,15 +127,14 @@ const Settings = ({ onClose }) => {
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
-          err.response?.data?.message ||
-          err.message
+        err.response?.data?.message ||
+        err.message
       );
     } finally {
       setLoading(false);
     }
   };
 
-  // Close modal
   const handleClose = () => {
     if (typeof onClose === "function") {
       onClose();
@@ -157,7 +143,6 @@ const Settings = ({ onClose }) => {
     }
   };
 
-  // Delete account
   const handleDelete = async () => {
     if (
       !window.confirm(
@@ -179,8 +164,8 @@ const Settings = ({ onClose }) => {
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
-          err.response?.data?.message ||
-          err.message
+        err.response?.data?.message ||
+        err.message
       );
     } finally {
       setLoading(false);
@@ -202,9 +187,8 @@ const Settings = ({ onClose }) => {
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-4">Profile Settings</h2>
             <div className="space-y-4">
-              {/* Profile Photo */}
               <div className="flex items-center space-x-4">
-                { (editMode ? formData.photo : user?.photo) ? (
+                {(editMode ? formData.photo : user?.photo) ? (
                   <img
                     src={editMode ? formData.photo || user?.photo : user?.photo}
                     alt="Profile"
@@ -230,7 +214,6 @@ const Settings = ({ onClose }) => {
                 )}
               </div>
 
-              {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Name
@@ -245,7 +228,6 @@ const Settings = ({ onClose }) => {
                 />
               </div>
 
-              {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -260,7 +242,6 @@ const Settings = ({ onClose }) => {
                 />
               </div>
 
-              {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password
@@ -295,7 +276,6 @@ const Settings = ({ onClose }) => {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-between items-center mt-6">
             <button
               onClick={handleDelete}

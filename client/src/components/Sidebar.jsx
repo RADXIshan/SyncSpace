@@ -26,6 +26,7 @@ const Sidebar = () => {
       await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/logout`);
       await logout();
       await checkAuth();
+      toast.success("Logged out successfully");
       navigate("/login", { state: { message: "Logged out successfully" } });
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to log out");

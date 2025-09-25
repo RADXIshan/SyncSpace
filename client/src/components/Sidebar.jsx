@@ -71,9 +71,17 @@ const Sidebar = () => {
       
       <div className="p-4 border-t border-gray-700">
         <div className="flex items-center mb-4">
-          <div className="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
-            <span className="text-lg font-medium">{user?.name?.charAt(0) || 'U'}</span>
-          </div>
+          {user?.photo ? (
+            <img
+              src={user.photo}
+              alt="Profile"
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
+              <span className="text-lg font-medium">{user?.name?.charAt(0) || 'U'}</span>
+            </div>
+          )}
           <div className="ml-3">
             <p className="font-medium">{user?.name || 'User Name'}</p>
           </div>

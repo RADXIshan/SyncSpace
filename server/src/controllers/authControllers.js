@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import sql from "../database/db.js";
 import { generateOtpEmail } from "../templates/emailTemplate.js";
 import { generatePasswordResetEmail } from "../templates/resetPassword.js";
+import { v2 as cloudinary } from "cloudinary";
 
 export const signup = async (req, res) => {
     const { name, email, password } = req.body;
@@ -116,7 +117,7 @@ export const login = async (req, res) => {
 
     try {
         const [user] =
-            await sql`SELECT user_id, name, email, password FROM users WHERE email = ${email}`;
+            await sql`SELECT user_id, name, email, password, user_photo FROM users WHERE email = ${email}`;
 
         if (!user) {
             return res.status(401).json({ message: "Invalid credentials" });
@@ -320,21 +321,26 @@ export const updateProfile = async (req, res) => {
         return res.status(401).json({ message: "Invalid token" });
     }
 
-    const { name, email, password, photo } = req.body;
+    const { name, email, password } = req.body;
+    const file = req.file;
 
     // Build dynamic update object
     const updates = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
-    if (photo) {
-        // Convert base64 (or data URL) to Buffer suitable for Postgres bytea
+
+    // If image file uploaded, push to Cloudinary and store secure_url
+    if (file) {
         try {
-            const base64Data = photo.includes(',') ? photo.split(',')[1] : photo; // remove data URL prefix if present
-            const photoBuffer = Buffer.from(base64Data, 'base64');
-            updates.photo = photoBuffer;
+            const uploadResult = await cloudinary.uploader.upload(file.path, {
+                folder: "syncspace/profiles",
+                public_id: `user_${userId}`,
+                overwrite: true,
+            });
+            updates.user_photo = uploadResult.secure_url;
         } catch (err) {
-            console.error('Failed to process profile image:', err);
-            return res.status(400).json({ message: 'Invalid image format' });
+            console.error("Failed to upload profile image:", err);
+            return res.status(500).json({ message: "Image upload failed" });
         }
     }
 
@@ -434,7 +440,7 @@ export const authUser = async (req, res) => {
         return res.status(401).json({ message: "Invalid token" });
     }
 
-    const [user] = await sql`SELECT user_id, name, email FROM users WHERE user_id = ${userId}`;
+    const [user] = await sql`SELECT user_id, name, email, user_photo FROM users WHERE user_id = ${userId}`;
     if (!user) {
         return res.status(401).json({ message: "User not found" });
     }

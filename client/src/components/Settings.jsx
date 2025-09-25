@@ -14,7 +14,7 @@ const Settings = ({ onClose }) => {
     name: user?.name || "",
     email: user?.email || "",
     password: "",
-    photo: user?.photo || null,
+    photo: user?.user_photo || null,
   });
 
   const [photoFile, setPhotoFile] = useState(null);
@@ -100,17 +100,23 @@ const Settings = ({ onClose }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token"); // ✅ properly defined
-      const payload = {};
+
+      // Use FormData for potentially sending a file
+      const form = new FormData();
 
       if (formData.name && formData.name !== user?.name)
-        payload.name = formData.name;
+        form.append("name", formData.name);
       if (formData.email && formData.email !== user?.email)
-        payload.email = formData.email;
-      if (formData.password) payload.password = formData.password;
-      if (formData.photo && formData.photo !== user?.photo)
-        payload.photo = formData.photo;
+        form.append("email", formData.email);
+      if (formData.password) form.append("password", formData.password);
 
-      if (Object.keys(payload).length === 0) {
+      // Append file if user selected a new one
+      if (photoFile) {
+        form.append("profilePicture", photoFile);
+      }
+
+      // If nothing to update
+      if ([...form.keys()].length === 0) {
         toast("No changes to update");
         setEditMode(false);
         return;
@@ -118,10 +124,13 @@ const Settings = ({ onClose }) => {
 
       await axios.patch(
         `${import.meta.env.VITE_BASE_URL}/api/auth/updateProfile`,
-        payload,
+        form,
         {
           withCredentials: true,
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
 
@@ -195,9 +204,9 @@ const Settings = ({ onClose }) => {
             <div className="space-y-4">
               {/* Profile Photo */}
               <div className="flex items-center space-x-4">
-                {formData.photo ? (
+                { (editMode ? formData.photo : user?.photo) ? (
                   <img
-                    src={formData.photo}
+                    src={editMode ? formData.photo || user?.photo : user?.photo}
                     alt="Profile"
                     className="w-16 h-16 rounded-full object-cover"
                   />

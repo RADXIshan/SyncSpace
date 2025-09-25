@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { upload } from "../configs/multer.js";
 import { signup, login, logout, deleteUser, verifyMail, forgotPassword, authUser, resetPassword, resendOtp, updateProfile } from "../controllers/authControllers.js";
 
 const router = Router();
@@ -12,6 +13,6 @@ router.post("/resend-otp", resendOtp);
 router.post("/logout", logout);
 router.delete("/delete", deleteUser);
 router.post("/getMe", authUser);
-router.patch("/updateProfile", updateProfile);
+router.patch("/updateProfile", upload.single("profilePicture"), updateProfile);
 
 export default router;

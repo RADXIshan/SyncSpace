@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
         { token }, // send token as fallback if cookie is missing
         { withCredentials: true }
       );
-      setUser(response.data.user);  // Ensure user state is updated
+      setUser({ ...response.data.user, photo: response.data.user.user_photo });  // Ensure user state is updated
     } catch (error) {
       console.error("Authentication check failed:", error);
       setUser(null);  // Update state to null if authentication fails

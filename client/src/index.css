@@ -21,3 +21,25 @@
   font-size: 1rem;
 }
 
+/* datepicker-custom.css */
+.react-datepicker {
+  font-family: 'Montserrat', sans-serif;
+  border: 1px solid #5D3FD3;
+  border-radius: 0.5rem;
+}
+
+.react-datepicker__header {
+  background-color: #5D3FD3;
+  color: white;
+  border-bottom: none;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: #0B1215 !important;
+  color: #fff;
+}
+
+.react-datepicker__time-container .react-datepicker__time {
+  background-color: #F5F5F5;
+}

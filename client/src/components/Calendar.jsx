@@ -6,10 +6,13 @@ import interactionPlugin from "@fullcalendar/interaction";
 import axios from "axios";
 import { Info, X } from "lucide-react";
 import { toast } from "react-hot-toast";
+import EventInputForm from "./EventInputForm";
 
 const Calendar = () => {
   const [events, setEvents] = useState([]);
   const [showInfo, setShowInfo] = useState(true);
+  const [showEventInputForm, setShowEventInputForm] = useState(false); // State to control form visibility
+  const [selectedDate, setSelectedDate] = useState(null); // State to store selected date for new event
 
   // Fetch events from backend
   useEffect(() => {
@@ -28,25 +31,23 @@ const Calendar = () => {
 
   // Handle adding new event
   const handleDateClick = (info) => {
-    const title = prompt("Enter event title:");
-    if (title) {
-      const newEvent = {
-        title,
-        start: info.dateStr,
-        end: info.dateStr
-      };
-      let toastId;
-      toastId = toast.loading("Adding event...");
-      axios.post(`${import.meta.env.VITE_BASE_URL}/api/events`, newEvent)
-        .then(res => {
-          setEvents([...events, res.data]);
-          toast.success("Event added successfully", { id: toastId });
-        })
-        .catch(err => {
-          console.error(err);
-          toast.error("Failed to add event", { id: toastId });
-        });
-    }
+    setSelectedDate(info.dateStr);
+    setShowEventInputForm(true);
+  };
+
+  const handleAddEvent = (newEvent) => {
+    let toastId;
+    toastId = toast.loading("Adding event...");
+    axios.post(`${import.meta.env.VITE_BASE_URL}/api/events`, newEvent)
+      .then(res => {
+        setEvents([...events, res.data]);
+        toast.success("Event added successfully", { id: toastId });
+        setShowEventInputForm(false); // Hide the form after successful submission
+      })
+      .catch(err => {
+        console.error(err);
+        toast.error("Failed to add event", { id: toastId });
+      });
   };
 
   return (
@@ -65,6 +66,13 @@ const Calendar = () => {
             <X size={16} />
           </button>
         </div>
+        )}
+        {showEventInputForm && (
+          <EventInputForm
+            onAddEvent={handleAddEvent}
+            initialDate={selectedDate}
+            onClose={() => setShowEventInputForm(false)} // Add onClose prop
+          />
         )}
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

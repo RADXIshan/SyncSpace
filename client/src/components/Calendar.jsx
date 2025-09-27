@@ -89,6 +89,7 @@ const Calendar = () => {
           eventColor="#7C3AED"
           eventClick={(info) => alert(`Event: ${info.event.title}`)}
           height="auto"
+          className="custom-fullcalendar"
         />
       </div>
     </div>

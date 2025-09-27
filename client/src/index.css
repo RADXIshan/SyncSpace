@@ -13,3 +13,11 @@
   --color-accent: #0B1215;
 }
 
+.custom-fullcalendar .fc-toolbar-chunk button {
+  padding: 0.5rem 1rem; 
+}
+
+.custom-fullcalendar .fc-toolbar-title {
+  font-size: 1rem;
+}
+

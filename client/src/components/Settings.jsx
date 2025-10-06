@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router"; 
+import { useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -119,7 +119,7 @@ const Settings = ({ onClose }) => {
           withCredentials: true,
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            "Content-Type": "multipart/form-type",
+            "Content-Type": "multipart/form-data",
           },
         }
       );
@@ -130,8 +130,8 @@ const Settings = ({ onClose }) => {
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message,
+          err.response?.data?.message ||
+          err.message,
         { id: toastId }
       );
     } finally {
@@ -140,11 +140,8 @@ const Settings = ({ onClose }) => {
   };
 
   const handleClose = () => {
-    if (typeof onClose === "function") {
-      onClose();
-    } else {
-      navigate(-1);
-    }
+    if (typeof onClose === "function") onClose();
+    else navigate(-1);
   };
 
   const handleDelete = async () => {
@@ -170,8 +167,8 @@ const Settings = ({ onClose }) => {
     } catch (err) {
       toast.error(
         err.response?.data?.error ||
-        err.response?.data?.message ||
-        err.message,
+          err.response?.data?.message ||
+          err.message,
         { id: toastId }
       );
     } finally {
@@ -180,131 +177,130 @@ const Settings = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm transition-opacity duration-300">
-      <div className="bg-white rounded-xl shadow-xl max-h-[90vh] overflow-y-auto w-full max-w-xl p-6 relative transition-all duration-300 transform scale-100 hover:scale-[1.01] border-2 border-secondary">
-        <button
-          className="absolute top-3 right-3 text-gray-500 cursor-pointer"
-          onClick={handleClose}
-        >
-          ✕
-        </button>
-        <h1 className="text-2xl font-bold mb-6">Settings</h1>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
+      <div className="relative w-full max-w-2xl bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-6 border-b border-white/10">
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+            Settings
+          </h1>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-white transition-colors text-xl cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-4">Profile Settings</h2>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                {(editMode ? formData.photo : user?.photo) ? (
-                  <img
-                    src={editMode ? formData.photo || user?.photo : user?.photo}
-                    alt="Profile"
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-xl font-semibold text-gray-700">
-                    {user?.name?.charAt(0) || "U"}
-                  </div>
-                )}
-                {editMode && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 cursor-pointer">
-                      Profile Photo
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
-                      className="block w-full text-sm text-gray-500 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[var(--color-secondary)] file:text-white hover:file:bg-opacity-90"
-                    />
-                  </div>
-                )}
+        {/* Profile Section */}
+        <div className="p-8 space-y-8">
+          <div className="flex items-center gap-6">
+            {(editMode ? formData.photo : user?.photo) ? (
+              <img
+                src={editMode ? formData.photo || user?.photo : user?.photo}
+                alt="Profile"
+                className="w-20 h-20 rounded-full object-cover ring-2 ring-violet-500/60 shadow-lg"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+                {user?.name?.charAt(0) || "U"}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  disabled={!editMode}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] disabled:bg-gray-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled={!editMode}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] disabled:bg-gray-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                {editMode ? (
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Enter new password"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] pr-10"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                ) : (
+            )}
+            <div className="flex flex-col">
+              <h2 className="text-xl font-semibold text-white">{user?.name}</h2>
+              <p className="text-gray-400">{user?.email}</p>
+              {editMode && (
+                <label className="mt-3 cursor-pointer text-sm font-medium text-violet-500 hover:text-violet-400 transition-colors">
+                  Change Photo
                   <input
-                    type="password"
-                    value="********"
-                    readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
                   />
-                )}
-              </div>
+                </label>
+              )}
             </div>
           </div>
 
-          <div className="flex justify-between items-center mt-6">
+          {/* Editable Fields */}
+          <div className="space-y-6">
+            {["name", "email"].map((field) => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-300 mb-1 capitalize">
+                  {field}
+                </label>
+                <input
+                  type={field === "email" ? "email" : "text"}
+                  name={field}
+                  value={formData[field]}
+                  onChange={handleChange}
+                  disabled={!editMode}
+                  className={`w-full px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none ${
+                    !editMode ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                />
+              </div>
+            ))}
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Password
+              </label>
+              {editMode ? (
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Enter new password"
+                    className="w-full px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 pr-10 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-200"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              ) : (
+                <input
+                  type="password"
+                  value="********"
+                  readOnly
+                  className="w-full px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-white opacity-70"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center pt-6 border-t border-white/10">
             <button
               onClick={handleDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors cursor-pointer"
               disabled={loading}
+              className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-500 cursor-pointer text-white font-medium transition-all shadow-md"
             >
               Delete Account
             </button>
+
             <div className="space-x-3">
               {editMode ? (
                 <>
                   <button
                     onClick={toggleEdit}
-                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors cursor-pointer"
                     disabled={loading}
+                    className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
-                    className="px-4 py-2 bg-[var(--color-secondary)] text-white rounded-md hover:bg-violet-800 transition-colors disabled:opacity-60 cursor-pointer"
                     disabled={loading}
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg hover:opacity-90 transition-all cursor-pointer"
                   >
                     {loading ? "Saving..." : "Save Changes"}
                   </button>
@@ -312,7 +308,7 @@ const Settings = ({ onClose }) => {
               ) : (
                 <button
                   onClick={toggleEdit}
-                  className="px-4 py-2 bg-[var(--color-secondary)] text-white rounded-md hover:bg-violet-800 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg hover:opacity-90 transition-all cursor-pointer"
                 >
                   Edit Profile
                 </button>

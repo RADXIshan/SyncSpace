@@ -93,13 +93,13 @@ const Sidebar = ({ onSettingsClick }) => {
         <div className="space-y-1">
           <button
             onClick={onSettingsClick}
-            className={`w-full flex items-center px-4 py-2 text-left rounded-md transition-colors hover:bg-gray-800`}
+            className={`w-full flex items-center px-4 py-2 text-left rounded-md transition-colors hover:bg-gray-800 cursor-pointer`}
           >
             <span className="mr-3 cursor-pointer"><Settings size={18} /></span>
             <span>Settings</span>
           </button>
           
-          <button onClick={handleLogout} className="w-full flex items-center px-4 py-2 text-left rounded-md hover:bg-red-500 transition-colors cursor-pointer">
+          <button onClick={handleLogout} className="w-full flex items-center px-4 py-2 text-left rounded-md hover:bg-red-600 transition-colors cursor-pointer">
             <span className="mr-3"><LogOut size={18} /></span>
             <span>Logout</span>
           </button>

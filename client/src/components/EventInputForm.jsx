@@ -1,32 +1,23 @@
-import { useState, useEffect } from 'react';
-import { X, Calendar } from 'lucide-react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { useState, useEffect } from "react";
+import { X, Calendar } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
   const [dateTime, setDateTime] = useState(null);
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState("");
 
   useEffect(() => {
-    let date;
-    if (initialDate) {
-      date = new Date(initialDate);
-    } else {
-      date = new Date();
-    }
-
-    date.setHours(8);
-    date.setMinutes(0);
-    date.setSeconds(0);
-    
+    let date = initialDate ? new Date(initialDate) : new Date();
+    date.setHours(8, 0, 0, 0);
     setDateTime(date);
   }, [initialDate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title || !dateTime) {
-      alert('Please fill in all required fields: Title and Date/Time');
+      alert("Please fill in all required fields: Title and Date/Time");
       return;
     }
 
@@ -37,33 +28,38 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
     };
 
     onAddEvent(newEvent);
-    setTitle('');
+    setTitle("");
     setDateTime(null);
-    setDescription('');
+    setDescription("");
   };
 
   return (
-    <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 transition-opacity duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6 transition-opacity duration-300">
       <form
         onSubmit={handleSubmit}
-        className="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-md relative transition-all duration-300 transform scale-100 hover:scale-[1.01] border-2 border-secondary"
+        className="relative w-full max-w-lg bg-white/90 dark:bg-gray-900/90 backdrop-filter backdrop-blur-lg rounded-2xl shadow-2xl ring-1 ring-black/10 border border-secondary/30 p-8 transition-transform duration-300 transform-gpu hover:scale-[1.02]"
       >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-accent">Add New Event</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-400 hover:text-secondary absolute top-4 right-4 transition duration-200 cursor-pointer"
-            aria-label="Close"
-          >
-            <X size={22} />
-          </button>
-        </div>
+        {/* Close Button */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+        >
+          <X size={22} />
+        </button>
 
-        {/* Title */}
-        <div className="mb-5">
-          <label htmlFor="title" className="block text-sm font-semibold text-accent mb-1">
-            Title:
+        {/* Heading */}
+        <h2 className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
+          Add New Event
+        </h2>
+
+        {/* Title Input */}
+        <div className="mb-6">
+          <label
+            htmlFor="title"
+            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Event Title
           </label>
           <input
             type="text"
@@ -71,17 +67,21 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary transition"
+            placeholder="Enter your event title"
+            className="w-full px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-secondary transition-all text-gray-800 dark:text-white"
           />
         </div>
 
-        {/* Date and Time */}
-        <div className="mb-5">
-          <label className="block text-sm font-semibold text-accent mb-1">
-            Date and Time:
+        {/* Date & Time Picker */}
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            Date & Time
           </label>
           <div className="relative">
-            <Calendar className="absolute left-3 top-4 text-secondary pointer-events-none" size={18} />
+            <Calendar
+              className="absolute left-3 top-3.5 text-indigo-600 pointer-events-none"
+              size={18}
+            />
             <DatePicker
               selected={dateTime}
               onChange={(date) => setDateTime(date)}
@@ -90,31 +90,45 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
               timeIntervals={15}
               dateFormat="yyyy-MM-dd h:mm aa"
               placeholderText="Select date and time"
-              className="w-full pl-10 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary transition cursor-pointer"
+              className="w-full pl-10 px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-secondary transition-all cursor-pointer text-gray-800 dark:text-white"
             />
           </div>
         </div>
 
         {/* Description */}
-        <div className="mb-6">
-          <label htmlFor="description" className="block text-sm font-semibold text-accent mb-1">
-            Description:
+        <div className="mb-8">
+          <label
+            htmlFor="description"
+            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Description
           </label>
           <textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows="3"
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary transition resize-none"
+            placeholder="Write a short note about the event..."
+            className="w-full px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-secondary transition-all resize-none text-gray-800 dark:text-white"
           />
         </div>
 
-        <button
-          type="submit"
-          className="w-full py-3 px-4 rounded-md bg-secondary text-white font-semibold hover:bg-accent transition duration-300 cursor-pointer"
-        >
-          Add Event
-        </button>
+        {/* Buttons */}
+        <div className="flex justify-end space-x-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold rounded-md shadow-md hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            Add Event
+          </button>
+        </div>
       </form>
     </div>
   );

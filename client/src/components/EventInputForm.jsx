@@ -3,15 +3,25 @@ import { X, Calendar } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-const EventInputForm = ({ onAddEvent, onClose }) => {
+const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
   const [title, setTitle] = useState('');
   const [dateTime, setDateTime] = useState(null);
   const [description, setDescription] = useState('');
 
   useEffect(() => {
-    const now = new Date(); // Current time with today's date
-    setDateTime(now);
-  }, []);
+    let date;
+    if (initialDate) {
+      date = new Date(initialDate);
+    } else {
+      date = new Date();
+    }
+
+    date.setHours(8);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    
+    setDateTime(date);
+  }, [initialDate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,8 +32,7 @@ const EventInputForm = ({ onAddEvent, onClose }) => {
 
     const newEvent = {
       title,
-      start: dateTime.toISOString(),
-      end: dateTime.toISOString(),
+      time: dateTime.toISOString(),
       description,
     };
 

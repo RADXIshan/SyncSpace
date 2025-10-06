@@ -3,46 +3,41 @@ import { X, Calendar } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
-const EventInputForm = ({ onAddEvent, initialDate, onClose }) => {
+const EventInputForm = ({ onAddEvent, onClose }) => {
   const [title, setTitle] = useState('');
-  const [start, setStart] = useState(null);
-  const [end, setEnd] = useState(null);
+  const [dateTime, setDateTime] = useState(null);
   const [description, setDescription] = useState('');
 
   useEffect(() => {
     const now = new Date(); // Current time with today's date
-    const endDate = new Date(now.getTime() + 15 * 60 * 1000); // Add 15 minutes
-
-    setStart(now);
-    setEnd(endDate);
+    setDateTime(now);
   }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!title || !start || !end) {
-      alert('Please fill in all required fields: Title, Start Date, End Date');
+    if (!title || !dateTime) {
+      alert('Please fill in all required fields: Title and Date/Time');
       return;
     }
 
     const newEvent = {
       title,
-      start: start.toISOString(),
-      end: end.toISOString(),
+      start: dateTime.toISOString(),
+      end: dateTime.toISOString(),
       description,
     };
 
     onAddEvent(newEvent);
     setTitle('');
-    setStart(null);
-    setEnd(null);
+    setDateTime(null);
     setDescription('');
   };
 
   return (
-    <div className="fixed inset-0 bg-accent bg-opacity-40 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50 transition-opacity duration-300">
       <form
         onSubmit={handleSubmit}
-        className="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-md relative transition-all duration-300"
+        className="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-md relative transition-all duration-300 transform scale-100 hover:scale-[1.01] border-2 border-secondary"
       >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-accent">Add New Event</h2>
@@ -71,41 +66,21 @@ const EventInputForm = ({ onAddEvent, initialDate, onClose }) => {
           />
         </div>
 
-        {/* Start Date */}
+        {/* Date and Time */}
         <div className="mb-5">
           <label className="block text-sm font-semibold text-accent mb-1">
-            Start Date:
+            Date and Time:
           </label>
           <div className="relative">
             <Calendar className="absolute left-3 top-4 text-secondary pointer-events-none" size={18} />
             <DatePicker
-              selected={start}
-              onChange={(date) => setStart(date)}
+              selected={dateTime}
+              onChange={(date) => setDateTime(date)}
               showTimeSelect
               timeFormat="HH:mm"
               timeIntervals={15}
               dateFormat="yyyy-MM-dd h:mm aa"
-              placeholderText="Select start date and time"
-              className="w-full pl-10 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary transition cursor-pointer"
-            />
-          </div>
-        </div>
-
-        {/* End Date */}
-        <div className="mb-5">
-          <label className="block text-sm font-semibold text-accent mb-1">
-            End Date:
-          </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-4 text-secondary pointer-events-none" size={18} />
-            <DatePicker
-              selected={end}
-              onChange={(date) => setEnd(date)}
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              dateFormat="yyyy-MM-dd h:mm aa"
-              placeholderText="Select end date and time"
+              placeholderText="Select date and time"
               className="w-full pl-10 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary transition cursor-pointer"
             />
           </div>

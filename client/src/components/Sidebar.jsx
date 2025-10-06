@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const Sidebar = () => {
+const Sidebar = ({ onSettingsClick }) => {
   const location = useLocation();
   const path = location.pathname;
   const { user, checkAuth, logout } = useAuth();
@@ -91,17 +91,13 @@ const Sidebar = () => {
         </div>
         
         <div className="space-y-1">
-          <Link
-            to="/home/settings"
-            className={`flex items-center px-4 py-2 rounded-md transition-colors ${
-              isActive('/home/settings')
-                ? 'bg-[var(--color-secondary)] text-white'
-                : 'hover:bg-gray-800'
-            }`}
+          <button
+            onClick={onSettingsClick}
+            className={`w-full flex items-center px-4 py-2 text-left rounded-md transition-colors hover:bg-gray-800`}
           >
             <span className="mr-3 cursor-pointer"><Settings size={18} /></span>
             <span>Settings</span>
-          </Link>
+          </button>
           
           <button onClick={handleLogout} className="w-full flex items-center px-4 py-2 text-left rounded-md hover:bg-red-500 transition-colors cursor-pointer">
             <span className="mr-3"><LogOut size={18} /></span>

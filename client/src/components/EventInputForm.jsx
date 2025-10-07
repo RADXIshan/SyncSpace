@@ -37,7 +37,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6 transition-opacity duration-300">
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-lg bg-white/90 dark:bg-gray-900/90 backdrop-filter backdrop-blur-lg rounded-2xl shadow-2xl ring-1 ring-black/10 border border-secondary/30 p-8 transition-transform duration-300 transform-gpu hover:scale-[1.02]"
+        className="relative w-full max-w-lg dark:bg-gray-900/90 backdrop-filter backdrop-blur-lg rounded-2xl shadow-2xl ring-1 ring-black/10 border border-secondary/30 p-8 transition-transform duration-300 transform-gpu hover:scale-[1.02]"
       >
         {/* Close Button */}
         <button
@@ -79,7 +79,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
           </label>
           <div className="relative">
             <Calendar
-              className="absolute left-3 top-3.5 text-indigo-600 pointer-events-none"
+              className="absolute left-3 top-3.5 text-indigo-600 pointer-events-none z-10"
               size={18}
             />
             <DatePicker

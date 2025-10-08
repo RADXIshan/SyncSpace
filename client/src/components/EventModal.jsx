@@ -1,0 +1,138 @@
+import { useState, useEffect } from "react";
+import { X, Calendar } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
+  const [title, setTitle] = useState(event?.title || "");
+  const [dateTime, setDateTime] = useState(event ? new Date(event.start) : new Date());
+  const [description, setDescription] = useState(event?.description || "");
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (event) {
+      setTitle(event.title);
+      setDateTime(new Date(event.start));
+      setDescription(event.description || "");
+    }
+  }, [event]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!title || !dateTime) return;
+    const formatted = (() => {
+      const d = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000);
+      return d.toISOString().slice(0, 19);
+    })();
+    onUpdate({ ...event, title, time: formatted, description });
+  };
+
+  const handleDelete = () => onDelete(event.event_id || event.id);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6">
+      <form
+        onSubmit={handleSubmit}
+        className="relative w-full max-w-lg bg-white dark:bg-gray-900/90 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-secondary/30 p-8"
+      >
+        {/* Close */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+        >
+          <X size={22} />
+        </button>
+        <h2 className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
+          Event Details
+        </h2>
+        {/* Title */}
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Event Title</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            disabled={!isEditing}
+            className={`w-full px-4 py-2.5 border rounded-md transition-all text-gray-800 dark:text-white ${isEditing ? 'border-gray-400 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]' : 'bg-transparent border-transparent pointer-events-none'}`}
+          />
+        </div>
+        {/* Date */}
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Date & Time</label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-3.5 text-indigo-600 pointer-events-none z-10" size={18} />
+            <DatePicker
+              selected={dateTime}
+              onChange={(date) => setDateTime(date)}
+              showTimeSelect
+              timeFormat="HH:mm"
+              timeIntervals={15}
+              dateFormat="yyyy-MM-dd h:mm aa"
+              className={`w-full pl-10 px-4 py-2.5 border rounded-md transition-all cursor-pointer text-gray-800 dark:text-white ${isEditing ? 'border-gray-400 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]' : 'bg-transparent border-transparent pointer-events-none'}`}
+            />
+          </div>
+        </div>
+        {/* Description */}
+        <div className="mb-8">
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows="3"
+            disabled={!isEditing}
+            className={`w-full px-4 py-2.5 border rounded-md transition-all text-gray-800 dark:text-white ${isEditing ? 'border-gray-400 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]' : 'bg-transparent border-transparent pointer-events-none resize-none'}`}
+          />
+        </div>
+        <div className="flex justify-between items-center gap-4">
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition text-white font-medium shadow-md"
+          >
+            Delete
+          </button>
+          <div className="flex-1 text-right space-x-3">
+            {!isEditing && (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md hover:opacity-90 transition"
+              >
+                Edit
+              </button>
+            )}
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => { setIsEditing(false); setTitle(event.title); setDateTime(new Date(event.start)); setDescription(event.description || ""); }}
+                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              >
+                Cancel
+              </button>
+            )}
+            {isEditing ? (
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md hover:opacity-90 transition"
+              >
+                Save Changes
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default EventModal;

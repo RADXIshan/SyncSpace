@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.js";
 import connectCloudinary from "./configs/cloudinary.js";
+import eventRoutes from "./routes/eventRoutes.js";
 
 dotenv.config();
 
@@ -12,15 +13,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173', // your frontend URL
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
 
-// Increase payload size limit to handle base64 images (up to 10 MB)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
 
 connectCloudinary();
 

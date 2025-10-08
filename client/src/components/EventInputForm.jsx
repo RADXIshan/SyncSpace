@@ -23,7 +23,10 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
 
     const newEvent = {
       title,
-      time: dateTime.toISOString(),
+      time: (() => {
+        const d = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000);
+        return d.toISOString().slice(0, 19);
+      })(),
       description,
     };
 

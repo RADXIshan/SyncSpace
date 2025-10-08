@@ -22,10 +22,8 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
     e.preventDefault();
     if (!title || !dateTime) return;
     setIsSaving(true);
-    const offMs = dateTime.getTimezoneOffset() * 60000;
-    const formatted = new Date(dateTime.getTime() - offMs).toISOString().slice(0, 19);
-    onUpdate({ ...event, title, time: formatted, description });
-    const maybePromise = onUpdate({ ...event, title, time: formatted, description });
+    const utcISOString = dateTime.toISOString();
+    const maybePromise = onUpdate({ ...event, title, time: utcISOString, description });
    if (maybePromise && typeof maybePromise.finally === 'function') {
       maybePromise.finally(() => setIsSaving(false));
    } else {

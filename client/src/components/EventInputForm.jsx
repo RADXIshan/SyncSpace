@@ -23,11 +23,12 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
       return;
     }
 
-    const offMs = dateTime.getTimezoneOffset() * 60000;
-    const localDateIso = new Date(dateTime.getTime() - offMs).toISOString().slice(0, 19);
+    // Remove manual offset adjustment; store true UTC instant
+    const utcISOString = dateTime.toISOString();
+
     const newEvent = {
       title,
-      time: localDateIso,
+      time: utcISOString, // store as UTC ISO string; DB column should be timestamptz
       description,
     };
 

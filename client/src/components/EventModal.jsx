@@ -22,12 +22,10 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
     e.preventDefault();
     if (!title || !dateTime) return;
     setIsSaving(true);
-    const formatted = (() => {
-      const d = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000);
-      return d.toISOString().slice(0, 19);
-    })();
-   onUpdate({ ...event, title, time: formatted, description });
-   const maybePromise = onUpdate({ ...event, title, time: formatted, description });
+    const offMs = dateTime.getTimezoneOffset() * 60000;
+    const formatted = new Date(dateTime.getTime() - offMs).toISOString().slice(0, 19);
+    onUpdate({ ...event, title, time: formatted, description });
+    const maybePromise = onUpdate({ ...event, title, time: formatted, description });
    if (maybePromise && typeof maybePromise.finally === 'function') {
       maybePromise.finally(() => setIsSaving(false));
    } else {

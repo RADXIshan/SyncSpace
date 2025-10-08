@@ -23,12 +23,11 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
       return;
     }
 
-    const localDate = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000);
-    const formattedTime = localDate.toISOString().slice(0, 19); 
-
+    const offMs = dateTime.getTimezoneOffset() * 60000;
+    const localDateIso = new Date(dateTime.getTime() - offMs).toISOString().slice(0, 19);
     const newEvent = {
       title,
-      time: formattedTime,
+      time: localDateIso,
       description,
     };
 

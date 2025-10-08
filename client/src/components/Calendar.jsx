@@ -30,7 +30,11 @@ const Calendar = () => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       .then((res) => {
-        const formatted = res.data.map((ev) => ({ ...ev, start: ev.time || ev.start }));
+        const formatted = res.data.map((ev) => {
+          const startStr = ev.time || ev.start;
+          const startDate = startStr ? new Date(startStr) : null;
+          return { ...ev, start: startDate };
+        });
         setEvents(formatted);
         toast.success("Events loaded successfully", { id: toastId });
       })

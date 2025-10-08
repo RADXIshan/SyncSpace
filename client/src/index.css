@@ -43,3 +43,8 @@
 .react-datepicker__time-container .react-datepicker__time {
   background-color: #F5F5F5;
 }
+/* Remove grey hover background on FullCalendar events */
+.fc .fc-event:hover {
+  background-color: transparent !important;
+  opacity: 1 !important;
+}

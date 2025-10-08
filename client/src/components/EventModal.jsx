@@ -8,6 +8,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
   const [dateTime, setDateTime] = useState(event ? new Date(event.start) : new Date());
   const [description, setDescription] = useState(event?.description || "");
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (event) {
@@ -20,11 +21,18 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title || !dateTime) return;
+    setIsSaving(true);
     const formatted = (() => {
       const d = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000);
       return d.toISOString().slice(0, 19);
     })();
-    onUpdate({ ...event, title, time: formatted, description });
+   onUpdate({ ...event, title, time: formatted, description });
+   const maybePromise = onUpdate({ ...event, title, time: formatted, description });
+   if (maybePromise && typeof maybePromise.finally === 'function') {
+      maybePromise.finally(() => setIsSaving(false));
+   } else {
+      setIsSaving(false);
+   }
   };
 
   const handleDelete = () => onDelete(event.event_id || event.id);
@@ -39,7 +47,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer active:scale-95"
         >
           <X size={22} />
         </button>
@@ -105,7 +113,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
           <button
             type="button"
             onClick={handleDelete}
-            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition text-white font-semibold shadow-md cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition-all text-white font-semibold shadow-md cursor-pointer active:scale-95"
           >
             Delete
           </button>
@@ -114,7 +122,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md hover:opacity-90 transition cursor-pointer font-semibold"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md hover:opacity-90 transition-all cursor-pointer font-semibold active:scale-95"
               >
                 Edit
               </button>
@@ -123,7 +131,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={() => { setIsEditing(false); setTitle(event.title); setDateTime(new Date(event.start)); setDescription(event.description || ""); }}
-                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition cursor-pointer font-semibold"
+                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all cursor-pointer font-semibold active:scale-95"
               >
                 Cancel
               </button>
@@ -131,9 +139,10 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
             {isEditing ? (
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md hover:opacity-90 transition cursor-pointer"
+                disabled={isSaving}
+                className={`px-5 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md transition-all ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer active:scale-95'}`}
               >
-                Save Changes
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
             ) : (
               <button

@@ -186,7 +186,7 @@ const Settings = ({ onClose }) => {
           </h1>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-white transition-colors text-xl cursor-pointer"
+            className="text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95"
           >
             ✕
           </button>
@@ -210,7 +210,7 @@ const Settings = ({ onClose }) => {
               <h2 className="text-xl font-semibold text-white">{user?.name}</h2>
               <p className="text-gray-400">{user?.email}</p>
               {editMode && (
-                <label className="mt-3 cursor-pointer text-sm font-medium text-violet-500 hover:text-violet-400 transition-colors">
+                <label className="mt-3 cursor-pointer text-sm font-medium text-violet-500 hover:text-violet-400 transition-colors active:scale-95">
                   Change Photo
                   <input
                     type="file"
@@ -282,7 +282,7 @@ const Settings = ({ onClose }) => {
             <button
               onClick={handleDelete}
               disabled={loading}
-              className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition text-white font-medium shadow-md cursor-pointer"
+              className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition text-white font-medium shadow-md cursor-pointer active:scale-95"
             >
               Delete Account
             </button>
@@ -293,14 +293,14 @@ const Settings = ({ onClose }) => {
                   <button
                     onClick={toggleEdit}
                     disabled={loading}
-                    className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer active:scale-95"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg hover:opacity-90 transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg hover:opacity-90 transition-all cursor-pointer active:scale-95"
                   >
                     {loading ? "Saving..." : "Save Changes"}
                   </button>
@@ -308,7 +308,7 @@ const Settings = ({ onClose }) => {
               ) : (
                 <button
                   onClick={toggleEdit}
-                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg hover:opacity-90 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg hover:opacity-90 transition-all cursor-pointer active:scale-95"
                 >
                   Edit Profile
                 </button>

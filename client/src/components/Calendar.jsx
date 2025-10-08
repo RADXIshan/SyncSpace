@@ -18,29 +18,31 @@ const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState(null); // State to store selected date for new event
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  // Fetch events from backend
-  useEffect(() => {
-    if(!user) return; // wait until user data is available
-    let toastId;
-    toastId = toast.loading("Fetching events...");
+  // Centralised fetcher so we can refresh events after CRUD operations
+  const getEvents = () => {
+    if (!user) return;
+    let toastId = toast.loading("Fetching events...");
     const token = localStorage.getItem("token");
-    axios.get(
-      `${import.meta.env.VITE_BASE_URL}/api/events`,
-      {
+    axios
+      .get(`${import.meta.env.VITE_BASE_URL}/api/events`, {
         params: { user_id: user.user_id },
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : {},
-      }
-    )
-      .then(res => {
+      })
+      .then((res) => {
         const formatted = res.data.map((ev) => ({ ...ev, start: ev.time || ev.start }));
         setEvents(formatted);
         toast.success("Events loaded successfully", { id: toastId });
       })
-      .catch(err => {
+      .catch((err) => {
         console.error(err);
         toast.error("Failed to load events", { id: toastId });
       });
+  };
+
+  // Fetch events on initial load / user change
+  useEffect(() => {
+    getEvents();
   }, [user]);
 
   // Handle adding new event
@@ -62,10 +64,10 @@ const Calendar = () => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       }
     )
-      .then(res => {
-        setEvents([...events, { ...res.data, start: res.data.time }]);
+      .then((_) => {
         toast.success("Event added successfully", { id: toastId });
-        setShowEventInputForm(false); // Hide the form after successful submission
+        setShowEventInputForm(false); 
+        getEvents();
       })
       .catch(err => {
         console.error(err);
@@ -90,6 +92,8 @@ const Calendar = () => {
         setEvents(events.map((ev) => (ev.event_id === updatedEventData.event_id ? updatedEventData : ev)));
         toast.success("Event updated", { id: toastId });
         setSelectedEvent(null);
+        // Optionally refresh the list to ensure consistency
+        getEvents();
       })
       .catch((err) => {
         console.error(err);
@@ -108,6 +112,8 @@ const Calendar = () => {
         setEvents(events.filter((ev) => ev.event_id !== id));
         toast.success("Event deleted", { id: toastId });
         setSelectedEvent(null);
+        // Refresh events list
+        getEvents();
       })
       .catch((err) => {
         console.error(err);
@@ -117,18 +123,20 @@ const Calendar = () => {
 
   return (
     <div className="p-4 relative">
-      <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">📅 Calendar</h2>
       <div className="bg-white rounded-lg shadow ring-1 ring-gray-200 p-4">
         {showInfo && (
           <div className="flex items-start bg-violet-50 text-violet-700 rounded-md px-3 py-2 mb-4 text-sm">
             <Info size={16} className="mr-2 mt-0.5" />
-            <span className="flex-1">Tap or click on a date to add an event.</span>
+            <div className="flex-1 space-y-1">
+              <p>Tap or click on a date to add an event.</p>
+              <p>Tap on an event to edit or delete it.</p>
+            </div>
             <button
               onClick={() => setShowInfo(false)}
               className="ml-2 hover:text-violet-900 cursor-pointer"
               aria-label="Dismiss info"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           </div>
         )}
@@ -161,7 +169,7 @@ const Calendar = () => {
           selectMirror
           dayMaxEvents={3}
             eventContent={(arg) => (
-             <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-violet-600/40 shadow-sm hover:scale-105 transition max-w-full text-[15px] text-black">
+             <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-violet-600/40 shadow-sm hover:scale-[1.03] active:scale-95 transition max-w-full text-[15px] text-black">
                <div className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
                <span className="truncate font-medium flex-1">
                  {arg.event.title}
@@ -190,5 +198,4 @@ const Calendar = () => {
     </div>
   );
 }
-
 export default Calendar;

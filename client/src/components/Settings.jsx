@@ -282,7 +282,7 @@ const Settings = ({ onClose }) => {
             <button
               onClick={handleDelete}
               disabled={loading}
-              className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-500 cursor-pointer text-white font-medium transition-all shadow-md"
+              className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition text-white font-medium shadow-md cursor-pointer"
             >
               Delete Account
             </button>
@@ -308,7 +308,7 @@ const Settings = ({ onClose }) => {
               ) : (
                 <button
                   onClick={toggleEdit}
-                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white font-semibold shadow-lg hover:opacity-90 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg hover:opacity-90 transition-all cursor-pointer"
                 >
                   Edit Profile
                 </button>

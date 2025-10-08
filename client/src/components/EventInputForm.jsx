@@ -23,10 +23,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
 
     const newEvent = {
       title,
-      time: (() => {
-        const d = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000);
-        return d.toISOString().slice(0, 19);
-      })(),
+      time: dateTime.toISOString(),
       description,
     };
 
@@ -121,7 +118,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-semibold transition-all cursor-pointer"
           >
             Cancel
           </button>

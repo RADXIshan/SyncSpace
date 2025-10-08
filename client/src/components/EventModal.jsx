@@ -33,7 +33,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6">
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-lg bg-white dark:bg-gray-900/90 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-secondary/30 p-8"
+        className="relative w-full max-w-lg bg-white dark:bg-gray-900/90 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-secondary/30 p-8 hover:scale-[1.02] transition-transform duration-300 transform-gpu"
       >
         {/* Close */}
         <button
@@ -49,47 +49,63 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
         {/* Title */}
         <div className="mb-6">
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Event Title</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            disabled={!isEditing}
-            className={`w-full px-4 py-2.5 border rounded-md transition-all text-gray-800 dark:text-white ${isEditing ? 'border-gray-400 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]' : 'bg-transparent border-transparent pointer-events-none'}`}
-          />
+          {isEditing ? (
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className="w-full px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition-all text-gray-800 dark:text-white"
+            />
+          ) : (
+            <div className="w-full px-4 py-2.5 rounded-md bg-white/10 dark:bg-gray-800/70 text-gray-800 dark:text-white">
+              {title || "-"}
+            </div>
+          )}
         </div>
         {/* Date */}
         <div className="mb-6">
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Date & Time</label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-3.5 text-indigo-600 pointer-events-none z-10" size={18} />
-            <DatePicker
-              selected={dateTime}
-              onChange={(date) => setDateTime(date)}
-              showTimeSelect
-              timeFormat="HH:mm"
-              timeIntervals={15}
-              dateFormat="yyyy-MM-dd h:mm aa"
-              className={`w-full pl-10 px-4 py-2.5 border rounded-md transition-all cursor-pointer text-gray-800 dark:text-white ${isEditing ? 'border-gray-400 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]' : 'bg-transparent border-transparent pointer-events-none'}`}
-            />
-          </div>
+          {isEditing ? (
+            <div className="relative">
+              <Calendar className="absolute left-3 top-3.5 text-indigo-600 pointer-events-none z-10" size={18} />
+              <DatePicker
+                selected={dateTime}
+                onChange={(date) => setDateTime(date)}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={15}
+                dateFormat="yyyy-MM-dd h:mm aa"
+                className="w-full pl-10 px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition-all cursor-pointer text-gray-800 dark:text-white"
+              />
+            </div>
+          ) : (
+            <div className="w-full px-4 py-2.5 rounded-md bg-white/10 dark:bg-gray-800/70 text-gray-800 dark:text-white">
+              {new Date(dateTime).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}
+            </div>
+          )}
         </div>
         {/* Description */}
         <div className="mb-8">
           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows="3"
-            disabled={!isEditing}
-            className={`w-full px-4 py-2.5 border rounded-md transition-all text-gray-800 dark:text-white ${isEditing ? 'border-gray-400 bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]' : 'bg-transparent border-transparent pointer-events-none resize-none'}`}
-          />
+          {isEditing ? (
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows="3"
+              className="w-full px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition-all resize-none text-gray-800 dark:text-white"
+            />
+          ) : (
+            <div className="w-full px-4 py-2.5 rounded-md bg-white/10 dark:bg-gray-800/70 text-gray-800 dark:text-white whitespace-pre-wrap min-h-[84px]">
+              {description || "-"}
+            </div>
+          )}
         </div>
         <div className="flex justify-between items-center gap-4">
           <button
             type="button"
             onClick={handleDelete}
-            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition text-white font-medium shadow-md"
+            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition text-white font-semibold shadow-md cursor-pointer"
           >
             Delete
           </button>
@@ -98,7 +114,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md hover:opacity-90 transition"
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md hover:opacity-90 transition cursor-pointer font-semibold"
               >
                 Edit
               </button>
@@ -107,7 +123,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={() => { setIsEditing(false); setTitle(event.title); setDateTime(new Date(event.start)); setDescription(event.description || ""); }}
-                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition cursor-pointer font-semibold"
               >
                 Cancel
               </button>
@@ -115,7 +131,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
             {isEditing ? (
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md hover:opacity-90 transition"
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md hover:opacity-90 transition cursor-pointer"
               >
                 Save Changes
               </button>
@@ -123,7 +139,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition cursor-pointer font-semibold"
               >
                 Close
               </button>

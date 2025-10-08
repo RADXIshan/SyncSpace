@@ -153,6 +153,7 @@ const Calendar = () => {
             week: "Week",
             day: "Day",
           }}
+          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'short' }}
           events={events}
           dateClick={handleDateClick}
           editable
@@ -160,13 +161,13 @@ const Calendar = () => {
           selectMirror
           dayMaxEvents={3}
             eventContent={(arg) => (
-             <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 backdrop-blur-md border border-violet-500/30 shadow-sm hover:brightness-110 transition max-w-full text-[15px] text-black">
-               <div className="h-2 w-2 rounded-full bg-violet-400 shrink-0" />
+             <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-violet-600/40 shadow-sm hover:scale-105 transition max-w-full text-[15px] text-black">
+               <div className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
                <span className="truncate font-medium flex-1">
                  {arg.event.title}
                </span>
                {arg.timeText && (
-                 <span className="ml-1 text-[15px] text-indigo-500 whitespace-nowrap">
+                 <span className="ml-1 text-[15px] text-indigo-600 whitespace-nowrap">
                    {arg.timeText}
                  </span>
                )}

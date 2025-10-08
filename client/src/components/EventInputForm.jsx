@@ -23,11 +23,8 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
       return;
     }
 
-    // Adjust for timezone so stored time is correct in DB and UI
-    const formattedTime = (() => {
-      const d = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000);
-      return d.toISOString().slice(0, 19);
-    })();
+    const localDate = new Date(dateTime.getTime() - dateTime.getTimezoneOffset() * 60000);
+    const formattedTime = localDate.toISOString().slice(0, 19); 
 
     const newEvent = {
       title,

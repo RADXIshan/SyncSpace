@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const Sidebar = ({ onSettingsClick }) => {
+const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
   const location = useLocation();
   const path = location.pathname;
   const { user, checkAuth, logout } = useAuth();
@@ -60,12 +60,12 @@ const Sidebar = ({ onSettingsClick }) => {
         </nav>
         
         <div className="px-2 mt-6 space-y-1">
-          <button className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
+          <button onClick={onJoinOrgClick} className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
             <span className="mr-3"><Users size={22} /></span>
             <span>Join Organization</span>
           </button>
           
-          <button className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
+          <button onClick={onCreateOrgClick} className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
             <span className="mr-3"><Plus size={22} /></span>
             <span>Create Organization</span>
           </button>

@@ -31,7 +31,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
       <form
         onSubmit={handleSubmit}
-        className="relative w-full max-w-lg bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn px-8 py-10"
+        className="relative w-full max-w-lg bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn px-8 py-10 hover:scale-[1.02] transition-transform"
       >
         <button
           type="button"

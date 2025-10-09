@@ -1,17 +1,17 @@
-import React from "react";
+import { useNavigate } from "react-router";
 import {
   Bell,
   Calendar,
   CheckCircle,
-  CloudSun,
   MessageSquare,
-  Music,
-  Users,
-  Search,
   Activity,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   const activities = [
     "Alex pushed updates to repo 🚀",
     "Meeting scheduled for 4:30 PM 📅",
@@ -28,23 +28,28 @@ const Dashboard = () => {
     <div className="p-6 lg:p-10 w-full text-[var(--color-accent)] space-y-8">
       {/* Top Navbar */}
       <header className="flex justify-between items-center gap-4">
-        {/* Search */}
-        <div className="flex items-center gap-3 bg-white backdrop-blur-md px-4 py-2 rounded-lg shadow-sm flex-1 max-w-md">
-          <Search size={18} className="text-gray-500" />
-          <input
-            type="text"
-            placeholder="Search workspace..."
-            className="flex-1 bg-transparent outline-none text-sm placeholder-gray-500"
-          />
-        </div>
+        {/* Header Title */}
+        <div className="text-4xl font-bold cursor-pointer">Welcome back, {user.name}</div>
 
         {/* Notification & Avatar */}
         <div className="flex items-center gap-4">
           <Bell
-            size={22}
+            size={23}
             className="text-gray-600 hover:text-[var(--color-secondary)] transition-colors cursor-pointer"
           />
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--color-secondary)] to-indigo-500" />
+          {user?.photo ? (
+            <img
+              src={user.photo}
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center">
+              <span className="text-sm font-medium text-white">
+                {user?.name?.charAt(0) || "U"}
+              </span>
+            </div>
+          )}
         </div>
       </header>
 
@@ -97,7 +102,9 @@ const Dashboard = () => {
             <p>📞 4:30 PM — Design Sync</p>
             <p>💬 7:00 PM — Standup Recap</p>
           </div>
-          <button className="mt-4 px-5 py-2 text-md rounded-full bg-[var(--color-secondary)] text-white shadow hover:bg-violet-700 transition font-semibold cursor-pointer">
+          <button
+            onClick={() => navigate('/home/calendar')}
+            className="mt-4 px-5 py-2 text-md rounded-full bg-[var(--color-secondary)] text-white shadow hover:bg-violet-700 transition font-semibold cursor-pointer">
             View Calendar
           </button>
         </section>

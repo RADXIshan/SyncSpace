@@ -12,8 +12,8 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
   const navigate = useNavigate();
 
   const navItems = [
-    { name: 'Dashboard', icon: <Home size={22} />, path: '/home/dashboard' },
-    { name: 'Calendar', icon: <Calendar size={22} />, path: '/home/calendar' },
+    { name: 'Dashboard', icon: <Home size={23} />, path: '/home/dashboard' },
+    { name: 'Calendar', icon: <Calendar size={23} />, path: '/home/calendar' },
   ];
 
   const isActive = (itemPath) => {
@@ -38,7 +38,7 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
   return (
     <div className="h-screen w-64 bg-[var(--color-accent)] text-[var(--color-primary)] flex flex-col">
       <div className="p-4 border-b border-gray-700">
-        <h1 className="text-xl font-bold">SyncSpace</h1>
+        <h1 className="text-2xl font-bold">SyncSpace</h1>
       </div>
       
       <div className="flex-1 overflow-y-auto py-4">
@@ -47,7 +47,7 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
             <Link
               key={item.name}
               to={item.path}
-              className={`flex items-center px-4 py-3 rounded-md transition-colors ${
+              className={`flex items-center px-4 py-3 rounded-md transition-colors font-semibold ${
                 isActive(item.path)
                   ? 'bg-[var(--color-secondary)] text-white'
                   : 'hover:bg-gray-800'
@@ -61,13 +61,13 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
         
         <div className="px-2 mt-6 space-y-1">
           <button onClick={onJoinOrgClick} className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
-            <span className="mr-3"><Users size={22} /></span>
-            <span>Join Organization</span>
+            <span className="mr-3"><Users size={23} /></span>
+            <span className='font-semibold'>Join Organization</span>
           </button>
           
           <button onClick={onCreateOrgClick} className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
-            <span className="mr-3"><Plus size={22} /></span>
-            <span>Create Organization</span>
+            <span className="mr-3"><Plus size={23} /></span>
+            <span className='font-semibold'>Create Organization</span>
           </button>
         </div>
       </div>
@@ -78,15 +78,15 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
             <img
               src={user.photo}
               alt="Profile"
-              className="h-10 w-10 rounded-full object-cover"
+              className="h-[50px] w-[50px] rounded-full object-cover"
             />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
+            <div className="h-[50px] w-[50px] rounded-full bg-gray-600 flex items-center justify-center">
               <span className="text-lg font-medium">{user?.name?.charAt(0) || 'U'}</span>
             </div>
           )}
           <div className="ml-3">
-            <p className="font-medium">{user?.name || 'User Name'}</p>
+            <p className="font-semibold">{user?.name || 'User Name'}</p>
           </div>
         </div>
         
@@ -96,12 +96,12 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
             className={`w-full flex items-center px-4 py-2 text-left rounded-md transition-colors hover:bg-gray-800 cursor-pointer`}
           >
             <span className="mr-3 cursor-pointer"><Settings size={18} /></span>
-            <span>Settings</span>
+            <span className='font-semibold'>Settings</span>
           </button>
           
           <button onClick={handleLogout} className="w-full flex items-center px-4 py-2 text-left rounded-md hover:bg-red-600 transition-colors cursor-pointer">
             <span className="mr-3"><LogOut size={18} /></span>
-            <span>Logout</span>
+            <span className='font-semibold'>Logout</span>
           </button>
         </div>
       </div>

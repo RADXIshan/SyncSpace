@@ -14,6 +14,7 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
   const navItems = [
     { name: 'Dashboard', icon: <Home size={23} />, path: '/home/dashboard' },
     { name: 'Calendar', icon: <Calendar size={23} />, path: '/home/calendar' },
+    { name: 'Settings', icon: <Settings size={23} />, path: '/home/settings' },
   ];
 
   const isActive = (itemPath) => {

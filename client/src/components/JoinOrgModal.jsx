@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-hot-toast";
+import axios from "axios";
 
 // Modal for joining an organisation via invite / code
 const JoinOrgModal = ({ onClose, onSuccess }) => {
@@ -15,15 +16,23 @@ const JoinOrgModal = ({ onClose, onSuccess }) => {
     try {
       toastId = toast.loading("Joining organisation...");
 
-      // TODO: replace with real API call
-      await new Promise((res) => setTimeout(res, 800));
-      const mockOrg = { code: orgCode.trim(), name: "Demo Org" };
+      // Call the real API
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/join`, 
+        { code: orgCode.trim() }, 
+        { 
+          withCredentials: true,
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }
+      );
 
       toast.success("Successfully joined organisation", { id: toastId });
-      if (onSuccess) onSuccess(mockOrg);
+      if (onSuccess) onSuccess(response.data.organization);
       onClose();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Something went wrong", { id: toastId });
+      console.error("Error joining organization:", err);
+      toast.error(err.response?.data?.message || err.response?.data?.error || err.message || "Something went wrong", { id: toastId });
     } finally {
       setLoading(false);
     }
@@ -31,48 +40,74 @@ const JoinOrgModal = ({ onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
-      <form
-        onSubmit={handleSubmit}
-        className="relative w-full max-w-lg bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn px-8 py-10 hover:scale-[1.02] transition-transform"
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95"
-        >
-          <X size={22} />
-        </button>
-        <h2 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
-          Join Organisation
-        </h2>
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-300 mb-1">Invite Code</label>
-          <input
-            type="text"
-            value={orgCode}
-            onChange={(e) => setOrgCode(e.target.value)}
-            placeholder="Enter organisation code"
-            className="w-full px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
-          />
-        </div>
-        <div className="flex justify-end gap-3 mt-8">
+      <div className="relative w-full max-w-md bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.02] transition-transform">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
+        <form onSubmit={handleSubmit} className="relative px-8 py-10">
           <button
             type="button"
             onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer active:scale-95"
+            className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10"
           >
-            Cancel
+            <X size={22} />
           </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-5 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg transition-all hover:opacity-90 cursor-pointer active:scale-95"
-          >
-            {loading ? "Joining..." : "Join"}
-          </button>
-        </div>
-      </form>
+          
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+              Join Organisation
+            </h2>
+            <p className="text-gray-400 text-sm">Enter the invite code to join an organization</p>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Organization Code
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={orgCode}
+                  onChange={(e) => setOrgCode(e.target.value.toUpperCase())}
+                  placeholder="ABC123"
+                  maxLength={6}
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white text-center text-lg font-mono tracking-widest focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center">
+                  <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mt-2 text-center">
+                Enter the 6-character code provided by the organization
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                className="px-6 py-3 rounded-xl bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading || !orgCode.trim()}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg transition-all hover:opacity-90 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Joining...
+                  </>
+                ) : (
+                  "Join Organization"
+                )}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

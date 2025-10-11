@@ -140,7 +140,8 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
       <div className="relative w-full max-w-4xl max-h-[90vh] bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-        <div className="overflow-y-auto max-h-[90vh] px-8 py-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
+        <div className="relative overflow-y-auto max-h-[90vh] px-8 py-10">
           <form onSubmit={handleSubmit} className="space-y-8">
             <button
               type="button"
@@ -150,9 +151,12 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
               <X size={22} />
             </button>
             
-            <h2 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
-              Create Organisation
-            </h2>
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+                Create Organisation
+              </h2>
+              <p className="text-gray-400 text-sm">Set up your organization with channels and roles</p>
+            </div>
 
             {/* Basic Information */}
             <div className="space-y-6">
@@ -169,7 +173,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="Enter organisation name"
-                    className="w-full px-4 py-3 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
                   />
                 </div>
                 
@@ -178,7 +182,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                   <select
                     value={orgType}
                     onChange={(e) => setOrgType(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
                   >
                     <option value="business">Business</option>
                     <option value="nonprofit">Non-profit</option>
@@ -196,7 +200,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                   onChange={(e) => setOrgDescription(e.target.value)}
                   placeholder="Describe your organisation..."
                   rows={3}
-                  className="w-full px-4 py-3 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 resize-none transition-all"
                 />
               </div>
             </div>
@@ -225,10 +229,10 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                         onChange={(e) => setAccessLevel(e.target.value)}
                         className="sr-only"
                       />
-                      <div className={`p-4 rounded-lg border transition-all ${
+                      <div className={`p-4 rounded-xl border transition-all cursor-pointer ${
                         accessLevel === value 
-                          ? 'border-violet-500 bg-violet-500/10' 
-                          : 'border-white/10 bg-white/5 hover:bg-white/10'
+                          ? 'border-violet-500 bg-violet-500/10 shadow-lg shadow-violet-500/20' 
+                          : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
                       }`}>
                         <div className="flex items-center gap-3">
                           <Icon size={20} className={accessLevel === value ? 'text-violet-400' : 'text-gray-400'} />
@@ -255,7 +259,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                 <button
                   type="button"
                   onClick={addChannel}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 transition-all"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 transition-all border border-violet-500/20 hover:border-violet-500/40"
                 >
                   <Plus size={16} />
                   Add Channel
@@ -285,7 +289,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                           value={channel.name}
                           onChange={(e) => updateChannel(index, 'name', e.target.value)}
                           placeholder="e.g., general, announcements"
-                          className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                          className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
                         />
                       </div>
                       <div>
@@ -295,7 +299,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                           value={channel.description}
                           onChange={(e) => updateChannel(index, 'description', e.target.value)}
                           placeholder="Channel purpose..."
-                          className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                          className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
                         />
                       </div>
                     </div>
@@ -314,7 +318,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                 <button
                   type="button"
                   onClick={addRole}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 transition-all"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600/20 text-violet-400 hover:bg-violet-600/30 transition-all border border-violet-500/20 hover:border-violet-500/40"
                 >
                   <Plus size={16} />
                   Add Role
@@ -331,7 +335,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                           value={role.name}
                           onChange={(e) => updateRole(roleIndex, 'name', e.target.value)}
                           placeholder="Role name"
-                          className="px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none font-medium"
+                          className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 font-medium transition-all"
                         />
                       </div>
                       {roles.length > 1 && (
@@ -369,16 +373,23 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="px-6 py-3 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer active:scale-95"
+                className="px-6 py-3 rounded-xl bg-white/10 text-gray-300 hover:bg-white/20 font-medium transition-all cursor-pointer active:scale-95 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-3 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg transition-all hover:opacity-90 cursor-pointer active:scale-95"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg transition-all hover:opacity-90 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {loading ? "Creating..." : "Create Organisation"}
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Creating...
+                  </>
+                ) : (
+                  "Create Organisation"
+                )}
               </button>
             </div>
           </form>

@@ -106,7 +106,7 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
           </div>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-1">
           <button
             onClick={onSettingsClick}
             className="w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-200 hover:bg-violet-600/20 hover:border-violet-500/30 border border-transparent cursor-pointer group text-slate-300 hover:text-violet-400"

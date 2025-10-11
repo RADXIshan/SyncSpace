@@ -81,11 +81,6 @@
   background-color: transparent !important;
 }
 
-.react-datepicker__day:hover {
-  background-color: rgba(124, 58, 237, 0.2);
-  color: white;
-}
-
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
   background: linear-gradient(135deg, #7C3AED, #A855F7) !important;

@@ -70,8 +70,8 @@ const Dashboard = ({ onSettingsClick }) => {
         {/* Recent Activity */}
         <section className="col-span-12 md:col-span-6 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/10 flex flex-col text-white transition-all">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-xl bg-violet-500/20">
-              <Activity size={20} className="text-violet-400" />
+            <div className="p-3 rounded-full bg-violet-500/20">
+              <Activity size={22} className="text-violet-400" />
             </div>
             <h2 className="text-2xl font-semibold">Recent Activity</h2>
           </div>
@@ -88,8 +88,8 @@ const Dashboard = ({ onSettingsClick }) => {
         {/* Tasks */}
         <section className="col-span-12 md:col-span-6 bg-white backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/10 flex flex-col text-[var(--color-accent)] transition-all">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-xl bg-green-500/20">
-              <CheckCircle size={20} className="text-green-400" />
+            <div className="p-3 rounded-full bg-green-500/20">
+              <CheckCircle size={22} className="text-green-500" />
             </div>
             <h2 className="text-2xl font-semibold">Team Tasks</h2>
           </div>
@@ -111,10 +111,10 @@ const Dashboard = ({ onSettingsClick }) => {
         </section>
 
         {/* Calendar */}
-        <section className="col-span-12 md:col-span-6 bg-white rounded-3xl p-6 shadow-sm border border-white/20 flex flex-col justify-between">
+        <section className="col-span-12 md:col-span-6 bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl border border-white/20 flex flex-col justify-between">
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-[var(--color-accent)]">
-            <div className="bg-[var(--color-secondary)]/10 rounded-xl p-2">
-              <Calendar className="text-[var(--primary)]" size={20} />
+            <div className="bg-violet-700/20 rounded-full p-3">
+              <Calendar className="text-slate-800" size={22} />
             </div>
             Meetings
           </h2>
@@ -125,16 +125,16 @@ const Dashboard = ({ onSettingsClick }) => {
           </div>
           <button
             onClick={() => navigate('/home/calendar')}
-            className="mt-4 px-5 py-2 text-md rounded-full bg-[var(--color-secondary)] text-white shadow hover:bg-violet-700 transition font-semibold cursor-pointer">
+            className="mt-4 px-5 py-2 text-md font-semibold rounded-full bg-violet-700/20 hover:bg-violet-700/30 border border-violet-800/30 text-violet-700 hover:text-violet-600 transition cursor-pointer">
             View Calendar
           </button>
         </section>
 
         {/* Chat Summary */}
-        <section className="col-span-12 md:col-span-6 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-md flex flex-col justify-between">
+        <section className="col-span-12 md:col-span-6 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 text-white flex flex-col justify-between shadow-lg hover:shadow-xl">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <div className="bg-[var(--color-accent)] rounded-xl p-2">
-              <MessageSquare className="text-[var(--primary)]" size={20} />
+            <div className="bg-slate-300/20 rounded-full p-3">
+              <MessageSquare className="text-[var(--primary)]" size={22} />
             </div>
              Chat Summary
           </h2>
@@ -142,7 +142,7 @@ const Dashboard = ({ onSettingsClick }) => {
             <p className="text-5xl font-bold">12</p>
             <p className="text-md opacity-90 mt-1">Unread messages</p>
           </div>
-          <button className="mt-4 px-5 py-2 text-md rounded-full bg-white text-[var(--color-accent)] font-semibold shadow hover:bg-gray-200 transition cursor-pointer">
+          <button className="mt-4 px-5 py-2 text-md font-semibold rounded-full bg-slate-300/20 hover:bg-slate-300/30 border border-slate-800 text-primary hover:text-slate-200 transition cursor-pointer">
             Open Chat
           </button>
         </section>

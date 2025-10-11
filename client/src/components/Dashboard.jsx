@@ -46,9 +46,8 @@ const Dashboard = ({ onSettingsClick }) => {
             
             <div
               onClick={onSettingsClick}
-              className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-800 to-indigo-800 
-                        flex items-center justify-center border-2 border-violet-500/20 
-                        hover:border-violet-500/40 transition-all cursor-pointer overflow-hidden"
+              className="w-12 h-12 rounded-full gradient-bg flex items-center justify-center  
+                         transition-all cursor-pointer overflow-hidden border-2 border-violet-600"
             >
               {user?.photo ? (
                 <img

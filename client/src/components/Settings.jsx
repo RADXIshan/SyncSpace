@@ -295,14 +295,14 @@ const Settings = ({ onClose }) => {
                   <button
                     onClick={toggleEdit}
                     disabled={loading}
-                    className="px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                    className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="btn-primary"
+                    className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto"
                   >
                     {loading ? "Saving..." : "Save Changes"}
                   </button>
@@ -310,7 +310,7 @@ const Settings = ({ onClose }) => {
               ) : (
                 <button
                   onClick={toggleEdit}
-                  className="btn-primary w-full sm:w-auto"
+                  className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto"
                 >
                   Edit Profile
                 </button>

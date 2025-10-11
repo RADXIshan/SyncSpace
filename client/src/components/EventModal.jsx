@@ -122,7 +122,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="btn-primary"
+                className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto"
               >
                 Edit
               </button>
@@ -131,7 +131,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={() => { setIsEditing(false); setTitle(event.title); setDateTime(new Date(event.start)); setDescription(event.description || ""); }}
-                className="px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -140,7 +140,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="submit"
                 disabled={isSaving}
-                className={`btn-primary ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -148,7 +148,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-200 cursor-pointer"
+                className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto"
               >
                 Close
               </button>

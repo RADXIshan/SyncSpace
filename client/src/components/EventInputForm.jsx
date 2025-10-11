@@ -134,14 +134,14 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+            className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className={`btn-primary ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             {isLoading ? "Adding..." : "Add Event"}
           </button>

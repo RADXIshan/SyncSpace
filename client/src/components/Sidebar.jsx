@@ -85,7 +85,7 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
       </div>
       
       <div className="p-4 border-t border-slate-700/50">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-4">
           {user?.photo ? (
             <img
               src={user.photo}
@@ -99,7 +99,10 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
           )}
           <div className="ml-3 flex-1">
             <p className="font-semibold text-white text-lg">{user?.name || 'User Name'}</p>
-            <p className="text-sm text-slate-400">Online</p>
+            <div className='flex items-center'>
+              <div className='status-online h-2 w-2 rounded-full'></div>
+              <p className="text-sm text-slate-400 ml-1">Online</p>
+            </div>
           </div>
         </div>
         

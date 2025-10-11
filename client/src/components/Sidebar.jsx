@@ -38,7 +38,7 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
   return (
     <div className="h-screen w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col shadow-2xl border-r border-slate-700/50">
       <div className="p-6 border-b border-slate-700/50">
-        <h1 className="text-2xl font-bold gradient-text">SyncSpace</h1>
+        <h1 className="text-3xl font-bold gradient-text">SyncSpace</h1>
       </div>
       
       <div className="flex-1 overflow-y-auto py-6">

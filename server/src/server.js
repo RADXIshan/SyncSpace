@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.js";
 import connectCloudinary from "./configs/cloudinary.js";
 import eventRoutes from "./routes/eventRoutes.js";
+import orgRoutes from "./routes/orgRoutes.js";
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/orgs", orgRoutes);
 
 connectCloudinary();
 

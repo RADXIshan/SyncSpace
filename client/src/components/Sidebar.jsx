@@ -90,10 +90,10 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
             <img
               src={user.photo}
               alt="Profile"
-              className="h-12 w-12 rounded-full object-cover border-2 border-violet-600 shadow-lg"
+              className="h-12 w-12 rounded-full object-cover shadow-lg border-2 border-violet-600"
             />
           ) : (
-            <div className="h-12 w-12 rounded-full gradient-bg flex items-center justify-center shadow-lg">
+            <div className="h-12 w-12 rounded-full gradient-bg flex items-center justify-center shadow-lg border-2 border-violet-600">
               <span className="text-lg font-bold text-white">{user?.name?.charAt(0) || 'U'}</span>
             </div>
           )}

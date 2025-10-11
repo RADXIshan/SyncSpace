@@ -22,9 +22,8 @@ const Home = () => {
       <main className="flex-1 overflow-y-auto">
         <Routes>
           <Route path="/" element={<Navigate to="/home/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard  onSettingsClick={() => setShowSettings(true)} />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/home/dashboard" replace />} />
         </Routes>
         {showSettings && <Settings onClose={() => setShowSettings(false)} />}

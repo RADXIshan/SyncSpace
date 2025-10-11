@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-const Dashboard = () => {
+const Dashboard = ({ onSettingsClick }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -45,7 +45,7 @@ const Dashboard = () => {
             </div>
             
             <div
-              onClick={() => navigate('/home/settings')}
+              onClick={onSettingsClick}
               className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-800 to-indigo-800 
                         flex items-center justify-center border-2 border-violet-500/20 
                         hover:border-violet-500/40 transition-all cursor-pointer overflow-hidden"

@@ -130,15 +130,15 @@ const Calendar = () => {
       <div className="max-w-7xl mx-auto">
         <div className="card p-6 animate-fadeIn">
           {showInfo && (
-            <div className="flex items-start bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 rounded-xl px-4 py-3 mb-6 border border-blue-200 animate-slideIn">
-              <Info size={18} className="mr-3 mt-0.5 text-blue-600" />
+            <div className="flex items-start bg-gradient-to-r from-violet-50 to-purple-50 text-violet-800 rounded-xl px-4 py-3 mb-6 border border-violet-200 animate-slideIn">
+              <Info size={18} className="mr-3 mt-0.5 text-violet-600" />
               <div className="flex-1 space-y-1">
                 <p className="font-medium">Tap or click on a date to add an event.</p>
                 <p className="text-sm">Tap on an event to edit or delete it.</p>
               </div>
               <button
                 onClick={() => setShowInfo(false)}
-                className="ml-3 hover:text-blue-900 cursor-pointer p-1 rounded-full hover:bg-blue-100 transition-colors"
+                className="ml-3 hover:text-violet-900 cursor-pointer p-1 rounded-full hover:bg-violet-100 transition-colors"
                 aria-label="Dismiss info"
               >
                 <X size={18} />
@@ -175,7 +175,7 @@ const Calendar = () => {
               selectMirror
               dayMaxEvents={3}
               eventContent={(arg) => (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 max-w-full text-sm font-medium">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 max-w-full text-sm font-medium">
                   <div className="h-2 w-2 rounded-full bg-white shrink-0" />
                   <span className="truncate flex-1">
                     {arg.event.title}

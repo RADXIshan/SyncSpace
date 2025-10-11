@@ -39,7 +39,7 @@ const Dashboard = ({ onSettingsClick }) => {
             <div className="relative">
               <Bell
                 size={23}
-                className="text-gray-800 hover:text-violet-400 transition-colors cursor-pointer"
+                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer"
               />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
             </div>
@@ -68,7 +68,7 @@ const Dashboard = ({ onSettingsClick }) => {
       {/* Dashboard Grid */}
       <main className="grid grid-cols-12 gap-6 auto-rows-[300px]">
         {/* Recent Activity */}
-        <section className="col-span-12 md:col-span-6 bg-gray-900/90 rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/10 flex flex-col text-white transition-all">
+        <section className="col-span-12 md:col-span-6 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/10 flex flex-col text-white transition-all">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-xl bg-violet-500/20">
               <Activity size={20} className="text-violet-400" />
@@ -131,7 +131,7 @@ const Dashboard = ({ onSettingsClick }) => {
         </section>
 
         {/* Chat Summary */}
-        <section className="col-span-12 md:col-span-6 bg-gray-900/90 rounded-3xl p-6 text-white shadow-md flex flex-col justify-between">
+        <section className="col-span-12 md:col-span-6 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-md flex flex-col justify-between">
           <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
             <div className="bg-[var(--color-accent)] rounded-xl p-2">
               <MessageSquare className="text-[var(--primary)]" size={20} />

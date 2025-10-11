@@ -34,45 +34,47 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
   const handleDelete = () => onDelete(event.event_id || event.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6">
-      <form
-        onSubmit={handleSubmit}
-        className="relative w-full max-w-lg bg-white dark:bg-gray-900/90 rounded-2xl shadow-2xl ring-1 ring-black/10 border border-secondary/30 p-8 hover:scale-[1.02] transition-transform duration-300 transform-gpu"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 sm:p-6">
+      <div className="relative w-full max-w-lg bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
+        <form
+          onSubmit={handleSubmit}
+          className="relative p-8"
+        >
         {/* Close */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer active:scale-95"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer active:scale-95 p-2 rounded-full hover:bg-white/10"
         >
-          <X size={22} />
+          <X size={20} />
         </button>
-        <h2 className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
+        <h2 className="text-3xl font-bold mb-8 gradient-text">
           Event Details
         </h2>
         {/* Title */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Event Title</label>
+        <div className="form-group">
+          <label className="form-label-dark">Event Title</label>
           {isEditing ? (
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              className="w-full px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition-all text-gray-800 dark:text-white"
+              className="input-glass"
             />
           ) : (
-            <div className="w-full px-4 py-2.5 rounded-md bg-white/10 dark:bg-gray-800/70 text-gray-800 dark:text-white">
+            <div className="w-full px-4 py-3 rounded-lg bg-white/10 text-white">
               {title || "-"}
             </div>
           )}
         </div>
         {/* Date */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Date & Time</label>
+        <div className="form-group">
+          <label className="form-label-dark">Date & Time</label>
           {isEditing ? (
             <div className="relative">
-              <Calendar className="absolute left-3 top-3.5 text-indigo-600 pointer-events-none z-10" size={18} />
+              <Calendar className="absolute left-3 top-3.5 text-purple-400 pointer-events-none z-10" size={18} />
               <DatePicker
                 selected={dateTime}
                 onChange={(date) => setDateTime(date)}
@@ -80,27 +82,29 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                 timeFormat="HH:mm"
                 timeIntervals={15}
                 dateFormat="yyyy-MM-dd h:mm aa"
-                className="w-full pl-10 px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition-all cursor-pointer text-gray-800 dark:text-white"
+                className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200 text-white placeholder-gray-300"
+                portalId="datepicker-portal"
+                withPortal
               />
             </div>
           ) : (
-            <div className="w-full px-4 py-2.5 rounded-md bg-white/10 dark:bg-gray-800/70 text-gray-800 dark:text-white">
+            <div className="w-full px-4 py-3 rounded-lg bg-white/10 text-white border border-white/20">
               {new Date(dateTime).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}
             </div>
           )}
         </div>
         {/* Description */}
-        <div className="mb-8">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
+        <div className="form-group">
+          <label className="form-label-dark">Description</label>
           {isEditing ? (
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows="3"
-              className="w-full px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] transition-all resize-none text-gray-800 dark:text-white"
+              className="input-glass resize-none"
             />
           ) : (
-            <div className="w-full px-4 py-2.5 rounded-md bg-white/10 dark:bg-gray-800/70 text-gray-800 dark:text-white whitespace-pre-wrap min-h-[84px]">
+            <div className="w-full px-4 py-3 rounded-lg bg-white/10 text-white whitespace-pre-wrap min-h-[84px]">
               {description || "-"}
             </div>
           )}
@@ -109,7 +113,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
           <button
             type="button"
             onClick={handleDelete}
-            className="px-4 py-2 rounded-lg bg-red-700 hover:bg-red-600 active:bg-red-800 transition-all text-white font-semibold shadow-md cursor-pointer active:scale-95"
+            className="px-6 py-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95"
           >
             Delete
           </button>
@@ -118,7 +122,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md hover:opacity-90 transition-all cursor-pointer font-semibold active:scale-95"
+                className="btn-primary"
               >
                 Edit
               </button>
@@ -127,7 +131,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={() => { setIsEditing(false); setTitle(event.title); setDateTime(new Date(event.start)); setDescription(event.description || ""); }}
-                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all cursor-pointer font-semibold active:scale-95"
+                className="px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95"
               >
                 Cancel
               </button>
@@ -136,7 +140,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="submit"
                 disabled={isSaving}
-                className={`px-5 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md transition-all ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90 cursor-pointer active:scale-95'}`}
+                className={`btn-primary ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -144,14 +148,15 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition cursor-pointer font-semibold"
+                className="px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-200 cursor-pointer"
               >
                 Close
               </button>
             )}
           </div>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

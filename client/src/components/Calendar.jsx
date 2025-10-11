@@ -126,79 +126,83 @@ const Calendar = () => {
   };
 
   return (
-    <div className="p-4 relative">
-      <div className="bg-white rounded-lg shadow ring-1 ring-gray-200 p-4">
-        {showInfo && (
-          <div className="flex items-start bg-violet-50 text-violet-700 rounded-md px-3 py-2 mb-4 text-sm">
-            <Info size={16} className="mr-2 mt-0.5" />
-            <div className="flex-1 space-y-1">
-              <p>Tap or click on a date to add an event.</p>
-              <p>Tap on an event to edit or delete it.</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="card p-6 animate-fadeIn">
+          {showInfo && (
+            <div className="flex items-start bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 rounded-xl px-4 py-3 mb-6 border border-blue-200 animate-slideIn">
+              <Info size={18} className="mr-3 mt-0.5 text-blue-600" />
+              <div className="flex-1 space-y-1">
+                <p className="font-medium">Tap or click on a date to add an event.</p>
+                <p className="text-sm">Tap on an event to edit or delete it.</p>
+              </div>
+              <button
+                onClick={() => setShowInfo(false)}
+                className="ml-3 hover:text-blue-900 cursor-pointer p-1 rounded-full hover:bg-blue-100 transition-colors"
+                aria-label="Dismiss info"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <button
-              onClick={() => setShowInfo(false)}
-              className="ml-2 hover:text-violet-900 cursor-pointer"
-              aria-label="Dismiss info"
-            >
-              <X size={18} />
-            </button>
+          )}
+          {showEventInputForm && (
+            <EventInputForm
+              onAddEvent={handleAddEvent}
+              initialDate={selectedDate}
+              onClose={() => setShowEventInputForm(false)}
+            />
+          )}
+          <div className="rounded-xl overflow-hidden">
+            <FullCalendar
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              headerToolbar={{
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,timeGridDay",
+              }}
+              buttonText={{
+                today: "Today",
+                month: "Month",
+                week: "Week",
+                day: "Day",
+              }}
+              eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'short' }}
+              events={events}
+              dateClick={handleDateClick}
+              editable
+              selectable
+              selectMirror
+              dayMaxEvents={3}
+              eventContent={(arg) => (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 max-w-full text-sm font-medium">
+                  <div className="h-2 w-2 rounded-full bg-white shrink-0" />
+                  <span className="truncate flex-1">
+                    {arg.event.title}
+                  </span>
+                  {arg.timeText && (
+                    <span className="ml-1 text-xs bg-white/20 px-2 py-1 rounded-full whitespace-nowrap">
+                      {arg.timeText}
+                    </span>
+                  )}
+                </div>
+              )}
+              eventClick={handleEventClick}
+              height="auto"
+              className="custom-fullcalendar"
+            />
           </div>
-        )}
-        {showEventInputForm && (
-          <EventInputForm
-            onAddEvent={handleAddEvent}
-            initialDate={selectedDate}
-            onClose={() => setShowEventInputForm(false)}
+        </div>
+
+        {selectedEvent && (
+          <EventModal
+            event={selectedEvent}
+            onClose={() => setSelectedEvent(null)}
+            onUpdate={handleUpdateEvent}
+            onDelete={handleDeleteEvent}
           />
         )}
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
-          }}
-          buttonText={{
-            today: "Today",
-            month: "Month",
-            week: "Week",
-            day: "Day",
-          }}
-          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'short' }}
-          events={events}
-          dateClick={handleDateClick}
-          editable
-          selectable
-          selectMirror
-          dayMaxEvents={3}
-            eventContent={(arg) => (
-             <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-violet-600/40 shadow-sm hover:scale-[1.03] active:scale-95 transition max-w-full text-[15px] text-black">
-               <div className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
-               <span className="truncate font-medium flex-1">
-                 {arg.event.title}
-               </span>
-               {arg.timeText && (
-                 <span className="ml-1 text-[15px] text-indigo-600 whitespace-nowrap">
-                   {arg.timeText}
-                 </span>
-               )}
-             </div>
-           )}
-          eventClick={handleEventClick}
-          height="auto"
-          className="custom-fullcalendar"
-        />
       </div>
-
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-          onUpdate={handleUpdateEvent}
-          onDelete={handleDeleteEvent}
-        />
-      )}
     </div>
   );
 }

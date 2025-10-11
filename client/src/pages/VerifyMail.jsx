@@ -101,7 +101,7 @@ const VerifyMail = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100">
+    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-200 to-purple-200">
       <div className="w-full md:w-[45%] flex items-center justify-center p-4 sm:p-6 md:p-8">
         <form
           className="bg-white rounded-3xl shadow-lg p-6 sm:p-8 w-full max-w-xs sm:max-w-sm md:max-w-md"

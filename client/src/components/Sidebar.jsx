@@ -36,71 +36,91 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
   };
 
   return (
-    <div className="h-screen w-64 bg-[var(--color-accent)] text-[var(--color-primary)] flex flex-col">
-      <div className="p-4 border-b border-gray-700">
-        <h1 className="text-2xl font-bold">SyncSpace</h1>
+    <div className="h-screen w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col shadow-2xl border-r border-slate-700/50">
+      <div className="p-6 border-b border-slate-700/50">
+        <h1 className="text-2xl font-bold gradient-text">SyncSpace</h1>
       </div>
       
-      <div className="flex-1 overflow-y-auto py-4">
-        <nav className="px-2 space-y-1">
+      <div className="flex-1 overflow-y-auto py-6">
+        <nav className="px-3 space-y-2">
           {navItems.map((item) => (
             <Link
               key={item.name}
               to={item.path}
-              className={`flex items-center px-4 py-3 rounded-md transition-colors font-semibold ${
+              className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 font-semibold group hover:bg-violet-600/20 hover:border-violet-500/30 border border-transparent ${
                 isActive(item.path)
-                  ? 'bg-[var(--color-secondary)] text-white'
-                  : 'hover:bg-gray-800'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg'
+                  : 'hover:bg-slate-700/50 text-slate-300 hover:text-violet-400'
               }`}
             >
-              <span className="mr-3">{item.icon}</span>
+              <span className={`mr-3 transition-colors duration-200 ${
+                isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-violet-400'
+              }`}>{item.icon}</span>
               <span>{item.name}</span>
             </Link>
           ))}
         </nav>
         
-        <div className="px-2 mt-6 space-y-1">
-          <button onClick={onJoinOrgClick} className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
-            <span className="mr-3"><Users size={23} /></span>
+        <div className="px-3 mt-8 space-y-2">
+          <button 
+            onClick={onJoinOrgClick} 
+            className="w-full flex items-center px-4 py-3 text-left rounded-xl hover:bg-violet-600/20 hover:border-violet-500/30 border border-transparent hover:text-violet-400 transition-all duration-200 cursor-pointer group text-slate-300 "
+          >
+            <span className="mr-3 text-slate-400 group-hover:text-violet-400 transition-colors duration-200">
+              <Users size={20} />
+            </span>
             <span className='font-semibold'>Join Organization</span>
           </button>
           
-          <button onClick={onCreateOrgClick} className="w-full flex items-center px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors cursor-pointer">
-            <span className="mr-3"><Plus size={23} /></span>
+          <button 
+            onClick={onCreateOrgClick} 
+            className="w-full flex items-center px-4 py-3 text-left rounded-xl hover:bg-violet-600/20 hover:border-violet-500/30 border border-transparent transition-all duration-200 cursor-pointer group text-slate-300 hover:text-violet-400"
+          >
+            <span className="mr-3 text-slate-400 group-hover:text-violet-400 transition-colors duration-200">
+              <Plus size={20} />
+            </span>
             <span className='font-semibold'>Create Organization</span>
           </button>
         </div>
       </div>
       
-      <div className="p-4 border-t border-gray-700">
-        <div className="flex items-center mb-4">
+      <div className="p-4 border-t border-slate-700/50">
+        <div className="flex items-center mb-6">
           {user?.photo ? (
             <img
               src={user.photo}
               alt="Profile"
-              className="h-[50px] w-[50px] rounded-full object-cover"
+              className="h-12 w-12 rounded-full object-cover border-2 border-slate-600 shadow-lg"
             />
           ) : (
-            <div className="h-[50px] w-[50px] rounded-full bg-gray-600 flex items-center justify-center">
-              <span className="text-lg font-medium">{user?.name?.charAt(0) || 'U'}</span>
+            <div className="h-12 w-12 rounded-full gradient-bg flex items-center justify-center shadow-lg">
+              <span className="text-lg font-bold text-white">{user?.name?.charAt(0) || 'U'}</span>
             </div>
           )}
-          <div className="ml-3">
-            <p className="font-semibold">{user?.name || 'User Name'}</p>
+          <div className="ml-3 flex-1">
+            <p className="font-semibold text-white text-lg">{user?.name || 'User Name'}</p>
+            <p className="text-sm text-slate-400">Online</p>
           </div>
         </div>
         
-        <div className="space-y-1">
+        <div className="space-y-2">
           <button
             onClick={onSettingsClick}
-            className={`w-full flex items-center px-4 py-2 text-left rounded-md transition-colors hover:bg-gray-800 cursor-pointer`}
+            className="w-full flex items-center px-4 py-3 text-left rounded-xl transition-all duration-200 hover:bg-violet-600/20 hover:border-violet-500/30 border border-transparent cursor-pointer group text-slate-300 hover:text-violet-400"
           >
-            <span className="mr-3 cursor-pointer"><Settings size={18} /></span>
+            <span className="mr-3 text-slate-400 group-hover:text-violet-400 transition-colors duration-200">
+              <Settings size={18} />
+            </span>
             <span className='font-semibold'>Settings</span>
           </button>
           
-          <button onClick={handleLogout} className="w-full flex items-center px-4 py-2 text-left rounded-md hover:bg-red-600 transition-colors cursor-pointer">
-            <span className="mr-3"><LogOut size={18} /></span>
+          <button 
+            onClick={handleLogout} 
+            className="w-full flex items-center px-4 py-3 text-left rounded-xl hover:bg-red-600/20 hover:border-red-500/30 border border-transparent transition-all duration-200 cursor-pointer group text-slate-300 hover:text-red-400"
+          >
+            <span className="mr-3 text-slate-400 group-hover:text-red-400 transition-colors duration-200">
+              <LogOut size={18} />
+            </span>
             <span className='font-semibold'>Logout</span>
           </button>
         </div>

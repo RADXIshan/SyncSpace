@@ -35,7 +35,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-100 to-purple-100">
+    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-200 to-purple-200">
       <div className="w-full sm:w-[80%] md:w-[45%] flex items-center justify-center p-6 sm:p-8 md:p-10">
         <form
           className="bg-white rounded-3xl shadow-lg p-8 sm:p-10 w-full max-w-md"

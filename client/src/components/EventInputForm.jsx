@@ -46,30 +46,32 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6 transition-opacity duration-300">
-      <form
-        onSubmit={handleSubmit}
-        className="relative w-full max-w-lg dark:bg-gray-900/90 backdrop-filter backdrop-blur-lg rounded-2xl shadow-2xl ring-1 ring-black/10 border border-secondary/30 p-8 transition-transform duration-300 transform-gpu hover:scale-[1.02]"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 sm:p-6 transition-opacity duration-300">
+      <div className="relative w-full max-w-lg bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
+        <form
+          onSubmit={handleSubmit}
+          className="relative p-8"
+        >
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-all active:scale-95 cursor-pointer"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer active:scale-95 p-2 rounded-full hover:bg-white/10"
         >
-          <X size={22} />
+          <X size={20} />
         </button>
 
         {/* Heading */}
-        <h2 className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
+        <h2 className="text-3xl font-bold mb-8 gradient-text">
           Add New Event
         </h2>
 
         {/* Title Input */}
-        <div className="mb-6">
+        <div className="form-group">
           <label
             htmlFor="title"
-            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+            className="form-label-dark"
           >
             Event Title
           </label>
@@ -80,18 +82,18 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
             onChange={(e) => setTitle(e.target.value)}
             required
             placeholder="Enter your event title"
-            className="w-full px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-secondary transition-all text-gray-800 dark:text-white"
+            className="input-glass"
           />
         </div>
 
         {/* Date & Time Picker */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        <div className="form-group">
+          <label className="form-label-dark">
             Date & Time
           </label>
           <div className="relative">
             <Calendar
-              className="absolute left-3 top-3.5 text-indigo-600 pointer-events-none z-10"
+              className="absolute left-3 top-3.5 text-purple-400 pointer-events-none z-10"
               size={18}
             />
             <DatePicker
@@ -102,16 +104,18 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
               timeIntervals={15}
               dateFormat="yyyy-MM-dd h:mm aa"
               placeholderText="Select date and time"
-              className="w-full pl-10 px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-secondary transition-all cursor-pointer text-gray-800 dark:text-white"
+              className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-200 text-white placeholder-gray-300"
+              portalId="datepicker-portal"
+              withPortal
             />
           </div>
         </div>
 
         {/* Description */}
-        <div className="mb-8">
+        <div className="form-group">
           <label
             htmlFor="description"
-            className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2"
+            className="form-label-dark"
           >
             Description
           </label>
@@ -121,32 +125,29 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
             onChange={(e) => setDescription(e.target.value)}
             rows="3"
             placeholder="Write a short note about the event..."
-            className="w-full px-4 py-2.5 border border-gray-400 rounded-md bg-white/70 dark:bg-gray-800/70 focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)] focus:border-secondary transition-all resize-none text-gray-800 dark:text-white"
+            className="input-glass resize-none"
           />
         </div>
 
         {/* Buttons */}
-        <div className="flex justify-end space-x-3">
+        <div className="flex flex-col sm:flex-row justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-white/10 text-gray-300 hover:bg-white/20 font-semibold transition-all cursor-pointer active:scale-95"
+            className="px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isLoading}
-            className={`px-5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold rounded-md shadow-md transition-all ${
-              isLoading
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:opacity-90 cursor-pointer active:scale-95"
-            }`}
+            className={`btn-primary ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             {isLoading ? "Adding..." : "Add Event"}
           </button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

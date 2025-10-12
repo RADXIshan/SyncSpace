@@ -5,7 +5,7 @@ import { Star } from "lucide-react";
 
 const Landing = () => {
   return (
-    <h1>Varun</h1>
+    <h1>Vrinda</h1>
   )
 }
 

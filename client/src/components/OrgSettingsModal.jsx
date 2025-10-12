@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield } from "lucide-react";
+import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield, UserMinus, Crown, Edit3 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 
@@ -29,6 +29,9 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       }
     }];
   });
+  const [members, setMembers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("");
 
@@ -45,10 +48,71 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
     return userPermissions?.settings_access || userPermissions?.roles_access || false;
   };
 
+  const canManageUsers = () => {
+    return userPermissions?.manage_users || false;
+  };
+
+  // Fetch organization members
+  const fetchMembers = async () => {
+    if (!organization?.id) return;
+    
+    setMembersLoading(true);
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/members`,
+        { withCredentials: true }
+      );
+      setMembers(response.data.members || []);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to load organization members"
+      );
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  // Update member role
+  const updateMemberRole = async (memberId, newRole) => {
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/members/${memberId}/role`,
+        { role: newRole },
+        { withCredentials: true }
+      );
+      toast.success("Member role updated successfully");
+      fetchMembers(); // Refresh members list
+      setEditingMember(null);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to update member role"
+      );
+    }
+  };
+
+  // Remove member from organization
+  const removeMember = async (memberId) => {
+    if (!confirm("Are you sure you want to remove this member from the organization?")) {
+      return;
+    }
+
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/members/${memberId}`,
+        { withCredentials: true }
+      );
+      toast.success("Member removed successfully");
+      fetchMembers(); // Refresh members list
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to remove member"
+      );
+    }
+  };
+
   // Update state when organization prop changes
   useEffect(() => {
     if (organization) {
-      console.log("Organization data in settings modal:", organization);
       setOrgName(organization.name || "");
       setAccessLevel(organization.accessLevel || "invite-only");
       
@@ -75,7 +139,12 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
         }]);
       }
     }
-  }, [organization]);
+    
+    // Fetch members when organization changes
+    if (organization?.id && activeTab === "members") {
+      fetchMembers();
+    }
+  }, [organization, activeTab]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -105,7 +174,6 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       if (onSuccess) onSuccess(response.data.organization);
       onClose();
     } catch (err) {
-      console.error("Error updating organization:", err);
       toast.error(
         err.response?.data?.message ||
           err.response?.data?.error ||
@@ -217,6 +285,9 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
     if (canEditRoles()) {
       tabs.push({ id: "roles", label: "Roles", icon: Shield });
     }
+    
+    // Members tab is always visible to organization members
+    tabs.push({ id: "members", label: "Members", icon: Users });
     
     return tabs;
   };
@@ -518,6 +589,139 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {activeTab === "members" && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                      <Users size={20} />
+                      Organization Members
+                    </h3>
+                    <div className="text-sm text-gray-400">
+                      {members.length} member{members.length !== 1 ? 's' : ''}
+                    </div>
+                  </div>
+                  
+                  {membersLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {members.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400">
+                          <Users size={48} className="mx-auto mb-4 opacity-50" />
+                          <p>No members found</p>
+                        </div>
+                      ) : (
+                        members.map((member) => (
+                          <div key={member.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium overflow-hidden">
+                                  {member.userPhoto ? (
+                                    <img
+                                      src={member.userPhoto}
+                                      alt={member.name}
+                                      className="w-full h-full object-cover rounded-full"
+                                    />
+                                  ) : (
+                                    (member.name?.[0] || member.email[0]).toUpperCase()
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="flex items-center space-x-2">
+                                    <p className="text-sm font-medium text-white">
+                                      {member.name}
+                                    </p>
+                                    {member.isCreator && (
+                                      <Crown size={14} className="text-yellow-400" />
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-400">{member.email}</p>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <span className="text-xs px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded-md text-blue-300 capitalize">
+                                      {member.role}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      Joined {new Date(member.joinedAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {canManageUsers() && !member.isCreator && (
+                                <div className="flex items-center space-x-2">
+                                  {editingMember === member.id ? (
+                                    <div className="flex items-center space-x-2">
+                                      <select
+                                        className="px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs"
+                                        defaultValue={member.role}
+                                        onChange={(e) => updateMemberRole(member.id, e.target.value)}
+                                      >
+                                        <option value="member">Member</option>
+                                        <option value="admin">Admin</option>
+                                        {roles.map((role) => (
+                                          role.name && (
+                                            <option key={role.id || role.name} value={role.name}>
+                                              {role.name}
+                                            </option>
+                                          )
+                                        ))}
+                                      </select>
+                                      <button
+                                        onClick={() => setEditingMember(null)}
+                                        className="text-gray-400 hover:text-gray-300 text-xs px-2 py-1 border border-white/20 rounded"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => setEditingMember(member.id)}
+                                        className="text-blue-400 hover:text-blue-300 transition-colors p-1"
+                                        title="Change role"
+                                      >
+                                        <Edit3 size={14} />
+                                      </button>
+                                      <button
+                                        onClick={() => removeMember(member.id)}
+                                        className="text-red-400 hover:text-red-300 transition-colors p-1"
+                                        title="Remove member"
+                                      >
+                                        <UserMinus size={14} />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                      
+                      {!canManageUsers() && members.length > 0 && (
+                        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                          <div className="flex items-start">
+                            <div className="w-6 h-6 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
+                              <Lock size={12} className="text-yellow-400" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-yellow-300 mb-1">
+                                Limited Access
+                              </p>
+                              <p className="text-xs text-yellow-400/80">
+                                You can view organization members but cannot modify their roles or remove them. Contact an administrator with 'Manage Users' permission for member management.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

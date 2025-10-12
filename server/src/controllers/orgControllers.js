@@ -228,7 +228,7 @@ export const joinOrganization = async (req, res) => {
 
     // Check if user is already a member
     const existingMember = await sql`
-      SELECT org_member_id
+      SELECT user_id
       FROM org_members
       WHERE org_id = ${organization.org_id} AND user_id = ${userId}
       LIMIT 1
@@ -551,6 +551,238 @@ export const updateOrganization = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating organization:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Get Organization Members
+export const getOrganizationMembers = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const org_id = req.params.org_id;
+
+    // Check if user is a member of the organization
+    const [member] = await sql`
+      SELECT om.role, r.manage_users
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
+      LIMIT 1
+    `;
+
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!member) {
+      return res.status(403).json({ message: "You are not a member of this organization" });
+    }
+
+    const isCreator = org?.created_by === userId;
+
+    // Get all members of the organization with user details
+    const members = await sql`
+      SELECT 
+        om.user_id,
+        om.role,
+        om.joined_at,
+        u.name,
+        u.email,
+        u.user_photo
+      FROM org_members om
+      JOIN users u ON u.user_id = om.user_id
+      WHERE om.org_id = ${org_id}
+      ORDER BY om.joined_at ASC
+    `;
+
+    res.status(200).json({
+      message: "Organization members retrieved successfully",
+      members: members.map(memberItem => ({
+        id: memberItem.user_id, // Use user_id as the member identifier
+        userId: memberItem.user_id,
+        name: memberItem.name,
+        email: memberItem.email,
+        userPhoto: memberItem.user_photo,
+        role: memberItem.role,
+        joinedAt: memberItem.joined_at,
+        isCreator: memberItem.user_id === org?.created_by
+      })),
+      canManage: isCreator || member.manage_users
+    });
+  } catch (error) {
+    console.error("Error retrieving organization members:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Update Organization Member Role
+export const updateMemberRole = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const org_id = req.params.org_id;
+    const member_id = req.params.member_id;
+    const { role } = req.body;
+
+    // Validate input
+    if (!role?.trim()) {
+      return res.status(400).json({ message: "Role is required" });
+    }
+
+    // Check if user has permission to manage users
+    const [currentMember] = await sql`
+      SELECT om.role, r.manage_users
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
+      LIMIT 1
+    `;
+
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!currentMember) {
+      return res.status(403).json({ message: "You are not a member of this organization" });
+    }
+
+    const isCreator = org?.created_by === userId;
+    const canManageUsers = isCreator || currentMember.manage_users;
+
+    if (!canManageUsers) {
+      return res.status(403).json({ message: "You don't have permission to manage users" });
+    }
+
+    // Get target member details
+    const [targetMember] = await sql`
+      SELECT user_id, role
+      FROM org_members
+      WHERE user_id = ${member_id} AND org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!targetMember) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // Prevent changing creator's role
+    if (targetMember.user_id === org?.created_by) {
+      return res.status(400).json({ message: "Cannot change the role of organization creator" });
+    }
+
+    // Check if the role exists in the organization (or is 'admin' or 'member')
+    if (!['admin', 'member'].includes(role.trim())) {
+      const [roleExists] = await sql`
+        SELECT role_id
+        FROM org_roles
+        WHERE org_id = ${org_id} AND role_name = ${role.trim()}
+        LIMIT 1
+      `;
+
+      if (!roleExists) {
+        return res.status(400).json({ message: "Invalid role. Role does not exist in this organization" });
+      }
+    }
+
+    // Update member role
+    await sql`
+      UPDATE org_members
+      SET role = ${role.trim()}
+      WHERE user_id = ${member_id} AND org_id = ${org_id}
+    `;
+
+    res.status(200).json({
+      message: "Member role updated successfully"
+    });
+  } catch (error) {
+    console.error("Error updating member role:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Remove Organization Member
+export const removeMember = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const org_id = req.params.org_id;
+    const member_id = req.params.member_id;
+
+    // Check if user has permission to manage users
+    const [currentMember] = await sql`
+      SELECT om.role, r.manage_users
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
+      LIMIT 1
+    `;
+
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!currentMember) {
+      return res.status(403).json({ message: "You are not a member of this organization" });
+    }
+
+    const isCreator = org?.created_by === userId;
+    const canManageUsers = isCreator || currentMember.manage_users;
+
+    if (!canManageUsers) {
+      return res.status(403).json({ message: "You don't have permission to manage users" });
+    }
+
+    // Get target member details
+    const [targetMember] = await sql`
+      SELECT user_id
+      FROM org_members
+      WHERE user_id = ${member_id} AND org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!targetMember) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // Prevent removing organization creator
+    if (targetMember.user_id === org?.created_by) {
+      return res.status(400).json({ message: "Cannot remove organization creator" });
+    }
+
+    // Remove member from organization
+    await sql`
+      DELETE FROM org_members
+      WHERE user_id = ${member_id} AND org_id = ${org_id}
+    `;
+
+    // Update user's org_id to NULL
+    await sql`
+      UPDATE users
+      SET org_id = NULL
+      WHERE user_id = ${targetMember.user_id}
+    `;
+
+    res.status(200).json({
+      message: "Member removed successfully"
+    });
+  } catch (error) {
+    console.error("Error removing member:", error);
     if (error.message === "No token provided" || error.message === "Invalid token") {
       return res.status(401).json({ message: error.message });
     }

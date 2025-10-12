@@ -427,23 +427,31 @@ export const logout = async (_, res) => {
 };
 
 export const authUser = async (req, res) => {
-    const authToken = req.cookies.jwt || req.body.token || req.headers.authorization?.split(" ")[1];
-    if (!authToken) {
-        return res.status(401).json({ message: "No token provided" });
-    }
+  const authToken =
+    req.cookies.jwt || req.body.token || req.headers.authorization?.split(" ")[1];
 
-    let userId;
-    try {
-        const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
-        userId = decoded.userId;
-    } catch (error) {
-        return res.status(401).json({ message: "Invalid token" });
-    }
+  if (!authToken) {
+    return res.status(401).json({ message: "No token provided" });
+  }
 
-    const [user] = await sql`SELECT user_id, name, email, user_photo FROM users WHERE user_id = ${userId}`;
-    if (!user) {
-        return res.status(401).json({ message: "User not found" });
-    }
+  let userId;
+  try {
+    const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
+    userId = decoded.userId;
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
 
-    return res.json({ user });
-}
+  // ✅ FIX: Include org_id in the user select query
+  const [user] = await sql`
+    SELECT user_id, name, email, user_photo, org_id
+    FROM users
+    WHERE user_id = ${userId}
+  `;
+
+  if (!user) {
+    return res.status(401).json({ message: "User not found" });
+  }
+
+  return res.json({ user });
+};

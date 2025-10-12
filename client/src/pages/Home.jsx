@@ -15,11 +15,11 @@ const Home = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showOrgSettings, setShowOrgSettings] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [orgSettingsData, setOrgSettingsData] = useState({ organization: null, userRole: null });
+  const [orgSettingsData, setOrgSettingsData] = useState({ organization: null, userRole: null, userPermissions: null });
   const [inviteOrganization, setInviteOrganization] = useState(null);
   
-  const handleOrgSettings = (organization, userRole) => {
-    setOrgSettingsData({ organization, userRole });
+  const handleOrgSettings = (organization, userRole, userPermissions) => {
+    setOrgSettingsData({ organization, userRole, userPermissions });
     setShowOrgSettings(true);
   };
 
@@ -57,6 +57,7 @@ const Home = () => {
           <OrgSettingsModal 
             organization={orgSettingsData.organization}
             userRole={orgSettingsData.userRole}
+            userPermissions={orgSettingsData.userPermissions}
             onClose={() => setShowOrgSettings(false)}
             onSuccess={() => {
               // Optionally refresh the organization data

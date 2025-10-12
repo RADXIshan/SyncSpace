@@ -14,6 +14,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   const [organization, setOrganization] = useState(null);
   const [loadingOrg, setLoadingOrg] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [userPermissions, setUserPermissions] = useState(null);
 
   const navItems = [
     { name: 'Dashboard', icon: <Home size={23} />, path: '/home/dashboard' },
@@ -30,6 +31,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
     if (!user?.org_id) {
       setOrganization(null);
       setUserRole(null);
+      setUserPermissions(null);
       return;
     }
 
@@ -48,10 +50,12 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
       
       setOrganization(orgRes.data.organization);
       setUserRole(roleRes.data.role);
+      setUserPermissions(roleRes.data.permissions);
     } catch (err) {
       console.error("Error fetching organization:", err);
       setOrganization(null);
       setUserRole(null);
+      setUserPermissions(null);
     } finally {
       setLoadingOrg(false);
     }
@@ -103,15 +107,15 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
       return;
     }
     if (onOrgSettingsClick) {
-      onOrgSettingsClick(organization, userRole);
+      onOrgSettingsClick(organization, userRole, userPermissions);
     }
   };
 
   // Check if user can manage organization settings
   const canManageOrg = () => {
-    if (!userRole) return false;
-    // Admin and creator can manage org settings
-    return userRole === 'admin' || organization?.createdBy === user?.user_id;
+    if (!userPermissions) return false;
+    // Users with settings_access or creators can manage org settings
+    return userPermissions.settings_access || userPermissions.manage_channels;
   };
 
   const handleLogout = async () => {

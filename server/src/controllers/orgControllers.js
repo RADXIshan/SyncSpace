@@ -339,11 +339,13 @@ export const getUserRole = async (req, res) => {
     const userId = verifyToken(req);
     const org_id = req.params.org_id;
 
-    // Get user's role in the organization
+    // Get user's role and permissions in the organization
     const [member] = await sql`
-      SELECT role
-      FROM org_members
-      WHERE org_id = ${org_id} AND user_id = ${userId}
+      SELECT om.role, r.settings_access, r.manage_channels, r.manage_users,
+             r.notes_access, r.meeting_access, r.noticeboard_access
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
       LIMIT 1
     `;
 
@@ -351,9 +353,28 @@ export const getUserRole = async (req, res) => {
       return res.status(404).json({ message: "User is not a member of this organization" });
     }
 
+    // Check if user is organization creator (has full access)
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    const isCreator = org?.created_by === userId;
+
     res.status(200).json({
       message: "User role retrieved successfully",
       role: member.role,
+      permissions: {
+        settings_access: isCreator || member.settings_access || false,
+        manage_channels: isCreator || member.manage_channels || false,
+        manage_users: isCreator || member.manage_users || false,
+        notes_access: isCreator || member.notes_access || false,
+        meeting_access: isCreator || member.meeting_access || false,
+        noticeboard_access: isCreator || member.noticeboard_access || false,
+      },
+      isCreator,
     });
   } catch (error) {
     console.error("Error retrieving user role:", error);
@@ -371,20 +392,12 @@ export const updateOrganization = async (req, res) => {
     const org_id = req.params.org_id;
     const { name, accessLevel, channels, roles } = req.body;
 
-    // Validate input
-    if (!name?.trim()) {
-      return res.status(400).json({ message: "Organization name is required" });
-    }
-
-    if (!accessLevel?.trim()) {
-      return res.status(400).json({ message: "Access level is required" });
-    }
-
-    // Check if user has permission to update organization
+    // Get user's permissions
     const [member] = await sql`
-      SELECT role
-      FROM org_members
-      WHERE org_id = ${org_id} AND user_id = ${userId}
+      SELECT om.role, r.settings_access, r.manage_channels, r.manage_users
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
       LIMIT 1
     `;
 
@@ -395,20 +408,64 @@ export const updateOrganization = async (req, res) => {
       LIMIT 1
     `;
 
-    if (!member || (member.role !== 'admin' && org?.created_by !== userId)) {
-      return res.status(403).json({ message: "You don't have permission to update organization settings" });
+    if (!member) {
+      return res.status(403).json({ message: "You are not a member of this organization" });
     }
 
-    // Update organization basic info
-    const [updatedOrg] = await sql`
-      UPDATE organisations
-      SET org_name = ${name.trim()}, access_level = ${accessLevel.trim()}
-      WHERE org_id = ${org_id}
-      RETURNING org_id, org_name, access_level, org_code
-    `;
+    const isCreator = org?.created_by === userId;
+    const hasSettingsAccess = isCreator || member.settings_access;
+    const hasChannelAccess = isCreator || member.manage_channels;
 
-    // Update channels if provided
-    if (channels && Array.isArray(channels)) {
+    // Determine what user is trying to update
+    const updatingBasicSettings = name || accessLevel;
+    const updatingRoles = roles && roles.length > 0;
+    const updatingChannels = channels && channels.length > 0;
+
+    // Permission checks
+    if ((updatingBasicSettings || updatingRoles) && !hasSettingsAccess) {
+      return res.status(403).json({ 
+        message: "You need 'Settings Access' permission to update organization settings and roles" 
+      });
+    }
+
+    if (updatingChannels && !hasChannelAccess && !hasSettingsAccess) {
+      return res.status(403).json({ 
+        message: "You need 'Manage Channels' or 'Settings Access' permission to update channels" 
+      });
+    }
+
+    // Validate input only for fields being updated
+    if (updatingBasicSettings) {
+      if (name && !name.trim()) {
+        return res.status(400).json({ message: "Organization name is required" });
+      }
+      if (accessLevel && !accessLevel.trim()) {
+        return res.status(400).json({ message: "Access level is required" });
+      }
+    }
+
+    // Update organization basic info (only if user has settings access)
+    let updatedOrg;
+    if (hasSettingsAccess && updatingBasicSettings) {
+      [updatedOrg] = await sql`
+        UPDATE organisations
+        SET org_name = ${name?.trim() || sql`org_name`}, 
+            access_level = ${accessLevel?.trim() || sql`access_level`}
+        WHERE org_id = ${org_id}
+        RETURNING org_id, org_name, access_level, org_code
+      `;
+    } else {
+      // Just get current organization data if not updating basic settings
+      [updatedOrg] = await sql`
+        SELECT org_id, org_name, access_level, org_code
+        FROM organisations
+        WHERE org_id = ${org_id}
+        LIMIT 1
+      `;
+    }
+
+    // Update channels if provided and user has permission
+    if (updatingChannels && (hasChannelAccess || hasSettingsAccess)) {
       // Delete existing channels
       await sql`DELETE FROM org_channels WHERE org_id = ${org_id}`;
       
@@ -432,8 +489,8 @@ export const updateOrganization = async (req, res) => {
       }
     }
 
-    // Update roles if provided
-    if (roles && Array.isArray(roles)) {
+    // Update roles if provided and user has settings access
+    if (updatingRoles && hasSettingsAccess) {
       // Delete existing roles
       await sql`DELETE FROM org_roles WHERE org_id = ${org_id}`;
       

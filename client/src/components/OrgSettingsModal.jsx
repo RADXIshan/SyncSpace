@@ -3,7 +3,7 @@ import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield } from "lucide-
 import { toast } from "react-hot-toast";
 import axios from "axios";
 
-const OrgSettingsModal = ({ organization, userRole, onClose, onSuccess }) => {
+const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, onSuccess }) => {
   const [orgName, setOrgName] = useState(organization?.name || "");
   const [accessLevel, setAccessLevel] = useState(organization?.accessLevel || "invite-only");
   const [channels, setChannels] = useState(() => {
@@ -29,7 +29,20 @@ const OrgSettingsModal = ({ organization, userRole, onClose, onSuccess }) => {
     }];
   });
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState("");
+
+  // Permission check functions
+  const canEditBasicSettings = () => {
+    return userPermissions?.settings_access || false;
+  };
+
+  const canEditChannels = () => {
+    return userPermissions?.settings_access || userPermissions?.manage_channels || false;
+  };
+
+  const canEditRoles = () => {
+    return userPermissions?.settings_access || false;
+  };
 
   // Update state when organization prop changes
   useEffect(() => {
@@ -185,11 +198,33 @@ const OrgSettingsModal = ({ organization, userRole, onClose, onSuccess }) => {
     { key: "noticeboard_access", label: "Noticeboard Access" },
   ];
 
-  const tabs = [
-    { id: "basic", label: "Basic Settings", icon: Lock },
-    { id: "channels", label: "Channels", icon: Hash },
-    { id: "roles", label: "Roles", icon: Shield },
-  ];
+  // Determine available tabs based on permissions
+  const getAvailableTabs = () => {
+    const tabs = [];
+    
+    if (canEditBasicSettings()) {
+      tabs.push({ id: "basic", label: "Basic Settings", icon: Lock });
+    }
+    
+    if (canEditChannels()) {
+      tabs.push({ id: "channels", label: "Channels", icon: Hash });
+    }
+    
+    if (canEditRoles()) {
+      tabs.push({ id: "roles", label: "Roles", icon: Shield });
+    }
+    
+    return tabs;
+  };
+
+  const availableTabs = getAvailableTabs();
+
+  // Set default active tab to first available tab
+  useEffect(() => {
+    if (availableTabs.length > 0 && !activeTab) {
+      setActiveTab(availableTabs[0].id);
+    }
+  }, [availableTabs, activeTab]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
@@ -217,30 +252,49 @@ const OrgSettingsModal = ({ organization, userRole, onClose, onSuccess }) => {
             </div>
 
             {/* Tabs */}
-            <div className="flex space-x-1 mb-8">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                      activeTab === tab.id
-                        ? "bg-violet-600/30 text-violet-300 border border-violet-500/30"
-                        : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300"
-                    }`}
-                  >
-                    <Icon size={16} className="mr-2" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
+            {availableTabs.length > 1 && (
+              <div className="flex space-x-1 mb-8">
+                {availableTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                        activeTab === tab.id
+                          ? "bg-violet-600/30 text-violet-300 border border-violet-500/30"
+                          : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300"
+                      }`}
+                    >
+                      <Icon size={16} className="mr-2" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Tab Content */}
             <div className="space-y-6">
-              {activeTab === "basic" && (
+              {availableTabs.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-red-300 mb-2">
+                      Access Denied
+                    </h3>
+                    <p className="text-red-400 text-sm">
+                      You don't have permission to manage organization settings.
+                      Contact an administrator for access.
+                    </p>
+                    <p className="text-red-400/80 text-xs mt-2">
+                      Your current role: <span className="capitalize font-medium">{userRole}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "basic" && canEditBasicSettings() && (
                 <div className="space-y-6">
                   {/* Organization Name */}
                   <div>
@@ -333,7 +387,7 @@ const OrgSettingsModal = ({ organization, userRole, onClose, onSuccess }) => {
                 </div>
               )}
 
-              {activeTab === "channels" && (
+              {activeTab === "channels" && canEditChannels() && (
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xl font-semibold text-white flex items-center gap-2">
@@ -395,7 +449,7 @@ const OrgSettingsModal = ({ organization, userRole, onClose, onSuccess }) => {
                 </div>
               )}
 
-              {activeTab === "roles" && (
+              {activeTab === "roles" && canEditRoles() && (
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xl font-semibold text-white flex items-center gap-2">

@@ -1,15 +1,19 @@
 import { Link, useLocation } from 'react-router';
-import { Home, Calendar, Users, Settings, LogOut , Plus} from 'lucide-react';
+import { Home, Calendar, Users, Settings, LogOut, UserPlus, LogIn, Cog, Hash } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { useState, useEffect } from 'react';
 
-const Sidebar = ({ onSettingsClick }) => {
+const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   const location = useLocation();
   const path = location.pathname;
   const { user, checkAuth, logout } = useAuth();
   const navigate = useNavigate();
+  const [organization, setOrganization] = useState(null);
+  const [loadingOrg, setLoadingOrg] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
   const navItems = [
     { name: 'Dashboard', icon: <Home size={23} />, path: '/home/dashboard' },
@@ -21,7 +25,96 @@ const Sidebar = ({ onSettingsClick }) => {
   };
 
 
- const handleLogout = async () => {
+  // Fetch organization data
+  const fetchOrganization = async () => {
+    if (!user?.org_id) {
+      setOrganization(null);
+      setUserRole(null);
+      return;
+    }
+
+    try {
+      setLoadingOrg(true);
+      const [orgRes, roleRes] = await Promise.all([
+        axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}`,
+          { withCredentials: true }
+        ),
+        axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/role`,
+          { withCredentials: true }
+        )
+      ]);
+      
+      setOrganization(orgRes.data.organization);
+      setUserRole(roleRes.data.role);
+    } catch (err) {
+      console.error("Error fetching organization:", err);
+      setOrganization(null);
+      setUserRole(null);
+    } finally {
+      setLoadingOrg(false);
+    }
+  };
+
+  // Leave organization
+  const handleLeaveOrg = async () => {
+    if (!organization) return;
+    
+    const confirmLeave = window.confirm(
+      `Are you sure you want to leave ${organization.name}? This action cannot be undone.`
+    );
+    
+    if (!confirmLeave) return;
+
+    let toastId;
+    try {
+      toastId = toast.loading("Leaving organization...");
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/leave`,
+        {},
+        { withCredentials: true }
+      );
+      
+      toast.success("Left organization successfully", { id: toastId });
+      setOrganization(null);
+      await checkAuth(); // Refresh user data
+    } catch (err) {
+      console.error("Error leaving organization:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to leave organization",
+        { id: toastId }
+      );
+    }
+  };
+
+  // Handle invite modal
+  const handleInvite = () => {
+    if (!organization) return;
+    if (onInviteClick) {
+      onInviteClick(organization);
+    }
+  };
+
+  // Handle organization settings
+  const handleOrgSettings = () => {
+    if (!canManageOrg()) {
+      toast.error("You don't have permission to manage organization settings");
+      return;
+    }
+    if (onOrgSettingsClick) {
+      onOrgSettingsClick(organization, userRole);
+    }
+  };
+
+  // Check if user can manage organization settings
+  const canManageOrg = () => {
+    if (!userRole) return false;
+    // Admin and creator can manage org settings
+    return userRole === 'admin' || organization?.createdBy === user?.user_id;
+  };
+
+  const handleLogout = async () => {
     let toastId;
     try {
       toastId = toast.loading("Logging out...");
@@ -34,6 +127,11 @@ const Sidebar = ({ onSettingsClick }) => {
       toast.error(err?.response?.data?.message || "Failed to log out", { id: toastId });
     }
   };
+
+  // Fetch organization when user or org_id changes
+  useEffect(() => {
+    fetchOrganization();
+  }, [user?.org_id]);
 
   return (
     <div className="h-screen w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col shadow-2xl border-r border-slate-700/50">
@@ -60,6 +158,76 @@ const Sidebar = ({ onSettingsClick }) => {
             </Link>
           ))}
         </nav>
+
+        {/* Organization Section */}
+        {organization && (
+          <div className="px-3 mt-3">
+            <div className="bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border border-violet-500/30 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-violet-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
+                    <Users size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white text-sm truncate max-w-[120px]">
+                      {organization.name}
+                    </h3>
+                    <p className="text-xs text-slate-400">Organization</p>
+                  </div>
+                </div>
+                {canManageOrg() && (
+                  <button
+                    onClick={handleOrgSettings}
+                    className="p-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg transition-all duration-200 text-blue-300 hover:text-blue-200"
+                    title="Organization settings"
+                  >
+                    <Cog size={14} />
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleInvite}
+                  className="flex-1 flex items-center justify-center px-3 py-2 bg-violet-600/30 hover:bg-violet-600/40 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs font-medium"
+                  title="Copy invite code"
+                >
+                  <UserPlus size={14} className="mr-1" />
+                  Invite
+                </button>
+                <button
+                  onClick={handleLeaveOrg}
+                  className="flex-1 flex items-center justify-center px-3 py-2 bg-red-600/30 hover:bg-red-600/40 border border-red-500/30 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-xs font-medium"
+                  title="Leave organization"
+                >
+                  <LogIn size={14} className="mr-1 rotate-180" />
+                  Leave
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Channels Section */}
+        {organization?.channels && organization.channels.length > 0 && (
+          <div className="px-3 mt-4">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-2 mb-3">
+              Channels
+            </h3>
+            <div className="space-y-1">
+              {organization.channels.map((channel) => (
+                <div
+                  key={channel.id}
+                  className="flex items-center px-3 py-2 rounded-lg transition-all duration-200 hover:bg-slate-700/30 text-slate-300 hover:text-violet-400 cursor-pointer group"
+                  title={channel.description || channel.name}
+                >
+                  <Hash size={16} className="mr-2 text-slate-400 group-hover:text-violet-400 transition-colors" />
+                  <span className="text-sm font-medium truncate">{channel.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="p-4 border-t border-slate-700/50">
@@ -100,7 +268,7 @@ const Sidebar = ({ onSettingsClick }) => {
             className="w-full flex items-center px-4 py-3 text-left rounded-xl hover:bg-red-600/20 hover:border-red-500/30 border border-transparent transition-all duration-200 cursor-pointer group text-slate-300 hover:text-red-400"
           >
             <span className="mr-3 text-slate-400 group-hover:text-red-400 transition-colors duration-200">
-              <LogOut size={18} />
+              <LogOut size={18} className="rotate-180" />
             </span>
             <span className='font-semibold'>Logout</span>
           </button>

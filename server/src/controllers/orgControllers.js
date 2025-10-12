@@ -132,6 +132,7 @@ export const getOrganization = async (req, res) => {
   try {
     const org_id = req.params.org_id;
 
+    // Get organization details
     const org = await sql`
       SELECT org_id, org_name, access_level, org_code, created_by
       FROM organisations
@@ -145,6 +146,23 @@ export const getOrganization = async (req, res) => {
 
     const organization = org[0];
 
+    // Get organization channels
+    const channels = await sql`
+      SELECT channel_id, channel_name, channel_description
+      FROM org_channels
+      WHERE org_id = ${org_id}
+      ORDER BY channel_name
+    `;
+
+    // Get organization roles
+    const roles = await sql`
+      SELECT role_id, role_name, manage_channels, manage_users,
+             settings_access, notes_access, meeting_access, noticeboard_access
+      FROM org_roles
+      WHERE org_id = ${org_id}
+      ORDER BY role_name
+    `;
+
     res.status(200).json({
       message: "Organization retrieved successfully",
       organization: {
@@ -152,11 +170,461 @@ export const getOrganization = async (req, res) => {
         name: organization.org_name,
         accessLevel: organization.access_level,
         code: organization.org_code,
+        createdBy: organization.created_by,
         createdAt: organization.created_at,
+        channels: channels.map(ch => ({
+          id: ch.channel_id,
+          name: ch.channel_name,
+          description: ch.channel_description,
+        })),
+        roles: roles.map(role => ({
+          id: role.role_id,
+          name: role.role_name,
+          permissions: {
+            manage_channels: role.manage_channels,
+            manage_users: role.manage_users,
+            settings_access: role.settings_access,
+            notes_access: role.notes_access,
+            meeting_access: role.meeting_access,
+            noticeboard_access: role.noticeboard_access,
+          },
+        })),
       },
     });
   } catch (error) {
     console.error("Error retrieving organization:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Join Organization
+export const joinOrganization = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const { code } = req.body;
+
+    // Validation
+    if (!code?.trim()) {
+      return res.status(400).json({ message: "Organization code is required" });
+    }
+
+    // Find organization by code
+    const org = await sql`
+      SELECT org_id, org_name, access_level, org_code, created_by
+      FROM organisations
+      WHERE org_code = ${code.trim().toUpperCase()}
+      LIMIT 1
+    `;
+
+    if (org.length === 0) {
+      return res.status(404).json({ message: "Invalid organization code" });
+    }
+
+    const organization = org[0];
+
+    // Check if user is already a member
+    const existingMember = await sql`
+      SELECT org_member_id
+      FROM org_members
+      WHERE org_id = ${organization.org_id} AND user_id = ${userId}
+      LIMIT 1
+    `;
+
+    if (existingMember.length > 0) {
+      return res.status(400).json({ message: "You are already a member of this organization" });
+    }
+
+    // Check if user is already in another organization
+    const [currentUser] = await sql`
+      SELECT org_id
+      FROM users
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `;
+
+    if (currentUser?.org_id) {
+      return res.status(400).json({ message: "You are already a member of another organization. Please leave your current organization first." });
+    }
+
+    // Add user to organization members
+    await sql`
+      INSERT INTO org_members (org_id, user_id, role, joined_at)
+      VALUES (${organization.org_id}, ${userId}, 'member', NOW())
+    `;
+
+    // Update user's org_id
+    await sql`
+      UPDATE users
+      SET org_id = ${organization.org_id}
+      WHERE user_id = ${userId}
+    `;
+
+    res.status(200).json({
+      message: "Successfully joined organization",
+      organization: {
+        id: organization.org_id,
+        name: organization.org_name,
+        accessLevel: organization.access_level,
+        code: organization.org_code,
+      },
+    });
+  } catch (error) {
+    console.error("Error joining organization:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Leave Organization
+export const leaveOrganization = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+
+    // Get user's current organization
+    const [currentUser] = await sql`
+      SELECT org_id
+      FROM users
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `;
+
+    if (!currentUser?.org_id) {
+      return res.status(400).json({ message: "You are not a member of any organization" });
+    }
+
+    // Check if user is the creator/admin of the organization
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${currentUser.org_id}
+      LIMIT 1
+    `;
+
+    if (org?.created_by === userId) {
+      return res.status(400).json({ message: "Organization creator cannot leave. Please transfer ownership or delete the organization." });
+    }
+
+    // Remove user from org_members
+    await sql`
+      DELETE FROM org_members
+      WHERE org_id = ${currentUser.org_id} AND user_id = ${userId}
+    `;
+
+    // Update user's org_id to NULL
+    await sql`
+      UPDATE users
+      SET org_id = NULL
+      WHERE user_id = ${userId}
+    `;
+
+    res.status(200).json({
+      message: "Successfully left organization",
+    });
+  } catch (error) {
+    console.error("Error leaving organization:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Get User Role in Organization
+export const getUserRole = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const org_id = req.params.org_id;
+
+    // Get user's role in the organization
+    const [member] = await sql`
+      SELECT role
+      FROM org_members
+      WHERE org_id = ${org_id} AND user_id = ${userId}
+      LIMIT 1
+    `;
+
+    if (!member) {
+      return res.status(404).json({ message: "User is not a member of this organization" });
+    }
+
+    res.status(200).json({
+      message: "User role retrieved successfully",
+      role: member.role,
+    });
+  } catch (error) {
+    console.error("Error retrieving user role:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Update Organization Settings
+export const updateOrganization = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const org_id = req.params.org_id;
+    const { name, accessLevel, channels, roles } = req.body;
+
+    // Validate input
+    if (!name?.trim()) {
+      return res.status(400).json({ message: "Organization name is required" });
+    }
+
+    if (!accessLevel?.trim()) {
+      return res.status(400).json({ message: "Access level is required" });
+    }
+
+    // Check if user has permission to update organization
+    const [member] = await sql`
+      SELECT role
+      FROM org_members
+      WHERE org_id = ${org_id} AND user_id = ${userId}
+      LIMIT 1
+    `;
+
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!member || (member.role !== 'admin' && org?.created_by !== userId)) {
+      return res.status(403).json({ message: "You don't have permission to update organization settings" });
+    }
+
+    // Update organization basic info
+    const [updatedOrg] = await sql`
+      UPDATE organisations
+      SET org_name = ${name.trim()}, access_level = ${accessLevel.trim()}
+      WHERE org_id = ${org_id}
+      RETURNING org_id, org_name, access_level, org_code
+    `;
+
+    // Update channels if provided
+    if (channels && Array.isArray(channels)) {
+      // Delete existing channels
+      await sql`DELETE FROM org_channels WHERE org_id = ${org_id}`;
+      
+      // Add new channels
+      const channelNames = new Set();
+      for (const channel of channels) {
+        if (channel.name?.trim()) {
+          const channelName = channel.name.trim().toLowerCase();
+          if (channelNames.has(channelName)) {
+            return res.status(400).json({
+              message: `Duplicate channel name: ${channel.name.trim()}`,
+            });
+          }
+          channelNames.add(channelName);
+
+          await sql`
+            INSERT INTO org_channels (org_id, channel_name, channel_description)
+            VALUES (${org_id}, ${channel.name.trim()}, ${channel.description || ""})
+          `;
+        }
+      }
+    }
+
+    // Update roles if provided
+    if (roles && Array.isArray(roles)) {
+      // Delete existing roles
+      await sql`DELETE FROM org_roles WHERE org_id = ${org_id}`;
+      
+      // Add updated roles
+      const roleNames = new Set();
+      for (const role of roles) {
+        if (role.name?.trim()) {
+          const roleName = role.name.trim().toLowerCase();
+          if (roleNames.has(roleName)) {
+            return res.status(400).json({
+              message: `Duplicate role name: ${role.name.trim()}`,
+            });
+          }
+          roleNames.add(roleName);
+
+          await sql`
+            INSERT INTO org_roles (
+              org_id, role_name,
+              manage_channels, manage_users,
+              settings_access, notes_access, meeting_access, noticeboard_access,
+              created_by
+            )
+            VALUES (
+              ${org_id},
+              ${role.name.trim()},
+              ${role.permissions?.manage_channels || false},
+              ${role.permissions?.manage_users || false},
+              ${role.permissions?.settings_access || false},
+              ${role.permissions?.notes_access || false},
+              ${role.permissions?.meeting_access || false},
+              ${role.permissions?.noticeboard_access || false},
+              ${userId}
+            )
+          `;
+        }
+      }
+    }
+
+    res.status(200).json({
+      message: "Organization updated successfully",
+      organization: {
+        id: updatedOrg.org_id,
+        name: updatedOrg.org_name,
+        accessLevel: updatedOrg.access_level,
+        code: updatedOrg.org_code,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating organization:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Send Email Invitations
+export const sendInvitations = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const org_id = req.params.org_id;
+    const { emails, message, organizationName, inviteCode } = req.body;
+
+    // Validate input
+    if (!emails || !Array.isArray(emails) || emails.length === 0) {
+      return res.status(400).json({ message: "At least one email address is required" });
+    }
+
+    if (!message?.trim()) {
+      return res.status(400).json({ message: "Message is required" });
+    }
+
+    // Check if user has permission to send invites
+    const [member] = await sql`
+      SELECT role
+      FROM org_members
+      WHERE org_id = ${org_id} AND user_id = ${userId}
+      LIMIT 1
+    `;
+
+    const [org] = await sql`
+      SELECT created_by, access_level
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!member) {
+      return res.status(403).json({ message: "You are not a member of this organization" });
+    }
+
+    // Check access level permissions
+    if (org?.access_level === 'admin-only' && member.role !== 'admin' && org?.created_by !== userId) {
+      return res.status(403).json({ message: "Only admins can send invitations in this organization" });
+    }
+
+    // Validate email formats
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of emails) {
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ message: `Invalid email format: ${email}` });
+      }
+    }
+
+    // Import nodemailer and email template
+    const nodemailer = await import("nodemailer");
+    
+    const transporter = nodemailer.default.createTransporter({
+      service: 'gmail',
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.APP_PASSWORD,
+      },
+    });
+
+    // Generate email content
+    const generateInviteEmail = (organizationName, message, inviteCode) => {
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Invitation to join ${organizationName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .invite-code { background: #667eea; color: white; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 3px; border-radius: 5px; margin: 20px 0; }
+            .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🚀 You're Invited!</h1>
+              <p>Join ${organizationName} on SyncSpace</p>
+            </div>
+            <div class="content">
+              <p>Hello!</p>
+              <p>${message}</p>
+              <div class="invite-code">
+                ${inviteCode}
+              </div>
+              <p><strong>How to join:</strong></p>
+              <ol>
+                <li>Go to SyncSpace</li>
+                <li>Click "Join Organization"</li>
+                <li>Enter the invite code above</li>
+              </ol>
+              <p>We're excited to have you join our team!</p>
+            </div>
+            <div class="footer">
+              <p>This invitation was sent from SyncSpace</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+    };
+
+    // Send emails
+    const emailPromises = emails.map(email => {
+      const mailOptions = {
+        from: {
+          name: "SyncSpace",
+          address: process.env.EMAIL
+        },
+        to: email.trim(),
+        subject: `Invitation to join ${organizationName} on SyncSpace`,
+        html: generateInviteEmail(organizationName, message, inviteCode),
+      };
+
+      return transporter.sendMail(mailOptions);
+    });
+
+    await Promise.all(emailPromises);
+
+    res.status(200).json({
+      message: emails.length === 1 
+        ? `Invitation sent successfully to ${emails[0]}` 
+        : `Invitations sent successfully to ${emails.length} recipient(s)`,
+      sentTo: emails,
+    });
+  } catch (error) {
+    console.error("Error sending invitations:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Failed to send invitations" });
   }
 };

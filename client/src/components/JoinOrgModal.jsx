@@ -16,7 +16,6 @@ const JoinOrgModal = ({ onClose, onSuccess }) => {
     try {
       toastId = toast.loading("Joining organisation...");
 
-      // Call the real API
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/join`, 

@@ -6,18 +6,34 @@ import Calendar from '../components/Calendar'
 import Settings from '../components/Settings'
 import JoinOrgModal from '../components/JoinOrgModal'
 import CreateOrgModal from '../components/CreateOrgModal'
+import OrgSettingsModal from '../components/OrgSettingsModal'
+import InviteModal from '../components/InviteModal'
 
 const Home = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showOrgSettings, setShowOrgSettings] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [orgSettingsData, setOrgSettingsData] = useState({ organization: null, userRole: null });
+  const [inviteOrganization, setInviteOrganization] = useState(null);
+  
+  const handleOrgSettings = (organization, userRole) => {
+    setOrgSettingsData({ organization, userRole });
+    setShowOrgSettings(true);
+  };
+
+  const handleInvite = (organization) => {
+    setInviteOrganization(organization);
+    setShowInviteModal(true);
+  };
   
   return (
     <div className="flex h-screen bg-[var(--color-primary)]">
       <Sidebar 
         onSettingsClick={() => setShowSettings(true)} 
-        onJoinOrgClick={() => setShowJoinModal(true)} 
-        onCreateOrgClick={() => setShowCreateModal(true)} 
+        onOrgSettingsClick={handleOrgSettings}
+        onInviteClick={handleInvite}
       />
       <main className="flex-1 overflow-y-auto">
         <Routes>
@@ -36,6 +52,23 @@ const Home = () => {
         )}
         {showCreateModal && (
           <CreateOrgModal onClose={() => setShowCreateModal(false)} />
+        )}
+        {showOrgSettings && (
+          <OrgSettingsModal 
+            organization={orgSettingsData.organization}
+            userRole={orgSettingsData.userRole}
+            onClose={() => setShowOrgSettings(false)}
+            onSuccess={() => {
+              // Optionally refresh the organization data
+              setShowOrgSettings(false);
+            }}
+          />
+        )}
+        {showInviteModal && (
+          <InviteModal 
+            organization={inviteOrganization}
+            onClose={() => setShowInviteModal(false)}
+          />
         )}
       </main>
     </div>

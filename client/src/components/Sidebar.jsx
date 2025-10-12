@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
+const Sidebar = ({ onSettingsClick }) => {
   const location = useLocation();
   const path = location.pathname;
   const { user, checkAuth, logout } = useAuth();
@@ -60,28 +60,6 @@ const Sidebar = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
             </Link>
           ))}
         </nav>
-        
-        <div className="px-3 mt-8 space-y-2">
-          <button 
-            onClick={onJoinOrgClick} 
-            className="w-full flex items-center px-4 py-3 text-left rounded-xl hover:bg-violet-600/20 hover:border-violet-500/30 border border-transparent hover:text-violet-400 transition-all duration-200 cursor-pointer group text-slate-300 "
-          >
-            <span className="mr-3 text-slate-400 group-hover:text-violet-400 transition-colors duration-200">
-              <Users size={20} />
-            </span>
-            <span className='font-semibold'>Join Organization</span>
-          </button>
-          
-          <button 
-            onClick={onCreateOrgClick} 
-            className="w-full flex items-center px-4 py-3 text-left rounded-xl hover:bg-violet-600/20 hover:border-violet-500/30 border border-transparent transition-all duration-200 cursor-pointer group text-slate-300 hover:text-violet-400"
-          >
-            <span className="mr-3 text-slate-400 group-hover:text-violet-400 transition-colors duration-200">
-              <Plus size={20} />
-            </span>
-            <span className='font-semibold'>Create Organization</span>
-          </button>
-        </div>
       </div>
       
       <div className="p-4 border-t border-slate-700/50">

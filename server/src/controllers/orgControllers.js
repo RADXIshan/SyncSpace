@@ -81,7 +81,7 @@ export const createOrganization = async (req, res) => {
             INSERT INTO org_roles (
               org_id, role_name,
               manage_channels, manage_users,
-              settings_access, notes_access, meeting_access, noticeboard_access,
+              settings_access, notes_access, meeting_access, noticeboard_access, roles_access,
               created_by
             )
             VALUES (
@@ -93,6 +93,7 @@ export const createOrganization = async (req, res) => {
               ${role.permissions?.notes_access || false},
               ${role.permissions?.meeting_access || false},
               ${role.permissions?.noticeboard_access || false},
+              ${role.permissions?.roles_access || false},
               ${userId}
             )
           `;
@@ -159,7 +160,7 @@ export const getOrganization = async (req, res) => {
     // Get organization roles
     const roles = await sql`
       SELECT role_id, role_name, manage_channels, manage_users,
-             settings_access, notes_access, meeting_access, noticeboard_access
+             settings_access, notes_access, meeting_access, noticeboard_access, roles_access
       FROM org_roles
       WHERE org_id = ${org_id}
       ORDER BY role_name
@@ -189,6 +190,7 @@ export const getOrganization = async (req, res) => {
             notes_access: role.notes_access,
             meeting_access: role.meeting_access,
             noticeboard_access: role.noticeboard_access,
+            roles_access: role.roles_access,
           },
         })),
       },
@@ -342,7 +344,7 @@ export const getUserRole = async (req, res) => {
     // Get user's role and permissions in the organization
     const [member] = await sql`
       SELECT om.role, r.settings_access, r.manage_channels, r.manage_users,
-             r.notes_access, r.meeting_access, r.noticeboard_access
+             r.notes_access, r.meeting_access, r.noticeboard_access, r.roles_access
       FROM org_members om
       LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
       WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
@@ -373,6 +375,7 @@ export const getUserRole = async (req, res) => {
         notes_access: isCreator || member.notes_access || false,
         meeting_access: isCreator || member.meeting_access || false,
         noticeboard_access: isCreator || member.noticeboard_access || false,
+        roles_access: isCreator || member.roles_access || false,
       },
       isCreator,
     });
@@ -394,7 +397,7 @@ export const updateOrganization = async (req, res) => {
 
     // Get user's permissions
     const [member] = await sql`
-      SELECT om.role, r.settings_access, r.manage_channels, r.manage_users
+      SELECT om.role, r.settings_access, r.manage_channels, r.manage_users, r.roles_access
       FROM org_members om
       LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
       WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
@@ -415,6 +418,7 @@ export const updateOrganization = async (req, res) => {
     const isCreator = org?.created_by === userId;
     const hasSettingsAccess = isCreator || member.settings_access;
     const hasChannelAccess = isCreator || member.manage_channels;
+    const hasRolesAccess = isCreator || member.roles_access;
 
     // Determine what user is trying to update
     const updatingBasicSettings = name || accessLevel;
@@ -422,9 +426,15 @@ export const updateOrganization = async (req, res) => {
     const updatingChannels = channels && channels.length > 0;
 
     // Permission checks
-    if ((updatingBasicSettings || updatingRoles) && !hasSettingsAccess) {
+    if (updatingBasicSettings && !hasSettingsAccess) {
       return res.status(403).json({ 
-        message: "You need 'Settings Access' permission to update organization settings and roles" 
+        message: "You need 'Settings Access' permission to update organization settings" 
+      });
+    }
+
+    if (updatingRoles && !hasSettingsAccess && !hasRolesAccess) {
+      return res.status(403).json({ 
+        message: "You need 'Settings Access' or 'Roles Access' permission to update roles" 
       });
     }
 
@@ -489,8 +499,8 @@ export const updateOrganization = async (req, res) => {
       }
     }
 
-    // Update roles if provided and user has settings access
-    if (updatingRoles && hasSettingsAccess) {
+    // Update roles if provided and user has settings or roles access
+    if (updatingRoles && (hasSettingsAccess || hasRolesAccess)) {
       // Delete existing roles
       await sql`DELETE FROM org_roles WHERE org_id = ${org_id}`;
       
@@ -510,7 +520,7 @@ export const updateOrganization = async (req, res) => {
             INSERT INTO org_roles (
               org_id, role_name,
               manage_channels, manage_users,
-              settings_access, notes_access, meeting_access, noticeboard_access,
+              settings_access, notes_access, meeting_access, noticeboard_access, roles_access,
               created_by
             )
             VALUES (
@@ -522,6 +532,7 @@ export const updateOrganization = async (req, res) => {
               ${role.permissions?.notes_access || false},
               ${role.permissions?.meeting_access || false},
               ${role.permissions?.noticeboard_access || false},
+              ${role.permissions?.roles_access || false},
               ${userId}
             )
           `;

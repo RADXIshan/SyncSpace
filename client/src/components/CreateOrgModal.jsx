@@ -26,6 +26,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
         manage_meetings: true,
         manage_notes: true,
         manage_noticeboard: true,
+        roles_access: true,
       },
       accessibleChannels: [],
     },
@@ -38,6 +39,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
         manage_meetings: false,
         manage_notes: false,
         manage_noticeboard: false,
+        roles_access: false,
       },
       accessibleChannels: [],
     },
@@ -76,6 +78,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
           manage_meetings: false,
           manage_notes: false,
           manage_noticeboard: false,
+          roles_access: false,
         },
         accessibleChannels: [],
       },
@@ -121,6 +124,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
     { key: "manage_meetings", label: "Manage Meetings" },
     { key: "manage_notes", label: "Manage Notes" },
     { key: "manage_noticeboard", label: "Manage Noticeboard" },
+    { key: "roles_access", label: "Manage Roles" },
   ];
 
   // --- Submit Handler ---
@@ -166,6 +170,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
             notes_access: role.permissions.manage_notes,
             meeting_access: role.permissions.manage_meetings,
             noticeboard_access: role.permissions.manage_noticeboard,
+            roles_access: role.permissions.roles_access,
           },
         }))
       };

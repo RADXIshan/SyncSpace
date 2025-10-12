@@ -25,6 +25,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
         notes_access: false,
         meeting_access: false,
         noticeboard_access: false,
+        roles_access: false,
       }
     }];
   });
@@ -41,7 +42,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   };
 
   const canEditRoles = () => {
-    return userPermissions?.settings_access || false;
+    return userPermissions?.settings_access || userPermissions?.roles_access || false;
   };
 
   // Update state when organization prop changes
@@ -69,6 +70,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
             notes_access: false,
             meeting_access: false,
             noticeboard_access: false,
+            roles_access: false,
           }
         }]);
       }
@@ -145,6 +147,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
         notes_access: false,
         meeting_access: false,
         noticeboard_access: false,
+        roles_access: false,
       }
     }]);
   };
@@ -196,6 +199,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
     { key: "notes_access", label: "Notes Access" },
     { key: "meeting_access", label: "Meeting Access" },
     { key: "noticeboard_access", label: "Noticeboard Access" },
+    { key: "roles_access", label: "Manage Roles" },
   ];
 
   // Determine available tabs based on permissions

@@ -114,8 +114,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   // Check if user can manage organization settings
   const canManageOrg = () => {
     if (!userPermissions) return false;
-    // Users with settings_access or creators can manage org settings
-    return userPermissions.settings_access || userPermissions.manage_channels;
+    // Users with settings_access, manage_channels, or roles_access can manage org settings
+    return userPermissions.settings_access || userPermissions.manage_channels || userPermissions.roles_access;
   };
 
   const handleLogout = async () => {

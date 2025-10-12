@@ -158,14 +158,15 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
         })),
         org_code: generateOrgCode(),
         roles: roles.map((role) => ({
-          role_name: role.name.trim(),
-          settings_access: role.permissions.manage_settings,
-          manage_users: role.permissions.manage_users,
-          manage_channels: role.permissions.manage_channels,
-          meeting_access: role.permissions.manage_meetings,
-          notes_access: role.permissions.manage_notes,
-          noticeboard_access: role.permissions.manage_noticeboard,
-          accessible_teams: role.accessibleChannels,
+          name: role.name.trim(),
+          permissions: {
+            manage_channels: role.permissions.manage_channels,
+            manage_users: role.permissions.manage_users,
+            settings_access: role.permissions.manage_settings,
+            notes_access: role.permissions.manage_notes,
+            meeting_access: role.permissions.manage_meetings,
+            noticeboard_access: role.permissions.manage_noticeboard,
+          },
         }))
       };
 

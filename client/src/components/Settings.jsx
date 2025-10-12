@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
-import { Eye, EyeOff, X } from "lucide-react";
+import { Eye, EyeOff, X, Save} from "lucide-react";
 
 const Settings = ({ onClose }) => {
   const navigate = useNavigate();
@@ -302,9 +302,9 @@ const Settings = ({ onClose }) => {
                   <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto"
+                    className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto flex items-center gap-2 justify-center"
                   >
-                    {loading ? "Saving..." : "Save Changes"}
+                    <Save size={16} />{loading ? "Saving..." : "Save Changes"}
                   </button>
                 </>
               ) : (

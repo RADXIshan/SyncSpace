@@ -1,5 +1,7 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+import { generateInviteEmail } from "../templates/inviteTemplate.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -536,90 +538,35 @@ export const sendInvitations = async (req, res) => {
       }
     }
 
-    // Import nodemailer and email template
-    const nodemailer = await import("nodemailer");
-    
-    const transporter = nodemailer.default.createTransporter({
-      service: 'gmail',
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.APP_PASSWORD,
-      },
-    });
-
-    // Generate email content
-    const generateInviteEmail = (organizationName, message, inviteCode) => {
-      return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Invitation to join ${organizationName}</title>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-            .invite-code { background: #667eea; color: white; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 3px; border-radius: 5px; margin: 20px 0; }
-            .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>🚀 You're Invited!</h1>
-              <p>Join ${organizationName} on SyncSpace</p>
-            </div>
-            <div class="content">
-              <p>Hello!</p>
-              <p>${message}</p>
-              <div class="invite-code">
-                ${inviteCode}
-              </div>
-              <p><strong>How to join:</strong></p>
-              <ol>
-                <li>Go to SyncSpace</li>
-                <li>Click "Join Organization"</li>
-                <li>Enter the invite code above</li>
-              </ol>
-              <p>We're excited to have you join our team!</p>
-            </div>
-            <div class="footer">
-              <p>This invitation was sent from SyncSpace</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-    };
-
-    // Send emails
-    const emailPromises = emails.map(email => {
-      const mailOptions = {
-        from: {
-          name: "SyncSpace",
-          address: process.env.EMAIL
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.APP_PASSWORD,
         },
-        to: email.trim(),
-        subject: `Invitation to join ${organizationName} on SyncSpace`,
+    });
+
+    const confirmationMail = {
+        from: {
+            name: "Ishan Roy",
+            address: "trickster10ishan@gmail.com"
+        },
+        to: emails,
+        subject: `SyncSpace Invitation to join ${organizationName}`,
         html: generateInviteEmail(organizationName, message, inviteCode),
-      };
+    };    
 
-      return transporter.sendMail(mailOptions);
-    });
+    try {
+        await transporter.sendMail(confirmationMail);
+    } catch (error) {
+        console.error("Error sending email:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
 
-    await Promise.all(emailPromises);
-
-    res.status(200).json({
-      message: emails.length === 1 
-        ? `Invitation sent successfully to ${emails[0]}` 
-        : `Invitations sent successfully to ${emails.length} recipient(s)`,
-      sentTo: emails,
-    });
+    res.status(200).json({ "message": "Invitations sent successfully" });
   } catch (error) {
     console.error("Error sending invitations:", error);
     if (error.message === "No token provided" || error.message === "Invalid token") {

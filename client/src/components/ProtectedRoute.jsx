@@ -19,7 +19,6 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
-    localStorage.removeItem("token");
     return <Navigate to="/login" />;
   }
 

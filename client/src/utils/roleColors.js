@@ -1,4 +1,4 @@
-// Dynamic role color system
+// Dynamic role color system with unique colors
 export const roleColors = [
   { background: 'bg-blue-500/20', border: 'border-blue-400', text: 'text-blue-200' },
   { background: 'bg-green-500/20', border: 'border-green-400', text: 'text-green-200' },
@@ -16,7 +16,21 @@ export const roleColors = [
   { background: 'bg-fuchsia-500/20', border: 'border-fuchsia-400', text: 'text-fuchsia-200' },
   { background: 'bg-violet-500/20', border: 'border-violet-400', text: 'text-violet-200' },
   { background: 'bg-sky-500/20', border: 'border-sky-400', text: 'text-sky-200' },
+  { background: 'bg-slate-500/20', border: 'border-slate-400', text: 'text-slate-200' },
+  { background: 'bg-zinc-500/20', border: 'border-zinc-400', text: 'text-zinc-200' },
+  { background: 'bg-stone-500/20', border: 'border-stone-400', text: 'text-stone-200' },
+  { background: 'bg-neutral-500/20', border: 'border-neutral-400', text: 'text-neutral-200' },
 ];
+
+// Reserved Creator role styling
+const CREATOR_STYLE = {
+  background: 'bg-gradient-to-r from-yellow-500/25 to-orange-500/25',
+  border: 'border-yellow-400',
+  text: 'text-yellow-200'
+};
+
+// Store for tracking assigned colors to prevent duplicates
+let assignedColors = new Map(); // role name -> color index
 
 // Generate consistent hash for role names
 export const generateRoleHash = (role) => {
@@ -27,21 +41,66 @@ export const generateRoleHash = (role) => {
   return Math.abs(hash);
 };
 
-// Get role-specific styling with dynamic colors
-export const getRoleStyle = (role) => {
+// Function to get unique color assignment for roles
+export const getRoleStyle = (role, allRoles = []) => {
   if (!role) return { background: 'bg-gray-500/20', border: 'border-gray-400', text: 'text-gray-300' };
   
-  // Special case for Creator role
-  if (role.toLowerCase() === 'creator') {
-    return { 
-      background: 'bg-gradient-to-r from-yellow-500/25 to-orange-500/25', 
-      border: 'border-yellow-400', 
-      text: 'text-yellow-200'
-    };
+  const normalizedRole = role.toLowerCase();
+  
+  // Special case for Creator role - always gets the same reserved style
+  if (normalizedRole === 'creator') {
+    return CREATOR_STYLE;
   }
   
-  // Generate consistent color for other roles
-  const hash = generateRoleHash(role.toLowerCase());
-  const colorIndex = hash % roleColors.length;
-  return roleColors[colorIndex];
+  // If we already have a color assigned to this role, return it
+  if (assignedColors.has(normalizedRole)) {
+    const colorIndex = assignedColors.get(normalizedRole);
+    return roleColors[colorIndex];
+  }
+  
+  // Find the next available color that hasn't been used
+  const usedColorIndices = new Set(Array.from(assignedColors.values()));
+  let availableColorIndex = -1;
+  
+  // Try to find an unused color
+  for (let i = 0; i < roleColors.length; i++) {
+    if (!usedColorIndices.has(i)) {
+      availableColorIndex = i;
+      break;
+    }
+  }
+  
+  // If all colors are used, fall back to hash-based assignment with offset
+  if (availableColorIndex === -1) {
+    const hash = generateRoleHash(normalizedRole);
+    availableColorIndex = hash % roleColors.length;
+  }
+  
+  // Store the assignment
+  assignedColors.set(normalizedRole, availableColorIndex);
+  
+  return roleColors[availableColorIndex];
+};
+
+// Function to initialize role colors for a set of roles (for consistency)
+export const initializeRoleColors = (roles) => {
+  // Clear existing assignments
+  assignedColors.clear();
+  
+  // Sort roles to ensure consistent assignment order
+  const sortedRoles = [...roles]
+    .filter(role => role && role.toLowerCase() !== 'creator') // Exclude creator from assignment
+    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  
+  // Assign colors in order
+  sortedRoles.forEach((role, index) => {
+    if (index < roleColors.length) {
+      assignedColors.set(role.toLowerCase(), index);
+    }
+  });
+};
+
+// Function to reset role color assignments
+export const resetRoleColors = () => {
+  assignedColors.clear();
 };

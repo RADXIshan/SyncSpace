@@ -3,7 +3,7 @@ import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield, UserMinus, Cro
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import ConfirmationModal from "./ConfirmationModal";
-import { getRoleStyle } from "../utils/roleColors";
+import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 
 const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, onSuccess }) => {
   // Check if current user is the organization creator
@@ -667,6 +667,20 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       fetchMembers();
     }
   }, [organization?.id]);
+
+  // Initialize role colors when organization roles are available
+  useEffect(() => {
+    if (organization?.roles && organization.roles.length > 0) {
+      const roleNames = organization.roles.map(role => role.name);
+      // Also include member roles for consistency
+      const allRoles = [...roleNames];
+      if (members.length > 0) {
+        const memberRoles = members.map(member => member.role).filter(Boolean);
+        allRoles.push(...memberRoles);
+      }
+      initializeRoleColors([...new Set(allRoles)]);
+    }
+  }, [organization?.roles, members]);
 
   return (
     <>

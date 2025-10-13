@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Plus, Trash2, Users, Settings, Globe, Lock } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { getRoleStyle } from "../utils/roleColors";
+import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 
 const CreateOrgModal = ({ onClose, onSuccess }) => {
   const [orgName, setOrgName] = useState("");
@@ -53,6 +53,14 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
   // Refs for scrolling to new elements
   const channelRefs = useRef([]);
   const roleRefs = useRef([]);
+
+  // Initialize role colors whenever roles change
+  useEffect(() => {
+    const roleNames = roles.map(role => role.name.trim()).filter(name => name);
+    if (roleNames.length > 0) {
+      initializeRoleColors(roleNames);
+    }
+  }, [roles]);
 
   // --- Channel Management ---
   const addChannel = () => {

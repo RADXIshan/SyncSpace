@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import ConfirmationModal from './ConfirmationModal';
-import { getRoleStyle } from '../utils/roleColors';
+import { getRoleStyle, initializeRoleColors } from '../utils/roleColors';
 
 const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   const location = useLocation();
@@ -55,6 +55,12 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
       setOrganization(orgRes.data.organization);
       setUserRole(roleRes.data.role);
       setUserPermissions(roleRes.data.permissions);
+      
+      // Initialize role colors with organization roles
+      if (orgRes.data.organization?.roles) {
+        const roleNames = orgRes.data.organization.roles.map(role => role.name);
+        initializeRoleColors(roleNames);
+      }
     } catch (err) {
       console.error("Error fetching organization:", err);
       setOrganization(null);

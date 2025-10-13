@@ -126,33 +126,41 @@ const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="card p-6 animate-fadeIn">
-          {showInfo && (
-            <div className="flex items-start bg-gradient-to-r from-violet-50 to-purple-50 text-violet-800 rounded-xl px-4 py-3 mb-6 border border-violet-200 animate-slideIn">
-              <Info size={18} className="mr-3 mt-0.5 text-violet-600" />
-              <div className="flex-1 space-y-1">
-                <p className="font-medium">Tap or click on a date to add an event.</p>
-                <p className="text-sm">Tap on an event to edit or delete it.</p>
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-200/20 via-indigo-200/15 to-purple-200/25 animate-pulse"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/10 to-violet-100/20"></div>
+      
+      <div className="relative z-10 p-6">
+        {/* Header */}
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="text-center">
+            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 mb-3">
+              Calendar
+            </h1>
+            <p className="text-gray-600 text-lg">Organize your schedule and manage events</p>
+          </div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/50 shadow-2xl p-8 animate-fadeIn">
+            {showInfo && (
+              <div className="flex items-start bg-gradient-to-r from-violet-100/80 to-purple-100/80 text-violet-800 rounded-2xl px-6 py-4 mb-8 border border-violet-200/50 animate-slideIn shadow-sm">
+                <Info size={20} className="mr-4 mt-0.5 text-violet-600 flex-shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <p className="font-semibold text-lg">Getting Started</p>
+                  <p className="text-sm text-violet-700">Click on any date to create a new event, or click on existing events to edit them.</p>
+                </div>
+                <button
+                  onClick={() => setShowInfo(false)}
+                  className="ml-4 hover:text-violet-900 cursor-pointer p-2 rounded-xl hover:bg-violet-200/50 transition-all duration-200 hover:scale-110"
+                  aria-label="Dismiss info"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button
-                onClick={() => setShowInfo(false)}
-                className="ml-3 hover:text-violet-900 cursor-pointer p-1 rounded-full hover:bg-violet-100 transition-colors"
-                aria-label="Dismiss info"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          )}
-          {showEventInputForm && (
-            <EventInputForm
-              onAddEvent={handleAddEvent}
-              initialDate={selectedDate}
-              onClose={() => setShowEventInputForm(false)}
-            />
-          )}
-          <div className="rounded-xl overflow-hidden">
+            )}
+          <div className="rounded-2xl overflow-hidden shadow-inner bg-white/50 p-4">
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
@@ -175,13 +183,13 @@ const Calendar = () => {
               selectMirror
               dayMaxEvents={3}
               eventContent={(arg) => (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 max-w-full text-sm font-medium cursor-pointer" title="View Event">
-                  <div className="h-2 w-2 rounded-full bg-white shrink-0" />
-                  <span className="truncate flex-1">
+                <div className="group flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:scale-[1.05] active:scale-95 transition-all duration-300 max-w-full text-sm font-semibold cursor-pointer border border-white/20" title="Click to view event details">
+                  <div className="h-2.5 w-2.5 rounded-full bg-white/90 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="truncate flex-1 group-hover:text-white">
                     {arg.event.title}
                   </span>
                   {arg.timeText && (
-                    <span className="ml-1 text-xs bg-white/20 px-2 py-1 rounded-full whitespace-nowrap">
+                    <span className="ml-1 text-xs bg-white/25 px-2 py-1 rounded-lg whitespace-nowrap font-medium group-hover:bg-white/30 transition-colors">
                       {arg.timeText}
                     </span>
                   )}
@@ -189,20 +197,29 @@ const Calendar = () => {
               )}
               eventClick={handleEventClick}
               height="auto"
-              className="custom-fullcalendar"
+              className="enhanced-fullcalendar"
             />
           </div>
+          </div>
         </div>
-
-        {selectedEvent && (
-          <EventModal
-            event={selectedEvent}
-            onClose={() => setSelectedEvent(null)}
-            onUpdate={handleUpdateEvent}
-            onDelete={handleDeleteEvent}
-          />
-        )}
       </div>
+
+      {showEventInputForm && (
+        <EventInputForm
+          onAddEvent={handleAddEvent}
+          initialDate={selectedDate}
+          onClose={() => setShowEventInputForm(false)}
+        />
+      )}
+
+      {selectedEvent && (
+        <EventModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onUpdate={handleUpdateEvent}
+          onDelete={handleDeleteEvent}
+        />
+      )}
     </div>
   );
 }

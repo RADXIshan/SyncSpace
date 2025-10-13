@@ -129,54 +129,61 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
   const handleDelete = () => onDelete(event.event_id || event.id);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
-        <div className="relative overflow-y-auto max-h-[90vh] px-8 py-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all duration-300">
+      <div className="relative w-full max-w-2xl max-h-[95vh] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-gray-900/50 to-indigo-900/20"></div>
+        <div className="relative overflow-y-auto max-h-[95vh] px-8 py-10">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Close Button */}
             <button
               type="button"
               onClick={handleClose}
-              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10"
+              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80"
             >
               <X size={22} />
             </button>
             
             {/* Header */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+            <div className="text-center mb-8 pt-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Calendar size={32} className="text-white" />
+              </div>
+              <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
                 Event Details
               </h2>
-              <p className="text-gray-400 text-sm">
-                View and manage your event information
+              <p className="text-gray-300 text-base">
+                {isEditing ? 'Edit your event information' : 'View and manage your event'}
               </p>
             </div>
             {/* Event Information */}
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Event Title</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-3">
+                  Event Title {isEditing && '*'}
+                </label>
                 {isEditing ? (
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                    className="w-full px-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
                   />
                 ) : (
-                  <div className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white">
-                    {title || "-"}
+                  <div className="w-full px-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/60 text-gray-200 font-medium">
+                    {title || "No title provided"}
                   </div>
                 )}
               </div>
               {/* Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Date & Time</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-3">
+                  Date & Time {isEditing && '*'}
+                </label>
                 {isEditing ? (
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-3.5 text-violet-400 pointer-events-none z-10" size={18} />
+                    <Calendar className="absolute left-4 top-4 text-violet-400 pointer-events-none z-10" size={20} />
                     <DatePicker
                       selected={dateTime}
                       onChange={(date) => setDateTime(date)}
@@ -184,42 +191,53 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                       timeFormat="HH:mm"
                       timeIntervals={15}
                       dateFormat="yyyy-MM-dd h:mm aa"
-                      className="w-full pl-10 px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none placeholder-gray-400"
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
+                      calendarClassName="react-datepicker--dark-theme"
                       portalId="datepicker-portal"
                       withPortal
                     />
                   </div>
                 ) : (
-                  <div className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white">
-                    {new Date(dateTime).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}
+                  <div className="w-full px-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/60 text-gray-200 font-medium">
+                    {new Date(dateTime).toLocaleString(undefined, { 
+                      weekday: 'long',
+                      year: "numeric", 
+                      month: "long", 
+                      day: "numeric", 
+                      hour: "2-digit", 
+                      minute: "2-digit", 
+                      hour12: true 
+                    })}
                   </div>
                 )}
               </div>
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <label className="block text-sm font-semibold text-gray-200 mb-3">
+                  Description
+                </label>
                 {isEditing ? (
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    rows="3"
-                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none resize-none placeholder-gray-400"
+                    rows="4"
+                    className="w-full px-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
                     placeholder="Add a description for your event..."
                   />
                 ) : (
-                  <div className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white whitespace-pre-wrap min-h-[84px]">
-                    {description || "-"}
+                  <div className="w-full px-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/60 text-gray-200 whitespace-pre-wrap min-h-[100px]">
+                    {description || "No description provided"}
                   </div>
                 )}
               </div>
             </div>
             
             {/* Action Buttons */}
-            <div className="flex justify-between items-center gap-4 pt-4">
+            <div className="flex justify-between items-center gap-4 pt-6 border-t border-gray-700/50">
               <button
                 type="button"
                 onClick={handleDelete}
-                className="px-6 py-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                className="px-6 py-3 rounded-xl bg-red-900/40 hover:bg-red-900/60 border border-red-700/50 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md"
               >
                 Delete Event
               </button>
@@ -228,7 +246,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                    className="px-6 py-3 rounded-xl bg-violet-900/40 hover:bg-violet-900/60 border border-violet-700/50 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md"
                   >
                     Edit Event
                   </button>
@@ -237,7 +255,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                    className="px-6 py-3 rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md"
                   >
                     Cancel
                   </button>
@@ -246,12 +264,12 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-2 justify-center ${
+                    className={`px-8 py-3 rounded-xl font-semibold transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-2 justify-center shadow-lg hover:shadow-xl ${
                       isSaving ? 'opacity-50 cursor-not-allowed' : ''
                     } ${
                       hasUnsavedChanges 
                         ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300" 
-                        : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
+                        : "bg-violet-900/40 hover:bg-violet-900/60 border border-violet-700/50 text-violet-400 hover:text-violet-300"
                     }`}
                   >
                     {isSaving ? (
@@ -261,6 +279,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                       </>
                     ) : (
                       <>
+                        <Calendar size={16} />
                         {hasUnsavedChanges ? 'Save Changes*' : 'Save Changes'}
                         {hasUnsavedChanges && (
                           <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
@@ -272,7 +291,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                    className="px-8 py-3 rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md"
                   >
                     Close
                   </button>

@@ -16,7 +16,7 @@ const JoinedOrgDash = ({ activities, tasks }) => {
           <ul className="space-y-4 flex-1">
             {activities.map((a, i) => (
               <li key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all cursor-pointer">
-                <div className="w-2 h-2 bg-violet-400 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-violet-400 rounded-full" />
                 <span className="text-md text-gray-300 hover:text-white transition-colors">{a}</span>
               </li>
             ))}

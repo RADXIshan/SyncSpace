@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Bell, Users, Plus } from "lucide-react";
+import { Bell, Users, Plus, MessageCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import JoinedOrgDash from "./JoinedOrgDash";
 
-const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
+const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessagesClick, onNotificationsClick }) => {
   const { user, setUser } = useAuth();
 
   const [organization, setOrganization] = useState(null);
@@ -133,14 +133,26 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
             Welcome back, {user?.name || "User"}
           </div>
 
-          {/* Right-side: Notifications + Avatar */}
-          <div className="flex items-center gap-4">
+          {/* Right-side: Messages + Notifications + Avatar */}
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <MessageCircle
+                size={23}
+                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer"
+                onClick={onMessagesClick}
+                title="Messages"
+              />
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+            </div>
+            
             <div className="relative">
               <Bell
                 size={23}
                 className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer"
+                onClick={onNotificationsClick}
+                title="Notifications"
               />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></div>
             </div>
 
             <div

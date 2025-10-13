@@ -43,6 +43,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
@@ -148,7 +149,12 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/members`,
         { withCredentials: true }
       );
-      setMembers(response.data.members || []);
+      // Add mock online status for demonstration (in real app, this would come from backend)
+      const membersWithStatus = (response.data.members || []).map(member => ({
+        ...member,
+        isOnline: Math.random() > 0.4 // Random online status for demo
+      }));
+      setMembers(membersWithStatus);
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to load organization members"
@@ -321,6 +327,18 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
           default:
             return true;
         }
+      });
+    }
+    
+    // Status filter
+    if (statusFilter !== "all") {
+      filteredMembers = filteredMembers.filter(member => {
+        if (statusFilter === "online") {
+          return member.isOnline === true;
+        } else if (statusFilter === "offline") {
+          return member.isOnline === false;
+        }
+        return true;
       });
     }
     
@@ -1032,13 +1050,14 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                         </button>
                         
                         {/* Clear Filters */}
-                        {(searchQuery || roleFilter !== "all" || dateFilter !== "all") && (
+                        {(searchQuery || roleFilter !== "all" || dateFilter !== "all" || statusFilter !== "all") && (
                           <button
                             type="button"
                             onClick={() => {
                               setSearchQuery("");
                               setRoleFilter("all");
                               setDateFilter("all");
+                              setStatusFilter("all");
                             }}
                             className="text-xs text-violet-400 hover:text-violet-300 transition-colors whitespace-nowrap"
                           >
@@ -1050,7 +1069,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                     
                     {/* Filter Options */}
                     {showFilters && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
                         {/* Role Filter */}
                         <div>
                           <label className="block text-xs text-gray-400 mb-2">Filter by Role</label>
@@ -1065,6 +1084,20 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                 {role.charAt(0).toUpperCase() + role.slice(1)}
                               </option>
                             ))}
+                          </select>
+                        </div>
+                        
+                        {/* Status Filter */}
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-2">Filter by Status</label>
+                          <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                          >
+                            <option value="all">All Status</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
                           </select>
                         </div>
                         
@@ -1088,7 +1121,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                   </div>
                   
                   {/* Active Filters Summary */}
-                  {(searchQuery || roleFilter !== "all" || dateFilter !== "all") && (
+                  {(searchQuery || roleFilter !== "all" || dateFilter !== "all" || statusFilter !== "all") && (
                     <div className="flex flex-wrap items-center gap-2 p-3 bg-violet-500/10 border border-violet-500/20 rounded-lg">
                       <span className="text-xs text-violet-300 font-medium">Active filters:</span>
                       {searchQuery && (
@@ -1101,8 +1134,17 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           Role: {roleFilter.charAt(0).toUpperCase() + roleFilter.slice(1)}
                         </span>
                       )}
+                      {statusFilter !== "all" && (
+                        <span className={`inline-flex items-center px-2 py-1 border rounded text-xs ${
+                          statusFilter === "online" 
+                            ? "bg-green-600/20 border-green-500/30 text-green-200" 
+                            : "bg-gray-600/20 border-gray-500/30 text-gray-200"
+                        }`}>
+                          Status: {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                        </span>
+                      )}
                       {dateFilter !== "all" && (
-                        <span className="inline-flex items-center px-2 py-1 bg-green-600/20 border border-green-500/30 rounded text-xs text-green-200">
+                        <span className="inline-flex items-center px-2 py-1 bg-orange-600/20 border border-orange-500/30 rounded text-xs text-orange-200">
                           Date: {dateFilter === "today" ? "Today" : dateFilter === "week" ? "Last Week" : dateFilter === "month" ? "Last Month" : "Last 3 Months"}
                         </span>
                       )}
@@ -1134,16 +1176,22 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           <div key={member.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium overflow-hidden">
-                                  {member.userPhoto ? (
-                                    <img
-                                      src={member.userPhoto}
-                                      alt={member.name}
-                                      className="w-full h-full object-cover rounded-full"
-                                    />
-                                  ) : (
-                                    (member.name?.[0] || member.email[0]).toUpperCase()
-                                  )}
+                                <div className="relative">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium overflow-hidden">
+                                    {member.userPhoto ? (
+                                      <img
+                                        src={member.userPhoto}
+                                        alt={member.name}
+                                        className="w-full h-full object-cover rounded-full"
+                                      />
+                                    ) : (
+                                      (member.name?.[0] || member.email[0]).toUpperCase()
+                                    )}
+                                  </div>
+                                  {/* Online Status Indicator */}
+                                  <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 border-2 border-gray-800 rounded-full ${
+                                    member.isOnline ? 'bg-green-500' : 'bg-gray-500'
+                                  }`}></div>
                                 </div>
                                 <div>
                                   <div className="flex items-center space-x-2">
@@ -1155,10 +1203,20 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                     )}
                                   </div>
                                   <p className="text-xs text-gray-400">{member.email}</p>
-                                  <div className="flex items-center space-x-2 mt-1">
+                                  <div className="flex items-center space-x-2 mt-1 flex-wrap gap-1">
                                     <span className={`text-xs px-2 py-1 rounded-md capitalize font-medium ${getRoleStyle(member.role).background} border ${getRoleStyle(member.role).border} ${getRoleStyle(member.role).text}`}>
                                       {member.role}
                                     </span>
+                                    <div className="flex items-center gap-1">
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        member.isOnline ? 'bg-green-500' : 'bg-gray-500'
+                                      }`}></div>
+                                      <span className={`text-xs font-medium ${
+                                        member.isOnline ? 'text-green-400' : 'text-gray-400'
+                                      }`}>
+                                        {member.isOnline ? 'Online' : 'Offline'}
+                                      </span>
+                                    </div>
                                     <span className="text-xs text-gray-500">
                                       Joined {new Date(member.joinedAt).toLocaleDateString()}
                                     </span>

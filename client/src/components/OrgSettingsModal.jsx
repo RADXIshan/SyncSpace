@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield, UserMinus, Crown, Edit3, AlertTriangle, Search, Filter, ChevronDown } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -43,9 +43,29 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   const [dateFilter, setDateFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [showRemoveMemberConfirm, setShowRemoveMemberConfirm] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState(null);
+  const [showRemoveChannelConfirm, setShowRemoveChannelConfirm] = useState(false);
+  const [channelToRemove, setChannelToRemove] = useState(null);
+  const [showRemoveRoleConfirm, setShowRemoveRoleConfirm] = useState(false);
+  const [roleToRemove, setRoleToRemove] = useState(null);
   const [activeTab, setActiveTab] = useState("");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+
+  // Refs for scrolling to new elements
+  const channelRefs = useRef([]);
+  const roleRefs = useRef([]);
+  
+  // Original values for change detection
+  const originalValues = useRef({
+    orgName: organization?.name || "",
+    accessLevel: organization?.accessLevel || "invite-only",
+    channels: organization?.channels || [],
+    roles: organization?.roles || []
+  });
 
   // Permission check functions
   const canEditBasicSettings = () => {
@@ -62,6 +82,58 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
 
   const canManageUsers = () => {
     return userPermissions?.manage_users || false;
+  };
+
+  // Check for unsaved changes
+  const checkForUnsavedChanges = () => {
+    const currentOrgName = orgName.trim();
+    const currentAccessLevel = accessLevel;
+    const currentChannels = channels.filter(ch => ch.name.trim());
+    const currentRoles = roles.filter(role => role.name.trim());
+    
+    const originalOrgName = originalValues.current.orgName;
+    const originalAccessLevel = originalValues.current.accessLevel;
+    const originalChannels = originalValues.current.channels;
+    const originalRoles = originalValues.current.roles;
+    
+    // Check basic settings
+    if (currentOrgName !== originalOrgName || currentAccessLevel !== originalAccessLevel) {
+      return true;
+    }
+    
+    // Check channels
+    if (currentChannels.length !== originalChannels.length) {
+      return true;
+    }
+    for (let i = 0; i < currentChannels.length; i++) {
+      const current = currentChannels[i];
+      const original = originalChannels[i];
+      if (!original || current.name !== original.name || current.description !== original.description) {
+        return true;
+      }
+    }
+    
+    // Check roles
+    if (currentRoles.length !== originalRoles.length) {
+      return true;
+    }
+    for (let i = 0; i < currentRoles.length; i++) {
+      const current = currentRoles[i];
+      const original = originalRoles[i];
+      if (!original || current.name !== original.name) {
+        return true;
+      }
+      // Check permissions
+      const currentPerms = current.permissions;
+      const originalPerms = original.permissions;
+      for (const perm in currentPerms) {
+        if (currentPerms[perm] !== originalPerms[perm]) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
   };
 
   // Fetch organization members
@@ -288,6 +360,14 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
           }
         }]);
       }
+      
+      // Update original values for comparison
+      originalValues.current = {
+        orgName: organization.name || "",
+        accessLevel: organization.accessLevel || "invite-only",
+        channels: organization.channels || [],
+        roles: organization.roles || []
+      };
     }
     
     // Fetch members when organization changes
@@ -295,6 +375,67 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       fetchMembers();
     }
   }, [organization, activeTab]);
+  
+  // Track changes for unsaved changes detection
+  useEffect(() => {
+    const hasChanges = checkForUnsavedChanges();
+    setHasUnsavedChanges(hasChanges);
+  }, [orgName, accessLevel, channels, roles]);
+  
+  // Handle closing with unsaved changes
+  const handleClose = () => {
+    if (hasUnsavedChanges) {
+      setPendingAction(() => onClose);
+      setShowUnsavedChangesModal(true);
+    } else {
+      onClose();
+    }
+  };
+  
+  // Handle tab switching with unsaved changes
+  const handleTabSwitch = (tabId) => {
+    if (hasUnsavedChanges && activeTab !== tabId) {
+      setPendingAction(() => () => setActiveTab(tabId));
+      setShowUnsavedChangesModal(true);
+    } else {
+      setActiveTab(tabId);
+    }
+  };
+  
+  // Discard changes and proceed with pending action
+  const discardChanges = () => {
+    // Reset to original values
+    setOrgName(originalValues.current.orgName);
+    setAccessLevel(originalValues.current.accessLevel);
+    setChannels(originalValues.current.channels.length > 0 ? originalValues.current.channels : [{ name: "", description: "" }]);
+    setRoles(originalValues.current.roles.length > 0 ? originalValues.current.roles : [{
+      name: "",
+      permissions: {
+        manage_channels: false,
+        manage_users: false,
+        settings_access: false,
+        notes_access: false,
+        meeting_access: false,
+        noticeboard_access: false,
+        roles_access: false,
+      }
+    }]);
+    
+    setShowUnsavedChangesModal(false);
+    setHasUnsavedChanges(false);
+    
+    // Execute pending action
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  };
+  
+  // Cancel unsaved changes modal
+  const cancelUnsavedChanges = () => {
+    setShowUnsavedChangesModal(false);
+    setPendingAction(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -321,6 +462,17 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       );
 
       toast.success("Organization settings updated successfully", { id: toastId });
+      
+      // Update original values to new saved values
+      originalValues.current = {
+        orgName: orgName.trim(),
+        accessLevel,
+        channels: channels.filter(ch => ch.name.trim()),
+        roles: roles.filter(role => role.name.trim())
+      };
+      
+      setHasUnsavedChanges(false);
+      
       if (onSuccess) onSuccess(response.data.organization);
       onClose();
       
@@ -343,12 +495,34 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
 
   // Channel management functions
   const addChannel = () => {
-    setChannels([...channels, { name: "", description: "" }]);
+    const newChannels = [...channels, { name: "", description: "" }];
+    setChannels(newChannels);
+    
+    // Scroll to the new channel after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      const newChannelIndex = newChannels.length - 1;
+      if (channelRefs.current[newChannelIndex]) {
+        channelRefs.current[newChannelIndex].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }, 100);
   };
 
-  const removeChannel = (index) => {
+  const handleRemoveChannel = (index) => {
     if (channels.length > 1) {
-      setChannels(channels.filter((_, i) => i !== index));
+      setChannelToRemove(index);
+      setShowRemoveChannelConfirm(true);
+    }
+  };
+
+  const confirmRemoveChannel = () => {
+    if (channelToRemove !== null && channels.length > 1) {
+      setChannels(channels.filter((_, i) => i !== channelToRemove));
+      setShowRemoveChannelConfirm(false);
+      setChannelToRemove(null);
+      toast.success("Channel removed successfully");
     }
   };
 
@@ -361,7 +535,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
 
   // Role management functions
   const addRole = () => {
-    setRoles([...roles, {
+    const newRoles = [...roles, {
       name: "",
       permissions: {
         manage_channels: false,
@@ -372,12 +546,34 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
         noticeboard_access: false,
         roles_access: false,
       }
-    }]);
+    }];
+    setRoles(newRoles);
+    
+    // Scroll to the new role after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      const newRoleIndex = newRoles.length - 1;
+      if (roleRefs.current[newRoleIndex]) {
+        roleRefs.current[newRoleIndex].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }, 100);
   };
 
-  const removeRole = (index) => {
+  const handleRemoveRole = (index) => {
     if (roles.length > 1) {
-      setRoles(roles.filter((_, i) => i !== index));
+      setRoleToRemove(index);
+      setShowRemoveRoleConfirm(true);
+    }
+  };
+
+  const confirmRemoveRole = () => {
+    if (roleToRemove !== null && roles.length > 1) {
+      setRoles(roles.filter((_, i) => i !== roleToRemove));
+      setShowRemoveRoleConfirm(false);
+      setRoleToRemove(null);
+      toast.success("Role removed successfully");
     }
   };
 
@@ -471,8 +667,8 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
             {/* Close Button */}
             <button
               type="button"
-              onClick={onClose}
-              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10"
+              onClick={handleClose}
+              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10"
             >
               <X size={22} />
             </button>
@@ -496,7 +692,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                     <button
                       key={tab.id}
                       type="button"
-                      onClick={() => setActiveTab(tab.id)}
+                      onClick={() => handleTabSwitch(tab.id)}
                       className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                         activeTab === tab.id
                           ? "bg-violet-600/30 text-violet-300 border border-violet-500/30"
@@ -642,7 +838,11 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                   
                   <div className="space-y-4">
                     {channels.map((channel, index) => (
-                      <div key={channel.id || `channel-${index}`} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <div 
+                        key={channel.id || `channel-${index}`} 
+                        ref={(el) => channelRefs.current[index] = el}
+                        className="bg-white/5 border border-white/10 rounded-xl p-4"
+                      >
                         <div className="flex justify-between items-start mb-3">
                           <h4 className="text-sm font-medium text-gray-300">
                             {channel.name || `Channel ${index + 1}`}
@@ -650,7 +850,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           {channels.length > 1 && (
                             <button
                               type="button"
-                              onClick={() => removeChannel(index)}
+                              onClick={() => handleRemoveChannel(index)}
                               className="text-red-400 hover:text-red-300 transition-colors"
                             >
                               <Trash2 size={16} />
@@ -704,7 +904,11 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                   
                   <div className="space-y-4">
                     {roles.map((role, index) => (
-                      <div key={role.id || `role-${index}`} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <div 
+                        key={role.id || `role-${index}`} 
+                        ref={(el) => roleRefs.current[index] = el}
+                        className="bg-white/5 border border-white/10 rounded-xl p-4"
+                      >
                         <div className="flex justify-between items-start mb-3">
                           <h4 className="text-sm font-medium text-gray-300">
                             {role.name || `Role ${index + 1}`}
@@ -712,7 +916,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           {roles.length > 1 && (
                             <button
                               type="button"
-                              onClick={() => removeRole(index)}
+                              onClick={() => handleRemoveRole(index)}
                               className="text-red-400 hover:text-red-300 transition-colors"
                             >
                               <Trash2 size={16} />
@@ -1137,7 +1341,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
             <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={loading}
                 className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50"
               >
@@ -1146,7 +1350,11 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
               <button
                 type="submit"
                 disabled={loading || !orgName.trim()}
-                className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${
+                  hasUnsavedChanges 
+                    ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300" 
+                    : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
+                }`}
               >
                 {loading ? (
                   <>
@@ -1156,7 +1364,10 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                 ) : (
                   <>
                     <Save size={16} />
-                    Save Changes
+                    {hasUnsavedChanges ? "Save Changes*" : "Save Changes"}
+                    {hasUnsavedChanges && (
+                      <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                    )}
                   </>
                 )}
               </button>
@@ -1180,6 +1391,51 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       cancelText="Cancel"
       type="danger"
       loading={memberActionLoading}
+    />
+    
+    {/* Channel Removal Confirmation Modal */}
+    <ConfirmationModal
+      isOpen={showRemoveChannelConfirm}
+      onClose={() => {
+        setShowRemoveChannelConfirm(false);
+        setChannelToRemove(null);
+      }}
+      onConfirm={confirmRemoveChannel}
+      title="Remove Channel"
+      message={`Are you sure you want to remove the channel "${channelToRemove !== null ? channels[channelToRemove]?.name || `Channel ${channelToRemove + 1}` : ''}"? This action cannot be undone.`}
+      confirmText="Remove Channel"
+      cancelText="Cancel"
+      type="danger"
+      loading={false}
+    />
+    
+    {/* Role Removal Confirmation Modal */}
+    <ConfirmationModal
+      isOpen={showRemoveRoleConfirm}
+      onClose={() => {
+        setShowRemoveRoleConfirm(false);
+        setRoleToRemove(null);
+      }}
+      onConfirm={confirmRemoveRole}
+      title="Remove Role"
+      message={`Are you sure you want to remove the role "${roleToRemove !== null ? roles[roleToRemove]?.name || `Role ${roleToRemove + 1}` : ''}"? This action cannot be undone.`}
+      confirmText="Remove Role"
+      cancelText="Cancel"
+      type="danger"
+      loading={false}
+    />
+    
+    {/* Unsaved Changes Confirmation Modal */}
+    <ConfirmationModal
+      isOpen={showUnsavedChangesModal}
+      onClose={cancelUnsavedChanges}
+      onConfirm={discardChanges}
+      title="Unsaved Changes"
+      message="You have unsaved changes that will be lost if you continue. Are you sure you want to discard these changes?"
+      confirmText="Discard Changes"
+      cancelText="Keep Editing"
+      type="warning"
+      loading={false}
     />
     </>
   );

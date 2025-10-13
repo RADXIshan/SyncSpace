@@ -188,7 +188,7 @@ const Settings = ({ onClose }) => {
           </h1>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 p-2 rounded-full hover:bg-white/10"
+            className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10"
           >
             <X size={22} />
           </button>

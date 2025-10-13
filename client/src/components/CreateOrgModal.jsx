@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { X, Plus, Trash2, Users, Settings, Globe, Lock } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -47,9 +47,25 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
 
   const [loading, setLoading] = useState(false);
 
+  // Refs for scrolling to new elements
+  const channelRefs = useRef([]);
+  const roleRefs = useRef([]);
+
   // --- Channel Management ---
   const addChannel = () => {
-    setChannels([...channels, { name: "", description: "" }]);
+    const newChannels = [...channels, { name: "", description: "" }];
+    setChannels(newChannels);
+    
+    // Scroll to the new channel after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      const newChannelIndex = newChannels.length - 1;
+      if (channelRefs.current[newChannelIndex]) {
+        channelRefs.current[newChannelIndex].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }, 100);
   };
 
   const removeChannel = (index) => {
@@ -67,7 +83,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
 
   // --- Role Management ---
   const addRole = () => {
-    setRoles([
+    const newRoles = [
       ...roles,
       {
         name: "",
@@ -82,7 +98,19 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
         },
         accessibleChannels: [],
       },
-    ]);
+    ];
+    setRoles(newRoles);
+    
+    // Scroll to the new role after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      const newRoleIndex = newRoles.length - 1;
+      if (roleRefs.current[newRoleIndex]) {
+        roleRefs.current[newRoleIndex].scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }, 100);
   };
 
   const removeRole = (index) => {
@@ -217,7 +245,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10"
+              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10"
             >
               <X size={22} />
             </button>
@@ -326,6 +354,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                 {channels.map((channel, index) => (
                   <div
                     key={index}
+                    ref={(el) => channelRefs.current[index] = el}
                     className="p-4 rounded-lg border border-white/10 bg-white/5"
                   >
                     <div className="flex items-center justify-between mb-3">
@@ -398,6 +427,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                 {roles.map((role, roleIndex) => (
                   <div
                     key={roleIndex}
+                    ref={(el) => roleRefs.current[roleIndex] = el}
                     className="p-4 rounded-lg border border-white/10 bg-white/5"
                   >
                     <div className="flex items-center justify-between mb-4">

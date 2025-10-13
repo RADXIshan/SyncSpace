@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield, UserMinus, Crown, Edit3 } from "lucide-react";
+import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield, UserMinus, Crown, Edit3, AlertTriangle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import ConfirmationModal from "./ConfirmationModal";
 
 const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, onSuccess }) => {
+  // Check if current user is the organization creator
+  const isCreator = userPermissions?.isCreator || false;
   const [orgName, setOrgName] = useState(organization?.name || "");
   const [accessLevel, setAccessLevel] = useState(organization?.accessLevel || "invite-only");
   const [channels, setChannels] = useState(() => {
@@ -32,7 +35,13 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+  const [tempRole, setTempRole] = useState("");
   const [loading, setLoading] = useState(false);
+  const [memberActionLoading, setMemberActionLoading] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRemoveMemberConfirm, setShowRemoveMemberConfirm] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState(null);
   const [activeTab, setActiveTab] = useState("");
 
   // Permission check functions
@@ -72,41 +81,124 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
     }
   };
 
-  // Update member role
-  const updateMemberRole = async (memberId, newRole) => {
+  // Start editing member role
+  const startEditingMember = (member) => {
+    setEditingMember(member.id);
+    setTempRole(member.role);
+  };
+
+  // Cancel editing member role
+  const cancelEditingMember = () => {
+    setEditingMember(null);
+    setTempRole("");
+  };
+
+  // Save member role
+  const saveMemberRole = async (memberId) => {
+    setMemberActionLoading(true);
     try {
       await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/members/${memberId}/role`,
-        { role: newRole },
+        { role: tempRole },
         { withCredentials: true }
       );
       toast.success("Member role updated successfully");
       fetchMembers(); // Refresh members list
       setEditingMember(null);
+      setTempRole("");
+      
+      // Refresh page to ensure all changes are reflected
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to update member role"
       );
+    } finally {
+      setMemberActionLoading(false);
     }
   };
 
   // Remove member from organization
-  const removeMember = async (memberId) => {
-    if (!confirm("Are you sure you want to remove this member from the organization?")) {
+  const handleRemoveMember = (member) => {
+    setMemberToRemove(member);
+    setShowRemoveMemberConfirm(true);
+  };
+
+  const confirmRemoveMember = async () => {
+    if (!memberToRemove) {
+      console.log('No member to remove');
       return;
     }
 
+    console.log('Removing member:', memberToRemove);
+    setMemberActionLoading(true);
+
     try {
       await axios.delete(
-        `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/members/${memberId}`,
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/members/${memberToRemove.id}`,
         { withCredentials: true }
       );
       toast.success("Member removed successfully");
       fetchMembers(); // Refresh members list
+      setShowRemoveMemberConfirm(false);
+      setMemberToRemove(null);
+      
+      // Refresh page to ensure all changes are reflected
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
+      console.error('Error removing member:', error);
       toast.error(
         error.response?.data?.message || "Failed to remove member"
       );
+    } finally {
+      setMemberActionLoading(false);
+    }
+  };
+
+  // Delete organization function
+  const handleDeleteOrganization = async () => {
+    if (deleteConfirmation !== organization?.name) {
+      toast.error("Organization name does not match");
+      return;
+    }
+
+    setLoading(true);
+    let toastId;
+
+    try {
+      toastId = toast.loading("Deleting organization...");
+
+      await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}`,
+        { withCredentials: true }
+      );
+
+      toast.success("Organization deleted successfully", { id: toastId });
+      
+      // Close modal and trigger success callback
+      onClose();
+      if (onSuccess) {
+        onSuccess({ deleted: true });
+      }
+      
+      // Optionally redirect to dashboard or refresh page
+      window.location.reload();
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          "Failed to delete organization",
+        { id: toastId }
+      );
+    } finally {
+      setLoading(false);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmation("");
     }
   };
 
@@ -173,6 +265,11 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       toast.success("Organization settings updated successfully", { id: toastId });
       if (onSuccess) onSuccess(response.data.organization);
       onClose();
+      
+      // Refresh the page to reflect changes immediately
+      setTimeout(() => {
+        window.location.reload();
+      }, 500); // Small delay to allow modal to close gracefully
     } catch (err) {
       toast.error(
         err.response?.data?.message ||
@@ -289,6 +386,11 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
     // Members tab is always visible to organization members
     tabs.push({ id: "members", label: "Members", icon: Users });
     
+    // Danger Zone tab - only visible to organization creators
+    if (isCreator) {
+      tabs.push({ id: "danger", label: "Delete Organization", icon: AlertTriangle });
+    }
+    
     return tabs;
   };
 
@@ -302,6 +404,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   }, [availableTabs, activeTab]);
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
       <div className="relative w-full max-w-4xl max-h-[90vh] bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
@@ -328,7 +431,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
 
             {/* Tabs */}
             {availableTabs.length > 1 && (
-              <div className="flex space-x-1 mb-8">
+              <div className="flex space-x-2 mb-8">
                 {availableTabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -620,7 +723,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           <div key={member.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium overflow-hidden">
+                                <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium overflow-hidden">
                                   {member.userPhoto ? (
                                     <img
                                       src={member.userPhoto}
@@ -657,9 +760,9 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                   {editingMember === member.id ? (
                                     <div className="flex items-center space-x-2">
                                       <select
-                                        className="px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs"
-                                        defaultValue={member.role}
-                                        onChange={(e) => updateMemberRole(member.id, e.target.value)}
+                                        className="px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                                        value={tempRole}
+                                        onChange={(e) => setTempRole(e.target.value)}
                                       >
                                         <option value="member">Member</option>
                                         <option value="admin">Admin</option>
@@ -672,8 +775,24 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                         ))}
                                       </select>
                                       <button
-                                        onClick={() => setEditingMember(null)}
-                                        className="text-gray-400 hover:text-gray-300 text-xs px-2 py-1 border border-white/20 rounded"
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          saveMemberRole(member.id);
+                                        }}
+                                        className="text-green-400 hover:text-green-300 text-sm px-2 py-1 border border-green-500/30 bg-green-600/20 hover:bg-green-600/30 rounded font-medium cursor-pointer"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          cancelEditingMember();
+                                        }}
+                                        className="text-gray-400 hover:text-gray-300 text-sm px-2 py-1 border border-white/20 rounded cursor-pointer"
                                       >
                                         Cancel
                                       </button>
@@ -681,18 +800,28 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                   ) : (
                                     <>
                                       <button
-                                        onClick={() => setEditingMember(member.id)}
-                                        className="text-blue-400 hover:text-blue-300 transition-colors p-1"
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          startEditingMember(member);
+                                        }}
+                                        className="text-blue-400 hover:text-blue-300 transition-colors p-1 cursor-pointer"
                                         title="Change role"
                                       >
-                                        <Edit3 size={14} />
+                                        <Edit3 size={18} />
                                       </button>
                                       <button
-                                        onClick={() => removeMember(member.id)}
-                                        className="text-red-400 hover:text-red-300 transition-colors p-1"
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleRemoveMember(member);
+                                        }}
+                                        className="text-red-400 hover:text-red-300 transition-colors p-1 cursor-pointer"
                                         title="Remove member"
                                       >
-                                        <UserMinus size={14} />
+                                        <UserMinus size={18} />
                                       </button>
                                     </>
                                   )}
@@ -722,6 +851,109 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                       )}
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === "danger" && isCreator && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-semibold text-red-400 flex items-center gap-2">
+                      <AlertTriangle size={20} />
+                      Danger Zone
+                    </h3>
+                  </div>
+                  
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <AlertTriangle size={20} className="text-red-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-red-300 mb-2">
+                          Delete Organization
+                        </h4>
+                        <p className="text-red-400/80 text-sm mb-4 leading-relaxed">
+                          Permanently delete this organization and all of its data. This action cannot be undone.
+                          All members will be removed, and all channels, roles, and settings will be lost forever.
+                        </p>
+                        
+                        {!showDeleteConfirm ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowDeleteConfirm(true)}
+                            className="flex items-center px-4 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-medium"
+                          >
+                            <Trash2 size={16} className="mr-2" />
+                            Delete Organization
+                          </button>
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="p-4 bg-red-600/10 border border-red-500/30 rounded-lg">
+                              <p className="text-red-300 text-sm font-medium mb-3">
+                                To confirm deletion, please type the organization name:
+                              </p>
+                              <p className="text-white font-mono text-sm mb-3 bg-black/20 px-3 py-2 rounded-lg border">
+                                {organization?.name}
+                              </p>
+                              <input
+                                type="text"
+                                value={deleteConfirmation}
+                                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                                placeholder="Type organization name here"
+                                className="w-full px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/5 text-white text-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
+                              />
+                            </div>
+                            
+                            <div className="flex space-x-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowDeleteConfirm(false);
+                                  setDeleteConfirmation("");
+                                }}
+                                className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 rounded-lg text-gray-300 hover:text-gray-200 text-sm font-medium transition-all duration-200"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleDeleteOrganization}
+                                disabled={deleteConfirmation !== organization?.name || loading}
+                                className="flex items-center px-4 py-2 bg-red-600/30 hover:bg-red-600/40 border border-red-500/40 rounded-lg text-red-200 hover:text-red-100 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {loading ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-red-200/30 border-t-red-200 rounded-full animate-spin mr-2"></div>
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 size={16} className="mr-2" />
+                                    Delete Forever
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                      <AlertTriangle size={16} className="text-yellow-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-yellow-300 text-sm font-medium mb-1">
+                          Important Notes:
+                        </p>
+                        <ul className="text-yellow-400/80 text-xs space-y-1">
+                          <li>• All organization data will be permanently deleted</li>
+                          <li>• All members will be removed from the organization</li>
+                          <li>• This action cannot be undone</li>
+                          <li>• Consider transferring ownership instead if you want to leave</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -758,6 +990,23 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
         </div>
       </div>
     </div>
+    
+    {/* Member Removal Confirmation Modal - Outside main container */}
+    <ConfirmationModal
+      isOpen={showRemoveMemberConfirm}
+      onClose={() => {
+        setShowRemoveMemberConfirm(false);
+        setMemberToRemove(null);
+      }}
+      onConfirm={confirmRemoveMember}
+      title="Remove Member"
+      message={`Are you sure you want to remove "${memberToRemove?.name}" from the organization? They will lose access to all channels and content. This action cannot be undone.`}
+      confirmText="Remove Member"
+      cancelText="Cancel"
+      type="danger"
+      loading={memberActionLoading}
+    />
+    </>
   );
 };
 

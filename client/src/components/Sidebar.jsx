@@ -1,10 +1,10 @@
-import { Link, useLocation } from 'react-router';
-import { Home, Calendar, Users, Settings, LogOut, UserPlus, LogIn, Cog, Hash } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
+import { Calendar, Settings, Hash, Users, Cog, UserPlus, LogIn, Home, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { useState, useEffect } from 'react';
+import ConfirmationModal from './ConfirmationModal';
 
 const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   const location = useLocation();
@@ -15,6 +15,9 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   const [loadingOrg, setLoadingOrg] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [userPermissions, setUserPermissions] = useState(null);
+  const [showLeaveOrgConfirm, setShowLeaveOrgConfirm] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const navItems = [
     { name: 'Dashboard', icon: <Home size={23} />, path: '/home/dashboard' },
@@ -62,15 +65,15 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   };
 
   // Leave organization
-  const handleLeaveOrg = async () => {
+  const handleLeaveOrg = () => {
     if (!organization) return;
-    
-    const confirmLeave = window.confirm(
-      `Are you sure you want to leave ${organization.name}? This action cannot be undone.`
-    );
-    
-    if (!confirmLeave) return;
+    setShowLeaveOrgConfirm(true);
+  };
 
+  const confirmLeaveOrg = async () => {
+    if (!organization) return;
+
+    setActionLoading(true);
     let toastId;
     try {
       toastId = toast.loading("Leaving organization...");
@@ -82,6 +85,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
       
       toast.success("Left organization successfully", { id: toastId });
       setOrganization(null);
+      setShowLeaveOrgConfirm(false);
       await checkAuth(); // Refresh user data
     } catch (err) {
       console.error("Error leaving organization:", err);
@@ -89,6 +93,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
         err?.response?.data?.message || "Failed to leave organization",
         { id: toastId }
       );
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -106,6 +112,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
       toast.error("You don't have permission to manage organization settings");
       return;
     }
+    
     if (onOrgSettingsClick) {
       onOrgSettingsClick(organization, userRole, userPermissions);
     }
@@ -118,7 +125,12 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
     return userPermissions.settings_access || userPermissions.manage_channels || userPermissions.roles_access;
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
+    setActionLoading(true);
     let toastId;
     try {
       toastId = toast.loading("Logging out...");
@@ -126,9 +138,12 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
       await logout();
       await checkAuth();
       toast.success("Logged out successfully", { id: toastId });
+      setShowLogoutConfirm(false);
       navigate("/login", { state: { message: "Logged out successfully" } });
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to log out", { id: toastId });
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -185,7 +200,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                     className="p-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-lg transition-all duration-200 text-blue-300 hover:text-blue-200 cursor-pointer"
                     title="Organization settings"
                   >
-                    <Cog size={14} />
+                    <Cog size={20} />
                   </button>
                 )}
               </div>
@@ -278,6 +293,31 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
           </button>
         </div>
       </div>
+      
+      {/* Confirmation Modals */}
+      <ConfirmationModal
+        isOpen={showLeaveOrgConfirm}
+        onClose={() => setShowLeaveOrgConfirm(false)}
+        onConfirm={confirmLeaveOrg}
+        title="Leave Organization"
+        message={`Are you sure you want to leave "${organization?.name}"? You will lose access to all channels, files, and conversations. This action cannot be undone.`}
+        confirmText="Leave Organization"
+        cancelText="Cancel"
+        type="danger"
+        loading={actionLoading}
+      />
+      
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
+        title="Logout"
+        message="Are you sure you want to logout? You will need to sign in again to access your account."
+        confirmText="Logout"
+        cancelText="Cancel"
+        type="warning"
+        loading={actionLoading}
+      />
     </div>
   );
 };

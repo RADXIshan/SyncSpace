@@ -10,6 +10,7 @@ import {
   getOrganizationMembers,
   updateMemberRole,
   removeMember,
+  deleteOrganization,
 } from "../controllers/orgControllers.js";
 
 const router = Router();
@@ -24,5 +25,6 @@ router.get("/:org_id/members", getOrganizationMembers);
 router.put("/:org_id", updateOrganization);
 router.put("/:org_id/members/:member_id/role", updateMemberRole);
 router.delete("/:org_id/members/:member_id", removeMember);
+router.delete("/:org_id", deleteOrganization);
 
 export default router;

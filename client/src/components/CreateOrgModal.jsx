@@ -188,6 +188,11 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
       toast.success("Organisation created successfully", { id: toastId });
       if (onSuccess) onSuccess(response.data.organization);
       onClose();
+      
+      // Refresh the page to show the new organization
+      setTimeout(() => {
+        window.location.reload();
+      }, 500); // Small delay to allow modal to close gracefully
     } catch (err) {
       console.error("Error creating organization:", err);
       toast.error(

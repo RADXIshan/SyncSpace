@@ -154,7 +154,7 @@ export const getOrganization = async (req, res) => {
       SELECT channel_id, channel_name, channel_description
       FROM org_channels
       WHERE org_id = ${org_id}
-      ORDER BY channel_name
+      ORDER BY channel_id ASC
     `;
 
     // Get organization roles
@@ -163,7 +163,7 @@ export const getOrganization = async (req, res) => {
              settings_access, notes_access, meeting_access, noticeboard_access, roles_access
       FROM org_roles
       WHERE org_id = ${org_id}
-      ORDER BY role_name
+      ORDER BY role_id ASC
     `;
 
     res.status(200).json({
@@ -376,6 +376,7 @@ export const getUserRole = async (req, res) => {
         meeting_access: isCreator || member.meeting_access || false,
         noticeboard_access: isCreator || member.noticeboard_access || false,
         roles_access: isCreator || member.roles_access || false,
+        isCreator: isCreator, // Include isCreator in permissions object
       },
       isCreator,
     });
@@ -783,6 +784,57 @@ export const removeMember = async (req, res) => {
     });
   } catch (error) {
     console.error("Error removing member:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Delete Organization
+export const deleteOrganization = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const org_id = req.params.org_id;
+
+    // Get organization details and verify creator
+    const [org] = await sql`
+      SELECT created_by, org_name
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!org) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    // Only organization creator can delete the organization
+    if (org.created_by !== userId) {
+      return res.status(403).json({ message: "Only the organization creator can delete the organization" });
+    }
+
+    // Delete all related data sequentially
+    // Delete organization roles
+    await sql`DELETE FROM org_roles WHERE org_id = ${org_id}`;
+    
+    // Delete organization channels
+    await sql`DELETE FROM org_channels WHERE org_id = ${org_id}`;
+    
+    // Update all users' org_id to NULL
+    await sql`UPDATE users SET org_id = NULL WHERE org_id = ${org_id}`;
+    
+    // Delete organization members
+    await sql`DELETE FROM org_members WHERE org_id = ${org_id}`;
+    
+    // Finally, delete the organization itself
+    await sql`DELETE FROM organisations WHERE org_id = ${org_id}`;
+
+    res.status(200).json({
+      message: `Organization "${org.org_name}" has been successfully deleted`
+    });
+  } catch (error) {
+    console.error("Error deleting organization:", error);
     if (error.message === "No token provided" || error.message === "Invalid token") {
       return res.status(401).json({ message: error.message });
     }

@@ -48,8 +48,9 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
 
   const refreshUser = async () => {
     try {
-      const res = await axios.get(
+      const res = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/auth/getMe`,
+        {},
         { withCredentials: true }
       );
       if (res.data.user) {
@@ -79,8 +80,9 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick }) => {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await axios.get(
+        const res = await axios.post(
           `${import.meta.env.VITE_BASE_URL}/api/auth/getMe`,
+          {},
           { withCredentials: true }
         );
         if (

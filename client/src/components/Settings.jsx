@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff, X, Save} from "lucide-react";
+import ConfirmationModal from "./ConfirmationModal";
 
 const Settings = ({ onClose }) => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const Settings = ({ onClose }) => {
   const [photoFile, setPhotoFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -144,14 +146,11 @@ const Settings = ({ onClose }) => {
     else navigate(-1);
   };
 
-  const handleDelete = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone."
-      )
-    )
-      return;
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const confirmDelete = async () => {
     setLoading(true);
     let toastId;
     try {
@@ -163,6 +162,7 @@ const Settings = ({ onClose }) => {
       });
 
       toast.success("Account deleted", { id: toastId });
+      setShowDeleteConfirm(false);
       window.location.href = "/";
     } catch (err) {
       toast.error(
@@ -320,6 +320,19 @@ const Settings = ({ onClose }) => {
         </div>
       </div>
       </div>
+      
+      {/* Delete Account Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This will permanently remove all your data, including your profile, organization memberships, and settings. This action cannot be undone."
+        confirmText="Delete Account"
+        cancelText="Cancel"
+        type="danger"
+        loading={loading}
+      />
     </div>
   );
 };

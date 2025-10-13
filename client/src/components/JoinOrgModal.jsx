@@ -29,6 +29,11 @@ const JoinOrgModal = ({ onClose, onSuccess }) => {
       toast.success("Successfully joined organisation", { id: toastId });
       if (onSuccess) onSuccess(response.data.organization);
       onClose();
+      
+      // Refresh the page to show the joined organization
+      setTimeout(() => {
+        window.location.reload();
+      }, 500); // Small delay to allow modal to close gracefully
     } catch (err) {
       console.error("Error joining organization:", err);
       toast.error(err.response?.data?.message || err.response?.data?.error || err.message || "Something went wrong", { id: toastId });

@@ -37,10 +37,10 @@ export const createOrganization = async (req, res) => {
       RETURNING org_id, org_name, access_level, org_code, created_by
     `;
 
-    // --- Add creator as admin ---
+    // --- Add creator with special Creator role ---
     await sql`
       INSERT INTO org_members (org_id, user_id, role, joined_at)
-      VALUES (${newOrg.org_id}, ${userId}, 'admin', NOW())
+      VALUES (${newOrg.org_id}, ${userId}, 'Creator', NOW())
     `;
 
     // --- Create channels ---
@@ -255,14 +255,24 @@ export const joinOrganization = async (req, res) => {
     // Anyone with the correct organization code can join
     // Access level restrictions only apply to invitation-based joining, not direct code joining
 
-    // Get the default role for new members (first role in org_roles table)
-    const [defaultRole] = await sql`
-      SELECT role_name
+    // Get the role with the least permissions for new members
+    const defaultRoles = await sql`
+      SELECT role_name, 
+             (CASE WHEN manage_channels THEN 1 ELSE 0 END +
+              CASE WHEN manage_users THEN 1 ELSE 0 END +
+              CASE WHEN settings_access THEN 1 ELSE 0 END +
+              CASE WHEN notes_access THEN 1 ELSE 0 END +
+              CASE WHEN meeting_access THEN 1 ELSE 0 END +
+              CASE WHEN noticeboard_access THEN 1 ELSE 0 END +
+              CASE WHEN roles_access THEN 1 ELSE 0 END +
+              CASE WHEN invite_access THEN 1 ELSE 0 END) as permission_count
       FROM org_roles
       WHERE org_id = ${organization.org_id}
-      ORDER BY role_id ASC
+      ORDER BY permission_count ASC, role_id ASC
       LIMIT 1
     `;
+
+    const defaultRole = defaultRoles[0];
 
     if (!defaultRole) {
       return res.status(500).json({ message: "No roles found in organization. Please contact the administrator." });
@@ -700,6 +710,11 @@ export const updateMemberRole = async (req, res) => {
     // Prevent changing creator's role
     if (targetMember.user_id === org?.created_by) {
       return res.status(400).json({ message: "Cannot change the role of organization creator" });
+    }
+
+    // Prevent assigning the Creator role to anyone
+    if (role.trim() === 'Creator') {
+      return res.status(400).json({ message: "The Creator role cannot be assigned. It is reserved for the organization creator." });
     }
 
     // Check if the role exists in the organization

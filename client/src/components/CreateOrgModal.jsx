@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { X, Plus, Trash2, Users, Settings, Globe, Lock } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import { getRoleStyle } from "../utils/roleColors";
 
 const CreateOrgModal = ({ onClose, onSuccess }) => {
   const [orgName, setOrgName] = useState("");
@@ -436,20 +437,27 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                     className="p-4 rounded-lg border border-white/10 bg-white/5"
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <input
-                        type="text"
-                        value={role.name}
-                        onChange={(e) =>
-                          updateRole(roleIndex, "name", e.target.value)
-                        }
-                        placeholder="Role name"
-                        className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500"
-                      />
+                      <div className="flex items-center gap-3 flex-1">
+                        <input
+                          type="text"
+                          value={role.name}
+                          onChange={(e) =>
+                            updateRole(roleIndex, "name", e.target.value)
+                          }
+                          placeholder="Role name"
+                          className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 flex-1"
+                        />
+                        {role.name.trim() && (
+                          <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${getRoleStyle(role.name).background} ${getRoleStyle(role.name).border} ${getRoleStyle(role.name).text}`}>
+                            {role.name}
+                          </span>
+                        )}
+                      </div>
                       {roles.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeRole(roleIndex)}
-                          className="text-red-400 hover:text-red-300 transition-colors"
+                          className="text-red-400 hover:text-red-300 transition-colors ml-3"
                         >
                           <Trash2 size={16} />
                         </button>

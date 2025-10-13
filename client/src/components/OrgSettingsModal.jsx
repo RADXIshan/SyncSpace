@@ -3,6 +3,7 @@ import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield, UserMinus, Cro
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import ConfirmationModal from "./ConfirmationModal";
+import { getRoleStyle } from "../utils/roleColors";
 
 const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, onSuccess }) => {
   // Check if current user is the organization creator
@@ -920,9 +921,16 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                         className="bg-white/5 border border-white/10 rounded-xl p-4"
                       >
                         <div className="flex justify-between items-start mb-3">
-                          <h4 className="text-sm font-medium text-gray-300">
-                            {role.name || `Role ${index + 1}`}
-                          </h4>
+                          <div className="flex items-center gap-3">
+                            <h4 className="text-sm font-medium text-gray-300">
+                              {role.name || `Role ${index + 1}`}
+                            </h4>
+                            {role.name.trim() && (
+                              <span className={`px-2 py-1 rounded-md text-xs font-medium border ${getRoleStyle(role.name).background} ${getRoleStyle(role.name).border} ${getRoleStyle(role.name).text}`}>
+                                {role.name}
+                              </span>
+                            )}
+                          </div>
                           {roles.length > 1 && (
                             <button
                               type="button"
@@ -1134,7 +1142,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                   </div>
                                   <p className="text-xs text-gray-400">{member.email}</p>
                                   <div className="flex items-center space-x-2 mt-1">
-                                    <span className="text-xs px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded-md text-blue-300 capitalize">
+                                    <span className={`text-xs px-2 py-1 rounded-md capitalize font-medium ${getRoleStyle(member.role).background} border ${getRoleStyle(member.role).border} ${getRoleStyle(member.role).text}`}>
                                       {member.role}
                                     </span>
                                     <span className="text-xs text-gray-500">
@@ -1155,11 +1163,13 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                         disabled={memberActionLoading}
                                       >
                                         {organization?.roles && organization.roles.length > 0 ? (
-                                          organization.roles.map((role) => (
-                                            <option key={role.id || role.name} value={role.name} className="bg-gray-800 text-white">
-                                              {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                                            </option>
-                                          ))
+                                          organization.roles
+                                            .filter(role => role.name.toLowerCase() !== 'creator') // Exclude Creator role from dropdown
+                                            .map((role) => (
+                                              <option key={role.id || role.name} value={role.name} className="bg-gray-800 text-white">
+                                                {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                                              </option>
+                                            ))
                                         ) : (
                                           <>
                                             <option value="member" className="bg-gray-800 text-white">Member</option>

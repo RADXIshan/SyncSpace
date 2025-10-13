@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import ConfirmationModal from './ConfirmationModal';
+import { getRoleStyle } from '../utils/roleColors';
 
 const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   const location = useLocation();
@@ -110,21 +111,6 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
     }
   };
 
-  // Get role-specific styling
-  const getRoleStyle = (role) => {
-    if (!role) return { bg: 'bg-gray-600/30', border: 'border-gray-500/30', text: 'text-gray-300' };
-    
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return { bg: 'bg-red-600/30', border: 'border-red-500/30', text: 'text-red-300' };
-      case 'moderator':
-        return { bg: 'bg-orange-600/30', border: 'border-orange-500/30', text: 'text-orange-300' };
-      case 'member':
-        return { bg: 'bg-blue-600/30', border: 'border-blue-500/30', text: 'text-blue-300' };
-      default:
-        return { bg: 'bg-violet-600/30', border: 'border-violet-500/30', text: 'text-violet-300' };
-    }
-  };
 
   // Check if user can invite others
   const canInvite = () => {
@@ -231,25 +217,10 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                       <Users size={18} className="text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-white text-sm leading-tight truncate max-w-[140px]">
+                      <h3 className="font-bold text-white text-md leading-tight truncate max-w-[140px]">
                         {organization.name}
                       </h3>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-xs text-slate-400 font-medium">Org</span>
-                        {userRole && (
-                          <>
-                            <div className="w-1 h-1 bg-slate-400 rounded-full flex-shrink-0"></div>
-                            <div className={`px-1.5 py-0.5 ${getRoleStyle(userRole).bg} border ${getRoleStyle(userRole).border} rounded-full flex items-center gap-1 flex-shrink-0`}>
-                              {userPermissions?.isCreator && (
-                                <Crown size={8} className={`${getRoleStyle(userRole).text} flex-shrink-0`} />
-                              )}
-                              <span className={`text-xs font-semibold ${getRoleStyle(userRole).text} capitalize`}>
-                                {userRole}
-                              </span>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                      <p className="text-xs text-slate-400 font-medium mt-1">Organization</p>
                     </div>
                   </div>
                   {canManageOrg() && (
@@ -270,7 +241,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                   {canInvite() && (
                     <button
                       onClick={handleInvite}
-                      className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-violet-600/30 to-violet-500/30 hover:from-violet-600/40 hover:to-violet-500/40 border border-violet-500/30 hover:border-violet-400/50 rounded-xl transition-all duration-200 text-violet-300 hover:text-violet-200 text-sm font-semibold cursor-pointer shadow-lg group"
+                      className="flex items-center justify-center px-2 py-1 bg-gradient-to-r from-violet-600/30 to-violet-500/30 hover:from-violet-600/40 hover:to-violet-500/40 border border-violet-500/30 hover:border-violet-400/50 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-sm font-semibold cursor-pointer shadow-lg group"
                       title="Invite users to organization"
                     >
                       <UserPlus size={16} className="mr-2 group-hover:scale-110 transition-transform duration-200" />
@@ -279,7 +250,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                   )}
                   <button
                     onClick={handleLeaveOrg}
-                    className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-4 py-3 bg-gradient-to-r from-red-600/30 to-red-500/30 hover:from-red-600/40 hover:to-red-500/40 border border-red-500/30 hover:border-red-400/50 rounded-xl transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-semibold cursor-pointer shadow-lg group`}
+                    className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-2 py-1 bg-gradient-to-r from-red-600/30 to-red-500/30 hover:from-red-600/40 hover:to-red-500/40 border border-red-500/30 hover:border-red-400/50 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-semibold cursor-pointer shadow-lg group`}
                     title="Leave organization"
                   >
                     <LogIn size={16} className="mr-2 rotate-180 group-hover:scale-110 transition-transform duration-200" />
@@ -331,9 +302,21 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
           )}
           <div className="ml-3 flex-1">
             <p className="font-semibold text-white text-lg leading-tight">{user?.name || 'User Name'}</p>
-            <div className='flex items-center mt-1'>
-              <div className='status-online h-2 w-2 rounded-full'></div>
-              <p className="text-sm text-slate-400 ml-1 font-medium">Online</p>
+            <div className='flex items-center mt-1 gap-2'>
+              <div className='flex items-center'>
+                <div className='status-online h-2 w-2 rounded-full'></div>
+                <p className="text-sm text-slate-400 ml-1 font-medium">Online</p>
+              </div>
+              {organization && userRole && (
+                <div className={`px-2 py-1 ${getRoleStyle(userRole).background} border ${getRoleStyle(userRole).border} rounded-md flex items-center gap-1 flex-shrink-0`}>
+                  {userPermissions?.isCreator && (
+                    <Crown size={10} className={`${getRoleStyle(userRole).text} flex-shrink-0`} />
+                  )}
+                  <span className={`text-xs font-semibold ${getRoleStyle(userRole).text} capitalize`}>
+                    {userRole}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

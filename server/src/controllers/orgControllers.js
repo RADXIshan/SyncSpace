@@ -81,7 +81,7 @@ export const createOrganization = async (req, res) => {
             INSERT INTO org_roles (
               org_id, role_name,
               manage_channels, manage_users,
-              settings_access, notes_access, meeting_access, noticeboard_access, roles_access,
+              settings_access, notes_access, meeting_access, noticeboard_access, roles_access, invite_access,
               created_by
             )
             VALUES (
@@ -94,6 +94,7 @@ export const createOrganization = async (req, res) => {
               ${role.permissions?.meeting_access || false},
               ${role.permissions?.noticeboard_access || false},
               ${role.permissions?.roles_access || false},
+              ${role.permissions?.invite_access || false},
               ${userId}
             )
           `;
@@ -160,7 +161,7 @@ export const getOrganization = async (req, res) => {
     // Get organization roles
     const roles = await sql`
       SELECT role_id, role_name, manage_channels, manage_users,
-             settings_access, notes_access, meeting_access, noticeboard_access, roles_access
+             settings_access, notes_access, meeting_access, noticeboard_access, roles_access, invite_access
       FROM org_roles
       WHERE org_id = ${org_id}
       ORDER BY role_id ASC
@@ -191,6 +192,7 @@ export const getOrganization = async (req, res) => {
             meeting_access: role.meeting_access,
             noticeboard_access: role.noticeboard_access,
             roles_access: role.roles_access,
+            invite_access: role.invite_access,
           },
         })),
       },
@@ -249,6 +251,39 @@ export const joinOrganization = async (req, res) => {
     if (currentUser?.org_id) {
       return res.status(400).json({ message: "You are already a member of another organization. Please leave your current organization first." });
     }
+
+    // Enforce access level restrictions
+    if (organization.access_level === 'invite-only' || organization.access_level === 'admin-only') {
+      // Check if there's a valid invitation for this user
+      const invitation = await sql`
+        SELECT invitation_id, expires_at
+        FROM invitations
+        WHERE org_id = ${organization.org_id} 
+          AND invited_user_id = ${userId} 
+          AND status = 'pending'
+        LIMIT 1
+      `;
+
+      if (invitation.length === 0) {
+        const accessMessage = organization.access_level === 'invite-only' 
+          ? "This organization is invite-only. You need an invitation to join."
+          : "This organization is admin-only. You need an invitation from an admin to join.";
+        return res.status(403).json({ message: accessMessage });
+      }
+
+      // Check if invitation has expired
+      if (new Date() > new Date(invitation[0].expires_at)) {
+        return res.status(400).json({ message: "Your invitation has expired" });
+      }
+
+      // Update invitation status to accepted
+      await sql`
+        UPDATE invitations
+        SET status = 'accepted', updated_at = NOW()
+        WHERE invitation_id = ${invitation[0].invitation_id}
+      `;
+    }
+    // For 'public' access level, anyone can join directly using the code
 
     // Add user to organization members
     await sql`
@@ -344,7 +379,7 @@ export const getUserRole = async (req, res) => {
     // Get user's role and permissions in the organization
     const [member] = await sql`
       SELECT om.role, r.settings_access, r.manage_channels, r.manage_users,
-             r.notes_access, r.meeting_access, r.noticeboard_access, r.roles_access
+             r.notes_access, r.meeting_access, r.noticeboard_access, r.roles_access, r.invite_access
       FROM org_members om
       LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
       WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
@@ -376,6 +411,7 @@ export const getUserRole = async (req, res) => {
         meeting_access: isCreator || member.meeting_access || false,
         noticeboard_access: isCreator || member.noticeboard_access || false,
         roles_access: isCreator || member.roles_access || false,
+        invite_access: isCreator || member.invite_access || false,
         isCreator: isCreator, // Include isCreator in permissions object
       },
       isCreator,
@@ -521,7 +557,7 @@ export const updateOrganization = async (req, res) => {
             INSERT INTO org_roles (
               org_id, role_name,
               manage_channels, manage_users,
-              settings_access, notes_access, meeting_access, noticeboard_access, roles_access,
+              settings_access, notes_access, meeting_access, noticeboard_access, roles_access, invite_access,
               created_by
             )
             VALUES (
@@ -534,6 +570,7 @@ export const updateOrganization = async (req, res) => {
               ${role.permissions?.meeting_access || false},
               ${role.permissions?.noticeboard_access || false},
               ${role.permissions?.roles_access || false},
+              ${role.permissions?.invite_access || false},
               ${userId}
             )
           `;
@@ -860,9 +897,10 @@ export const sendInvitations = async (req, res) => {
 
     // Check if user has permission to send invites
     const [member] = await sql`
-      SELECT role
-      FROM org_members
-      WHERE org_id = ${org_id} AND user_id = ${userId}
+      SELECT om.role, r.invite_access
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
       LIMIT 1
     `;
 
@@ -877,9 +915,33 @@ export const sendInvitations = async (req, res) => {
       return res.status(403).json({ message: "You are not a member of this organization" });
     }
 
-    // Check access level permissions
-    if (org?.access_level === 'admin-only' && member.role !== 'admin' && org?.created_by !== userId) {
-      return res.status(403).json({ message: "Only admins can send invitations in this organization" });
+    const isCreator = org?.created_by === userId;
+    
+    // Check access level permissions based on organization settings
+    const hasInviteAccess = member.invite_access === true; // Handle null/undefined values
+    
+    if (org?.access_level === 'public') {
+      // Public: Anyone can join directly using the code, no invitation needed
+      // But members can still send invitations if they have invite_access
+      if (!isCreator && member.role !== 'admin' && !hasInviteAccess) {
+        return res.status(403).json({ 
+          message: "You don't have permission to send invitations. Please ask an admin or get 'Invite Access' permission." 
+        });
+      }
+    } else if (org?.access_level === 'invite-only') {
+      // Invite-only: Only permitted members can invite
+      if (!isCreator && member.role !== 'admin' && !hasInviteAccess) {
+        return res.status(403).json({ 
+          message: "You don't have permission to send invitations. Please ask an admin or get 'Invite Access' permission." 
+        });
+      }
+    } else if (org?.access_level === 'admin-only') {
+      // Admin-only: Only creator or admins can invite
+      if (!isCreator && member.role !== 'admin') {
+        return res.status(403).json({ 
+          message: "Only the organization creator or admins can send invitations in this organization." 
+        });
+      }
     }
 
     // Validate email formats

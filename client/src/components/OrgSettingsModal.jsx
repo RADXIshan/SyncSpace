@@ -29,6 +29,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
         meeting_access: false,
         noticeboard_access: false,
         roles_access: false,
+        invite_access: false,
       }
     }];
   });
@@ -545,6 +546,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
         meeting_access: false,
         noticeboard_access: false,
         roles_access: false,
+        invite_access: false,
       }
     }];
     setRoles(newRoles);
@@ -619,6 +621,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
     { key: "meeting_access", label: "Meeting Access" },
     { key: "noticeboard_access", label: "Noticeboard Access" },
     { key: "roles_access", label: "Manage Roles" },
+    { key: "invite_access", label: "Send Invitations" },
   ];
 
   // Determine available tabs based on permissions

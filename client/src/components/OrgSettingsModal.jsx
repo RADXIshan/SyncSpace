@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield, UserMinus, Crown, Edit3, AlertTriangle } from "lucide-react";
+import { X, Globe, Users, Lock, Save, Plus, Trash2, Hash, Shield, UserMinus, Crown, Edit3, AlertTriangle, Search, Filter, ChevronDown } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import ConfirmationModal from "./ConfirmationModal";
@@ -38,7 +38,10 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   const [tempRole, setTempRole] = useState("");
   const [loading, setLoading] = useState(false);
   const [memberActionLoading, setMemberActionLoading] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRemoveMemberConfirm, setShowRemoveMemberConfirm] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState(null);
@@ -200,6 +203,61 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       setShowDeleteConfirm(false);
       setDeleteConfirmation("");
     }
+  };
+
+  // Filter and search members
+  const getFilteredMembers = () => {
+    if (!members || members.length === 0) return [];
+    
+    let filteredMembers = [...members];
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filteredMembers = filteredMembers.filter(member => 
+        member.name?.toLowerCase().includes(query) ||
+        member.email?.toLowerCase().includes(query) ||
+        member.role?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Role filter
+    if (roleFilter !== "all") {
+      filteredMembers = filteredMembers.filter(member => 
+        member.role?.toLowerCase() === roleFilter.toLowerCase()
+      );
+    }
+    
+    // Date filter
+    if (dateFilter !== "all") {
+      const now = new Date();
+      filteredMembers = filteredMembers.filter(member => {
+        const joinedDate = new Date(member.joinedAt);
+        const daysDiff = Math.floor((now - joinedDate) / (1000 * 60 * 60 * 24));
+        
+        switch (dateFilter) {
+          case "today":
+            return daysDiff === 0;
+          case "week":
+            return daysDiff <= 7;
+          case "month":
+            return daysDiff <= 30;
+          case "3months":
+            return daysDiff <= 90;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    return filteredMembers;
+  };
+
+  // Get unique roles from members for filter options
+  const getUniqueRoles = () => {
+    if (!members || members.length === 0) return [];
+    const roles = [...new Set(members.map(member => member.role).filter(Boolean))];
+    return roles.sort();
   };
 
   // Update state when organization prop changes
@@ -703,9 +761,117 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                       Organization Members
                     </h3>
                     <div className="text-sm text-gray-400">
-                      {members.length} member{members.length !== 1 ? 's' : ''}
+                      {getFilteredMembers().length} of {members.length} member{members.length !== 1 ? 's' : ''}
                     </div>
                   </div>
+                  
+                  {/* Search and Filters */}
+                  <div className="space-y-4">
+                    {/* Search Bar and Filter Toggle - Side by Side */}
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+                      {/* Search Bar */}
+                      <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                          <Search size={16} className="text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search members by name, email, or role..."
+                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
+                        />
+                      </div>
+                      
+                      {/* Filter Toggle Button and Clear Filters */}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setShowFilters(!showFilters)}
+                          className="flex items-center px-3 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-200 text-gray-300 hover:text-white text-sm font-medium"
+                        >
+                          <Filter size={16} className="mr-2" />
+                          Filters
+                          <ChevronDown size={16} className={`ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {/* Clear Filters */}
+                        {(searchQuery || roleFilter !== "all" || dateFilter !== "all") && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSearchQuery("");
+                              setRoleFilter("all");
+                              setDateFilter("all");
+                            }}
+                            className="text-xs text-violet-400 hover:text-violet-300 transition-colors whitespace-nowrap"
+                          >
+                            Clear all filters
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Filter Options */}
+                    {showFilters && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
+                        {/* Role Filter */}
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-2">Filter by Role</label>
+                          <select
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                          >
+                            <option value="all">All Roles</option>
+                            {getUniqueRoles().map((role) => (
+                              <option key={role} value={role}>
+                                {role.charAt(0).toUpperCase() + role.slice(1)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        {/* Date Filter */}
+                        <div>
+                          <label className="block text-xs text-gray-400 mb-2">Filter by Join Date</label>
+                          <select
+                            value={dateFilter}
+                            onChange={(e) => setDateFilter(e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                          >
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">Last Week</option>
+                            <option value="month">Last Month</option>
+                            <option value="3months">Last 3 Months</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Active Filters Summary */}
+                  {(searchQuery || roleFilter !== "all" || dateFilter !== "all") && (
+                    <div className="flex flex-wrap items-center gap-2 p-3 bg-violet-500/10 border border-violet-500/20 rounded-lg">
+                      <span className="text-xs text-violet-300 font-medium">Active filters:</span>
+                      {searchQuery && (
+                        <span className="inline-flex items-center px-2 py-1 bg-violet-600/20 border border-violet-500/30 rounded text-xs text-violet-200">
+                          Search: "{searchQuery}"
+                        </span>
+                      )}
+                      {roleFilter !== "all" && (
+                        <span className="inline-flex items-center px-2 py-1 bg-blue-600/20 border border-blue-500/30 rounded text-xs text-blue-200">
+                          Role: {roleFilter.charAt(0).toUpperCase() + roleFilter.slice(1)}
+                        </span>
+                      )}
+                      {dateFilter !== "all" && (
+                        <span className="inline-flex items-center px-2 py-1 bg-green-600/20 border border-green-500/30 rounded text-xs text-green-200">
+                          Date: {dateFilter === "today" ? "Today" : dateFilter === "week" ? "Last Week" : dateFilter === "month" ? "Last Month" : "Last 3 Months"}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   
                   {membersLoading ? (
                     <div className="flex justify-center py-8">
@@ -713,13 +879,22 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {members.length === 0 ? (
+                      {getFilteredMembers().length === 0 ? (
                         <div className="text-center py-8 text-gray-400">
                           <Users size={48} className="mx-auto mb-4 opacity-50" />
-                          <p>No members found</p>
+                          {members.length === 0 ? (
+                            <p>No members found</p>
+                          ) : (
+                            <div>
+                              <p>No members match your filters</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Try adjusting your search or filter criteria
+                              </p>
+                            </div>
+                          )}
                         </div>
                       ) : (
-                        members.map((member) => (
+                        getFilteredMembers().map((member) => (
                           <div key={member.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">

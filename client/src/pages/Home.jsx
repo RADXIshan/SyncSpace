@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router'
+import { Routes, Route, Navigate, useNavigate } from 'react-router'
 import Sidebar from '../components/Sidebar'
 import Dashboard from '../components/Dashboard'
 import Calendar from '../components/Calendar'
+import Messages from '../components/Messages'
+import Notifications from '../components/Notifications'
 import Settings from '../components/Settings'
 import JoinOrgModal from '../components/JoinOrgModal'
 import CreateOrgModal from '../components/CreateOrgModal'
@@ -10,6 +12,7 @@ import OrgSettingsModal from '../components/OrgSettingsModal'
 import InviteModal from '../components/InviteModal'
 
 const Home = () => {
+  const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -41,9 +44,13 @@ const Home = () => {
           <Route path="/dashboard" element={<Dashboard 
             onSettingsClick={() => setShowSettings(true)} 
             onJoinOrgClick={() => setShowJoinModal(true)} 
-            onCreateOrgClick={() => setShowCreateModal(true)} 
+            onCreateOrgClick={() => setShowCreateModal(true)}
+            onMessagesClick={() => navigate('/home/messages')}
+            onNotificationsClick={() => navigate('/home/notifications')}
           />} />
           <Route path="/calendar" element={<Calendar />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="*" element={<Navigate to="/home/dashboard" replace />} />
         </Routes>
         {showSettings && <Settings onClose={() => setShowSettings(false)} />}

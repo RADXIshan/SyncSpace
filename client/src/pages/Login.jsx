@@ -1,6 +1,6 @@
 import formpage from "../assets/formpage.jpg";
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check, X, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -9,22 +9,54 @@ import { useAuth } from "../context/AuthContext";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(true);
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({ email: true, password: true });
+  const [validation, setValidation] = useState({
+    email: { isValid: false, message: "", touched: false },
+    password: { isValid: false, message: "", touched: false }
+  });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { checkAuth } = useAuth();
+
+  const validateField = (name, value) => {
+    let isValid = false;
+    let message = "";
+    
+    switch (name) {
+      case "email":
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value.trim()) {
+          message = "Email is required";
+        } else if (!emailRegex.test(value.trim())) {
+          message = "Please enter a valid email address";
+        } else {
+          isValid = true;
+          message = "Valid email format";
+        }
+        break;
+      case "password":
+        if (!value) {
+          message = "Password is required";
+        } else if (value.length < 6) {
+          message = "Password must be at least 6 characters";
+        } else {
+          isValid = true;
+          message = "Password format is valid";
+        }
+        break;
+    }
+    
+    return { isValid, message };
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    let invalid = false;
-    if (name === "email") {
-      invalid = !/^\S+@\S+\.\S+$/.test(value);
-    } else if (name === "password") {
-      invalid = value.length < 6;
-    }
-    setErrors((prev) => ({ ...prev, [name]: invalid }));
+    const { isValid, message } = validateField(name, value);
+    setValidation((prev) => ({
+      ...prev,
+      [name]: { isValid, message, touched: true }
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -76,15 +108,40 @@ const Login = () => {
             
             <div className="form-group">
               <label htmlFor="email" className="form-label">Email Address</label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                placeholder="Enter your email" 
-                className={`input-primary ${errors.email ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""}`} 
-                value={formData.email} 
-                onChange={handleChange} 
-              />
+              <div className="relative">
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email" 
+                  placeholder="Enter your email" 
+                  className={`input-primary pr-10 ${
+                    validation.email.touched
+                      ? validation.email.isValid
+                        ? "border-green-400 focus:border-green-400 focus:ring-green-400"
+                        : "border-red-400 focus:border-red-400 focus:ring-red-400"
+                      : ""
+                  }`} 
+                  value={formData.email} 
+                  onChange={handleChange} 
+                />
+                {validation.email.touched && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {validation.email.isValid ? (
+                      <Check size={20} className="text-green-500" />
+                    ) : (
+                      <X size={20} className="text-red-500" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {validation.email.touched && (
+                <div className={`flex items-center mt-1 text-sm ${
+                  validation.email.isValid ? "text-green-600" : "text-red-600"
+                }`}>
+                  <AlertCircle size={16} className="mr-1" />
+                  {validation.email.message}
+                </div>
+              )}
             </div>
             
             <div className="form-group">
@@ -95,18 +152,41 @@ const Login = () => {
                   id="password" 
                   name="password" 
                   placeholder="Enter your password" 
-                  className={`input-primary pr-12 ${errors.password ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""}`} 
+                  className={`input-primary pr-20 ${
+                    validation.password.touched
+                      ? validation.password.isValid
+                        ? "border-green-400 focus:border-green-400 focus:ring-green-400"
+                        : "border-red-400 focus:border-red-400 focus:ring-red-400"
+                      : ""
+                  }`} 
                   value={formData.password} 
                   onChange={handleChange} 
                 />
-                <button 
-                  type="button" 
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors" 
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                  {validation.password.touched && (
+                    validation.password.isValid ? (
+                      <Check size={20} className="text-green-500" />
+                    ) : (
+                      <X size={20} className="text-red-500" />
+                    )
+                  )}
+                  <button 
+                    type="button" 
+                    className="text-gray-400 hover:text-gray-600 transition-colors" 
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
+              {validation.password.touched && (
+                <div className={`flex items-center mt-1 text-sm ${
+                  validation.password.isValid ? "text-green-600" : "text-red-600"
+                }`}>
+                  <AlertCircle size={16} className="mr-1" />
+                  {validation.password.message}
+                </div>
+              )}
             </div>
             
             <div className="text-right mb-6">
@@ -119,7 +199,7 @@ const Login = () => {
               <button 
                 type="submit" 
                 className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" 
-                disabled={Object.values(errors).some(Boolean) || loading}
+                disabled={!validation.email.isValid || !validation.password.isValid || loading}
               >
                 {loading ? "Signing in..." : "Sign In"}
               </button>

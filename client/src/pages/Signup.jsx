@@ -1,6 +1,6 @@
 import formpage from "../assets/formpage.jpg";
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check, X, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -15,26 +15,86 @@ const Signup = () => {
     password: "",
   });
 
-  // Track validation errors (true = invalid)
-  const [errors, setErrors] = useState({
-    name: true,
-    email: true,
-    password: true,
+  // Track validation state with detailed feedback
+  const [validation, setValidation] = useState({
+    name: { isValid: false, message: "", touched: false },
+    email: { isValid: false, message: "", touched: false },
+    password: { isValid: false, message: "", touched: false, requirements: {
+      length: false,
+      uppercase: false,
+      lowercase: false,
+      number: false,
+      special: false
+    }}
   });
+
+  const validateField = (name, value) => {
+    let isValid = false;
+    let message = "";
+    let requirements = {};
+    
+    switch (name) {
+      case "name":
+        if (!value.trim()) {
+          message = "Full name is required";
+        } else if (value.trim().length < 2) {
+          message = "Name must be at least 2 characters";
+        } else {
+          isValid = true;
+          message = "Name looks good";
+        }
+        break;
+      case "email":
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value.trim()) {
+          message = "Email is required";
+        } else if (!emailRegex.test(value.trim())) {
+          message = "Please enter a valid email address";
+        } else {
+          isValid = true;
+          message = "Valid email format";
+        }
+        break;
+      case "password":
+        // Backend regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+        requirements = {
+          length: value.length >= 8,
+          uppercase: /[A-Z]/.test(value),
+          lowercase: /[a-z]/.test(value),
+          number: /\d/.test(value),
+          special: /[@$!%*?&]/.test(value)
+        };
+        
+        const allRequirementsMet = Object.values(requirements).every(req => req);
+        
+        if (!value) {
+          message = "Password is required";
+        } else if (!allRequirementsMet) {
+          message = "Password must meet all requirements below";
+        } else {
+          isValid = true;
+          message = "Strong password";
+        }
+        break;
+    }
+    
+    return { isValid, message, requirements };
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    let invalid = false;
-    if (name === "email") {
-      invalid = !/^\S+@\S+\.\S+$/.test(value);
-    } else if (name === "password") {
-      invalid = value.length < 6;
-    } else {
-      invalid = value.trim() === "";
-    }
-    setErrors((prev) => ({ ...prev, [name]: invalid }));
+    const { isValid, message, requirements } = validateField(name, value);
+    setValidation((prev) => ({
+      ...prev,
+      [name]: { 
+        isValid, 
+        message, 
+        touched: true,
+        ...(requirements && { requirements })
+      }
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -97,37 +157,79 @@ const Signup = () => {
             {/* Name Field */}
             <div className="form-group">
               <label htmlFor="name" className="form-label">Full Name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Enter your full name"
-                className={`input-primary ${
-                  errors.name
-                    ? "border-red-400 focus:border-red-400 focus:ring-red-400"
-                    : ""
-                }`}
-                value={formData.name}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  placeholder="Enter your full name"
+                  className={`input-primary pr-10 ${
+                    validation.name.touched
+                      ? validation.name.isValid
+                        ? "border-green-400 focus:border-green-400 focus:ring-green-400"
+                        : "border-red-400 focus:border-red-400 focus:ring-red-400"
+                      : ""
+                  }`}
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+                {validation.name.touched && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {validation.name.isValid ? (
+                      <Check size={20} className="text-green-500" />
+                    ) : (
+                      <X size={20} className="text-red-500" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {validation.name.touched && (
+                <div className={`flex items-center mt-1 text-sm ${
+                  validation.name.isValid ? "text-green-600" : "text-red-600"
+                }`}>
+                  <AlertCircle size={16} className="mr-1" />
+                  {validation.name.message}
+                </div>
+              )}
             </div>
 
             {/* Email Field */}
             <div className="form-group">
               <label htmlFor="email" className="form-label">Email Address</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="Enter your email"
-                className={`input-primary ${
-                  errors.email
-                    ? "border-red-400 focus:border-red-400 focus:ring-red-400"
-                    : ""
-                }`}
-                value={formData.email}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  className={`input-primary pr-10 ${
+                    validation.email.touched
+                      ? validation.email.isValid
+                        ? "border-green-400 focus:border-green-400 focus:ring-green-400"
+                        : "border-red-400 focus:border-red-400 focus:ring-red-400"
+                      : ""
+                  }`}
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+                {validation.email.touched && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    {validation.email.isValid ? (
+                      <Check size={20} className="text-green-500" />
+                    ) : (
+                      <X size={20} className="text-red-500" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {validation.email.touched && (
+                <div className={`flex items-center mt-1 text-sm ${
+                  validation.email.isValid ? "text-green-600" : "text-red-600"
+                }`}>
+                  <AlertCircle size={16} className="mr-1" />
+                  {validation.email.message}
+                </div>
+              )}
             </div>
 
             {/* Password Field */}
@@ -139,22 +241,100 @@ const Signup = () => {
                   id="password"
                   name="password"
                   placeholder="Enter your password"
-                  className={`input-primary pr-12 ${
-                    errors.password
-                      ? "border-red-400 focus:border-red-400 focus:ring-red-400"
+                  className={`input-primary pr-20 ${
+                    validation.password.touched
+                      ? validation.password.isValid
+                        ? "border-green-400 focus:border-green-400 focus:ring-green-400"
+                        : "border-red-400 focus:border-red-400 focus:ring-red-400"
                       : ""
                   }`}
                   value={formData.password}
                   onChange={handleChange}
                 />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                  {validation.password.touched && (
+                    validation.password.isValid ? (
+                      <Check size={20} className="text-green-500" />
+                    ) : (
+                      <X size={20} className="text-red-500" />
+                    )
+                  )}
+                  <button
+                    type="button"
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
+              {validation.password.touched && (
+                <div className={`flex items-center mt-1 text-sm ${
+                  validation.password.isValid ? "text-green-600" : "text-red-600"
+                }`}>
+                  <AlertCircle size={16} className="mr-1" />
+                  {validation.password.message}
+                </div>
+              )}
+              
+              {/* Password Requirements */}
+              {validation.password.touched && validation.password.requirements && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Password Requirements:</p>
+                  <div className="grid grid-cols-1 gap-1 text-xs">
+                    <div className={`flex items-center ${
+                      validation.password.requirements.length ? "text-green-600" : "text-gray-500"
+                    }`}>
+                      {validation.password.requirements.length ? (
+                        <Check size={14} className="mr-1" />
+                      ) : (
+                        <X size={14} className="mr-1" />
+                      )}
+                      At least 8 characters
+                    </div>
+                    <div className={`flex items-center ${
+                      validation.password.requirements.uppercase ? "text-green-600" : "text-gray-500"
+                    }`}>
+                      {validation.password.requirements.uppercase ? (
+                        <Check size={14} className="mr-1" />
+                      ) : (
+                        <X size={14} className="mr-1" />
+                      )}
+                      One uppercase letter (A-Z)
+                    </div>
+                    <div className={`flex items-center ${
+                      validation.password.requirements.lowercase ? "text-green-600" : "text-gray-500"
+                    }`}>
+                      {validation.password.requirements.lowercase ? (
+                        <Check size={14} className="mr-1" />
+                      ) : (
+                        <X size={14} className="mr-1" />
+                      )}
+                      One lowercase letter (a-z)
+                    </div>
+                    <div className={`flex items-center ${
+                      validation.password.requirements.number ? "text-green-600" : "text-gray-500"
+                    }`}>
+                      {validation.password.requirements.number ? (
+                        <Check size={14} className="mr-1" />
+                      ) : (
+                        <X size={14} className="mr-1" />
+                      )}
+                      One number (0-9)
+                    </div>
+                    <div className={`flex items-center ${
+                      validation.password.requirements.special ? "text-green-600" : "text-gray-500"
+                    }`}>
+                      {validation.password.requirements.special ? (
+                        <Check size={14} className="mr-1" />
+                      ) : (
+                        <X size={14} className="mr-1" />
+                      )}
+                      One special character (@$!%*?&)
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -162,7 +342,7 @@ const Signup = () => {
               <button
                 type="submit"
                 className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={loading || Object.values(errors).some(Boolean)}
+                disabled={loading || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
               >
                 {loading ? "Creating Account..." : "Create Account"}
               </button>

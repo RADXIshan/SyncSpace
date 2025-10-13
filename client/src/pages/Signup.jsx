@@ -134,40 +134,47 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-200 to-purple-200">
-      <div className="hidden md:flex w-[55%] h-full items-center justify-center overflow-hidden p-6">
+    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-indigo-200 via-violet-200 to-blue-100 relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-bl from-indigo-200/30 via-violet-200/20 to-blue-200/40 animate-pulse"></div>
+      <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-transparent via-white/20 to-indigo-100/30"></div>
+      <div className="hidden md:flex w-[55%] h-full items-center justify-center overflow-hidden p-6 relative z-10">
         <div className="relative w-full h-full">
           <img
             src={formpage}
             alt="Signup Illustration"
             className="w-full h-full object-cover rounded-3xl shadow-2xl"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-3xl"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent rounded-3xl"></div>
+          <div className="absolute bottom-8 left-8 right-8">
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">Join the Future</h2>
+            <p className="text-gray-600">Create your account and start collaborating with your team today</p>
+          </div>
         </div>
       </div>
-      <div className="w-full md:w-[45%] flex items-center justify-center p-8">
+      <div className="w-full md:w-[45%] flex items-center justify-center p-8 relative z-10">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold gradient-text mb-2">Join SyncSpace</h1>
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 mb-2">Join SyncSpace</h1>
             <p className="text-gray-600">Create your account to get started</p>
           </div>
-          <form className="card p-8 animate-fadeIn" onSubmit={handleSubmit}>
-            <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Sign Up</h2>
+          <form className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-8 shadow-xl animate-fadeIn" onSubmit={handleSubmit}>
+            <h2 className="text-2xl font-bold mb-8 text-center text-gray-800">Create Account</h2>
 
             {/* Name Field */}
-            <div className="form-group">
-              <label htmlFor="name" className="form-label">Full Name</label>
+            <div className="mb-6">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
               <div className="relative">
                 <input
                   type="text"
                   id="name"
                   name="name"
                   placeholder="Enter your full name"
-                  className={`input-primary pr-10 ${
+                  className={`w-full px-4 py-3 bg-gray-50/50 border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 transition-all duration-200 pr-10 ${
                     validation.name.touched
                       ? validation.name.isValid
-                        ? "border-green-400 focus:border-green-400 focus:ring-green-400"
-                        : "border-red-400 focus:border-red-400 focus:ring-red-400"
+                        ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                        : "border-red-500 focus:border-red-500 focus:ring-red-500"
                       : ""
                   }`}
                   value={formData.name}
@@ -184,7 +191,7 @@ const Signup = () => {
                 )}
               </div>
               {validation.name.touched && (
-                <div className={`flex items-center mt-1 text-sm ${
+                <div className={`flex items-center mt-2 text-sm ${
                   validation.name.isValid ? "text-green-600" : "text-red-600"
                 }`}>
                   <AlertCircle size={16} className="mr-1" />
@@ -194,19 +201,19 @@ const Signup = () => {
             </div>
 
             {/* Email Field */}
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">Email Address</label>
+            <div className="mb-6">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
               <div className="relative">
                 <input
                   type="email"
                   id="email"
                   name="email"
                   placeholder="Enter your email"
-                  className={`input-primary pr-10 ${
+                  className={`w-full px-4 py-3 bg-gray-50/50 border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 transition-all duration-200 pr-10 ${
                     validation.email.touched
                       ? validation.email.isValid
-                        ? "border-green-400 focus:border-green-400 focus:ring-green-400"
-                        : "border-red-400 focus:border-red-400 focus:ring-red-400"
+                        ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                        : "border-red-500 focus:border-red-500 focus:ring-red-500"
                       : ""
                   }`}
                   value={formData.email}
@@ -233,19 +240,19 @@ const Signup = () => {
             </div>
 
             {/* Password Field */}
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">Password</label>
+            <div className="mb-6">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "password" : "text"}
                   id="password"
                   name="password"
                   placeholder="Enter your password"
-                  className={`input-primary pr-20 ${
+                  className={`w-full px-4 py-3 bg-gray-50/50 border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 transition-all duration-200 pr-20 ${
                     validation.password.touched
                       ? validation.password.isValid
-                        ? "border-green-400 focus:border-green-400 focus:ring-green-400"
-                        : "border-red-400 focus:border-red-400 focus:ring-red-400"
+                        ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                        : "border-red-500 focus:border-red-500 focus:ring-red-500"
                       : ""
                   }`}
                   value={formData.password}
@@ -261,7 +268,7 @@ const Signup = () => {
                   )}
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -279,7 +286,7 @@ const Signup = () => {
               
               {/* Password Requirements */}
               {validation.password.touched && validation.password.requirements && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
+                <div className="mt-3 p-3 bg-gray-100/80 rounded-lg border border-gray-200">
                   <p className="text-sm font-medium text-gray-700 mb-2">Password Requirements:</p>
                   <div className="grid grid-cols-1 gap-1 text-xs">
                     <div className={`flex items-center ${
@@ -341,7 +348,7 @@ const Signup = () => {
             <div className="mb-6">
               <button
                 type="submit"
-                className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                 disabled={loading || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
               >
                 {loading ? "Creating Account..." : "Create Account"}
@@ -352,7 +359,7 @@ const Signup = () => {
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-purple-600 hover:text-purple-700 font-semibold transition-colors duration-200 hover:underline"
+                className="text-violet-600 hover:text-violet-700 font-semibold transition-colors duration-200 hover:underline"
               >
                 Sign in
               </Link>

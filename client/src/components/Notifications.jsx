@@ -119,23 +119,23 @@ const Notifications = () => {
   });
 
   const getNotificationColor = (type, priority) => {
-    if (priority === 'high') return 'border-red-500/30 bg-red-500/10';
-    if (type === 'mention') return 'border-violet-500/30 bg-violet-500/10';
-    if (type === 'success') return 'border-green-500/30 bg-green-500/10';
-    if (type === 'alert') return 'border-red-500/30 bg-red-500/10';
-    if (type === 'meeting') return 'border-blue-500/30 bg-blue-500/10';
-    if (type === 'system') return 'border-gray-500/30 bg-gray-500/10';
-    return 'border-white/10 bg-white/5';
+    if (priority === 'high') return 'border-red-400/40 bg-red-50/80';
+    if (type === 'mention') return 'border-violet-400/40 bg-violet-50/80';
+    if (type === 'success') return 'border-green-400/40 bg-green-50/80';
+    if (type === 'alert') return 'border-red-400/40 bg-red-50/80';
+    if (type === 'meeting') return 'border-blue-400/40 bg-blue-50/80';
+    if (type === 'system') return 'border-gray-400/40 bg-gray-50/80';
+    return 'border-gray-300/30 bg-gray-50/50';
   };
 
   const getIconColor = (type, priority) => {
-    if (priority === 'high') return 'text-red-400';
-    if (type === 'mention') return 'text-violet-400';
-    if (type === 'success') return 'text-green-400';
-    if (type === 'alert') return 'text-red-400';
-    if (type === 'meeting') return 'text-blue-400';
-    if (type === 'system') return 'text-gray-400';
-    return 'text-gray-400';
+    if (priority === 'high') return 'text-red-500';
+    if (type === 'mention') return 'text-violet-500';
+    if (type === 'success') return 'text-green-500';
+    if (type === 'alert') return 'text-red-500';
+    if (type === 'meeting') return 'text-blue-500';
+    if (type === 'system') return 'text-gray-500';
+    return 'text-gray-500';
   };
 
   const markAsRead = (id) => {
@@ -151,40 +151,40 @@ const Notifications = () => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="p-6 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white min-h-screen">
-      <div className="max-w-5xl mx-auto">
+    <div className="p-6 bg-gradient-to-b from-gray-50 via-white to-gray-100 text-gray-800 min-h-screen">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between p-6">
           <div>
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
               Notifications
             </h1>
-            <p className="text-slate-400 mt-2">Stay updated with your team activities</p>
+            <p className="text-gray-600 mt-2">Stay updated with your team activities</p>
           </div>
           
           <div className="flex items-center gap-4">
             <div className="relative">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search notifications..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-80 bg-slate-800/50 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50"
+                className="pl-10 pr-4 py-2 w-80 bg-white/70 border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 shadow-sm"
               />
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === 'all' 
-                  ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30' 
-                  : 'bg-slate-800/40 text-slate-400 border border-slate-600/30 hover:bg-slate-700/40'
+                  ? 'bg-violet-100/80 text-violet-700 border border-violet-300/50' 
+                  : 'bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80'
               }`}
             >
               All ({notifications.length})
@@ -193,8 +193,8 @@ const Notifications = () => {
               onClick={() => setFilter('unread')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === 'unread' 
-                  ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30' 
-                  : 'bg-slate-800/40 text-slate-400 border border-slate-600/30 hover:bg-slate-700/40'
+                  ? 'bg-violet-100/80 text-violet-700 border border-violet-300/50' 
+                  : 'bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80'
               }`}
             >
               Unread ({unreadCount})
@@ -203,8 +203,8 @@ const Notifications = () => {
               onClick={() => setFilter('mentions')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === 'mentions' 
-                  ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30' 
-                  : 'bg-slate-800/40 text-slate-400 border border-slate-600/30 hover:bg-slate-700/40'
+                  ? 'bg-violet-100/80 text-violet-700 border border-violet-300/50' 
+                  : 'bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80'
               }`}
             >
               Mentions ({notifications.filter(n => n.type === 'mention').length})
@@ -213,8 +213,8 @@ const Notifications = () => {
               onClick={() => setFilter('system')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 filter === 'system' 
-                  ? 'bg-violet-600/20 text-violet-300 border border-violet-500/30' 
-                  : 'bg-slate-800/40 text-slate-400 border border-slate-600/30 hover:bg-slate-700/40'
+                  ? 'bg-violet-100/80 text-violet-700 border border-violet-300/50' 
+                  : 'bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80'
               }`}
             >
               System ({notifications.filter(n => n.type === 'system').length})
@@ -224,7 +224,7 @@ const Notifications = () => {
           {unreadCount > 0 && (
             <button
               onClick={() => console.log('Mark all as read')}
-              className="px-4 py-2 bg-blue-600/20 text-blue-300 border border-blue-500/30 rounded-lg text-sm font-medium hover:bg-blue-600/30 transition-colors"
+              className="px-4 py-2 bg-blue-100/80 text-blue-700 border border-blue-300/50 rounded-lg text-sm font-medium hover:bg-blue-200/60 transition-colors"
             >
               Mark All Read
             </button>
@@ -232,12 +232,12 @@ const Notifications = () => {
         </div>
 
         {/* Notifications Container */}
-        <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl border border-slate-600/30 overflow-hidden shadow-xl">
-          <div className="divide-y divide-slate-600/30">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 overflow-hidden shadow-xl">
+          <div className="divide-y divide-gray-200/50">
             {filteredNotifications.length === 0 ? (
               <div className="text-center py-12">
-                <Bell size={48} className="mx-auto mb-4 text-slate-400 opacity-50" />
-                <p className="text-slate-400">
+                <Bell size={48} className="mx-auto mb-4 text-gray-400 opacity-50" />
+                <p className="text-gray-600">
                   {searchQuery ? 'No notifications found matching your search.' : 'No notifications yet.'}
                 </p>
               </div>
@@ -247,13 +247,13 @@ const Notifications = () => {
                 return (
                   <div
                     key={notification.id}
-                    className={`p-4 transition-all duration-200 cursor-pointer hover:bg-slate-700/30 border-l-4 ${getNotificationColor(notification.type, notification.priority)} ${
-                      !notification.isRead ? 'bg-violet-500/10' : ''
+                    className={`p-4 transition-all duration-200 cursor-pointer hover:bg-gray-50/60 border-l-4 ${getNotificationColor(notification.type, notification.priority)} ${
+                      !notification.isRead ? 'bg-violet-50/60' : ''
                     }`}
                   >
                     <div className="flex items-start gap-4">
                       {/* Icon */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-lg bg-slate-800/60 flex items-center justify-center`}>
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100/80 flex items-center justify-center`}>
                         <IconComponent size={20} className={getIconColor(notification.type, notification.priority)} />
                       </div>
 
@@ -261,16 +261,16 @@ const Notifications = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h3 className={`font-semibold mb-1 ${!notification.isRead ? 'text-white' : 'text-slate-300'}`}>
+                            <h3 className={`font-semibold mb-1 ${!notification.isRead ? 'text-gray-800' : 'text-gray-600'}`}>
                               {notification.title}
                               {!notification.isRead && (
                                 <span className="ml-2 w-2 h-2 bg-violet-500 rounded-full inline-block"></span>
                               )}
                             </h3>
-                            <p className="text-slate-400 text-sm mb-2">
+                            <p className="text-gray-600 text-sm mb-2">
                               {notification.message}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-gray-500">
                               {notification.timestamp}
                             </p>
                           </div>
@@ -283,7 +283,7 @@ const Notifications = () => {
                                   e.stopPropagation();
                                   markAsRead(notification.id);
                                 }}
-                                className="text-blue-400 hover:text-blue-300 text-xs px-2 py-1 rounded transition-colors"
+                                className="text-blue-600 hover:text-blue-700 text-xs px-2 py-1 rounded transition-colors"
                                 title="Mark as read"
                               >
                                 Mark Read
@@ -294,7 +294,7 @@ const Notifications = () => {
                                 e.stopPropagation();
                                 deleteNotification(notification.id);
                               }}
-                              className="text-slate-400 hover:text-red-400 transition-colors p-1"
+                              className="text-gray-500 hover:text-red-500 transition-colors p-1"
                               title="Delete notification"
                             >
                               <X size={16} />
@@ -312,26 +312,26 @@ const Notifications = () => {
 
         {/* Stats */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-slate-800/40 backdrop-blur-xl rounded-xl border border-slate-600/30 p-4 shadow-lg">
-            <h3 className="font-semibold text-white mb-2">Total</h3>
-            <p className="text-2xl font-bold text-violet-400">{notifications.length}</p>
+          <div className="bg-white/60 backdrop-blur-xl rounded-xl border border-gray-200/40 p-4 shadow-lg">
+            <h3 className="font-semibold text-gray-800 mb-2">Total</h3>
+            <p className="text-2xl font-bold text-violet-600">{notifications.length}</p>
           </div>
           
-          <div className="bg-slate-800/40 backdrop-blur-xl rounded-xl border border-slate-600/30 p-4 shadow-lg">
-            <h3 className="font-semibold text-white mb-2">Unread</h3>
-            <p className="text-2xl font-bold text-red-400">{unreadCount}</p>
+          <div className="bg-white/60 backdrop-blur-xl rounded-xl border border-gray-200/40 p-4 shadow-lg">
+            <h3 className="font-semibold text-gray-800 mb-2">Unread</h3>
+            <p className="text-2xl font-bold text-red-600">{unreadCount}</p>
           </div>
           
-          <div className="bg-slate-800/40 backdrop-blur-xl rounded-xl border border-slate-600/30 p-4 shadow-lg">
-            <h3 className="font-semibold text-white mb-2">Mentions</h3>
-            <p className="text-2xl font-bold text-blue-400">
+          <div className="bg-white/60 backdrop-blur-xl rounded-xl border border-gray-200/40 p-4 shadow-lg">
+            <h3 className="font-semibold text-gray-800 mb-2">Mentions</h3>
+            <p className="text-2xl font-bold text-blue-600">
               {notifications.filter(n => n.type === 'mention').length}
             </p>
           </div>
           
-          <div className="bg-slate-800/40 backdrop-blur-xl rounded-xl border border-slate-600/30 p-4 shadow-lg">
-            <h3 className="font-semibold text-white mb-2">High Priority</h3>
-            <p className="text-2xl font-bold text-orange-400">
+          <div className="bg-white/60 backdrop-blur-xl rounded-xl border border-gray-200/40 p-4 shadow-lg">
+            <h3 className="font-semibold text-gray-800 mb-2">High Priority</h3>
+            <p className="text-2xl font-bold text-orange-600">
               {notifications.filter(n => n.priority === 'high').length}
             </p>
           </div>

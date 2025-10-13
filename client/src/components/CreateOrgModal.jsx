@@ -297,9 +297,9 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
-                    { value: "public", label: "Public", desc: "Anyone can join", icon: Globe },
-                    { value: "invite-only", label: "Invite Only", desc: "Members invite others", icon: Users },
-                    { value: "admin-only", label: "Admin Only", desc: "Only admins can invite", icon: Lock },
+                    { value: "public", label: "Public", desc: "Anyone can send invites", icon: Globe },
+                    { value: "invite-only", label: "Invite Only", desc: "Members can send invites", icon: Users },
+                    { value: "admin-only", label: "Admin Only", desc: "Only admins send invites", icon: Lock },
                   ].map(({ value, label, desc, icon: Icon }) => (
                     <label key={value} className="relative cursor-pointer">
                       <input

@@ -199,8 +199,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
         <h1 className="text-3xl font-bold gradient-text">SyncSpace</h1>
       </div>
       
-      <div className="flex-1 overflow-y-auto py-6">
-        <nav className="px-3 space-y-3">
+      <div className="flex-1 overflow-y-auto py-3">
+        <nav className="px-3 space-y-2.5">
           {navItems.map((item) => (
             <Link
               key={item.name}
@@ -221,7 +221,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
 
         {/* Organization Section */}
         {organization && (
-          <div className="px-3 mt-6">
+          <div className="px-3 mt-3">
             <div className="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 border border-slate-600/40 rounded-2xl backdrop-blur-sm shadow-xl overflow-hidden">
               {/* Organization Header */}
               <div className="bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-b border-violet-500/20 p-4">
@@ -255,10 +255,10 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                   {canManageOrg() && (
                     <button
                       onClick={handleOrgSettings}
-                      className="flex-shrink-0 p-2 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 rounded-lg transition-all duration-200 text-white hover:text-violet-200 cursor-pointer group shadow-md backdrop-blur-sm"
+                      className="flex-shrink-0 p-2 bg-blue-600/30 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-400/30 rounded-lg transition-all duration-200 text-blue-300 hover:text-blue-200 cursor-pointer group shadow-md backdrop-blur-sm"
                       title="Organization settings"
                     >
-                      <Cog size={14} className="group-hover:rotate-90 transition-transform duration-300" />
+                      <Cog size={18} className="group-hover:rotate-90 transition-transform duration-300" />
                     </button>
                   )}
                 </div>

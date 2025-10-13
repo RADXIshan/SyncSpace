@@ -82,7 +82,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   };
 
   const canManageUsers = () => {
-    return userPermissions?.manage_users || false;
+    return userPermissions?.isCreator || userPermissions?.manage_users || false;
   };
 
   // Check for unsaved changes
@@ -596,19 +596,19 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
     {
       value: "public",
       label: "Public",
-      desc: "Anyone can join with the invite code",
+      desc: "Anyone can send invites",
       icon: Globe,
     },
     {
       value: "invite-only",
       label: "Invite Only",
-      desc: "Members can invite others",
+      desc: "Members can send invites",
       icon: Users,
     },
     {
       value: "admin-only",
       label: "Admin Only",
-      desc: "Only admins can invite new members",
+      desc: "Only admins send invites",
       icon: Lock,
     },
   ];
@@ -659,6 +659,13 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       setActiveTab(availableTabs[0].id);
     }
   }, [availableTabs, activeTab]);
+
+  // Fetch members when modal opens
+  useEffect(() => {
+    if (organization?.id) {
+      fetchMembers();
+    }
+  }, [organization?.id]);
 
   return (
     <>
@@ -1142,19 +1149,23 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                   {editingMember === member.id ? (
                                     <div className="flex items-center space-x-2">
                                       <select
-                                        className="px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                                        className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-w-[100px] focus:ring-2 focus:ring-violet-500 focus:outline-none"
                                         value={tempRole}
                                         onChange={(e) => setTempRole(e.target.value)}
+                                        disabled={memberActionLoading}
                                       >
-                                        <option value="member">Member</option>
-                                        <option value="admin">Admin</option>
-                                        {roles.map((role) => (
-                                          role.name && (
-                                            <option key={role.id || role.name} value={role.name}>
-                                              {role.name}
+                                        {organization?.roles && organization.roles.length > 0 ? (
+                                          organization.roles.map((role) => (
+                                            <option key={role.id || role.name} value={role.name} className="bg-gray-800 text-white">
+                                              {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
                                             </option>
-                                          )
-                                        ))}
+                                          ))
+                                        ) : (
+                                          <>
+                                            <option value="member" className="bg-gray-800 text-white">Member</option>
+                                            <option value="admin" className="bg-gray-800 text-white">Admin</option>
+                                          </>
+                                        )}
                                       </select>
                                       <button
                                         type="button"
@@ -1163,9 +1174,17 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                           e.stopPropagation();
                                           saveMemberRole(member.id);
                                         }}
-                                        className="text-green-400 hover:text-green-300 text-sm px-2 py-1 border border-green-500/30 bg-green-600/20 hover:bg-green-600/30 rounded font-medium cursor-pointer"
+                                        disabled={memberActionLoading}
+                                        className="text-green-400 hover:text-green-300 text-sm px-3 py-2 border border-green-500/30 bg-green-600/20 hover:bg-green-600/30 rounded-lg font-medium cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                                       >
-                                        Save
+                                        {memberActionLoading ? (
+                                          <>
+                                            <div className="w-3 h-3 border border-green-400 border-t-transparent rounded-full animate-spin"></div>
+                                            Saving...
+                                          </>
+                                        ) : (
+                                          'Save'
+                                        )}
                                       </button>
                                       <button
                                         type="button"
@@ -1174,7 +1193,8 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                           e.stopPropagation();
                                           cancelEditingMember();
                                         }}
-                                        className="text-gray-400 hover:text-gray-300 text-sm px-2 py-1 border border-white/20 rounded cursor-pointer"
+                                        disabled={memberActionLoading}
+                                        className="text-gray-400 hover:text-gray-300 text-sm px-3 py-2 border border-white/20 hover:border-white/30 bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
                                         Cancel
                                       </button>

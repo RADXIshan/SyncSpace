@@ -252,43 +252,26 @@ export const joinOrganization = async (req, res) => {
       return res.status(400).json({ message: "You are already a member of another organization. Please leave your current organization first." });
     }
 
-    // Enforce access level restrictions
-    if (organization.access_level === 'invite-only' || organization.access_level === 'admin-only') {
-      // Check if there's a valid invitation for this user
-      const invitation = await sql`
-        SELECT invitation_id, expires_at
-        FROM invitations
-        WHERE org_id = ${organization.org_id} 
-          AND invited_user_id = ${userId} 
-          AND status = 'pending'
-        LIMIT 1
-      `;
+    // Anyone with the correct organization code can join
+    // Access level restrictions only apply to invitation-based joining, not direct code joining
 
-      if (invitation.length === 0) {
-        const accessMessage = organization.access_level === 'invite-only' 
-          ? "This organization is invite-only. You need an invitation to join."
-          : "This organization is admin-only. You need an invitation from an admin to join.";
-        return res.status(403).json({ message: accessMessage });
-      }
+    // Get the default role for new members (first role in org_roles table)
+    const [defaultRole] = await sql`
+      SELECT role_name
+      FROM org_roles
+      WHERE org_id = ${organization.org_id}
+      ORDER BY role_id ASC
+      LIMIT 1
+    `;
 
-      // Check if invitation has expired
-      if (new Date() > new Date(invitation[0].expires_at)) {
-        return res.status(400).json({ message: "Your invitation has expired" });
-      }
-
-      // Update invitation status to accepted
-      await sql`
-        UPDATE invitations
-        SET status = 'accepted', updated_at = NOW()
-        WHERE invitation_id = ${invitation[0].invitation_id}
-      `;
+    if (!defaultRole) {
+      return res.status(500).json({ message: "No roles found in organization. Please contact the administrator." });
     }
-    // For 'public' access level, anyone can join directly using the code
 
     // Add user to organization members
     await sql`
       INSERT INTO org_members (org_id, user_id, role, joined_at)
-      VALUES (${organization.org_id}, ${userId}, 'member', NOW())
+      VALUES (${organization.org_id}, ${userId}, ${defaultRole.role_name}, NOW())
     `;
 
     // Update user's org_id
@@ -719,18 +702,16 @@ export const updateMemberRole = async (req, res) => {
       return res.status(400).json({ message: "Cannot change the role of organization creator" });
     }
 
-    // Check if the role exists in the organization (or is 'admin' or 'member')
-    if (!['admin', 'member'].includes(role.trim())) {
-      const [roleExists] = await sql`
-        SELECT role_id
-        FROM org_roles
-        WHERE org_id = ${org_id} AND role_name = ${role.trim()}
-        LIMIT 1
-      `;
+    // Check if the role exists in the organization
+    const [roleExists] = await sql`
+      SELECT role_id
+      FROM org_roles
+      WHERE org_id = ${org_id} AND role_name = ${role.trim()}
+      LIMIT 1
+    `;
 
-      if (!roleExists) {
-        return res.status(400).json({ message: "Invalid role. Role does not exist in this organization" });
-      }
+    if (!roleExists) {
+      return res.status(400).json({ message: "Invalid role. Role does not exist in this organization" });
     }
 
     // Update member role

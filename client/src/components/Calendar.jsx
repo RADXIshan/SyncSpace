@@ -175,7 +175,7 @@ const Calendar = () => {
               selectMirror
               dayMaxEvents={3}
               eventContent={(arg) => (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 max-w-full text-sm font-medium">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 max-w-full text-sm font-medium cursor-pointer" title="View Event">
                   <div className="h-2 w-2 rounded-full bg-white shrink-0" />
                   <span className="truncate flex-1">
                     {arg.event.title}

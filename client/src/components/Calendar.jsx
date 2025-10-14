@@ -17,10 +17,12 @@ const Calendar = () => {
   const [showEventInputForm, setShowEventInputForm] = useState(false); // State to control form visibility
   const [selectedDate, setSelectedDate] = useState(null); // State to store selected date for new event
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Centralised fetcher so we can refresh events after CRUD operations
   const getEvents = () => {
     if (!user) return;
+    setLoading(true);
     let toastId = toast.loading("Fetching events...");
     const token = localStorage.getItem("token");
     axios
@@ -37,10 +39,12 @@ const Calendar = () => {
         });
         setEvents(formatted);
         toast.success("Events loaded successfully", { id: toastId });
+        setLoading(false);
       })
       .catch((err) => {
         console.error(err);
         toast.error("Failed to load events", { id: toastId });
+        setLoading(false);
       });
   };
 
@@ -48,6 +52,17 @@ const Calendar = () => {
   useEffect(() => {
     getEvents();
   }, [user]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading calendar...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Handle adding new event
   const handleDateClick = (info) => {

@@ -5,6 +5,7 @@ import { getRoleStyle, initializeRoleColors } from '../utils/roleColors';
 const Messages = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Messages-specific role styling with darker text for light theme
   const getMessagesRoleStyle = (role) => {
@@ -111,13 +112,27 @@ const Messages = () => {
     }
   ];
 
-  // Initialize role colors on component mount
   useEffect(() => {
     const roleNames = [...new Set(messages.map(msg => msg.role))].filter(Boolean);
     if (roleNames.length > 0) {
       initializeRoleColors(roleNames);
     }
+    // Simulate data loading
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading messages...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Filter messages based on search query
   const filteredMessages = messages.filter(message =>

@@ -251,10 +251,10 @@ const ChannelPage = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-1 items-center justify-center gap-2 py-3 font-semibold text-lg transition-all duration-200 border-b-0 border-t-0 border-l-0 rounded-t-lg ${
+                className={`flex flex-1 items-center justify-center gap-2 py-3 font-semibold text-lg transition-all duration-200 border-b-0 border-t-0 border-l-0 rounded-t-lg cursor-pointer ${  
                   activeTab === tab.id
                     ? 'text-purple-600 bg-slate-50 border-transparent'
-                    : 'border-transparent text-purple-400 hover:text-purple-600'
+                    : 'border-transparent text-purple-400 hover:text-purple-600 hover:bg-slate-200'
                 }`}
               >
                 <Icon size={18} />

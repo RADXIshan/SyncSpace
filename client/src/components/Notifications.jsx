@@ -141,11 +141,13 @@ const Notifications = () => {
   const markAsRead = (id) => {
     // In a real app, this would make an API call
     console.log(`Marking notification ${id} as read`);
+    return Promise.resolve(); // Simulate async operation
   };
 
   const deleteNotification = (id) => {
     // In a real app, this would make an API call
     console.log(`Deleting notification ${id}`);
+    return Promise.resolve(); // Simulate async operation
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -279,9 +281,15 @@ const Notifications = () => {
                           <div className="flex items-center gap-2 ml-4">
                             {!notification.isRead && (
                               <button
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                   e.stopPropagation();
-                                  markAsRead(notification.id);
+                                  try {
+                                    await markAsRead(notification.id);
+                                    // Optionally update UI here if needed after successful mark as read
+                                  } catch (error) {
+                                    console.error("Failed to mark as read:", error);
+                                    // Handle error, e.g., show a toast notification
+                                  }
                                 }}
                                 className="text-blue-600 hover:text-blue-700 text-xs px-2 py-1 rounded transition-colors"
                                 title="Mark as read"
@@ -290,10 +298,16 @@ const Notifications = () => {
                               </button>
                             )}
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteNotification(notification.id);
-                              }}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await deleteNotification(notification.id);
+                                    // Optionally update UI here if needed after successful deletion
+                                  } catch (error) {
+                                    console.error("Failed to delete notification:", error);
+                                    // Handle error
+                                  }
+                                }}
                               className="text-gray-500 hover:text-red-500 transition-colors p-1"
                               title="Delete notification"
                             >

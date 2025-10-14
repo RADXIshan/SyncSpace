@@ -291,14 +291,23 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
             </div>
             <div className="space-y-1">
               {organization.channels.map((channel) => (
-                <div
+                <Link
                   key={channel.id}
-                  className="flex items-center px-2 py-1.5 mx-1 rounded-lg transition-all duration-200 hover:bg-slate-700/40 hover:border-violet-500/30 border border-transparent text-slate-300 hover:text-violet-300 cursor-pointer group shadow-sm hover:shadow-lg"
+                  to={`/home/channels/${channel.id}`}
+                  className={`flex items-center px-3 py-2 rounded-lg transition-all duration-300 font-medium group border shadow-sm hover:shadow-lg ${
+                    isActive(`/home/channels/${channel.id}`)
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-500/30 shadow-purple-500/20'
+                      : 'hover:bg-slate-700/60 text-slate-300 hover:text-violet-300 border-transparent hover:border-violet-500/30'
+                  }`}
                   title={channel.description || channel.name}
                 >
-                  <Hash size={14} className="mr-2.5 text-slate-500 group-hover:text-violet-400 transition-colors duration-200" />
-                  <span className="text-sm font-medium truncate group-hover:font-semibold transition-all duration-200">{channel.name}</span>
-                </div>
+                  <span className={`mr-2.5 transition-colors duration-200 ${
+                    isActive(`/home/channels/${channel.id}`) ? 'text-white' : 'text-slate-500 group-hover:text-violet-400'
+                  }`}>
+                    <Hash size={14} />
+                  </span>
+                  <span className="text-sm font-medium truncate">{channel.name}</span>
+                </Link>
               ))}
             </div>
           </div>

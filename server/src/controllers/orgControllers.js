@@ -985,3 +985,52 @@ export const sendInvitations = async (req, res) => {
     res.status(500).json({ message: "Failed to send invitations" });
   }
 };
+
+// Get Single Channel
+export const getChannel = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const org_id = req.params.org_id;
+    const channel_id = req.params.channel_id;
+
+    // Check if user is a member of the organization
+    const [member] = await sql`
+      SELECT user_id
+      FROM org_members
+      WHERE org_id = ${org_id} AND user_id = ${userId}
+      LIMIT 1
+    `;
+
+    if (!member) {
+      return res.status(403).json({ message: "You are not a member of this organization" });
+    }
+
+    // Get channel details
+    const [channel] = await sql`
+      SELECT channel_id, channel_name, channel_description
+      FROM org_channels
+      WHERE channel_id = ${channel_id} AND org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!channel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    res.status(200).json({
+      message: "Channel retrieved successfully",
+      channel: {
+        id: channel.channel_id,
+        name: channel.channel_name,
+        description: channel.channel_description,
+        createdAt: channel.created_at,
+      },
+    });
+  } catch (error) {
+    console.error("Error retrieving channel:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

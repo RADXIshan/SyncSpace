@@ -160,7 +160,7 @@ const Calendar = () => {
                 </button>
               </div>
             )}
-          <div className="rounded-2xl overflow-hidden shadow-inner bg-white/50 p-4">
+          <div className="rounded-2xl overflow-hidden shadow-inner bg-white/50 p-4 enhanced-fullcalendar">
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
@@ -197,7 +197,6 @@ const Calendar = () => {
               )}
               eventClick={handleEventClick}
               height="auto"
-              className="enhanced-fullcalendar"
             />
           </div>
           </div>

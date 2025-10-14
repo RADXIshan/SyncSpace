@@ -11,6 +11,7 @@ import {
   updateMemberRole,
   removeMember,
   deleteOrganization,
+  getChannel,
 } from "../controllers/orgControllers.js";
 
 const router = Router();
@@ -26,5 +27,7 @@ router.put("/:org_id", updateOrganization);
 router.put("/:org_id/members/:member_id/role", updateMemberRole);
 router.delete("/:org_id/members/:member_id", removeMember);
 router.delete("/:org_id", deleteOrganization);
+
+router.get("/:org_id/channels/:channel_id", getChannel);
 
 export default router;

@@ -168,7 +168,7 @@ const Calendar = () => {
                 </div>
                 <button
                   onClick={() => setShowInfo(false)}
-                  className="ml-4 hover:text-violet-900 cursor-pointer p-2 rounded-xl hover:bg-violet-200/50 transition-all duration-200 hover:scale-110"
+                  className="ml-4 hover:text-violet-900 cursor-pointer p-2 rounded-full hover:bg-violet-200/50 transition-all duration-200 hover:scale-110"
                   aria-label="Dismiss info"
                 >
                   <X size={20} />

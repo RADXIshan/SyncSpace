@@ -338,33 +338,6 @@
   opacity: 1 !important;
 }
 
-/* Dark Theme DatePicker for Modals */
-.react-datepicker--dark-theme {
-  background: rgba(17, 24, 39, 0.95) !important;
-  border: 1px solid rgba(107, 114, 128, 0.5) !important;
-  color: white;
-}
-
-.react-datepicker--dark-theme .react-datepicker__header {
-  background: linear-gradient(135deg, #7C3AED, #6366F1) !important;
-  color: white;
-  border-bottom: none;
-}
-
-.react-datepicker--dark-theme .react-datepicker__month {
-  background: rgba(17, 24, 39, 0.95) !important;
-  color: white;
-}
-
-.react-datepicker--dark-theme .react-datepicker__day {
-  color: #E5E7EB !important;
-}
-
-.react-datepicker--dark-theme .react-datepicker__day:hover {
-  background: rgba(124, 58, 237, 0.3) !important;
-  color: white !important;
-}
-
 .react-datepicker--dark-theme .react-datepicker__day--selected,
 .react-datepicker--dark-theme .react-datepicker__day--keyboard-selected {
   background: linear-gradient(135deg, #7C3AED, #6366F1) !important;
@@ -373,7 +346,7 @@
 
 .react-datepicker--dark-theme .react-datepicker__day--today {
   background: rgba(124, 58, 237, 0.2) !important;
-  color: #A78BFA !important;
+  color: #7C3AED !important;
   border: 2px solid #7C3AED !important;
 }
 

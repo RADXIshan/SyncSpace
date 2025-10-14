@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Bell, Users, Calendar, Settings, AlertTriangle, CheckCircle, Info, X, MoreVertical } from 'lucide-react';
 
 const Notifications = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all'); // all, unread, mentions, system
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Add loading state
+
+  useEffect(() => {
+    // Simulate data loading
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000); // Adjust time as needed
+  }, []);
 
   // Dummy notifications data
   const notifications = [
@@ -106,42 +113,6 @@ const Notifications = () => {
     }
   ];
 
-  useEffect(() => {
-    // Simulate data loading
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading notifications...</p>
-        </div>
-      </div>
-    );
-  }
-
-  useEffect(() => {
-    // Simulate data loading
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading notifications...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Filter notifications based on search and filter
   const filteredNotifications = notifications.filter(notification => {
     const matchesSearch = notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -178,16 +149,25 @@ const Notifications = () => {
   const markAsRead = (id) => {
     // In a real app, this would make an API call
     console.log(`Marking notification ${id} as read`);
-    return Promise.resolve(); // Simulate async operation
   };
 
   const deleteNotification = (id) => {
     // In a real app, this would make an API call
     console.log(`Deleting notification ${id}`);
-    return Promise.resolve(); // Simulate async operation
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading notifications...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gradient-to-b from-gray-50 via-white to-gray-100 text-gray-800 min-h-screen">
@@ -318,15 +298,9 @@ const Notifications = () => {
                           <div className="flex items-center gap-2 ml-4">
                             {!notification.isRead && (
                               <button
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                   e.stopPropagation();
-                                  try {
-                                    await markAsRead(notification.id);
-                                    // Optionally update UI here if needed after successful mark as read
-                                  } catch (error) {
-                                    console.error("Failed to mark as read:", error);
-                                    // Handle error, e.g., show a toast notification
-                                  }
+                                  markAsRead(notification.id);
                                 }}
                                 className="text-blue-600 hover:text-blue-700 text-xs px-2 py-1 rounded transition-colors"
                                 title="Mark as read"
@@ -335,16 +309,10 @@ const Notifications = () => {
                               </button>
                             )}
                             <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    await deleteNotification(notification.id);
-                                    // Optionally update UI here if needed after successful deletion
-                                  } catch (error) {
-                                    console.error("Failed to delete notification:", error);
-                                    // Handle error
-                                  }
-                                }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notification.id);
+                              }}
                               className="text-gray-500 hover:text-red-500 transition-colors p-1"
                               title="Delete notification"
                             >

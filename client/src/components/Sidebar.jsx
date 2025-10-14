@@ -169,9 +169,9 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
     let toastId;
     try {
       toastId = toast.loading("Logging out...");
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/logout`);
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
       await logout();
-      await checkAuth();
+      localStorage.removeItem("token");
       toast.success("Logged out successfully", { id: toastId });
       setShowLogoutConfirm(false);
       navigate("/login", { state: { message: "Logged out successfully" } });

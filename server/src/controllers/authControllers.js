@@ -60,8 +60,9 @@ export const signup = async (req, res) => {
         res.cookie("jwt", token, {
             maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true,
-            sameSite: "strict",
-            secure: false,
+            sameSite: "none",
+            secure: true,
+            path: "/",
         });
 
         const transporter = nodemailer.createTransport({
@@ -136,8 +137,9 @@ export const login = async (req, res) => {
         res.cookie("jwt", token, {
             maxAge: 7 * 24 * 60 * 60 * 1000,
             httpOnly: true, 
-            sameSite: "strict", 
-            secure: false,
+            sameSite: "none", 
+            secure: true,
+            path: "/",
         });
 
         const userResponse = {
@@ -418,7 +420,12 @@ export const deleteUser = async (req, res) => {
 
 export const logout = async (_, res) => {
   try {
-    res.clearCookie("jwt", { httpOnly: true, secure: true });
+    res.clearCookie("jwt", { 
+      httpOnly: true, 
+      secure: true,
+      sameSite: "none",
+      path: "/"
+    });
     res.status(200).json({ success: true, message: "Logout successful" });
   } catch (error) {
     console.error("Error logging out:", error);

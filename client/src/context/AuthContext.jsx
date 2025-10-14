@@ -37,8 +37,15 @@ export const AuthProvider = ({ children }) => {
       );
       setUser(null);
       localStorage.removeItem("token"); // Clear token from localStorage
+      
+      // Force page reload to clear any cached state
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);
+      // Even if the server request fails, clear local state
+      setUser(null);
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     }
   };
 

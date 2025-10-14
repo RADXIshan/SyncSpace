@@ -169,14 +169,24 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
     let toastId;
     try {
       toastId = toast.loading("Logging out...");
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/logout`, {}, { 
+        withCredentials: true,
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
       await logout();
       localStorage.removeItem("token");
       toast.success("Logged out successfully", { id: toastId });
       setShowLogoutConfirm(false);
-      navigate("/login", { state: { message: "Logged out successfully" } });
+      // Force redirect to login page with cache busting
+      window.location.href = "/login?t=" + new Date().getTime();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to log out", { id: toastId });
+      // Even if server request fails, clear local state and redirect
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     } finally {
       setActionLoading(false);
     }

@@ -1,8 +1,5 @@
-import { Link } from "react-router";
-import { Calendar, Users, Shield, Star, X, CheckCheck } from "lucide-react";
-import { useState } from "react";
+import { Star, X, CheckCheck } from "lucide-react";
 import landing_page_pic from "../assets/landing_page_pic.png";
-import React from "react";
 
 function Landing() {
   return (
@@ -30,10 +27,10 @@ function Landing() {
         </div>
 
         <div className="flex gap-4 mt-3 sm:mt-0">
-          <button className="px-4 py-2 border border-[var(--color-gray-300)] rounded-[var(--radius-md)] font-small hover:bg-[var(--color-blue-200)] transition">
+          <button onClick={() => window.location.href = "/login"} className="px-4 py-2 border border-[var(--color-gray-300)] rounded-[var(--radius-md)] font-small hover:bg-[var(--color-blue-200)] transition">
             Login
           </button>
-          <button className="px-5 py-2 rounded-[var(--radius-md)] font-small text-white bg-[var(--color-secondary)] shadow-md hover:bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)]">
+          <button onClick={() => window.location.href = "/signup"} className="px-5 py-2 rounded-[var(--radius-md)] font-small text-white bg-[var(--color-secondary)] shadow-md hover:bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)]">
             Sign Up
           </button>
         </div>

@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import JoinedOrgDash from "./JoinedOrgDash";
 
 const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessagesClick, onNotificationsClick }) => {
-  const { user, setUser } = useAuth();
+  const { user, checkAuth } = useAuth();
 
   const [organization, setOrganization] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,19 +23,29 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
     { id: 3, text: "Prepare meeting summary", done: false },
   ];
 
-  const fetchOrg = async (orgId) => {
-    if (!orgId) {
+  const fetchOrg = async () => {
+    if (!user?.org_id) {
       setOrganization(null);
       setLoading(false);
       return;
     }
 
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/api/orgs/${orgId}`,
-        { withCredentials: true }
-      );
-      setOrganization(res.data.organization);
+      setLoading(true);
+
+      // Fetch organization data and role
+      const [orgRes] = await Promise.all([
+        axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}`,
+          { withCredentials: true }
+        ),
+        axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/role`,
+          { withCredentials: true }
+        ),
+      ]);
+
+      setOrganization(orgRes.data.organization);
       setError(null);
     } catch (err) {
       console.error("Error fetching organization:", err);
@@ -45,59 +55,13 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
       setLoading(false);
     }
   };
-
-  const refreshUser = async () => {
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/auth/getMe`,
-        {},
-        { withCredentials: true }
-      );
-      if (res.data.user) {
-        setUser(res.data.user);
-      }
-    } catch (err) {
-      console.error("Failed to refresh user:", err);
-    }
-  };
-
   useEffect(() => {
     const init = async () => {
-      await refreshUser(); // ensures user.org_id is latest
-      await fetchOrg(user?.org_id);
+      await checkAuth(); // ensures user data is fresh and includes org_id
+      await fetchOrg();
     };
     init();
   }, []);
-
-  useEffect(() => {
-    if (user?.org_id) {
-      fetchOrg(user.org_id);
-    } else {
-      setOrganization(null);
-    }
-  }, [user?.org_id]);
-
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/api/auth/getMe`,
-          {},
-          { withCredentials: true }
-        );
-        if (
-          res.data.user?.org_id &&
-          res.data.user.org_id !== user?.org_id
-        ) {
-          setUser(res.data.user);
-        }
-      } catch (err) {
-        console.error("Polling failed:", err);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [user, setUser]);
 
   if (loading) {
     return (

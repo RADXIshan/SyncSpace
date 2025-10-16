@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell, Users, Calendar, Settings, AlertTriangle, CheckCircle, Info, X, MoreVertical } from 'lucide-react';
+import { Search, Bell, Users, Calendar, Settings, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
 
 const Notifications = () => {
   const [searchQuery, setSearchQuery] = useState('');

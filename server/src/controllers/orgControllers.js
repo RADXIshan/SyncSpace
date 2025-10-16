@@ -965,7 +965,7 @@ export const sendInvitations = async (req, res) => {
             address: "trickster10ishan@gmail.com"
         },
         to: emails,
-        subject: `SyncSpace Invitation to join ${organizationName}`,
+        subject: `Invitation Code to join ${organizationName}`,
         html: generateInviteEmail(organizationName, message, inviteCode),
     };    
 

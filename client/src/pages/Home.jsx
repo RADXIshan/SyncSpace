@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router'
 import Sidebar from '../components/Sidebar'
 import Dashboard from '../components/Dashboard'
@@ -26,14 +26,24 @@ const Home = () => {
     setOrgSettingsData({ organization, userRole, userPermissions });
     setShowOrgSettings(true);
   };
+  const [orgUpdateToggle, setOrgUpdateToggle] = useState(false);
 
   const handleInvite = (organization) => {
     setInviteOrganization(organization);
     setShowInviteModal(true);
   };
-  
+
+  // Refresh components upon organization update without full reload
+  useEffect(() => {
+    const handleRefresh = () => {
+      setOrgUpdateToggle(prev => !prev);
+    };
+    window.addEventListener('organizationUpdated', handleRefresh);
+    return () => window.removeEventListener('organizationUpdated', handleRefresh);
+  }, []);
+
   return (
-    <div className="flex h-screen bg-[var(--color-primary)]">
+    <div className="flex h-screen bg-[var(--color-primary)]" key={orgUpdateToggle}>
       <Sidebar 
         onSettingsClick={() => setShowSettings(true)} 
         onOrgSettingsClick={handleOrgSettings}

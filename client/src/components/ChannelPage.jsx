@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import { Hash, Send, Smile, Paperclip, MoreVertical, Trash2, Edit2, Home, MessageSquare, Users, Crown } from 'lucide-react';
+import { Hash, Send, Smile, Paperclip, Trash2, Edit2, Home, MessageSquare, Users, Crown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getRoleStyle, initializeRoleColors } from '../utils/roleColors';
 
@@ -103,7 +103,19 @@ const ChannelPage = () => {
           `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/members`,
           { withCredentials: true }
         );
-        setMembers(membersRes.data.members || []);
+        const allMembers = membersRes.data.members || [];
+        // Filter members based on their accessible teams (if any)
+        const filtered = allMembers.filter((member) => {
+          // Organization creator can access all channels
+          if (member.isCreator) return true;
+          // If accessible_teams is empty or not an array, assume access to all channels
+          if (!Array.isArray(member.accessible_teams) || member.accessible_teams.length === 0) {
+            return true;
+          }
+          // Otherwise, include member only if they have access to this channel
+          return member.accessible_teams.includes(response.data.channel.name);
+        });
+        setMembers(filtered);
       } catch (err) {
         console.error("Error fetching channel:", err);
         setError(err?.response?.data?.message || "Failed to load channel");

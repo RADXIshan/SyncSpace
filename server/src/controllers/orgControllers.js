@@ -82,6 +82,7 @@ export const createOrganization = async (req, res) => {
               org_id, role_name,
               manage_channels, manage_users,
               settings_access, notes_access, meeting_access, noticeboard_access, roles_access, invite_access,
+              accessible_teams,
               created_by
             )
             VALUES (
@@ -95,6 +96,7 @@ export const createOrganization = async (req, res) => {
               ${role.permissions?.noticeboard_access || false},
               ${role.permissions?.roles_access || false},
               ${role.permissions?.invite_access || false},
+              ${Array.isArray(role.accessible_teams) ? role.accessible_teams : (Array.isArray(role.accessibleChannels) ? role.accessibleChannels : [])},
               ${userId}
             )
           `;
@@ -134,6 +136,7 @@ export const createOrganization = async (req, res) => {
 // Get Organization
 export const getOrganization = async (req, res) => {
   try {
+    const userId = verifyToken(req);
     const org_id = req.params.org_id;
 
     // Get organization details
@@ -150,18 +153,35 @@ export const getOrganization = async (req, res) => {
 
     const organization = org[0];
 
-    // Get organization channels
-    const channels = await sql`
+    // Get organization channels (initially fetch all)
+    let channels = await sql`
       SELECT channel_id, channel_name, channel_description
       FROM org_channels
       WHERE org_id = ${org_id}
       ORDER BY channel_id ASC
     `;
 
+    // Determine user's accessible teams for channel filtering
+    const [memberWithRole] = await sql`
+      SELECT om.role, r.accessible_teams
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
+      LIMIT 1
+    `;
+
+    const isCreator = organization.created_by === userId;
+    const accessibleTeams = memberWithRole?.accessible_teams || null;
+
+    if (!isCreator && Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
+      channels = channels.filter(ch => accessibleTeams.includes(ch.channel_name));
+    }
+
     // Get organization roles
     const roles = await sql`
       SELECT role_id, role_name, manage_channels, manage_users,
-             settings_access, notes_access, meeting_access, noticeboard_access, roles_access, invite_access
+             settings_access, notes_access, meeting_access, noticeboard_access, roles_access, invite_access,
+             accessible_teams
       FROM org_roles
       WHERE org_id = ${org_id}
       ORDER BY role_id ASC
@@ -194,11 +214,15 @@ export const getOrganization = async (req, res) => {
             roles_access: role.roles_access,
             invite_access: role.invite_access,
           },
+          accessible_teams: Array.isArray(role.accessible_teams) ? role.accessible_teams : [],
         })),
       },
     });
   } catch (error) {
     console.error("Error retrieving organization:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -551,6 +575,7 @@ export const updateOrganization = async (req, res) => {
               org_id, role_name,
               manage_channels, manage_users,
               settings_access, notes_access, meeting_access, noticeboard_access, roles_access, invite_access,
+              accessible_teams,
               created_by
             )
             VALUES (
@@ -564,6 +589,7 @@ export const updateOrganization = async (req, res) => {
               ${role.permissions?.noticeboard_access || false},
               ${role.permissions?.roles_access || false},
               ${role.permissions?.invite_access || false},
+              ${Array.isArray(role.accessible_teams) ? role.accessible_teams : (Array.isArray(role.accessibleChannels) ? role.accessibleChannels : [])},
               ${userId}
             )
           `;
@@ -617,7 +643,7 @@ export const getOrganizationMembers = async (req, res) => {
 
     const isCreator = org?.created_by === userId;
 
-    // Get all members of the organization with user details
+    // Get all members of the organization with user details and their role's accessible teams
     const members = await sql`
       SELECT 
         om.user_id,
@@ -625,9 +651,11 @@ export const getOrganizationMembers = async (req, res) => {
         om.joined_at,
         u.name,
         u.email,
-        u.user_photo
+        u.user_photo,
+        r.accessible_teams
       FROM org_members om
       JOIN users u ON u.user_id = om.user_id
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
       WHERE om.org_id = ${org_id}
       ORDER BY om.joined_at ASC
     `;
@@ -642,6 +670,7 @@ export const getOrganizationMembers = async (req, res) => {
         userPhoto: memberItem.user_photo,
         role: memberItem.role,
         joinedAt: memberItem.joined_at,
+        accessible_teams: Array.isArray(memberItem.accessible_teams) ? memberItem.accessible_teams : [],
         isCreator: memberItem.user_id === org?.created_by
       })),
       canManage: isCreator || member.manage_users
@@ -1015,6 +1044,34 @@ export const getChannel = async (req, res) => {
 
     if (!channel) {
       return res.status(404).json({ message: "Channel not found" });
+    }
+
+    // Enforce channel access based on role's accessible_teams unless user is creator
+    const [orgForCreator] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    const isCreator = orgForCreator?.created_by === userId;
+
+    if (!isCreator) {
+      const [memberWithRole] = await sql`
+        SELECT r.accessible_teams
+        FROM org_members om
+        LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+        WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
+        LIMIT 1
+      `;
+
+      const accessibleTeams = memberWithRole?.accessible_teams || null;
+      if (Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
+        const canAccess = accessibleTeams.includes(channel.channel_name);
+        if (!canAccess) {
+          return res.status(403).json({ message: "You don't have access to this channel" });
+        }
+      }
     }
 
     res.status(200).json({

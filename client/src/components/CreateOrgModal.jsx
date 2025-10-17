@@ -214,6 +214,9 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
             roles_access: role.permissions.roles_access,
             invite_access: role.permissions.invite_access,
           },
+          accessible_teams: Array.isArray(role.accessibleChannels)
+            ? role.accessibleChannels.map((c) => c?.trim()).filter(Boolean)
+            : [],
         }))
       };
 

@@ -197,6 +197,16 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
     fetchOrganization();
   }, [user?.org_id]);
 
+  // Listen for global organization updates to refresh sidebar data
+  useEffect(() => {
+    const handleOrgUpdate = (e) => {
+      // we could optimistically update but simplest is refetch
+      fetchOrganization();
+    };
+    window.addEventListener('organizationUpdated', handleOrgUpdate);
+    return () => window.removeEventListener('organizationUpdated', handleOrgUpdate);
+  }, []);
+
   return (
     <div className="h-screen w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col shadow-2xl border-r border-slate-700/50">
       <div className="p-4 border-b border-slate-700/50">

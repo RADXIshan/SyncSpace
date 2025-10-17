@@ -483,23 +483,14 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
 
       toast.success("Organization settings updated successfully", { id: toastId });
       
-      // Update original values to new saved values
-      originalValues.current = {
-        orgName: orgName.trim(),
-        accessLevel,
-        channels: channels.filter(ch => ch.name.trim()),
-        roles: roles.filter(role => role.name.trim())
-      };
-      
-      setHasUnsavedChanges(false);
+      // Dispatch global event to notify other components of organization update
+      window.dispatchEvent(new CustomEvent('organizationUpdated', { detail: response.data.organization }));
       
       if (onSuccess) onSuccess(response.data.organization);
       onClose();
       
-      // Refresh the page to reflect changes immediately
-      setTimeout(() => {
-        window.location.reload();
-      }, 500); // Small delay to allow modal to close gracefully
+      // Optionally, you can invoke a callback to refresh data in parent components
+      // without forcing a full page reload so that the user stays on the same tab/route.
     } catch (err) {
       toast.error(
         err.response?.data?.message ||
@@ -608,6 +599,16 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   const togglePermission = (roleIndex, permission) => {
     const updated = [...roles];
     updated[roleIndex].permissions[permission] = !updated[roleIndex].permissions[permission];
+    setRoles(updated);
+  };
+
+  const toggleRoleChannelAccess = (roleIndex, channelName) => {
+    const updated = [...roles];
+    const role = updated[roleIndex] || {};
+    const current = Array.isArray(role.accessible_teams) ? role.accessible_teams : [];
+    const hasAccess = current.includes(channelName);
+    const next = hasAccess ? current.filter((c) => c !== channelName) : [...current, channelName];
+    updated[roleIndex] = { ...role, accessible_teams: next };
     setRoles(updated);
   };
 
@@ -996,6 +997,22 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                     className="w-4 h-4 text-violet-600 bg-white/10 border-white/20 rounded focus:ring-violet-500 focus:ring-2"
                                   />
                                   <span className="text-xs text-gray-300">{permission.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-400 mb-2">Accessible Channels</label>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {channels.map((ch, i) => (
+                                <label key={ch.id || `${ch.name}-${i}`} className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={(Array.isArray(role.accessible_teams) ? role.accessible_teams : []).includes(ch.name)}
+                                    onChange={() => toggleRoleChannelAccess(index, ch.name)}
+                                    className="w-4 h-4 text-violet-600 bg-white/10 border-white/20 rounded focus:ring-violet-500 focus:ring-2"
+                                  />
+                                  <span className="text-xs text-gray-300">{ch.name}</span>
                                 </label>
                               ))}
                             </div>

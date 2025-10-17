@@ -201,10 +201,10 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       setEditingMember(null);
       setTempRole("");
       
-      // Refresh page to ensure all changes are reflected
+      // Notify other components about organization update without reloading the page
       setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+        window.dispatchEvent(new Event('organizationUpdated'));
+      }, 0);
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Failed to update member role"

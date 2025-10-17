@@ -50,7 +50,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-[var(--color-primary)]" key={orgUpdateToggle}>
+    <div className="flex h-screen bg-[var(--color-primary)]">
       <Sidebar 
         onSettingsClick={() => setShowSettings(true)} 
         onOrgSettingsClick={handleOrgSettings}

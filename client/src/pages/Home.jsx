@@ -38,8 +38,15 @@ const Home = () => {
     const handleRefresh = () => {
       setOrgUpdateToggle(prev => !prev);
     };
+    const handleDeleted = () => {
+      navigate('/home/dashboard');
+    }
     window.addEventListener('organizationUpdated', handleRefresh);
-    return () => window.removeEventListener('organizationUpdated', handleRefresh);
+    window.addEventListener('organizationDeleted', handleDeleted);
+    return () => {
+      window.removeEventListener('organizationUpdated', handleRefresh);
+      window.removeEventListener('organizationDeleted', handleDeleted);
+    };
   }, []);
 
   return (

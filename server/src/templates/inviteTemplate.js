@@ -162,7 +162,7 @@ export const generateInviteEmail = (organizationName, message, inviteCode) => {
         </p>
 
         <div style="text-align: center;">
-          <a href="https://syncspace.app/join" class="button">Join Now</a>
+          <a href="https://syncspace-client.vercel.app/home/dashboard" class="button">Join Now</a>
         </div>
       </div>
 

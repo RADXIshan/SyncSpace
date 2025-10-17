@@ -261,6 +261,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       );
 
       toast.success("Organization deleted successfully", { id: toastId });
+      window.dispatchEvent(new Event('organizationDeleted'));
       
       // Close modal and trigger success callback
       onClose();

@@ -96,6 +96,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
       setOrganization(null);
       setShowLeaveOrgConfirm(false);
       await checkAuth(); // Refresh user data
+      navigate('/home/dashboard');
     } catch (err) {
       console.error("Error leaving organization:", err);
       toast.error(

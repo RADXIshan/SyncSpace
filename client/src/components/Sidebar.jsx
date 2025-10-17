@@ -273,7 +273,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                       className="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-violet-600/30 to-violet-500/30 hover:from-violet-600/40 hover:to-violet-500/40 border border-violet-500/30 hover:border-violet-400/50 rounded-md transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs font-medium cursor-pointer shadow-lg group"
                       title="Invite users to organization"
                     >
-                      <UserPlus size={14} className="mr-1.5 group-hover:rotate-360 group-hover:scale-110 transition-transform duration-400" />
+                      <UserPlus size={14} className="mr-1.5 group-hover:scale-110 transition-transform duration-200" />
                       Invite
                     </button>
                   )}
@@ -282,7 +282,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                     className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-3 py-2 bg-gradient-to-r from-red-600/30 to-red-500/30 hover:from-red-600/40 hover:to-red-500/40 border border-red-500/30 hover:border-red-400/50 rounded-md transition-all duration-200 text-red-300 hover:text-red-200 text-xs font-medium cursor-pointer shadow-lg group`}
                     title="Leave organization"
                   >
-                    <LogOut size={14} className="mr-1.5 rotate-180 group-hover:scale-110 group-hover:rotate-540 transition-transform duration-400" />
+                    <LogOut size={14} className="mr-1.5 rotate-180 group-hover:scale-110 transition-transform duration-200" />
                     Leave
                   </button>
                 </div>
@@ -375,7 +375,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
             className="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-sm hover:shadow-lg"
           >
             <span className="mr-3 text-slate-400 group-hover:text-red-400 transition-colors duration-300">
-              <LogOut size={16} className="rotate-180 group-hover:rotate-540 group-hover:scale-120 transition-transform duration-300" />
+              <LogOut size={16} className="rotate-180 group-hover:scale-120 transition-transform duration-300" />
             </span>
             <span className='font-medium text-sm'>Logout</span>
           </button>

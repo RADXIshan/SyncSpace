@@ -465,6 +465,11 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       return toast.error("Please enter an organization name");
     }
 
+      if (!hasUnsavedChanges) {
+         toast("No changes to update");
+          return;
+       }
+
     setLoading(true);
     let toastId;
 

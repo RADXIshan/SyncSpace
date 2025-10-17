@@ -263,10 +263,8 @@
 }
 
 .react-datepicker__input-container input {
-  background: transparent;
-  border: none;
   outline: none;
-  color: #374151;
+  color: white;
   width: 100%;
 }
 
@@ -298,7 +296,7 @@
 /* Light theme day variations */
 .react-datepicker__day--outside-month {
   background-color: transparent !important;
-  color: rgba(156, 163, 175, 0.6) !important;
+  color: white !important;
 }
 
 .react-datepicker__day--disabled {
@@ -379,11 +377,11 @@
 }
 
 .react-datepicker--dark-theme .react-datepicker__day--outside-month {
-  color: rgba(156, 163, 175, 0.4) !important;
+  color: white !important;
 }
 
-.react-datepicker--dark-theme .react-datepicker__day--disabled {
-  color: rgba(156, 163, 175, 0.3) !important;
+.react-datepicker--dark-theme .react-datepicker__input-container input {
+  color: white !important;
 }
 
 /* Enhanced UI Components */

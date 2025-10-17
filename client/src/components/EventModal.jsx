@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Calendar } from "lucide-react";
+import { toast } from "react-hot-toast";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ConfirmationModal from "./ConfirmationModal";
@@ -118,7 +119,12 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
   // Submit updates
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!title || !dateTime) return;
+    // ... existing code ...
+        if (!title || !dateTime) return;
+        if (!hasUnsavedChanges) {
+          toast("No changes to update");
+          return;
+        }
     setIsSaving(true);
 
     const utcISOString = dateTime.toISOString();
@@ -205,7 +211,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                     />
                   </div>
                 ) : (
-                  <div className="w-full px-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/60 text-gray-200 font-medium">
+                  <div className="w-full px-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/60 text-white font-medium">
                     {new Date(dateTime).toLocaleString(undefined, {
                       weekday: "long",
                       year: "numeric",

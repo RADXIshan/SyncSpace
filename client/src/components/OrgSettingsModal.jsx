@@ -134,6 +134,17 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
           return true;
         }
       }
+      // Check accessible teams
+      const currentTeams = Array.isArray(current.accessible_teams) ? [...current.accessible_teams].sort() : [];
+      const originalTeams = Array.isArray(original.accessible_teams) ? [...original.accessible_teams].sort() : [];
+      if (currentTeams.length !== originalTeams.length) {
+        return true;
+      }
+      for (let j = 0; j < currentTeams.length; j++) {
+        if (currentTeams[j] !== originalTeams[j]) {
+          return true;
+        }
+      }
     }
     
     return false;

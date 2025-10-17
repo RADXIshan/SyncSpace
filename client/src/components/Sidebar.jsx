@@ -211,7 +211,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   return (
     <div className="h-screen w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col shadow-2xl border-r border-slate-700/50">
       <div className="p-4 border-b border-slate-700/50">
-        <h1 className="text-2xl font-bold gradient-text">SyncSpace</h1>
+        <h1 onClick={() => navigate('/home/dashboard')} className="text-2xl font-bold gradient-text cursor-pointer">SyncSpace</h1>
       </div>
       
       <div className="flex-1 overflow-y-auto py-3">

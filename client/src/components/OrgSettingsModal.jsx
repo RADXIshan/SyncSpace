@@ -6,7 +6,6 @@ import ConfirmationModal from "./ConfirmationModal";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 
 const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, onSuccess }) => {
-  // Check if current user is the organization creator
   const isCreator = userPermissions?.isCreator || false;
   const [orgName, setOrgName] = useState(organization?.name || "");
   const [accessLevel, setAccessLevel] = useState(organization?.accessLevel || "invite-only");
@@ -762,7 +761,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                       key={tab.id}
                       type="button"
                       onClick={() => handleTabSwitch(tab.id)}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all cursor-pointer ${
                         activeTab === tab.id
                           ? "bg-violet-600/30 text-violet-300 border border-violet-500/30"
                           : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300"
@@ -898,7 +897,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                     <button
                       type="button"
                       onClick={addChannel}
-                      className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-sm font-medium"
+                      className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-sm font-medium cursor-pointer"
                     >
                       <Plus size={16} className="mr-1" />
                       Add Channel
@@ -920,7 +919,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                             <button
                               type="button"
                               onClick={() => handleRemoveChannel(index)}
-                              className="text-red-400 hover:text-red-300 transition-colors"
+                              className="text-red-400 hover:text-red-300 transition-colors duration-200 cursor-pointer"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -964,7 +963,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                     <button
                       type="button"
                       onClick={addRole}
-                      className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-sm font-medium"
+                      className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-sm font-medium cursor-pointer"
                     >
                       <Plus size={16} className="mr-1" />
                       Add Role
@@ -993,7 +992,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                             <button
                               type="button"
                               onClick={() => handleRemoveRole(index)}
-                              className="text-red-400 hover:text-red-300 transition-colors"
+                              className="text-red-400 hover:text-red-300 transition-colors duration-200 cursor-pointer"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -1084,7 +1083,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                         <button
                           type="button"
                           onClick={() => setShowFilters(!showFilters)}
-                          className="flex items-center px-3 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-200 text-gray-300 hover:text-white text-sm font-medium"
+                          className="flex items-center px-3 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-200 text-gray-300 hover:text-white text-sm font-medium cursor-pointer"
                         >
                           <Filter size={16} className="mr-2" />
                           Filters
@@ -1101,7 +1100,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                               setDateFilter("all");
                               setStatusFilter("all");
                             }}
-                            className="text-xs text-violet-400 hover:text-violet-300 transition-colors whitespace-nowrap"
+                            className="text-xs text-violet-400 hover:text-violet-300 transition-colors whitespace-nowrap cursor-pointer"
                           >
                             Clear all filters
                           </button>
@@ -1118,7 +1117,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           <select
                             value={roleFilter}
                             onChange={(e) => setRoleFilter(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
                           >
                             <option value="all">All Roles</option>
                             {getUniqueRoles().map((role) => (
@@ -1135,7 +1134,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
                           >
                             <option value="all">All Status</option>
                             <option value="online">Online</option>
@@ -1149,7 +1148,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           <select
                             value={dateFilter}
                             onChange={(e) => setDateFilter(e.target.value)}
-                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                            className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
                           >
                             <option value="all">All Time</option>
                             <option value="today">Today</option>
@@ -1405,7 +1404,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           <button
                             type="button"
                             onClick={() => setShowDeleteConfirm(true)}
-                            className="flex items-center px-4 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-medium"
+                            className="flex items-center px-4 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-medium cursor-pointer"
                           >
                             <Trash2 size={16} className="mr-2" />
                             Delete Organization
@@ -1435,7 +1434,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                   setShowDeleteConfirm(false);
                                   setDeleteConfirmation("");
                                 }}
-                                className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 rounded-lg text-gray-300 hover:text-gray-200 text-sm font-medium transition-all duration-200"
+                                className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 rounded-lg text-gray-300 hover:text-gray-200 text-sm font-medium transition-all duration-200 cursor-pointer"
                               >
                                 Cancel
                               </button>
@@ -1443,7 +1442,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                 type="button"
                                 onClick={handleDeleteOrganization}
                                 disabled={deleteConfirmation !== organization?.name || loading}
-                                className="flex items-center px-4 py-2 bg-red-600/30 hover:bg-red-600/40 border border-red-500/40 rounded-lg text-red-200 hover:text-red-100 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center px-4 py-2 bg-red-600/30 hover:bg-red-600/40 border border-red-500/40 rounded-lg text-red-200 hover:text-red-100 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                               >
                                 {loading ? (
                                   <>

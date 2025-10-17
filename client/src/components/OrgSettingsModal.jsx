@@ -377,7 +377,13 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       }
       
       if (organization.roles && organization.roles.length > 0) {
-        setRoles(organization.roles);
+        // Deep clone roles to avoid shared references with original values
+        const clonedRoles = organization.roles.map(r => ({
+          ...r,
+          permissions: { ...r.permissions },
+          accessible_teams: Array.isArray(r.accessible_teams) ? [...r.accessible_teams] : [],
+        }));
+        setRoles(clonedRoles);
       } else {
         setRoles([{
           name: "",
@@ -389,7 +395,9 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
             meeting_access: false,
             noticeboard_access: false,
             roles_access: false,
-          }
+            invite_access: false,
+          },
+          accessible_teams: []
         }]);
       }
       

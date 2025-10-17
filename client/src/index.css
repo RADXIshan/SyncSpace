@@ -41,17 +41,20 @@
 /* Enhanced FullCalendar Styles */
 .enhanced-fullcalendar {
   font-family: 'Montserrat', sans-serif;
-  border-radius: 1rem;
+  border-radius: 1rem;;
   overflow: hidden;
 }
 
 .enhanced-fullcalendar .fc-toolbar {
   background: linear-gradient(135deg, #7C3AED, #6366F1);
   color: white;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   margin-bottom: 0;
-  border-radius: 1rem 1rem 0 0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.enhanced-fullcalendar .fc-button-group {
+  gap: 0.5rem;
 }
 
 .enhanced-fullcalendar .fc-toolbar-title {
@@ -65,8 +68,8 @@
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   color: white !important;
   font-weight: 600;
-  border-radius: 0.75rem !important;
-  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  padding: 0.2rem 0.5rem !important;
   transition: all 0.2s ease !important;
   backdrop-filter: blur(10px);
 }
@@ -79,12 +82,16 @@
 }
 
 .enhanced-fullcalendar .fc-button-primary:focus {
-  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25) !important;
+  box-shadow: none;
 }
 
 .enhanced-fullcalendar .fc-button-active {
   background: rgba(255, 255, 255, 0.4) !important;
   border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active:focus{
+  box-shadow: none;
 }
 
 .enhanced-fullcalendar .fc-daygrid-day {

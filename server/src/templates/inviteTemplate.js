@@ -1,4 +1,5 @@
 export const generateInviteEmail = (organizationName, message, inviteCode) => {
+  const year = new Date().getFullYear(); // get current year
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -169,6 +170,7 @@ export const generateInviteEmail = (organizationName, message, inviteCode) => {
       <div class="footer">
         <p>This email was sent by <strong>SyncSpace</strong> — your collaborative hub for modern teams.</p>
         <p style="margin-top: 8px;">If you didn’t request this, you can safely ignore it.</p>
+        <p style="margin-top: 8px;">&copy; ${year} SyncSpace. All rights reserved.</p>
       </div>
     </div>
   </body>

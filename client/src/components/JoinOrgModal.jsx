@@ -28,6 +28,10 @@ const JoinOrgModal = ({ onClose, onSuccess }) => {
 
       toast.success("Successfully joined organisation", { id: toastId });
       if (onSuccess) onSuccess(response.data.organization);
+
+      // Notify other components of organization change
+      window.dispatchEvent(new CustomEvent('organizationUpdated', { detail: response.data.organization }));
+
       onClose();
       
       // Refresh the page to show the joined organization

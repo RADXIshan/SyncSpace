@@ -13,18 +13,18 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
-  
-  // Original values for change detection
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+
+  // Store original values for comparison
   const originalValues = useRef({
     title: event?.title || "",
     dateTime: event ? new Date(event.start) : new Date(),
-    description: event?.description || ""
+    description: event?.description || "",
   });
 
-  // Check for unsaved changes
+  // Check if any field differs from original
   const checkForUnsavedChanges = () => {
     if (!isEditing) return false;
-    
     const original = originalValues.current;
     return (
       title !== original.title ||
@@ -32,33 +32,31 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
       description !== original.description
     );
   };
-  
+
+  // Update when a new event prop is passed
   useEffect(() => {
     if (event) {
       setTitle(event.title);
       setDateTime(new Date(event.start));
       setDescription(event.description || "");
-      
-      // Update original values
       originalValues.current = {
         title: event.title,
         dateTime: new Date(event.start),
-        description: event.description || ""
+        description: event.description || "",
       };
     }
   }, [event]);
-  
-  // Track changes for unsaved changes detection
+
+  // Detect unsaved changes
   useEffect(() => {
     if (isEditing) {
-      const hasChanges = checkForUnsavedChanges();
-      setHasUnsavedChanges(hasChanges);
+      setHasUnsavedChanges(checkForUnsavedChanges());
     } else {
       setHasUnsavedChanges(false);
     }
   }, [title, dateTime, description, isEditing]);
-  
-  // Handle closing with unsaved changes
+
+  // Close with unsaved check
   const handleClose = () => {
     if (hasUnsavedChanges) {
       setPendingAction(() => onClose);
@@ -67,8 +65,8 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
       onClose();
     }
   };
-  
-  // Handle cancel editing with unsaved changes
+
+  // Cancel editing with unsaved check
   const handleCancelEdit = () => {
     if (hasUnsavedChanges) {
       setPendingAction(() => () => {
@@ -86,47 +84,54 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
       setDescription(originalValues.current.description);
     }
   };
-  
-  // Discard changes and proceed with pending action
+
+  // Confirm discard of unsaved changes
   const discardChanges = () => {
     setShowUnsavedChangesModal(false);
     setHasUnsavedChanges(false);
-    
     if (pendingAction) {
       pendingAction();
       setPendingAction(null);
     }
   };
-  
+
   // Cancel unsaved changes modal
   const cancelUnsavedChanges = () => {
     setShowUnsavedChangesModal(false);
     setPendingAction(null);
   };
 
+  // Delete confirmation handlers
+  const handleDeleteClick = () => {
+    setShowDeleteConfirmModal(true);
+  };
+
+  const confirmDelete = () => {
+    onDelete(event.event_id || event.id);
+    setShowDeleteConfirmModal(false);
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirmModal(false);
+  };
+
+  // Submit updates
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title || !dateTime) return;
     setIsSaving(true);
-    const utcISOString = dateTime.toISOString();
-    
-    // Update original values to reflect the saved state
-    originalValues.current = {
-      title,
-      dateTime,
-      description
-    };
-    setHasUnsavedChanges(false);
-    
-    const maybePromise = onUpdate({ ...event, title, time: utcISOString, description });
-   if (maybePromise && typeof maybePromise.finally === 'function') {
-      maybePromise.finally(() => setIsSaving(false));
-   } else {
-      setIsSaving(false);
-   }
-  };
 
-  const handleDelete = () => onDelete(event.event_id || event.id);
+    const utcISOString = dateTime.toISOString();
+    originalValues.current = { title, dateTime, description };
+    setHasUnsavedChanges(false);
+
+    const maybePromise = onUpdate({ ...event, title, time: utcISOString, description });
+    if (maybePromise && typeof maybePromise.finally === "function") {
+      maybePromise.finally(() => setIsSaving(false));
+    } else {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all duration-300">
@@ -142,7 +147,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
             >
               <X size={22} />
             </button>
-            
+
             {/* Header */}
             <div className="text-center mb-8 pt-4">
               <div className="w-16 h-16 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -152,15 +157,16 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                 Event Details
               </h2>
               <p className="text-gray-300 text-base">
-                {isEditing ? 'Edit your event information' : 'View and manage your event'}
+                {isEditing ? "Edit your event information" : "View and manage your event"}
               </p>
             </div>
+
             {/* Event Information */}
             <div className="space-y-8">
               {/* Title */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-3">
-                  Event Title {isEditing && '*'}
+                  Event Title {isEditing && "*"}
                 </label>
                 {isEditing ? (
                   <input
@@ -176,10 +182,11 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   </div>
                 )}
               </div>
+
               {/* Date */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-3">
-                  Date & Time {isEditing && '*'}
+                  Date & Time {isEditing && "*"}
                 </label>
                 {isEditing ? (
                   <div className="relative">
@@ -199,18 +206,19 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   </div>
                 ) : (
                   <div className="w-full px-4 py-4 rounded-2xl border border-gray-600/50 bg-gray-800/60 text-gray-200 font-medium">
-                    {new Date(dateTime).toLocaleString(undefined, { 
-                      weekday: 'long',
-                      year: "numeric", 
-                      month: "long", 
-                      day: "numeric", 
-                      hour: "2-digit", 
-                      minute: "2-digit", 
-                      hour12: true 
+                    {new Date(dateTime).toLocaleString(undefined, {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
                     })}
                   </div>
                 )}
               </div>
+
               {/* Description */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-3">
@@ -231,16 +239,17 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                 )}
               </div>
             </div>
-            
+
             {/* Action Buttons */}
             <div className="flex justify-between items-center gap-4 pt-6 border-t border-gray-700/50">
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 className="px-6 py-3 rounded-xl bg-red-900/40 hover:bg-red-900/60 border border-red-700/50 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md"
               >
                 Delete Event
               </button>
+
               <div className="flex gap-3">
                 {!isEditing && (
                   <button
@@ -265,10 +274,10 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                     type="submit"
                     disabled={isSaving}
                     className={`px-8 py-3 rounded-xl font-semibold transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-2 justify-center shadow-lg hover:shadow-xl ${
-                      isSaving ? 'opacity-50 cursor-not-allowed' : ''
+                      isSaving ? "opacity-50 cursor-not-allowed" : ""
                     } ${
-                      hasUnsavedChanges 
-                        ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300" 
+                      hasUnsavedChanges
+                        ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300"
                         : "bg-violet-900/40 hover:bg-violet-900/60 border border-violet-700/50 text-violet-400 hover:text-violet-300"
                     }`}
                   >
@@ -280,7 +289,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                     ) : (
                       <>
                         <Calendar size={16} />
-                        {hasUnsavedChanges ? 'Save Changes*' : 'Save Changes'}
+                        {hasUnsavedChanges ? "Save Changes*" : "Save Changes"}
                         {hasUnsavedChanges && (
                           <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
                         )}
@@ -301,8 +310,8 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
           </form>
         </div>
       </div>
-      
-      {/* Unsaved Changes Confirmation Modal */}
+
+      {/* Unsaved Changes Modal */}
       <ConfirmationModal
         isOpen={showUnsavedChangesModal}
         onClose={cancelUnsavedChanges}
@@ -312,6 +321,19 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
         confirmText="Discard Changes"
         cancelText="Keep Editing"
         type="warning"
+        loading={false}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirmModal}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        title="Delete Event"
+        message="Are you sure you want to delete this event? This action cannot be undone."
+        confirmText="Delete Event"
+        cancelText="Cancel"
+        type="danger"
         loading={false}
       />
     </div>

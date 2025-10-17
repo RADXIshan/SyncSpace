@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { Calendar, Settings, Hash, Users, Cog, UserPlus, LogIn, Home, LogOut, Crown, MessageCircle, Bell } from 'lucide-react';
+import { Calendar, Settings, Hash, Users, UserPlus, Home, LogOut, Crown, MessageCircle, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
@@ -227,7 +227,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
               }`}
             >
               <span className={`mr-3 transition-colors duration-200 ${
-                isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-violet-400'
+                isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-violet-400 group-hover:scale-110 transition-transform duration-200'
               }`}>{React.cloneElement(item.icon, { size: 20 })}</span>
               <span className="text-sm font-medium">{item.name}</span>
             </Link>
@@ -258,7 +258,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                       className="flex-shrink-0 p-1.5 bg-blue-600/30 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-400/30 rounded-md transition-all duration-200 text-blue-300 hover:text-blue-200 cursor-pointer group shadow-md backdrop-blur-sm"
                       title="Organization settings"
                     >
-                      <Cog size={16} className="group-hover:rotate-90 transition-transform duration-300" />
+                      <Settings size={17} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
                     </button>
                   )}
                 </div>
@@ -273,7 +273,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                       className="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-violet-600/30 to-violet-500/30 hover:from-violet-600/40 hover:to-violet-500/40 border border-violet-500/30 hover:border-violet-400/50 rounded-md transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs font-medium cursor-pointer shadow-lg group"
                       title="Invite users to organization"
                     >
-                      <UserPlus size={14} className="mr-1.5 group-hover:scale-110 transition-transform duration-200" />
+                      <UserPlus size={14} className="mr-1.5 group-hover:rotate-360 group-hover:scale-110 transition-transform duration-400" />
                       Invite
                     </button>
                   )}
@@ -282,7 +282,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                     className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-3 py-2 bg-gradient-to-r from-red-600/30 to-red-500/30 hover:from-red-600/40 hover:to-red-500/40 border border-red-500/30 hover:border-red-400/50 rounded-md transition-all duration-200 text-red-300 hover:text-red-200 text-xs font-medium cursor-pointer shadow-lg group`}
                     title="Leave organization"
                   >
-                    <LogIn size={14} className="mr-1.5 rotate-180 group-hover:scale-110 transition-transform duration-200" />
+                    <LogOut size={14} className="mr-1.5 rotate-180 group-hover:scale-110 group-hover:rotate-540 transition-transform duration-400" />
                     Leave
                   </button>
                 </div>
@@ -313,7 +313,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                   title={channel.description || channel.name}
                 >
                   <span className={`mr-2.5 transition-colors duration-200 ${
-                    isActive(`/home/channels/${channel.id}`) ? 'text-white' : 'text-slate-500 group-hover:text-violet-400'
+                    isActive(`/home/channels/${channel.id}`) ? 'text-white' : 'text-slate-500 group-hover:text-violet-400 group-hover:scale-110 transition-transform duration-200'
                   }`}>
                     <Hash size={14} />
                   </span>
@@ -365,7 +365,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
             className="w-full flex items-center px-3 py-3 text-left rounded-lg transition-all duration-300 hover:bg-slate-700/60 hover:border-violet-500/40 border border-slate-600/30 cursor-pointer group text-slate-300 hover:text-violet-300 shadow-sm hover:shadow-lg"
           >
             <span className="mr-3 text-slate-400 group-hover:text-violet-400 transition-colors duration-300">
-              <Settings size={16} className="group-hover:rotate-45 transition-transform duration-300" />
+              <Settings size={16} className="group-hover:rotate-180 group-hover:scale-120 transition-transform duration-300" />
             </span>
             <span className='font-medium text-sm'>Settings</span>
           </button>
@@ -375,7 +375,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
             className="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-sm hover:shadow-lg"
           >
             <span className="mr-3 text-slate-400 group-hover:text-red-400 transition-colors duration-300">
-              <LogOut size={16} className="rotate-180 group-hover:scale-110 transition-transform duration-300" />
+              <LogOut size={16} className="rotate-180 group-hover:rotate-540 group-hover:scale-120 transition-transform duration-300" />
             </span>
             <span className='font-medium text-sm'>Logout</span>
           </button>

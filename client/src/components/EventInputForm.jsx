@@ -61,7 +61,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
             </button>
 
             {/* Header */}
-            <div className="text-center mb-6 sm:mb-8 pt-4 pr-12">
+            <div className="text-center mb-6 sm:mb-8">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
                 <Calendar size={24} className="text-white sm:w-8 sm:h-8" />
               </div>
@@ -180,7 +180,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
         </div>
       </div>
     </div>
-  );
+  ); 
 };
 
 export default EventInputForm;

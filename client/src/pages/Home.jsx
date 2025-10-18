@@ -21,6 +21,7 @@ const Home = () => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [orgSettingsData, setOrgSettingsData] = useState({ organization: null, userRole: null, userPermissions: null });
   const [inviteOrganization, setInviteOrganization] = useState(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   const handleOrgSettings = (organization, userRole, userPermissions) => {
     setOrgSettingsData({ organization, userRole, userPermissions });
@@ -55,8 +56,10 @@ const Home = () => {
         onSettingsClick={() => setShowSettings(true)} 
         onOrgSettingsClick={handleOrgSettings}
         onInviteClick={handleInvite}
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
       />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto main-content">
         <Routes>
           <Route path="/" element={<Navigate to="/home/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard 

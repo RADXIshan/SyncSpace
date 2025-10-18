@@ -286,48 +286,48 @@ const Settings = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
-      <div className="relative w-full max-w-3xl max-h-[90vh] bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 sm:p-4 transition-all duration-300">
+      <div className="relative w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
-        <div className="relative overflow-y-auto max-h-[90vh] px-8 py-10">
+        <div className="relative overflow-y-auto max-h-[95vh] sm:max-h-[90vh] px-4 py-6 sm:px-8 sm:py-10">
           <div className="space-y-8">
             {/* Close Button */}
             <button
               onClick={handleClose}
-              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10"
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10"
             >
-              <X size={22} />
+              <X size={20} className="sm:w-6 sm:h-6" />
             </button>
             
             {/* Header */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+            <div className="text-center mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
                 Profile Settings
               </h2>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-xs sm:text-sm">
                 Manage your account settings and preferences
               </p>
             </div>
 
             {/* Profile Section */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-              <div className="flex items-center gap-6">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
                 {(editMode ? formData.photo : user?.user_photo) ? (
                   <img
                     src={editMode ? formData.photo || user?.user_photo : user?.user_photo}
                     alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover ring-4 ring-violet-500/30 shadow-xl hover:ring-violet-500/50 transition-all duration-200"
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-violet-500/30 shadow-xl hover:ring-violet-500/50 transition-all duration-200 flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-3xl font-bold text-white shadow-xl hover:scale-105 transition-transform duration-200">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-2xl sm:text-3xl font-bold text-white shadow-xl hover:scale-105 transition-transform duration-200 flex-shrink-0">
                     {user?.name?.charAt(0) || "U"}
                   </div>
                 )}
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white mb-1">{user?.name}</h2>
-                  <p className="text-gray-300">{user?.email}</p>
+                <div className="flex-1 text-center sm:text-left">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">{user?.name}</h2>
+                  <p className="text-gray-300 text-sm sm:text-base break-all">{user?.email}</p>
                   {editMode && (
-                    <label className="mt-4 cursor-pointer text-sm font-semibold text-violet-400 hover:text-violet-300 transition-colors active:scale-95 bg-violet-500/20 px-4 py-2 rounded-lg hover:bg-violet-500/30 inline-block">
+                    <label className="mt-4 cursor-pointer text-xs sm:text-sm font-semibold text-violet-400 hover:text-violet-300 transition-colors active:scale-95 bg-violet-500/20 px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-violet-500/30 inline-block">
                       Change Photo
                       <input
                         type="file"
@@ -342,8 +342,8 @@ const Settings = ({ onClose }) => {
             </div>
 
             {/* Account Information */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Account Information</h3>
+            <div className="space-y-4 sm:space-y-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Account Information</h3>
               
               {["name", "email"].map((field) => (
                 <div key={field}>
@@ -356,7 +356,7 @@ const Settings = ({ onClose }) => {
                     value={formData[field]}
                     onChange={handleChange}
                     disabled={!editMode}
-                    className={`w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none ${
+                    className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:outline-none ${
                       !editMode ? "opacity-70 cursor-not-allowed" : ""
                     }`}
                   />
@@ -376,14 +376,14 @@ const Settings = ({ onClose }) => {
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="Enter new password"
-                      className="w-full px-4 py-3 pr-12 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                      className="w-full px-3 py-2.5 sm:px-4 sm:py-3 pr-10 sm:pr-12 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:outline-none"
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showPassword ? <EyeOff size={18} className="sm:w-5 sm:h-5" /> : <Eye size={18} className="sm:w-5 sm:h-5" />}
                     </button>
                   </div>
                 ) : (
@@ -391,52 +391,57 @@ const Settings = ({ onClose }) => {
                     type="password"
                     value="••••••••"
                     readOnly
-                    className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white opacity-70 cursor-not-allowed"
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base opacity-70 cursor-not-allowed"
                   />
                 )}
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-between items-center gap-4 pt-6 border-t border-white/10">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-white/10">
               <button
                 onClick={handleDelete}
                 disabled={loading}
-                className="px-6 py-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base order-2 sm:order-1"
               >
                 Delete Account
               </button>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 order-1 sm:order-2">
                 {editMode ? (
                   <>
                     <button
                       onClick={toggleEdit}
                       disabled={loading}
-                      className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                      className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={loading}
-                      className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-2 justify-center ${
+                      className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-2 justify-center text-sm sm:text-base ${
                         hasUnsavedChanges 
                           ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300" 
                           : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
                       }`}
                     >
-                      <Save size={16} />
-                      {loading ? "Saving..." : hasUnsavedChanges ? "Save Changes*" : "Save Changes"}
+                      <Save size={14} className="sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">
+                        {loading ? "Saving..." : hasUnsavedChanges ? "Save Changes*" : "Save Changes"}
+                      </span>
+                      <span className="sm:hidden">
+                        {loading ? "Saving..." : hasUnsavedChanges ? "Save*" : "Save"}
+                      </span>
                       {hasUnsavedChanges && !loading && (
-                        <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-400 rounded-full animate-pulse" />
                       )}
                     </button>
                   </>
                 ) : (
                   <button
                     onClick={toggleEdit}
-                    className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95"
+                    className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base"
                   >
                     Edit Profile
                   </button>

@@ -727,33 +727,33 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
 
   return (
     <>
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
+      <div className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
-        <div className="relative overflow-y-auto max-h-[90vh] px-8 py-10">
+        <div className="relative overflow-y-auto max-h-[95vh] sm:max-h-[90vh] px-4 py-6 sm:px-8 sm:py-10">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Close Button */}
             <button
               type="button"
               onClick={handleClose}
-              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10"
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10"
             >
-              <X size={22} />
+              <X size={20} className="sm:w-6 sm:h-6" />
             </button>
 
             {/* Header */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+            <div className="text-center mb-6 sm:mb-8 pr-12">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
                 Organization Settings
               </h2>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-xs sm:text-sm">
                 Update your organization settings and preferences
               </p>
             </div>
 
             {/* Tabs */}
             {availableTabs.length > 1 && (
-              <div className="flex space-x-2 mb-8">
+              <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
                 {availableTabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -761,14 +761,15 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                       key={tab.id}
                       type="button"
                       onClick={() => handleTabSwitch(tab.id)}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium text-sm transition-all cursor-pointer ${
+                      className={`flex items-center px-3 py-2 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all cursor-pointer ${
                         activeTab === tab.id
                           ? "bg-violet-600/30 text-violet-300 border border-violet-500/30"
                           : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300"
                       }`}
                     >
-                      <Icon size={16} className="mr-2" />
-                      {tab.label}
+                      <Icon size={14} className="mr-1.5 sm:mr-2 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">{tab.label}</span>
+                      <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
                     </button>
                   );
                 })}
@@ -776,7 +777,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
             )}
 
             {/* Tab Content */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {availableTabs.length === 0 && (
                 <div className="text-center py-12">
                   <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
@@ -795,7 +796,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
               )}
 
               {activeTab === "basic" && canEditBasicSettings() && (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Organization Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -806,7 +807,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                       value={orgName}
                       onChange={(e) => setOrgName(e.target.value)}
                       placeholder="Enter organization name"
-                      className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                      className="w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:outline-none"
                       required
                     />
                   </div>
@@ -816,7 +817,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                     <label className="block text-sm font-medium text-gray-300 mb-3">
                       Access Level
                     </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                       {accessLevelOptions.map(({ value, label, desc, icon: Icon }) => (
                         <label key={value} className="relative cursor-pointer">
                           <input
@@ -828,17 +829,17 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                             className="sr-only"
                           />
                           <div
-                            className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                            className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border transition-all cursor-pointer ${
                               accessLevel === value
                                 ? "border-violet-500 bg-violet-500/10 shadow-lg shadow-violet-500/20"
                                 : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
                             }`}
                           >
                             <div className="flex items-center mb-2">
-                              <Icon size={20} className={`mr-2 ${
+                              <Icon size={18} className={`mr-2 sm:w-5 sm:h-5 ${
                                 accessLevel === value ? "text-violet-400" : "text-gray-400"
                               }`} />
-                              <span className={`font-semibold ${
+                              <span className={`font-semibold text-sm sm:text-base ${
                                 accessLevel === value ? "text-violet-300" : "text-gray-300"
                               }`}>
                                 {label}
@@ -888,18 +889,18 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
               )}
 
               {activeTab === "channels" && canEditChannels() && (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                      <Hash size={20} />
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
+                      <Hash size={18} className="sm:w-5 sm:h-5" />
                       Channels
                     </h3>
                     <button
                       type="button"
                       onClick={addChannel}
-                      className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-sm font-medium cursor-pointer"
+                      className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto"
                     >
-                      <Plus size={16} className="mr-1" />
+                      <Plus size={14} className="mr-1 sm:w-4 sm:h-4" />
                       Add Channel
                     </button>
                   </div>
@@ -925,7 +926,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                             </button>
                           )}
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div>
                             <label className="block text-xs text-gray-400 mb-1">Channel Name</label>
                             <input
@@ -954,18 +955,18 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
               )}
 
               {activeTab === "roles" && canEditRoles() && (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                      <Shield size={20} />
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
+                      <Shield size={18} className="sm:w-5 sm:h-5" />
                       Roles & Permissions
                     </h3>
                     <button
                       type="button"
                       onClick={addRole}
-                      className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-sm font-medium cursor-pointer"
+                      className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto"
                     >
-                      <Plus size={16} className="mr-1" />
+                      <Plus size={14} className="mr-1 sm:w-4 sm:h-4" />
                       Add Role
                     </button>
                   </div>
@@ -1011,7 +1012,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           </div>
                           <div>
                             <label className="block text-xs text-gray-400 mb-2">Permissions</label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                               {availablePermissions.map((permission) => (
                                 <label key={permission.key} className="flex items-center space-x-2 cursor-pointer">
                                   <input
@@ -1027,7 +1028,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           </div>
                           <div>
                             <label className="block text-xs text-gray-400 mb-2">Accessible Channels</label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                               {channels.map((ch, i) => (
                                 <label key={ch.id || `${ch.name}-${i}`} className="flex items-center gap-2 cursor-pointer">
                                   <input
@@ -1049,13 +1050,13 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
               )}
 
               {activeTab === "members" && (
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                      <Users size={20} />
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white flex items-center gap-2">
+                      <Users size={18} className="sm:w-5 sm:h-5" />
                       Organization Members
                     </h3>
-                    <div className="text-sm text-gray-400">
+                    <div className="text-xs sm:text-sm text-gray-400">
                       {getFilteredMembers().length} of {members.length} member{members.length !== 1 ? 's' : ''}
                     </div>
                   </div>
@@ -1074,7 +1075,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           placeholder="Search members by name, email, or role..."
-                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
+                          className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
                         />
                       </div>
                       
@@ -1083,11 +1084,11 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                         <button
                           type="button"
                           onClick={() => setShowFilters(!showFilters)}
-                          className="flex items-center px-3 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all duration-200 text-gray-300 hover:text-white text-sm font-medium cursor-pointer"
+                          className="flex items-center px-3 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg sm:rounded-xl transition-all duration-200 text-gray-300 hover:text-white text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto"
                         >
-                          <Filter size={16} className="mr-2" />
+                          <Filter size={14} className="mr-1.5 sm:mr-2 sm:w-4 sm:h-4" />
                           Filters
-                          <ChevronDown size={16} className={`ml-2 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                          <ChevronDown size={14} className={`ml-1.5 sm:ml-2 sm:w-4 sm:h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
                         </button>
                         
                         {/* Clear Filters */}
@@ -1110,7 +1111,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                     
                     {/* Filter Options */}
                     {showFilters && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white/5 border border-white/10 rounded-xl">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl">
                         {/* Role Filter */}
                         <div>
                           <label className="block text-xs text-gray-400 mb-2">Filter by Role</label>
@@ -1214,11 +1215,11 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                         </div>
                       ) : (
                         getFilteredMembers().map((member) => (
-                          <div key={member.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
-                            <div className="flex items-center justify-between">
+                          <div key={member.id} className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                               <div className="flex items-center space-x-3">
                                 <div className="relative">
-                                  <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium overflow-hidden">
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium overflow-hidden">
                                     {member.userPhoto ? (
                                       <img
                                         src={member.userPhoto}
@@ -1230,26 +1231,26 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                     )}
                                   </div>
                                   {/* Online Status Indicator */}
-                                  <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 border-2 border-gray-800 rounded-full ${
+                                  <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-4 sm:h-4 border-2 border-gray-800 rounded-full ${
                                     member.isOnline ? 'bg-green-500' : 'bg-gray-500'
                                   }`}></div>
                                 </div>
-                                <div>
+                                <div className="flex-1 min-w-0">
                                   <div className="flex items-center space-x-2">
-                                    <p className="text-sm font-medium text-white">
+                                    <p className="text-sm font-medium text-white truncate">
                                       {member.name}
                                     </p>
                                     {member.isCreator && (
-                                      <Crown size={14} className="text-yellow-400" />
+                                      <Crown size={12} className="text-yellow-400 flex-shrink-0" />
                                     )}
                                   </div>
-                                  <p className="text-xs text-gray-400">{member.email}</p>
+                                  <p className="text-xs text-gray-400 truncate">{member.email}</p>
                                   <div className="flex items-center space-x-2 mt-1 flex-wrap gap-1">
                                     <span className={`text-xs px-2 py-1 rounded-md capitalize font-medium ${getRoleStyle(member.role).background} border ${getRoleStyle(member.role).border} ${getRoleStyle(member.role).text}`}>
                                       {member.role}
                                     </span>
                                     <div className="flex items-center gap-1">
-                                      <div className={`w-2 h-2 rounded-full ${
+                                      <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
                                         member.isOnline ? 'bg-green-500' : 'bg-gray-500'
                                       }`}></div>
                                       <span className={`text-xs font-medium ${
@@ -1258,7 +1259,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                         {member.isOnline ? 'Online' : 'Offline'}
                                       </span>
                                     </div>
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs text-gray-500 hidden sm:inline">
                                       Joined {new Date(member.joinedAt).toLocaleDateString()}
                                     </span>
                                   </div>
@@ -1484,19 +1485,19 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={loading}
-                className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading || !orgName.trim()}
-                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${
+                className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base justify-center ${
                   hasUnsavedChanges 
                     ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300" 
                     : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
@@ -1504,15 +1505,21 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Updating...
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span className="hidden sm:inline">Updating...</span>
+                    <span className="sm:hidden">Saving...</span>
                   </>
                 ) : (
                   <>
-                    <Save size={16} />
-                    {hasUnsavedChanges ? "Save Changes*" : "Save Changes"}
+                    <Save size={14} className="sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">
+                      {hasUnsavedChanges ? "Save Changes*" : "Save Changes"}
+                    </span>
+                    <span className="sm:hidden">
+                      {hasUnsavedChanges ? "Save*" : "Save"}
+                    </span>
                     {hasUnsavedChanges && (
-                      <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-400 rounded-full animate-pulse" />
                     )}
                   </>
                 )}

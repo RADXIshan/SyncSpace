@@ -1,5 +1,6 @@
-import { Star, X, CheckCheck } from "lucide-react";
+import { Star, X, CheckCheck, ChevronDown } from "lucide-react";
 import landing_page_pic from "../assets/landing_page_pic.png";
+import { useState } from "react";
 
 function Landing() {
   return (
@@ -219,6 +220,100 @@ function Landing() {
           </div>
         </div>
       </section>
+
+      <section id="faqs"> 
+        <div className="min-h-screen bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-gray-100)] to-[var(--color-gray-50)] text-[var(--color-accent)] flex flex-col items-center py-20 px-6 sm:px-8 lg:px-12 transition-colors duration-500">
+
+          {/* Header */}
+          <div className="w-full max-w-3xl text-center mb-14">
+            <header className="text-5xl font-extrabold gradient-text bg-clip-text text-transparent tracking-tight drop-shadow-sm">
+              FAQs
+            </header>
+            <p className="text-[var(--color-gray-600)] mt-3 text-base sm:text-lg italic">
+              Find quick answers to our most commonly asked questions.
+            </p>
+            <div className="mt-4 w-24 h-1 mx-auto bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] rounded-full"></div>
+          </div>
+
+          {/* FAQ Section */}
+          {(() => {
+            const [openIndex, setOpenIndex] = useState(null);
+            const faqs = [
+              {
+                q: "How can I get started?",
+                a: "Getting started is simple — sign up, verify your account, and follow the quick-start guide in your dashboard.",
+              },
+              {
+                q: "What is your refund policy?",
+                a: "We offer a 14-day money-back guarantee if you’re not satisfied — no questions asked.",
+              },
+              {
+                q: "Is customer support available 24/7?",
+                a: "Yes! Our support team is available 24/7 to assist you through chat or email.",
+              },
+              {
+                q: "Can I upgrade my plan later?",
+                a: "Absolutely! You can upgrade anytime from your account settings — your data will remain intact.",
+              },
+              {
+                q: "How do I contact support?",
+                a: "You can reach us via the 'Help' section in your dashboard or by emailing support@example.com.",
+              },
+              {
+                q: "Do you offer team discounts?",
+                a: "Yes, we offer special pricing for teams and organizations. Contact us to learn more.",
+              },
+            ];
+
+            return (
+              <div className="w-full max-w-3xl space-y-5">
+                {faqs.map((faq, index) => (
+                  <div
+                    key={index}
+                    className={`group border border-[var(--color-gray-200)] rounded-2xl bg-gradient-to-br from-white/70 to-[var(--color-gray-50)] shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden backdrop-blur-sm ${
+                      openIndex === index ? "ring-2 ring-[var(--color-secondary)] ring-opacity-40" : ""
+                    }`}
+                  >
+                    {/* Question Row */}
+                    <div
+                      className={`flex items-center justify-between p-6 cursor-pointer select-none transition-all duration-500 ${
+                        openIndex === index
+                          ? "bg-gradient-to-r from-[var(--color-secondary)]/10 to-[var(--color-info)]/10"
+                          : "hover:bg-gradient-to-r hover:from-[var(--color-gray-100)] hover:to-[var(--color-gray-50)]"
+                      }`}
+                    >
+                      <p className="font-semibold text-lg sm:text-xl text-[var(--color-accent)] group-hover:text-[var(--color-secondary)] transition-colors duration-300">
+                        Q{index + 1}. {faq.q}
+                      </p>
+
+                      <ChevronDown
+                        className={`w-6 h-6 text-[var(--color-secondary)] transition-transform duration-300 ${
+                          openIndex === index ? "rotate-180 text-[var(--color-info)]" : ""
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenIndex(openIndex === index ? null : index);
+                        }}
+                      />
+                    </div>
+
+                    {/* Answer */}
+                    <div
+                      className={`px-6 pb-6 text-[var(--color-gray-700)] text-sm sm:text-base leading-relaxed overflow-hidden transition-all duration-500 ease-in-out ${
+                        openIndex === index ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      {faq.a}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      </section>
+
+
     </>
   );
 }

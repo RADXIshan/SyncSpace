@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { Calendar, Settings, Hash, Users, UserPlus, Home, LogOut, Crown, MessageCircle, Bell } from 'lucide-react';
+import { Calendar, Settings, Hash, Users, Cog, UserPlus, LogIn, Home, LogOut, Crown, MessageCircle, Bell, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import ConfirmationModal from './ConfirmationModal';
 import { getRoleStyle, initializeRoleColors } from '../utils/roleColors';
 
-const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
+const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileOpen, onMobileToggle }) => {
   const location = useLocation();
   const path = location.pathname;
   const { user, checkAuth, logout } = useAuth();
@@ -19,6 +19,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
   const [showLeaveOrgConfirm, setShowLeaveOrgConfirm] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const navItems = [
     { name: 'Dashboard', icon: <Home size={23} />, path: '/home/dashboard' },
@@ -193,6 +194,17 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
     }
   };
 
+  // Check if screen is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Fetch organization when user or org_id changes
   useEffect(() => {
     fetchOrganization();
@@ -208,38 +220,75 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
     return () => window.removeEventListener('organizationUpdated', handleOrgUpdate);
   }, []);
 
+  // Close mobile sidebar when route changes
+  useEffect(() => {
+    if (isMobile && isMobileOpen && onMobileToggle) {
+      onMobileToggle();
+    }
+  }, [path]);
+
   return (
-    <div className="h-screen w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col shadow-2xl border-r border-slate-700/50">
-      <div className="p-4 border-b border-slate-700/50">
-        <h1 onClick={() => navigate('/home/dashboard')} className="text-2xl font-bold gradient-text cursor-pointer">SyncSpace</h1>
-      </div>
+    <>
+      {/* Mobile Overlay */}
+      {isMobile && isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden mobile-sidebar-overlay"
+          onClick={onMobileToggle}
+        />
+      )}
+
+      {/* Mobile Hamburger Button */}
+      {isMobile && (
+        <button
+          onClick={onMobileToggle}
+          className={`fixed top-4 z-50 p-2 bg-slate-800/90 mobile-hamburger border border-slate-600/50 rounded-lg text-white hover:bg-slate-700/90 transition-all duration-300 shadow-lg ${
+            isMobileOpen ? 'left-68' : 'left-4'
+          }`}
+        >
+          {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      )}
+
+      {/* Sidebar */}
+      <div className={`
+        h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col
+        ${isMobile 
+          ? `fixed top-0 left-0 z-40 w-64 mobile-sidebar transition-transform duration-300 ${
+              isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+            }` 
+          : 'w-64'
+        }
+      `}>
+        <div className="p-4 border-b border-slate-700/50">
+          <h1><span className="text-2xl font-bold gradient-text">SyncSpace</span></h1>
+        </div>
       
-      <div className="flex-1 overflow-y-auto py-3">
-        <nav className="px-3 space-y-2">
+      <div className="flex-1 overflow-y-auto">
+        <nav className="">
           {navItems.map((item) => (
             <Link
               key={item.name}
               to={item.path}
-              className={`flex items-center px-3 py-3 rounded-lg transition-all duration-300 font-medium group border shadow-sm hover:shadow-lg ${
+              className={`flex items-center px-3 py-3 transition-all duration-300 bg-gradient-to-r font-medium group ${
                 isActive(item.path)
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-500/30 shadow-purple-500/20'
-                  : 'hover:bg-slate-700/60 text-slate-300 hover:text-violet-300 border-transparent hover:border-violet-500/30'
+                  ? 'from-purple-600 to-indigo-600 text-white shadow-purple-500/20'
+                  : 'hover:bg-slate-800 text-slate-300 hover:text-violet-300'
               }`}
             >
-              <span className={`mr-3 transition-colors duration-200 ${
-                isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-violet-400 group-hover:scale-110 transition-transform duration-200'
+              <span className={`mr-3 transition-all duration-300 group-hover:scale-110 ${
+                isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-violet-400 duration-300'
               }`}>{React.cloneElement(item.icon, { size: 20 })}</span>
-              <span className="text-sm font-medium">{item.name}</span>
+              <span className="text-sm  font-medium">{item.name}</span>
             </Link>
           ))}
         </nav>
 
         {/* Organization Section */}
         {organization && (
-          <div className="px-3 mt-2">
-            <div className="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 border border-slate-600/40 rounded-xl backdrop-blur-sm shadow-xl overflow-hidden">
+          <div className="">
+            <div className="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 border border-slate-600/40 overflow-hidden">
               {/* Organization Header */}
-              <div className="bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-b border-violet-500/20 p-2.5">
+              <div className="bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-b border-violet-500/20 py-2.5 px-3.5">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center space-x-2 flex-1 min-w-0">
                     <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
@@ -255,10 +304,10 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                   {canManageOrg() && (
                     <button
                       onClick={handleOrgSettings}
-                      className="flex-shrink-0 p-1.5 bg-blue-600/30 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-400/30 rounded-md transition-all duration-200 text-blue-300 hover:text-blue-200 cursor-pointer group shadow-md backdrop-blur-sm"
+                      className="flex-shrink-0 p-1.5 bg-blue-600/30 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-400/30 rounded-md transition-all duration-300 text-blue-300 hover:text-blue-200 cursor-pointer group shadow-md backdrop-blur-sm"
                       title="Organization settings"
                     >
-                      <Settings size={17} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
+                      <Settings size={16} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
                     </button>
                   )}
                 </div>
@@ -270,19 +319,19 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
                   {canInvite() && (
                     <button
                       onClick={handleInvite}
-                      className="flex items-center justify-center px-3 py-2 bg-gradient-to-r from-violet-600/30 to-violet-500/30 hover:from-violet-600/40 hover:to-violet-500/40 border border-violet-500/30 hover:border-violet-400/50 rounded-md transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs font-medium cursor-pointer shadow-lg group"
+                      className="flex items-center justify-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 hover:border-violet-400/50 rounded-md transition-all duration-300 text-violet-300 hover:text-violet-200 text-xs font-medium cursor-pointer shadow-lg group"
                       title="Invite users to organization"
                     >
-                      <UserPlus size={14} className="mr-1.5 group-hover:scale-110 transition-transform duration-200" />
+                      <UserPlus size={14} className="mr-1.5 group-hover:scale-110 transition-transform duration-300" />
                       Invite
                     </button>
                   )}
                   <button
                     onClick={handleLeaveOrg}
-                    className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-3 py-2 bg-gradient-to-r from-red-600/30 to-red-500/30 hover:from-red-600/40 hover:to-red-500/40 border border-red-500/30 hover:border-red-400/50 rounded-md transition-all duration-200 text-red-300 hover:text-red-200 text-xs font-medium cursor-pointer shadow-lg group`}
+                    className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-400/50 rounded-md transition-all duration-300 text-red-300 hover:text-red-200 text-xs font-medium cursor-pointer shadow-lg group`}
                     title="Leave organization"
                   >
-                    <LogOut size={14} className="mr-1.5 rotate-180 group-hover:scale-110 transition-transform duration-200" />
+                    <LogOut size={14} className="mr-1.5 rotate-180 group-hover:scale-110 transition-transform duration-300" />
                     Leave
                   </button>
                 </div>
@@ -293,29 +342,29 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
 
         {/* Channels Section */}
         {organization?.channels && organization.channels.length > 0 && (
-          <div className="px-3 mt-4.5">
+          <div className="mt-4.5">
             <div className="mb-2">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1 mb-1 flex items-center">
-                <Hash size={12} className="mr-1.5" />
+              <h3 className="text-xs px-3 font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center">
+                <Hash size={14} className="mr-1.5" />
                 Channels
               </h3>
             </div>
-            <div className="space-y-1">
+            <div className="">
               {organization.channels.map((channel) => (
                 <Link
                   key={channel.id}
                   to={`/home/channels/${channel.id}`}
-                  className={`flex items-center px-3 py-2 rounded-lg transition-all duration-300 font-medium group border shadow-sm hover:shadow-lg ${
+                  className={`flex items-center px-5 py-2 transition-all duration-300 font-medium group shadow-sm hover:shadow-lg ${
                     isActive(`/home/channels/${channel.id}`)
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-500/30 shadow-purple-500/20'
-                      : 'hover:bg-slate-700/60 text-slate-300 hover:text-violet-300 border-transparent hover:border-violet-500/30'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/20'
+                      : 'hover:bg-slate-700/60 text-slate-300 hover:text-violet-300'
                   }`}
                   title={channel.description || channel.name}
                 >
                   <span className={`mr-2.5 transition-colors duration-200 ${
-                    isActive(`/home/channels/${channel.id}`) ? 'text-white' : 'text-slate-500 group-hover:text-violet-400 group-hover:scale-110 transition-transform duration-200'
+                    isActive(`/home/channels/${channel.id}`) ? 'text-white' : 'text-slate-500 group-hover:text-violet-400'
                   }`}>
-                    <Hash size={14} />
+                    <Hash size={12} className="group-hover:scale-110 duration-300"/>
                   </span>
                   <span className="text-sm font-medium truncate">{channel.name}</span>
                 </Link>
@@ -325,8 +374,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
         )}
       </div>
       
-      <div className="p-4 border-t border-slate-600/50 bg-slate-900/50">
-        <div className="flex items-center mb-4">
+      <div className="border-t border-slate-600/50 bg-slate-900/50">
+        <div className="p-4 flex items-center">
           {user?.photo ? (
             <img
               src={user.photo}
@@ -339,7 +388,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
             </div>
           )}
           <div className="ml-3 flex-1 min-w-0">
-            <p className="font-medium text-white text-sm leading-tight truncate">{user?.name || 'User Name'}</p>
+            <p className="font-medium text-white text-base leading-tight truncate">{user?.name || 'User Name'}</p>
             <div className='flex items-center mt-1 gap-2'>
               <div className='flex items-center'>
                 <div className='bg-green-500 h-2 w-2 rounded-full'></div>
@@ -359,23 +408,23 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
           </div>
         </div>
         
-        <div className="space-y-3">
+        <div className="flex px-3 pb-3 pt-0 gap-2">
           <button
             onClick={onSettingsClick}
-            className="w-full flex items-center px-3 py-3 text-left rounded-lg transition-all duration-300 hover:bg-slate-700/60 hover:border-violet-500/40 border border-slate-600/30 cursor-pointer group text-slate-300 hover:text-violet-300 shadow-sm hover:shadow-lg"
+            className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md transition-all duration-300 hover:bg-slate-700/60 hover:border-violet-500/80 border border-slate-600/30 cursor-pointer group text-slate-300 hover:text-violet-300 shadow-sm hover:shadow-lg"
           >
-            <span className="mr-3 text-slate-400 group-hover:text-violet-400 transition-colors duration-300">
-              <Settings size={16} className="group-hover:rotate-180 group-hover:scale-120 transition-transform duration-300" />
+            <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-violet-400 transition-alls duration-300">
+              <Settings size={16} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
             </span>
             <span className='font-medium text-sm'>Settings</span>
           </button>
           
           <button 
             onClick={handleLogout} 
-            className="w-full flex items-center px-3 py-3 text-left rounded-lg hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-sm hover:shadow-lg"
+            className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-sm hover:shadow-lg"
           >
-            <span className="mr-3 text-slate-400 group-hover:text-red-400 transition-colors duration-300">
-              <LogOut size={16} className="rotate-180 group-hover:scale-120 transition-transform duration-300" />
+            <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-red-400 transition-all duration-300">
+              <LogOut size={16} className="rotate-180 group-hover:scale-110 transition-transform duration-300" />
             </span>
             <span className='font-medium text-sm'>Logout</span>
           </button>
@@ -406,8 +455,10 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick }) => {
         type="warning"
         loading={actionLoading}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
 export default Sidebar;
+

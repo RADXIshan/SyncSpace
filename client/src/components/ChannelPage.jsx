@@ -292,7 +292,7 @@ const ChannelPage = () => {
         {/* HOME TAB */}
         {activeTab === "home" && (
           <div className="h-full overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-4xl mx-auto space-y-6 bg-slate-50">
               <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-8 text-center">
                 <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-purple-300 shadow-sm">
                   <Hash size={32} className="text-purple-600" />

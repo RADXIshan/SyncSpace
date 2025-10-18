@@ -137,9 +137,8 @@
 .react-datepicker__header {
   background: linear-gradient(135deg, #7C3AED, #6366F1);
   color: white;
-  border-bottom: none;
+  border: none;
   padding: 1.25rem;
-  border-radius: 1rem 1rem 0 0;
 }
 
 .react-datepicker__current-month,
@@ -344,7 +343,6 @@
   
   .react-datepicker__current-month {
     font-size: 0.9rem !important;
-    margin-bottom: 0.5rem !important;
   }
   
   .react-datepicker__day-name {
@@ -480,7 +478,6 @@
 @media (max-width: 480px) {
   .react-datepicker {
     max-width: 320px !important;
-    flex-direction: column !important;
   }
   
   .react-datepicker__month-container {
@@ -534,6 +531,8 @@
   background: rgba(17, 24, 39, 0.95) !important;
   border: 1px solid rgba(75, 85, 99, 0.5) !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  display: flex;
+  
 }
 
 .react-datepicker--dark-theme .react-datepicker__header {

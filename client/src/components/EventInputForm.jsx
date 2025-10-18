@@ -180,7 +180,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
         </div>
       </div>
     </div>
-  );
+  ); 
 };
 
 export default EventInputForm;

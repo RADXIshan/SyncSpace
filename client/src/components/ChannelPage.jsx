@@ -493,7 +493,13 @@ const ChannelPage = () => {
                     {meetings.length > 0 ? (
                       <div className="space-y-3">
                         {meetings.map((meeting, index) => (
-                          <div key={index} className={`p-4 rounded-lg border ${userPermissions?.meeting_access ? 'hover:bg-gray-50 cursor-pointer' : ''}`}>
+                          <div key={index} className={`p-4 rounded-lg border shadow-sm transition-all pl-4 group ${userPermissions?.meeting_access ? 'hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-purple-100 cursor-pointer' : ''} ${
+                             meeting.status === 'upcoming'
+                               ? 'border-l-4 border-blue-500 bg-gradient-to-r from-white via-white to-blue-50'
+                               : meeting.status === 'ongoing'
+                               ? 'border-l-4 border-green-500 bg-gradient-to-r from-white via-white to-green-50'
+                               : 'border-l-4 border-gray-400 bg-gradient-to-r from-white via-white to-gray-50'
+                           }`}>
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <h4 className="font-medium text-gray-900">{meeting.title}</h4>
@@ -560,7 +566,7 @@ const ChannelPage = () => {
                     ) : notes.length > 0 ? (
                       <div className="space-y-3">
                         {notes.map((note) => (
-                          <div key={note.note_id} className={`p-4 rounded-lg border ${userPermissions?.notes_access ? 'hover:bg-gray-50 cursor-pointer' : ''} ${note.pinned ? 'border-purple-200 bg-purple-50' : 'border-gray-200 bg-white'}`}>
+                          <div key={note.note_id} className={`p-4 rounded-lg border shadow-sm transition-all pl-4 group ${userPermissions?.notes_access ? 'hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-purple-100 cursor-pointer' : ''} ${note.pinned ? 'border-l-4 border-purple-500 bg-gradient-to-r from-white via-white to-purple-50' : 'border-l-4 border-gray-300 bg-gradient-to-r from-white via-white to-gray-50'}`}>
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">

@@ -14,9 +14,14 @@ import {
   Users,
   Crown,
   MoreVertical,
+  Plus,
+  Pin,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
+import NoteInputModal from "./NoteInputModal";
+import NoteEditModal from "./NoteEditModal";
+import ConfirmationModal from "./ConfirmationModal";
 
 const ChannelPage = () => {
   const { channelId } = useParams();
@@ -29,8 +34,52 @@ const ChannelPage = () => {
   const [sending, setSending] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const [members, setMembers] = useState([]);
+  const [userPermissions, setUserPermissions] = useState(null);
+  const [notes, setNotes] = useState([]); // Real notes data from API
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [meetings, setMeetings] = useState([
+    {
+      id: 1,
+      title: "Weekly Team Sync",
+      description: "Weekly synchronization meeting with all team members",
+      date: "Dec 15, 2024",
+      time: "10:00 AM",
+      status: "upcoming"
+    },
+    {
+      id: 2,
+      title: "Project Review",
+      description: "Review project progress and discuss next steps",
+      date: "Dec 16, 2024",
+      time: "2:00 PM",
+      status: "upcoming"
+    },
+    {
+      id: 3,
+      title: "Client Presentation",
+      description: "Present project updates to the client",
+      date: "Dec 18, 2024",
+      time: "11:00 AM",
+      status: "upcoming"
+    }
+  ]); // Mock meetings data
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // Helper to sort notes (pinned notes first, then by newest)
+  const sortNotes = (notesArray) => {
+    return [...notesArray].sort((a, b) => {
+      if (a.pinned === b.pinned) {
+        return new Date(b.created_at) - new Date(a.created_at);
+      }
+      return a.pinned ? -1 : 1;
+    });
+  };
 
   const getMessagesRoleStyle = (role) => {
     const baseStyle = getRoleStyle(role);
@@ -133,6 +182,48 @@ const ChannelPage = () => {
     fetchChannel();
   }, [channelId, user?.org_id]);
 
+  // Fetch user permissions
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      if (!user?.org_id) return;
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/role`,
+          { withCredentials: true }
+        );
+        setUserPermissions(res.data.permissions || null);
+      } catch (err) {
+        console.error("Error fetching permissions", err);
+        setUserPermissions(null);
+      }
+    };
+
+    fetchPermissions();
+  }, [user?.org_id]);
+
+  // Fetch notes for the channel
+  useEffect(() => {
+    const fetchNotes = async () => {
+      if (!user?.org_id || !channelId) return;
+      try {
+        setNotesLoading(true);
+        const res = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/notes?org_id=${user.org_id}&channel_id=${channelId}`,
+          { withCredentials: true }
+        );
+        setNotes(sortNotes(res.data.notes || []));
+      } catch (err) {
+        console.error("Error fetching notes", err);
+        toast.error(err?.response?.data?.message || "Failed to load notes");
+        setNotes([]);
+      } finally {
+        setNotesLoading(false);
+      }
+    };
+
+    fetchNotes();
+  }, [user?.org_id, channelId]);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -173,6 +264,97 @@ const ChannelPage = () => {
       e.preventDefault();
       handleSendMessage(e);
     }
+  };
+
+  // Note management functions
+  const handleCreateNote = async (noteData) => {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/notes`,
+        {
+          org_id: user.org_id,
+          channel_id: channelId,
+          ...noteData
+        },
+        { withCredentials: true }
+      );
+      setNotes(prev => [res.data.note, ...prev]);
+      toast.success("Note created successfully");
+    } catch (err) {
+      console.error("Error creating note:", err);
+      toast.error(err?.response?.data?.message || "Failed to create note");
+      throw err; // Re-throw to handle in modal
+    }
+  };
+
+  const handleUpdateNote = async (noteId, noteData) => {
+    try {
+      const res = await axios.put(
+        `${import.meta.env.VITE_BASE_URL}/api/notes/${noteId}`,
+        noteData,
+        { withCredentials: true }
+      );
+      setNotes(prev => {
+        const updated = prev.map(note =>
+          note.note_id === noteId ? res.data.note : note
+        );
+        return sortNotes(updated);
+      });
+      toast.success("Note updated successfully");
+    } catch (err) {
+      console.error("Error updating note:", err);
+      toast.error(err?.response?.data?.message || "Failed to update note");
+      throw err; // Re-throw to handle in modal
+    }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/api/notes/${noteId}`,
+        { withCredentials: true }
+      );
+      setNotes(prev => prev.filter(note => note.note_id !== noteId));
+      toast.success("Note deleted successfully");
+    } catch (err) {
+      console.error("Error deleting note:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete note");
+    }
+  };
+
+  const handleEditNote = (note) => {
+    setSelectedNote(note);
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (noteData) => {
+    try {
+      await handleUpdateNote(selectedNote.note_id, noteData);
+      setShowEditModal(false);
+      setSelectedNote(null);
+    } catch (error) {
+      // Error is already handled in handleUpdateNote
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedNote) return;
+    
+    setDeleteLoading(true);
+    try {
+      await handleDeleteNote(selectedNote.note_id);
+      setShowDeleteModal(false);
+      setSelectedNote(null);
+    } catch (error) {
+      // Error is already handled in handleDeleteNote
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleDeleteNoteClick = (note) => {
+    setSelectedNote(note);
+    setShowDeleteModal(true);
   };
 
   const formatTime = (timestamp) => {
@@ -291,37 +473,164 @@ const ChannelPage = () => {
       <div className="flex-1 overflow-hidden">
         {/* HOME TAB */}
         {activeTab === "home" && (
-          <div className="h-full overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto space-y-6 bg-slate-50">
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-8 text-center">
-                <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-purple-300 shadow-sm">
-                  <Hash size={32} className="text-purple-600" />
+          <div className="h-full overflow-y-auto p-6 bg-slate-50">
+            <div className="max-w-7xl mx-auto">
+              {/* Two Column Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Side - Meetings */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-900">Meetings</h3>
+                      {userPermissions?.meeting_access && (
+                        <button className="text-purple-600 hover:text-purple-700 p-1 rounded-lg hover:bg-purple-50 transition-colors">
+                          <Plus size={18} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {meetings.length > 0 ? (
+                      <div className="space-y-3">
+                        {meetings.map((meeting, index) => (
+                          <div key={index} className={`p-4 rounded-lg border ${userPermissions?.meeting_access ? 'hover:bg-gray-50 cursor-pointer' : ''}`}>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900">{meeting.title}</h4>
+                                <p className="text-sm text-gray-600 mt-1">{meeting.description}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-xs text-gray-500">{meeting.date}</span>
+                                  <span className="text-xs text-gray-500">{meeting.time}</span>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${meeting.status === 'upcoming' ? 'bg-blue-100 text-blue-700' : meeting.status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                    {meeting.status}
+                                  </span>
+                                </div>
+                              </div>
+                              {userPermissions?.meeting_access && (
+                                <div className="flex items-center gap-1 ml-2">
+                                  <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600">
+                                    <Edit2 size={14} />
+                                  </button>
+                                  <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-red-600">
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Hash size={24} className="text-gray-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  #{channel.name}
-                </h2>
-                <p className="text-gray-700">Welcome to the channel!</p>
-                {channel.description && (
-                  <p className="text-gray-600 text-sm mt-2">{channel.description}</p>
+                        <p className="text-gray-500 mb-2">No meetings scheduled</p>
+                        {userPermissions?.meeting_access && (
+                          <p className="text-sm text-gray-400">Click the + button to schedule a meeting</p>
                 )}
               </div>
-
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Channel Information</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start">
-                    <span className="text-gray-600 font-medium w-32">Channel Name:</span>
-                    <span className="text-gray-900">#{channel.name}</span>
+                    )}
                   </div>
-                  {channel.description && (
-                    <div className="flex items-start">
-                      <span className="text-gray-600 font-medium w-32">Description:</span>
-                      <span className="text-gray-900">{channel.description}</span>
+              </div>
+
+                {/* Right Side - Notes/Tasks */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-gray-900">Notes & Tasks</h3>
+                      {userPermissions?.notes_access && (
+                        <button 
+                          onClick={() => setShowNoteModal(true)}
+                          className="text-purple-600 hover:text-purple-700 p-1.5 rounded-full hover:bg-purple-50 transition-colors cursor-pointer"
+                        >
+                          <Plus size={20} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {notesLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                          <p className="text-gray-500 text-sm">Loading notes...</p>
+                        </div>
+                      </div>
+                    ) : notes.length > 0 ? (
+                      <div className="space-y-3">
+                        {notes.map((note) => (
+                          <div key={note.note_id} className={`p-4 rounded-lg border ${userPermissions?.notes_access ? 'hover:bg-gray-50 cursor-pointer' : ''} ${note.pinned ? 'border-purple-200 bg-purple-50' : 'border-gray-200 bg-white'}`}>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium text-gray-900">{note.title}</h4>
+                                  {note.pinned && (
+                                    <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                                      Pinned
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 mt-1 line-clamp-3">{note.body}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(note.created_at).toLocaleDateString()}
+                                  </span>
+                                  {note.created_by_name && (
+                                    <span className="text-xs text-gray-500">
+                                      by {note.created_by_name}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              {userPermissions?.notes_access && (
+                                <div className="flex items-center gap-1 ml-2">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleUpdateNote(note.note_id, { title: note.title, body: note.body, pinned: !note.pinned });
+                                    }}
+                                    className={`p-1.5 hover:bg-violet-100 rounded transition-colors cursor-pointer ${note.pinned ? 'text-purple-600' : 'text-gray-400 hover:text-purple-600'}`}
+                                    title={note.pinned ? "Unpin" : "Pin"}
+                                  >
+                                    <Pin size={14} />
+                                  </button>
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleEditNote(note);
+                                    }}
+                                    className="p-1.5 hover:bg-blue-100 rounded text-gray-400 hover:text-blue-600 cursor-pointer transition-colors"
+                                    title="Edit note"
+                                  >
+                                    <Edit2 size={14} />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteNoteClick(note)}
+                                    className="p-1.5 hover:bg-red-100 rounded text-gray-400 hover:text-red-600 cursor-pointer transition-colors"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Hash size={24} className="text-gray-400" />
+                        </div>
+                        <p className="text-gray-500 mb-2">No notes or tasks yet</p>
+                        {userPermissions?.notes_access && (
+                          <p className="text-sm text-gray-400">Click the + button to add your first note</p>
+                        )}
                     </div>
                   )}
-                  <div className="flex items-start">
-                    <span className="text-gray-600 font-medium w-32">Members:</span>
-                    <span className="text-gray-900">{members.length} members</span>
                   </div>
                 </div>
               </div>
@@ -516,6 +825,40 @@ const ChannelPage = () => {
           </div>
         )}
       </div>
+
+      {/* Note Modals */}
+      <NoteInputModal
+        isOpen={showNoteModal}
+        onClose={() => setShowNoteModal(false)}
+        onSubmit={handleCreateNote}
+      />
+      
+      <NoteEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedNote(null);
+        }}
+        onSubmit={handleEditSubmit}
+        note={selectedNote}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSelectedNote(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Note"
+        message="Are you sure you want to delete this note? This action cannot be undone."
+        confirmText="Delete Note"
+        cancelText="Cancel"
+        type="danger"
+        loading={deleteLoading}
+      />
+
     </div>
   );
 };

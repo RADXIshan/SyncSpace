@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import connectCloudinary from "./configs/cloudinary.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import orgRoutes from "./routes/orgRoutes.js";
+import noteRoutes from "./routes/noteRoutes.js";
 
 dotenv.config();
 
@@ -24,7 +25,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/orgs", orgRoutes);
-
+app.use("/api/notes", noteRoutes);
 connectCloudinary();
 
 app.get("/", (_, res) => {

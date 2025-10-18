@@ -1303,7 +1303,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                       >
                                         {memberActionLoading ? (
                                           <>
-                                            <div className="w-3 h-3 border border-green-400 border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-3 h-3 border border-green-400 shadow-md hover:shadow-lg border-t-transparent rounded-full animate-spin"></div>
                                             Saving...
                                           </>
                                         ) : (
@@ -1318,7 +1318,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                           cancelEditingMember();
                                         }}
                                         disabled={memberActionLoading}
-                                        className="text-gray-400 hover:text-gray-300 text-sm px-3 py-2 border border-white/20 hover:border-white/30 bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="text-gray-300 hover:text-gray-100 text-sm px-3 py-2 border border-white/20 hover:border-white/30 bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                                       >
                                         Cancel
                                       </button>
@@ -1405,7 +1405,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           <button
                             type="button"
                             onClick={() => setShowDeleteConfirm(true)}
-                            className="flex items-center px-4 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-medium cursor-pointer"
+                            className="flex items-center px-4 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-medium cursor-pointer shadow-md hover:shadow-lg"
                           >
                             <Trash2 size={16} className="mr-2" />
                             Delete Organization
@@ -1490,14 +1490,14 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                 type="button"
                 onClick={handleClose}
                 disabled={loading}
-                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading || !orgName.trim()}
-                className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base justify-center ${
+                className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base justify-center shadow-lg hover:shadow-xl ${
                   hasUnsavedChanges 
                     ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300" 
                     : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"

@@ -304,10 +304,10 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
                   {canManageOrg() && (
                     <button
                       onClick={handleOrgSettings}
-                      className="flex-shrink-0 p-1.5 bg-blue-600/30 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-400/30 rounded-md transition-all duration-300 text-blue-300 hover:text-blue-200 cursor-pointer group shadow-md backdrop-blur-sm"
+                      className="flex-shrink-0 p-1.5 bg-blue-600/30 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-400/30 rounded-md transition-all duration-300 text-blue-300 hover:text-blue-200 cursor-pointer group shadow-lg backdrop-blur-sm hover:shadow-xl"
                       title="Organization settings"
                     >
-                      <Settings size={16} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
+                      <Settings size={17} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
                     </button>
                   )}
                 </div>
@@ -319,7 +319,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
                   {canInvite() && (
                     <button
                       onClick={handleInvite}
-                      className="flex items-center justify-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 hover:border-violet-400/50 rounded-md transition-all duration-300 text-violet-300 hover:text-violet-200 text-xs font-medium cursor-pointer shadow-lg group"
+                      className="flex items-center justify-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 hover:border-violet-400/50 rounded-md transition-all duration-300 text-violet-400 hover:text-violet-200 text-xs font-medium cursor-pointer shadow-lg hover:shadow-xl group"
                       title="Invite users to organization"
                     >
                       <UserPlus size={14} className="mr-1.5 group-hover:scale-110 transition-transform duration-300" />
@@ -328,7 +328,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
                   )}
                   <button
                     onClick={handleLeaveOrg}
-                    className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-400/50 rounded-md transition-all duration-300 text-red-300 hover:text-red-200 text-xs font-medium cursor-pointer shadow-lg group`}
+                    className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-400/50 rounded-md transition-all duration-300 text-red-400 hover:text-red-200 text-xs font-medium cursor-pointer shadow-lg hover:shadow-xl group`}
                     title="Leave organization"
                   >
                     <LogOut size={14} className="mr-1.5 rotate-180 group-hover:scale-110 transition-transform duration-300" />
@@ -411,7 +411,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
         <div className="flex px-3 pb-3 pt-0 gap-2">
           <button
             onClick={onSettingsClick}
-            className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md transition-all duration-300 hover:bg-slate-700/60 hover:border-violet-500/80 border border-slate-600/30 cursor-pointer group text-slate-300 hover:text-violet-300 shadow-sm hover:shadow-lg"
+            className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md transition-all duration-300 hover:bg-slate-700/60 hover:border-violet-500/80 border border-slate-600/30 cursor-pointer group text-slate-300 hover:text-violet-300 shadow-lg hover:shadow-xl"
           >
             <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-violet-400 transition-alls duration-300">
               <Settings size={16} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
@@ -421,7 +421,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
           
           <button 
             onClick={handleLogout} 
-            className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-sm hover:shadow-lg"
+            className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-lg hover:shadow-xl"
           >
             <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-red-400 transition-all duration-300">
               <LogOut size={16} className="rotate-180 group-hover:scale-110 transition-transform duration-300" />

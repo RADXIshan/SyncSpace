@@ -152,7 +152,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 shadow-sm hover:shadow-md text-sm sm:text-base order-2 sm:order-1"
+                className="px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 shadow-lg hover:shadow-xl text-sm sm:text-base order-2 sm:order-1"
               >
                 Cancel
               </button>

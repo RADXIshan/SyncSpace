@@ -72,7 +72,7 @@ const ConfirmationModal = ({
                   onClose();
                 }}
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 rounded-xl text-gray-300 hover:text-white font-semibold transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-md active:scale-95"
+                className="flex-1 px-6 py-3 bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 rounded-xl text-gray-300 hover:text-white font-semibold transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl active:scale-95"
               >
                 {cancelText}
               </button>
@@ -84,7 +84,7 @@ const ConfirmationModal = ({
                   onConfirm();
                 }}
                 disabled={loading}
-                className={`flex-1 px-6 py-3 border rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-sm hover:shadow-md active:scale-95 ${styles.button}`}
+                className={`flex-1 px-6 py-3 border rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl active:scale-95 ${styles.button}`}
               >
                 {loading ? (
                   <div className="flex items-center justify-center">

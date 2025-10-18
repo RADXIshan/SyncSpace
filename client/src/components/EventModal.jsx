@@ -251,7 +251,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               <button
                 type="button"
                 onClick={handleDeleteClick}
-                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-red-900/40 hover:bg-red-900/60 border border-red-700/50 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md text-sm sm:text-base order-2 sm:order-1"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-red-900/40 hover:bg-red-900/60 border border-red-700/50 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base order-2 sm:order-1"
               >
                 Delete Event
               </button>
@@ -261,7 +261,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-violet-900/40 hover:bg-violet-900/60 border border-violet-700/50 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md text-sm sm:text-base"
+                    className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-violet-900/40 hover:bg-violet-900/60 border border-violet-700/50 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base"
                   >
                     Edit Event
                   </button>
@@ -270,7 +270,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md text-sm sm:text-base"
+                    className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base"
                   >
                     Cancel
                   </button>
@@ -312,7 +312,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-sm hover:shadow-md text-sm sm:text-base"
+                    className="px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base"
                   >
                     Close
                   </button>

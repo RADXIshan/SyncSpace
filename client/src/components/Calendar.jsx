@@ -160,7 +160,7 @@ const Calendar = () => {
       
       <div className="relative z-10 p-3 sm:p-6">
         {/* Header */}
-        <div className="max-w-7xl mx-auto p-3 sm:p-6">
+        <div className="max-w-7xl mx-auto p-6 sm:p-6">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 mb-2 sm:mb-3">
             Calendar
           </h1>

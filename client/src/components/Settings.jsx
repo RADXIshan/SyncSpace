@@ -402,7 +402,7 @@ const Settings = ({ onClose }) => {
               <button
                 onClick={handleDelete}
                 disabled={loading}
-                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base order-2 sm:order-1"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base order-2 sm:order-1 shadow-lg hover:shadow-xl"
               >
                 Delete Account
               </button>
@@ -413,14 +413,14 @@ const Settings = ({ onClose }) => {
                     <button
                       onClick={toggleEdit}
                       disabled={loading}
-                      className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base"
+                      className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base shadow-lg hover:shadow-xl"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={loading}
-                      className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-2 justify-center text-sm sm:text-base ${
+                      className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-2 justify-center text-sm sm:text-base shadow-lg hover:shadow-xl ${
                         hasUnsavedChanges 
                           ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300" 
                           : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
@@ -441,7 +441,7 @@ const Settings = ({ onClose }) => {
                 ) : (
                   <button
                     onClick={toggleEdit}
-                    className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base"
+                    className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base shadow-lg hover:shadow-xl"
                   >
                     Edit Profile
                   </button>

@@ -94,7 +94,7 @@ function Landing() {
         <div className="max-w-6xl mx-auto relative z-10">
           {/* Section Header */}
           <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
+            <h2 className="text-6xl font-bold mb-6">
               Why Choose <span className="gradient-text">SyncSpace</span>
             </h2>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-4">
@@ -225,9 +225,9 @@ function Landing() {
         <div className="min-h-screen bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-gray-100)] to-[var(--color-gray-50)] text-[var(--color-accent)] flex flex-col items-center py-20 px-6 sm:px-8 lg:px-12 transition-colors duration-500">
 
           {/* Header */}
-          <div className="w-full max-w-3xl text-center mb-14">
-            <header className="text-5xl font-extrabold gradient-text bg-clip-text text-transparent tracking-tight drop-shadow-sm">
-              FAQs
+          <div className="w-full text-center mb-14">
+            <header className="text-6xl font-bold tracking-tight drop-shadow-sm">
+              Frequently Asked <span className="gradient-text">Questions</span>
             </header>
             <p className="text-[var(--color-gray-600)] mt-3 text-base sm:text-lg italic">
               Find quick answers to our most commonly asked questions.
@@ -270,7 +270,7 @@ function Landing() {
                 {faqs.map((faq, index) => (
                   <div
                     key={index}
-                    className={`group border border-[var(--color-gray-200)] rounded-2xl bg-gradient-to-br from-white/70 to-[var(--color-gray-50)] shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden backdrop-blur-sm ${
+                    className={`group border border-[var(--color-gray-200)] rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden backdrop-blur-sm ${
                       openIndex === index ? "ring-2 ring-[var(--color-secondary)] ring-opacity-40" : ""
                     }`}
                   >
@@ -279,11 +279,11 @@ function Landing() {
                       className={`flex items-center justify-between p-6 cursor-pointer select-none transition-all duration-500 ${
                         openIndex === index
                           ? "bg-gradient-to-r from-[var(--color-secondary)]/10 to-[var(--color-info)]/10"
-                          : "hover:bg-gradient-to-r hover:from-[var(--color-gray-100)] hover:to-[var(--color-gray-50)]"
+                          : "hover:bg-[var(--color-gray-100)]"
                       }`}
                     >
                       <p className="font-semibold text-lg sm:text-xl text-[var(--color-accent)] group-hover:text-[var(--color-secondary)] transition-colors duration-300">
-                        Q{index + 1}. {faq.q}
+                        {faq.q}
                       </p>
 
                       <ChevronDown
@@ -299,8 +299,8 @@ function Landing() {
 
                     {/* Answer */}
                     <div
-                      className={`px-6 pb-6 text-[var(--color-gray-700)] text-sm sm:text-base leading-relaxed overflow-hidden transition-all duration-500 ease-in-out ${
-                        openIndex === index ? "max-h-40 opacity-100" : "max-h-0 opacity-0"
+                      className={`px-6 text-[var(--color-gray-700)] text-sm sm:text-base leading-relaxed overflow-hidden transition-all duration-300 ease-out ${
+                        openIndex === index ? "max-h-40 py-3 opacity-100" : "max-h-0 opacity-0"
                       }`}
                     >
                       {faq.a}

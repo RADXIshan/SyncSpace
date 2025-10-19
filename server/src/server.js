@@ -1,12 +1,13 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import connectCloudinary from "./configs/cloudinary.js";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.js";
-import connectCloudinary from "./configs/cloudinary.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import orgRoutes from "./routes/orgRoutes.js";
 import noteRoutes from "./routes/noteRoutes.js";
+import meetingRoutes from "./routes/meetingRoutes.js";
 
 dotenv.config();
 
@@ -26,6 +27,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/orgs", orgRoutes);
 app.use("/api/notes", noteRoutes);
+app.use("/api/meetings", meetingRoutes);
+
 connectCloudinary();
 
 app.get("/", (_, res) => {

@@ -20,7 +20,7 @@ export const generateOtpEmail = (name, otp) => {
       .container {
         max-width: 600px;
         margin: 50px auto;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgb(40, 40, 40);
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 20px;
         backdrop-filter: blur(16px);
@@ -112,19 +112,7 @@ export const generateOtpEmail = (name, otp) => {
         color: #9999cc;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         padding: 25px 20px;
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      @media (max-width: 600px) {
-        .container {
-          margin: 20px;
-        }
-        .content {
-          padding: 30px 20px;
-        }
-        .otp-code {
-          font-size: 26px;
-        }
+        background: rgb(65, 65, 65);
       }
     </style>
   </head>

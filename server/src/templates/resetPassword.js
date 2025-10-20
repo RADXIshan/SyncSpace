@@ -20,7 +20,7 @@ export const generatePasswordResetEmail = (resetLink) => {
       .container {
         max-width: 600px;
         margin: 50px auto;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgb(40, 40, 40);
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 20px;
         backdrop-filter: blur(16px);
@@ -96,16 +96,7 @@ export const generatePasswordResetEmail = (resetLink) => {
         color: #9999cc;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         padding: 25px 20px;
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      @media (max-width: 600px) {
-        .container {
-          margin: 20px;
-        }
-        .content {
-          padding: 30px 20px;
-        }
+        background: rgb(44, 42, 42);
       }
     </style>
   </head>

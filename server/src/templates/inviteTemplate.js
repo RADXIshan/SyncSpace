@@ -1,5 +1,5 @@
 export const generateInviteEmail = (organizationName, message, inviteCode) => {
-  const year = new Date().getFullYear(); // get current year
+  const year = new Date().getFullYear();
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -11,7 +11,7 @@ export const generateInviteEmail = (organizationName, message, inviteCode) => {
       body {
         margin: 0;
         padding: 0;
-        background: linear-gradient(135deg, #1a1a2e, #151522);
+        background: black;
         font-family: 'Segoe UI', Roboto, Arial, sans-serif;
         color: #e0e0ff;
         line-height: 1.6;
@@ -20,7 +20,7 @@ export const generateInviteEmail = (organizationName, message, inviteCode) => {
       .container {
         max-width: 600px;
         margin: 50px auto;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgb(40, 40, 40);
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 20px;
         backdrop-filter: blur(16px);
@@ -119,19 +119,7 @@ export const generateInviteEmail = (organizationName, message, inviteCode) => {
         color: #9999cc;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         padding: 25px 20px;
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      @media (max-width: 600px) {
-        .container {
-          margin: 20px;
-        }
-        .content {
-          padding: 30px 20px;
-        }
-        .invite-code {
-          font-size: 22px;
-        }
+        background: rgb(65, 65, 65);
       }
     </style>
   </head>

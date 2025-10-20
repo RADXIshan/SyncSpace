@@ -26,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/orgs", orgRoutes);
 app.use("/api/notes", noteRoutes);
+
 connectCloudinary();
 
 app.get("/", (_, res) => {

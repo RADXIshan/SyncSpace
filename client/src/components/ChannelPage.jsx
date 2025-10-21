@@ -288,6 +288,8 @@ const ChannelPage = () => {
   };
 
   const handleUpdateNote = async (noteId, noteData) => {
+    const toastId = toast.loading("Updating note...");
+
     try {
       const res = await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/notes/${noteId}`,
@@ -300,11 +302,12 @@ const ChannelPage = () => {
         );
         return sortNotes(updated);
       });
-      toast.success("Note updated successfully");
+      toast.success("Note updated successfully", { id: toastId });
+
     } catch (err) {
       console.error("Error updating note:", err);
-      toast.error(err?.response?.data?.message || "Failed to update note");
-      throw err; // Re-throw to handle in modal
+      toast.error(err?.response?.data?.message || "Failed to update note", { id: toastId });
+      throw err;
     }
   };
 

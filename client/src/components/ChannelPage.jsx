@@ -16,6 +16,7 @@ import {
   MoreVertical,
   Plus,
   Pin,
+  X
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
@@ -35,13 +36,14 @@ const ChannelPage = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [members, setMembers] = useState([]);
   const [userPermissions, setUserPermissions] = useState(null);
-  const [notes, setNotes] = useState([]); // Real notes data from API
+  const [notes, setNotes] = useState([]);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
+  const [showChannelMenu, setShowChannelMenu] = useState(false);
   const [meetings, setMeetings] = useState([
     {
       id: 1,
@@ -444,7 +446,7 @@ const ChannelPage = () => {
 
           {/* Right Section - 3 Dots */}
           <div className="pr-6 cursor-pointer">
-            <button className="p-2 rounded-full hover:bg-indigo-100 transition-colors cursor-pointer">
+            <button onClick={() => setShowChannelMenu(true)} className="p-2.5 rounded-full hover:bg-blue-200/70 transition-colors cursor-pointer">
               <MoreVertical size={20} className="text-gray-700" />
             </button>
           </div>
@@ -842,6 +844,62 @@ const ChannelPage = () => {
           </div>
         )}
       </div>
+
+      {showChannelMenu && (
+        <div
+          className="w-64 absolute top-1 right-6 bg-white/70 backdrop-blur-lg border border-gray-200/50 
+                    rounded-xl shadow-2xl z-50 animate-slideIn"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200/60">
+            <h3 className="text-lg font-bold text-gray-900">Channel Menu</h3>
+            <button
+              onClick={() => setShowChannelMenu(false)}
+              className="p-2.5 rounded-full hover:bg-blue-100 hover:rotate-90 transition-all duration-300 cursor-pointer text-violet-700"
+            >
+              <X size={20} className="text-gray-700 group-hover:text-violet-700 transition-all duration-300" />
+            </button>
+          </div>
+
+          {/* Menu items */}
+          <div className="p-3 space-y-2 overflow-hidden">
+            
+            {/* Edit Channel */}
+            <div
+              className="flex items-center gap-3 p-3 rounded-md border border-transparent 
+                        transition-all duration-300 cursor-pointer group 
+                        hover:translate-x-1 hover:scale-[1.02] hover:shadow-md
+                        hover:bg-gradient-to-r from-violet-50 to-indigo-100"
+            >
+              <Edit2
+                size={20}
+                className="text-gray-600 group-hover:text-violet-700 transition-all duration-300 group-hover:rotate-6"
+              />
+              <span className="text-gray-900 group-hover:text-violet-700 transition-colors duration-300">
+                Edit Channel
+              </span>
+            </div>
+            
+            {/* Delete Channel */}
+            <div
+              className="flex items-center gap-3 p-3 rounded-md border border-transparent 
+                        transition-all duration-300 cursor-pointer group 
+                        hover:translate-x-1 hover:scale-[1.02] hover:shadow-md
+                        hover:bg-gradient-to-r from-red-50 to-rose-100"
+            >
+              <Trash2
+                size={20}
+                className="text-gray-600 group-hover:text-red-600 transition-all duration-300 group-hover:-rotate-6"
+              />
+              <span className="text-gray-900 group-hover:text-red-600 transition-colors duration-300">
+                Delete Channel
+              </span>
+            </div>
+
+          </div>
+        </div>
+      )}
+
 
       {/* Note Modals */}
       <NoteInputModal

@@ -43,7 +43,7 @@ const Landing = () => {
             {/* Login Button */}
             <button
               onClick={() => (window.location.href = "/login")}
-              className="relative px-6 py-2 rounded-md font-semibold text-lg text-gray-700 border-2 border-gray-300 overflow-hidden group transition-all hover:bg-accent hover:text-white duration-300 cursor-pointer hover:scale-110 active:scale-95"
+              className="relative px-6 py-2 rounded-lg font-semibold text-lg text-gray-700 border-2 border-gray-300 overflow-hidden group transition-all hover:bg-accent hover:text-white duration-300 cursor-pointer hover:scale-110 active:scale-95"
             >
                 Login
             </button>
@@ -51,7 +51,7 @@ const Landing = () => {
             {/* Sign Up Button */}
             <button
               onClick={() => (window.location.href = "/signup")}
-              className="relative px-6 py-[9px] rounded-md font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-md hover:shadow-lg  transition-all duration-300 overflow-hidden group cursor-pointer hover:scale-110 active:scale-95 text-lg"
+              className="relative px-6 py-[9px] rounded-lg font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-md hover:shadow-lg  transition-all duration-300 overflow-hidden group cursor-pointer hover:scale-110 active:scale-95 text-lg"
             >
               <span className="relative z-10">Sign Up</span>
               <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-info)] to-[var(--color-secondary)] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -79,11 +79,11 @@ const Landing = () => {
                 collaboration and project management with SyncSpace.
               </p>
               <div className="flex justify-center sm:justify-start gap-4">
-                <button className="relative px-6 py-[9px] rounded-md font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-md hover:shadow-lg  transition-all duration-300 overflow-hidden group cursor-pointer hover:scale-110 active:scale-95 text-lg">
+                <button className="relative px-6 py-[9px] rounded-md font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-lg hover:shadow-lg  transition-all duration-300 overflow-hidden group cursor-pointer hover:scale-110 active:scale-95 text-lg">
                   <span className="relative z-10 cursor-pointer">Get Started</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-info)] to-[var(--color-secondary)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"></div>
                 </button>
-                <button className="relative px-6 py-2 rounded-md font-semibold text-lg text-gray-700 border-2 border-gray-300 overflow-hidden group transition-all hover:bg-accent hover:text-white duration-300 cursor-pointer hover:scale-110 active:scale-95">
+                <button className="relative px-6 py-2 rounded-lg font-semibold text-lg text-gray-700 border-2 border-gray-300 overflow-hidden group transition-all hover:bg-accent hover:text-white duration-300 cursor-pointer hover:scale-110 active:scale-95">
                   Learn More
                 </button>
               </div>

@@ -548,9 +548,9 @@ const ChannelPage = () => {
                       {userPermissions?.notes_access && (
                         <button 
                           onClick={() => setShowNoteModal(true)}
-                          className="text-purple-600 hover:text-purple-700 p-1.5 rounded-full hover:bg-purple-50 transition-colors cursor-pointer"
+                          className="text-purple-600 hover:text-purple-700 p-1.5 rounded-full hover:bg-purple-50 transition-colors cursor-pointer duration-300 group"
                         >
-                          <Plus size={20} />
+                          <Plus size={20} className="group-hover:scale-120 group-hover:rotate-90 duration-300"/>
                         </button>
                       )}
                     </div>
@@ -566,41 +566,49 @@ const ChannelPage = () => {
                     ) : notes.length > 0 ? (
                       <div className="space-y-3">
                         {notes.map((note) => (
-                          <div key={note.note_id} className={`p-4 rounded-lg border shadow-sm transition-all pl-4 group ${userPermissions?.notes_access ? 'hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-purple-100 cursor-pointer' : ''} ${note.pinned ? 'border-l-4 border-purple-500 bg-gradient-to-r from-white via-white to-purple-50' : 'border-l-4 border-gray-300 bg-gradient-to-r from-white via-white to-gray-50'}`}>
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
+                          <div key={note.note_id} className={`rounded-2xl transition-all flex ${userPermissions?.notes_access ? 'hover:shadow-lg hover:-translate-y-1' : ''} ${note.pinned ? 'bg-gradient-to-r from-purple-500 via-purple-400 to-purple-100 shadow-purple-300 shadow-md' : 'border border-gray-300 bg-gradient-to-r from-white via-white to-gray-50'}`}>
+                            <div className="flex items-start w-full justify-between">
+                              <div className="flex-1 p-4">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-medium text-gray-900">{note.title}</h4>
+                                  <h4 className={`font-medium ${
+                                    note.pinned ? `text-white `: `text-gray-900`
+                                  }`}>{note.title}</h4>
                                   {note.pinned && (
-                                    <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                                    <span className="px-2 py-1 bg-white/40 border border-purple-700 text-purple-700 text-xs font-medium rounded-full">
                                       Pinned
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-600 mt-1 line-clamp-3">{note.body}</p>
+                                <p className={`text-sm mt-1 line-clamp-3 ${
+                                 note.pinned ? `text-slate-200` : `text-gray-600` 
+                                }`}>{note.body}</p>
                                 <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs text-gray-500">
+                                  <span className={`text-xs ${
+                                      note.pinned ? `text-slate-300` : `text-gray-500`
+                                    }`}>
                                     {new Date(note.created_at).toLocaleDateString()}
                                   </span>
                                   {note.created_by_name && (
-                                    <span className="text-xs text-gray-500">
+                                    <span className={`text-xs ${
+                                      note.pinned ? `text-slate-300` : `text-gray-500`
+                                    }`}>
                                       by {note.created_by_name}
                                     </span>
                                   )}
                                 </div>
                               </div>
                               {userPermissions?.notes_access && (
-                                <div className="flex items-center gap-1 ml-2">
+                                <div className="flex items-center rounded-r-2xl overflow-hidden flex-col h-full">
                                   <button 
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
                                       handleUpdateNote(note.note_id, { title: note.title, body: note.body, pinned: !note.pinned });
                                     }}
-                                    className={`p-1.5 hover:bg-violet-100 rounded transition-colors cursor-pointer ${note.pinned ? 'text-purple-600' : 'text-gray-400 hover:text-purple-600'}`}
+                                    className={`pl-2 pb-2 pt-3 pr-3 flex-1 duration-300 cursor-pointer group hover:text-white hover:bg-purple-600 ${note.pinned ? 'text-purple-500' : 'text-gray-400'}`}
                                     title={note.pinned ? "Unpin" : "Pin"}
                                   >
-                                    <Pin size={14} />
+                                    <Pin size={14} className="group-hover:scale-120 duration-300"/>
                                   </button>
                                   <button 
                                     type="button"
@@ -609,16 +617,16 @@ const ChannelPage = () => {
                                       e.stopPropagation();
                                       handleEditNote(note);
                                     }}
-                                    className="p-1.5 hover:bg-blue-100 rounded text-gray-400 hover:text-blue-600 cursor-pointer transition-colors"
+                                    className="pt-2 pl-2 pb-2 pr-3 flex-1 hover:bg-blue-500 group text-gray-400 hover:text-white cursor-pointer duration-300"
                                     title="Edit note"
                                   >
-                                    <Edit2 size={14} />
+                                    <Edit2 size={14} className="group-hover:scale-120 duration-300"/>
                                   </button>
                                   <button 
                                     onClick={() => handleDeleteNoteClick(note)}
-                                    className="p-1.5 hover:bg-red-100 rounded text-gray-400 hover:text-red-600 cursor-pointer transition-colors"
+                                    className="pt-2 pl-2 pr-3 pb-3 flex-1 hover:bg-red-500 rounded-br-2xl text-gray-400 hover:text-white cursor-pointer duration-300 group"
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={14} className="group-hover:scale-120 duration-300"/>
                                   </button>
                                 </div>
                               )}

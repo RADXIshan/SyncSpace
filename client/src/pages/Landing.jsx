@@ -43,7 +43,7 @@ const Landing = () => {
             {/* Login Button */}
             <button
               onClick={() => (window.location.href = "/login")}
-              className="relative px-6 py-2 rounded-lg font-semibold text-lg text-gray-700 border-2 border-gray-300 overflow-hidden group transition-all hover:bg-accent hover:text-white duration-300 cursor-pointer hover:scale-110 active:scale-95"
+              className="relative px-6 py-2 rounded-lg font-semibold text-lg text-gray-700 border-2 border-gray-400 overflow-hidden group transition-all hover:bg-accent hover:text-white duration-300 cursor-pointer hover:scale-110 active:scale-95"
             >
                 Login
             </button>
@@ -83,7 +83,7 @@ const Landing = () => {
                   <span className="relative z-10 cursor-pointer">Get Started</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-info)] to-[var(--color-secondary)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"></div>
                 </button>
-                <button className="relative px-6 py-2 rounded-lg font-semibold text-lg text-gray-700 border-2 border-gray-300 overflow-hidden group transition-all hover:bg-accent hover:text-white duration-300 cursor-pointer hover:scale-110 active:scale-95">
+                <button className="relative px-6 py-2 rounded-lg font-semibold text-lg text-gray-700 border-2 border-gray-400 overflow-hidden group transition-all hover:bg-accent hover:text-white duration-300 cursor-pointer hover:scale-110 active:scale-95">
                   Learn More
                 </button>
               </div>

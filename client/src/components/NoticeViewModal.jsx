@@ -16,21 +16,26 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
-      <div className="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 w-full max-w-3xl border border-white/20 shadow-2xl max-h-[90vh] overflow-y-auto animate-fadeIn transform transition-all duration-300 scale-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
+      <div className="bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-full max-w-2xl shadow-2xl animate-fadeIn transform transition-all duration-300 scale-100 relative">
+        
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-full bg-purple-400/20">
-              <Pin size={22} className="text-purple-400" />
+        <div className="relative mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-purple-400/20">
+                <Pin size={22} className="text-purple-400" />
+              </div>
+              <h2 className="text-2xl font-semibold text-white">Notice Details</h2>
             </div>
-            <h2 className="text-2xl font-semibold text-white">Notice Details</h2>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Edit and Close Buttons */}
+          <div className="absolute top-0 right-0 flex items-center gap-2">
             {canEdit && (
               <button
                 onClick={() => onEdit(notice)}
-                className="p-2 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 hover:text-blue-300 transition-all transform hover:scale-110 active:scale-95"
+                className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 transition-colors text-xl cursor-pointer active:scale-95 p-2.5 rounded-full duration-300"
                 title="Edit Notice"
               >
                 <Edit size={18} />
@@ -38,7 +43,8 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all transform hover:scale-110 active:scale-95"
+              className="text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 p-2 rounded-full hover:bg-white/10 duration-300"
+              title="Close"
             >
               <X size={20} />
             </button>
@@ -61,7 +67,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
                 <User size={16} />
                 <span>By {notice.created_by_name}</span>
                 {notice.created_by_role && (
-                  <span 
+                  <span
                     className={`px-2 py-1 rounded text-xs border ${getRoleStyle(notice.created_by_role).background} ${getRoleStyle(notice.created_by_role).border} ${getRoleStyle(notice.created_by_role).text}`}
                   >
                     {notice.created_by_role}
@@ -104,9 +110,11 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="text-white font-medium">{notice.created_by_name}</div>
+                  <div className="text-white font-medium">
+                    {notice.created_by_name}
+                  </div>
                   {notice.created_by_role && (
-                    <span 
+                    <span
                       className={`px-2 py-1 rounded text-xs border ${getRoleStyle(notice.created_by_role).background} ${getRoleStyle(notice.created_by_role).border} ${getRoleStyle(notice.created_by_role).text}`}
                     >
                       {notice.created_by_role}
@@ -123,7 +131,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
         <div className="flex justify-end pt-6 mt-6 border-t border-white/10">
           <button
             onClick={onClose}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium transform hover:scale-105 active:scale-95"
+            className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-300 cursor-pointer active:scale-95 text-sm sm:text-base shadow-lg hover:shadow-xl"
           >
             Close
           </button>

@@ -10,11 +10,9 @@ const NoticeModal = ({
   orgId,
   notice = null,
   onNoticeChange,
+  canEdit = false,
 }) => {
-  const [formData, setFormData] = useState({
-    title: "",
-    body: "",
-  });
+  const [formData, setFormData] = useState({ title: "", body: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -23,14 +21,8 @@ const NoticeModal = ({
   const [pendingAction, setPendingAction] = useState(null);
 
   const isEditing = Boolean(notice);
+  const originalValues = useRef({ title: "", body: "" });
 
-  // Original values for change detection
-  const originalValues = useRef({
-    title: "",
-    body: "",
-  });
-
-  // Check for unsaved changes
   const checkForUnsavedChanges = () => {
     const original = originalValues.current;
     return (
@@ -39,28 +31,19 @@ const NoticeModal = ({
     );
   };
 
-  // Track changes for unsaved changes detection
   useEffect(() => {
     const hasChanges = checkForUnsavedChanges();
     setHasUnsavedChanges(hasChanges);
   }, [formData]);
 
-  // API Functions
   const createNotice = async (noticeData) => {
     try {
       const token = localStorage.getItem("token");
-      const headers = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/notices`,
         noticeData,
-        {
-          withCredentials: true,
-          headers,
-        }
+        { withCredentials: true, headers }
       );
       return response.data;
     } catch (error) {
@@ -71,18 +54,11 @@ const NoticeModal = ({
   const updateNotice = async (noticeId, noticeData) => {
     try {
       const token = localStorage.getItem("token");
-      const headers = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/notices/${noticeId}`,
         noticeData,
-        {
-          withCredentials: true,
-          headers,
-        }
+        { withCredentials: true, headers }
       );
       return response.data;
     } catch (error) {
@@ -93,17 +69,10 @@ const NoticeModal = ({
   const deleteNotice = async (noticeId) => {
     try {
       const token = localStorage.getItem("token");
-      const headers = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await axios.delete(
         `${import.meta.env.VITE_BASE_URL}/api/notices/${noticeId}`,
-        {
-          withCredentials: true,
-          headers,
-        }
+        { withCredentials: true, headers }
       );
       return response.data;
     } catch (error) {
@@ -112,27 +81,16 @@ const NoticeModal = ({
   };
 
   useEffect(() => {
-    if (notice) {
-      const initialData = {
-        title: notice.title || "",
-        body: notice.body || "",
-      };
-      setFormData(initialData);
-      originalValues.current = { ...initialData };
-    } else {
-      const initialData = {
-        title: "",
-        body: "",
-      };
-      setFormData(initialData);
-      originalValues.current = { ...initialData };
-    }
+    const initialData = notice
+      ? { title: notice.title || "", body: notice.body || "" }
+      : { title: "", body: "" };
+    setFormData(initialData);
+    originalValues.current = { ...initialData };
     setHasUnsavedChanges(false);
   }, [notice, isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.title.trim() || !formData.body.trim()) {
       toast.error("Please fill in all fields");
       return;
@@ -150,10 +108,7 @@ const NoticeModal = ({
 
       if (isEditing) {
         toastId = toast.loading("Updating notice...");
-        await updateNotice(notice.notice_id, {
-          title: formData.title.trim(),
-          body: formData.body.trim(),
-        });
+        await updateNotice(notice.notice_id, noticeData);
         toast.success("Notice updated successfully!", { id: toastId });
       } else {
         toastId = toast.loading("Creating notice...");
@@ -171,14 +126,11 @@ const NoticeModal = ({
     }
   };
 
-  const handleDelete = () => {
-    setShowDeleteConfirm(true);
-  };
+  const handleDelete = () => setShowDeleteConfirm(true);
 
   const confirmDelete = async () => {
     setIsDeleting(true);
     let toastId;
-
     try {
       toastId = toast.loading("Deleting notice...");
       await deleteNotice(notice.notice_id);
@@ -205,9 +157,7 @@ const NoticeModal = ({
 
   const confirmUnsavedChanges = () => {
     setShowUnsavedChangesModal(false);
-    if (pendingAction === "close") {
-      onClose();
-    }
+    if (pendingAction === "close") onClose();
     setPendingAction(null);
   };
 
@@ -216,38 +166,42 @@ const NoticeModal = ({
     setPendingAction(null);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !canEdit) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
-      <div className="bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-full max-w-2xl shadow-2xl animate-fadeIn transform transition-all duration-300 scale-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
+      <div className="bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-2xl p-6 w-full max-w-2xl shadow-2xl animate-fadeIn transform transition-all duration-300 scale-100 relative">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-full bg-purple-400/20">
-              <Pin size={22} className="text-purple-400" />
+        <div className="relative mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-purple-400/20">
+                <Pin size={22} className="text-purple-400" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
+                {isEditing ? "Edit Notice" : "Create Notice"}
+              </h2>
             </div>
-            <h2 className="text-2xl font-semibold text-white">
-              {isEditing ? "Edit Notice" : "Create Notice"}
-            </h2>
-          </div>
-          <div className="flex items-center gap-2">
-            {isEditing && (
+
+            <div className="flex items-center gap-2">
+              {isEditing && (
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  title="Delete Notice"
+                  className="absolute top-1 right-12 text-red-400 hover:text-red-300 transition-colors cursor-pointer active:scale-95 z-10 p-2.5 rounded-full border border-transparent hover:bg-red-500/10 duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
               <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 hover:text-red-300 transition-all disabled:opacity-50 transform hover:scale-110 active:scale-95"
-                title="Delete Notice"
+                onClick={handleClose}
+                title="Close"
+                className="absolute top-1 right-1 text-gray-400 hover:text-white transition-colors cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10 border border-transparent shadow-md hover:shadow-lg duration-300"
               >
-                <Trash2 size={18} />
+                <X size={20} />
               </button>
-            )}
-            <button
-              onClick={handleClose}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all transform hover:scale-110 active:scale-95"
-            >
-              <X size={20} />
-            </button>
+            </div>
           </div>
         </div>
 
@@ -255,7 +209,7 @@ const NoticeModal = ({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
               Title
             </label>
             <input
@@ -276,7 +230,7 @@ const NoticeModal = ({
 
           {/* Body Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
               Content
             </label>
             <textarea
@@ -300,29 +254,42 @@ const NoticeModal = ({
             <button
               type="button"
               onClick={handleClose}
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all font-medium transform hover:scale-105 active:scale-95"
+              className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base shadow-lg hover:shadow-xl"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={
-                isLoading || !formData.title.trim() || !formData.body.trim()
-              }
-              className={`px-6 py-3 rounded-xl transition-all font-medium flex items-center gap-2 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 ${
+              className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 flex items-center gap-2 text-sm sm:text-base justify-center shadow-lg hover:shadow-xl ${
                 hasUnsavedChanges
-                  ? "bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white shadow-lg shadow-green-500/25"
-                  : "bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white"
+                  ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300"
+                  : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
               }`}
             >
-              <Save size={18} />
-              {isLoading
-                ? "Saving..."
-                : hasUnsavedChanges
-                ? "Save Changes"
-                : isEditing
-                ? "Update"
-                : "Create"}
+              {isLoading ? (
+                <>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span className="hidden sm:inline">
+                    {isEditing ? "Updating..." : "Saving..."}
+                  </span>
+                  <span className="sm:hidden">
+                    {isEditing ? "Upd..." : "Save..."}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Save size={14} className="sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">
+                    {hasUnsavedChanges ? "Save Changes*" : "Save Changes"}
+                  </span>
+                  <span className="sm:hidden">
+                    {hasUnsavedChanges ? "Save*" : "Save"}
+                  </span>
+                  {hasUnsavedChanges && (
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-400 rounded-full animate-pulse" />
+                  )}
+                </>
+              )}
             </button>
           </div>
         </form>

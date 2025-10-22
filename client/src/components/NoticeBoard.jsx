@@ -85,12 +85,47 @@ const NoticeBoard = ({ orgId, className = "" }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [hasNoticeAccess, setHasNoticeAccess] = useState(false);
+  const [userPermissions, setUserPermissions] = useState(null);
 
-  // Check if user has notice access (simplified - you might want to get this from API)
+  // Fetch user permissions
   useEffect(() => {
-    // For now, assume all users have access. You can implement proper role checking here
-    setHasNoticeAccess(true);
-  }, [user]);
+    const fetchPermissions = async () => {
+      if (!user?.org_id) {
+        setHasNoticeAccess(false);
+        return;
+      }
+
+      try {
+        // Fetch both role permissions and organization info
+        const [roleRes, orgRes] = await Promise.all([
+          axios.get(
+            `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/role`,
+            { withCredentials: true }
+          ),
+          axios.get(
+            `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}`,
+            { withCredentials: true }
+          )
+        ]);
+
+        const permissions = roleRes.data.permissions || {};
+        const organization = orgRes.data.organization || {};
+        
+        setUserPermissions(permissions);
+        
+        // User has notice access if they have the permission OR are the org creator
+        const isCreator = organization.created_by === user.user_id;
+        const hasPermission = Boolean(permissions.noticeboard_access);
+        setHasNoticeAccess(isCreator || hasPermission);
+      } catch (err) {
+        console.error("Error fetching permissions:", err);
+        setUserPermissions(null);
+        setHasNoticeAccess(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [user?.org_id, user?.user_id]);
 
   const handleNoticeClick = (notice) => {
     setSelectedNotice(notice);
@@ -171,9 +206,13 @@ const NoticeBoard = ({ orgId, className = "" }) => {
             <div className="text-center py-8">
               <Pin size={48} className="text-gray-500 mx-auto mb-4 opacity-50" />
               <p className="text-gray-400 text-lg">No notices yet</p>
-              {hasNoticeAccess && (
+              {hasNoticeAccess ? (
                 <p className="text-gray-500 text-sm mt-2">
                   Click the + button to create the first notice
+                </p>
+              ) : (
+                <p className="text-gray-500 text-sm mt-2">
+                  Only users with noticeboard access can create notices
                 </p>
               )}
             </div>
@@ -236,6 +275,7 @@ const NoticeBoard = ({ orgId, className = "" }) => {
         onClose={handleCloseModals}
         orgId={orgId}
         onNoticeChange={refreshNotices}
+        canEdit={hasNoticeAccess}
       />
 
       <NoticeModal
@@ -244,6 +284,7 @@ const NoticeBoard = ({ orgId, className = "" }) => {
         orgId={orgId}
         notice={selectedNotice}
         onNoticeChange={refreshNotices}
+        canEdit={hasNoticeAccess}
       />
 
       <NoticeViewModal

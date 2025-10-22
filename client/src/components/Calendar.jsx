@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -20,8 +20,8 @@ const Calendar = () => {
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Centralised fetcher so we can refresh events after CRUD operations
-  const getEvents = () => {
+  // Centralized fetcher so we can refresh events after CRUD operations
+  const getEvents = useCallback(() => {
     if (!user) return;
     setLoading(true);
     let toastId = toast.loading("Fetching events...");
@@ -47,7 +47,11 @@ const Calendar = () => {
         toast.error("Failed to load events", { id: toastId });
         setLoading(false);
       });
-  };
+  }, [user]);
+
+  const refreshEvents = useCallback(() => {
+    getEvents();
+  }, [getEvents]);
 
   // Check if screen is mobile
   useEffect(() => {
@@ -63,7 +67,7 @@ const Calendar = () => {
   // Fetch events on initial load / user change
   useEffect(() => {
     getEvents();
-  }, [user]);
+  }, [getEvents]);
 
   if (loading) {
     return (
@@ -98,7 +102,7 @@ const Calendar = () => {
       .then((_) => {
         toast.success("Event added successfully", { id: toastId });
         setShowEventInputForm(false); 
-        getEvents();
+        refreshEvents();
       })
       .catch(err => {
         console.error(err);
@@ -118,13 +122,10 @@ const Calendar = () => {
       { title: updated.title, time: updated.time, description: updated.description },
       { withCredentials: true, headers: token ? { Authorization: `Bearer ${token}` } : {} }
     )
-      .then((res) => {
-        const updatedEventData = { ...res.data, start: res.data.time || res.data.start };
-        setEvents(events.map((ev) => (ev.event_id === updatedEventData.event_id ? updatedEventData : ev)));
+      .then(() => {
         toast.success("Event updated", { id: toastId });
         setSelectedEvent(null);
-        // Optionally refresh the list to ensure consistency
-        getEvents();
+        refreshEvents(); // Refresh events after update
       })
       .catch((err) => {
         console.error(err);
@@ -140,11 +141,9 @@ const Calendar = () => {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then(() => {
-        setEvents(events.filter((ev) => ev.event_id !== id));
         toast.success("Event deleted", { id: toastId });
         setSelectedEvent(null);
-        // Refresh events list
-        getEvents();
+        refreshEvents(); // Refresh events after deletion
       })
       .catch((err) => {
         console.error(err);

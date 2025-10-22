@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
@@ -213,29 +213,33 @@ const ChannelPage = () => {
   }, [user?.org_id]);
 
   // Fetch notes for the channel
-  useEffect(() => {
-    const fetchNotes = async () => {
-      if (!user?.org_id || !channelId) return;
-      try {
-        setNotesLoading(true);
-        const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/api/notes?org_id=${
-            user.org_id
-          }&channel_id=${channelId}`,
-          { withCredentials: true }
-        );
-        setNotes(sortNotes(res.data.notes || []));
-      } catch (err) {
-        console.error("Error fetching notes", err);
-        toast.error(err?.response?.data?.message || "Failed to load notes");
-        setNotes([]);
-      } finally {
-        setNotesLoading(false);
-      }
-    };
-
-    fetchNotes();
+  const fetchNotes = useCallback(async () => {
+    if (!user?.org_id || !channelId) return;
+    try {
+      setNotesLoading(true);
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/api/notes?org_id=${
+          user.org_id
+        }&channel_id=${channelId}`,
+        { withCredentials: true }
+      );
+      setNotes(sortNotes(res.data.notes || []));
+    } catch (err) {
+      console.error("Error fetching notes", err);
+      toast.error(err?.response?.data?.message || "Failed to load notes");
+      setNotes([]);
+    } finally {
+      setNotesLoading(false);
+    }
   }, [user?.org_id, channelId]);
+
+  const refreshNotes = useCallback(() => {
+    fetchNotes();
+  }, [fetchNotes]);
+
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -282,7 +286,7 @@ const ChannelPage = () => {
   // Note management functions
   const handleCreateNote = async (noteData) => {
     try {
-      const res = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/notes`,
         {
           org_id: user.org_id,
@@ -291,7 +295,7 @@ const ChannelPage = () => {
         },
         { withCredentials: true }
       );
-      setNotes((prev) => [res.data.note, ...prev]);
+      refreshNotes(); // Refresh notes after creation
       toast.success("Note created successfully");
     } catch (err) {
       console.error("Error creating note:", err);
@@ -304,17 +308,12 @@ const ChannelPage = () => {
     const toastId = toast.loading("Updating note...");
 
     try {
-      const res = await axios.put(
+      await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/notes/${noteId}`,
         noteData,
         { withCredentials: true }
       );
-      setNotes((prev) => {
-        const updated = prev.map((note) =>
-          note.note_id === noteId ? res.data.note : note
-        );
-        return sortNotes(updated);
-      });
+      refreshNotes(); // Refresh notes after update
       toast.success("Note updated successfully", { id: toastId });
     } catch (err) {
       console.error("Error updating note:", err);
@@ -331,7 +330,7 @@ const ChannelPage = () => {
         `${import.meta.env.VITE_BASE_URL}/api/notes/${noteId}`,
         { withCredentials: true }
       );
-      setNotes((prev) => prev.filter((note) => note.note_id !== noteId));
+      refreshNotes(); // Refresh notes after deletion
       toast.success("Note deleted successfully");
     } catch (err) {
       console.error("Error deleting note:", err);

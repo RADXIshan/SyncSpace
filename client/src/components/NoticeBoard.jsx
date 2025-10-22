@@ -220,11 +220,11 @@ const NoticeBoard = ({ orgId, className = "" }) => {
             notices.map((notice) => (
               <div 
                 key={notice.notice_id}
-                className="border border-purple-700/50 bg-purple-700/10 p-4 rounded-xl cursor-pointer transition-all duration-300 group/card hover:border-purple-500 hover:bg-purple-500/20 transform hover:shadow-lg hover:shadow-purple-500/10"
+                className="border border-purple-700/50 bg-purple-700/20 p-4 rounded-xl cursor-pointer transition-all duration-300 group/card hover:border-purple-500 hover:bg-purple-500/20 transform hover:shadow-lg hover:shadow-purple-500/10"
                 onClick={() => handleNoticeClick(notice)}
               >
                 <div className="flex justify-between items-start gap-4 mb-3">
-                  <span className="text-lg font-semibold text-slate-400 group-hover/card:text-slate-100 duration-300 flex-1 line-clamp-2">
+                  <span className="text-lg font-semibold text-slate-300 group-hover/card:text-slate-100 duration-300 flex-1 line-clamp-2">
                     {notice.title}
                   </span>
 

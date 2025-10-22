@@ -17,7 +17,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
     "Mira joined #frontend channel 💬",
   ];
 
-  const tasks = [
+  const notices = [
     { 
       id: 100,
       title: "All - Updated Paid Leave Policy",
@@ -184,7 +184,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
           <JoinedOrgDash
             org={organization}
             activities={activities}
-            tasks={tasks}
+            notices={notices}
           />
         ) : (
           <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 h-[500px] flex items-center justify-center flex-col gap-4">

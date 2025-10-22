@@ -1,6 +1,6 @@
 import {Calendar, Pin, Activity, Plus, ChevronDown} from "lucide-react";
 
-const JoinedOrgDash = ({ activities, tasks }) => {
+const JoinedOrgDash = ({ activities, notices }) => {
 
   return (
     <>
@@ -34,7 +34,7 @@ const JoinedOrgDash = ({ activities, tasks }) => {
                 <div className="p-3 rounded-full bg-purple-400/20">
                   <Pin size={22} className="text-purple-400 rotate-45 group-hover/notice:rotate-0 duration-200 group-hover/notice:scale-110" />
                 </div>
-                <h2 className="text-2xl font-semibold text-purple-400">Notice Board</h2>
+                <h2 className="text-2xl font-semibold text-slate-100">Notice Board</h2>
               </div>
 
               {/* Right section: Plus button */}
@@ -48,20 +48,29 @@ const JoinedOrgDash = ({ activities, tasks }) => {
             </div>
           </div>
           <div className="space-y-4 flex-1 overflow-y-auto p-1">
-            {tasks.map((task) => (
-              <div className="border border-purple-700/50 bg-purple-700/10 p-4 rounded-xl cursor-pointer transition-all duration-300 group/card hover:border-purple-500 hover:bg-purple-500/10">
+            {notices.map((notice) => (
+              <div className="border border-purple-700/50 bg-purple-700/10 p-4 rounded-xl cursor-pointer transition-all duration-300 group/card hover:border-purple-500 hover:bg-purple-500/20">
                 <div className="flex justify-between items-start gap-4">
-                  <span className="text-lg font-semibold text-purple-600/90 group-hover/card:text-purple-500  duration-300 max-w-80">
-                    {task.title}
+                  <span className="text-lg font-semibold text-slate-400 group-hover/card:text-slate-100 duration-300 max-w-60">
+                    {notice.title}
                   </span>
 
-                  <div className="author flex items-center">
-                    <p className="text-xs gradient-text mt-1">{task.author}</p>
+                  <div className="author flex items-center gap-1">
+                    <p className="text-xs text-slate-400 group-hover/card:text-slate-300 duration-300">
+                      {notice.author}
+                    </p>
+
+                    <div className="role-placeholder relative">
+                      <div className="hover-dealer top-0 bottom-0 left-0 right-0 absolute bg-black/20 group-hover/card:bg-transparent duration-300"></div>
+
+                      {/* TODO: REPLACE THIS SPAN WITH USER ROLE */}
+                      <span className="text-white text-xs bg-slate-500 px-1 py-0.5 rounded-sm">Roles</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="relative max-h-10 overflow-hidden mt-1">
-                  <p className="text-sm text-violet-500/60 leading-snug">{task.body}</p>
+                  <p className="text-sm text-violet-500/60 leading-snug group-hover/card:text-violet-300/50 duration-300">{notice.body}</p>
                 </div>
               </div>
             ))}

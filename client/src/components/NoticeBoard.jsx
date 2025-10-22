@@ -181,7 +181,7 @@ const NoticeBoard = ({ orgId, className = "" }) => {
                 <Pin size={24} className="text-purple-400 rotate-45 group-hover/notice:rotate-0 group-hover/notice:scale-110 transition-all duration-300" />
               </div>
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-white group-hover/notice:text-purple-100 transition-colors duration-300">
+                <h2 className="text-2xl font-bold text-white group-hover/notice:text-purple-100 transition-colors duration-300">
                   Notice Board
                 </h2>
                 <p className="text-gray-400 text-sm mt-1">Organization announcements</p>
@@ -193,7 +193,7 @@ const NoticeBoard = ({ orgId, className = "" }) => {
               <button 
                 onClick={() => setShowCreateModal(true)}
                 title="Create New Notice"
-                className="p-3 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg hover:shadow-purple-500/25 group/plus"
+                className="p-3 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg group/plus cursor-pointer"
               >
                 <Plus size={20} className="group-hover/plus:rotate-90 transition-transform duration-300" />
               </button>
@@ -230,11 +230,11 @@ const NoticeBoard = ({ orgId, className = "" }) => {
                 )}
               </div>
             ) : (
-              <div className="space-y-3 sm:space-y-4 max-h-full overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+              <div className="space-y-3 max-h-full overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
                 {notices.map((notice) => (
                   <div 
                     key={notice.notice_id}
-                    className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10"
+                    className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
                     onClick={() => handleNoticeClick(notice)}
                   >
                     {/* Hover gradient overlay */}
@@ -242,8 +242,8 @@ const NoticeBoard = ({ orgId, className = "" }) => {
                     
                     <div className="relative z-10">
                       {/* Header */}
-                      <div className="flex justify-between items-start gap-4 mb-3">
-                        <h3 className="text-lg sm:text-xl font-semibold text-white group-hover/card:text-purple-100 transition-colors duration-300 flex-1 line-clamp-2 leading-tight">
+                      <div className="flex justify-between items-start gap-3 mb-3">
+                        <h3 className="text-lg font-semibold text-white group-hover/card:text-purple-100 transition-colors duration-300 flex-1 line-clamp-2 leading-tight">
                           {notice.title}
                         </h3>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -255,7 +255,7 @@ const NoticeBoard = ({ orgId, className = "" }) => {
 
                       {/* Content preview */}
                       <div className="mb-4">
-                        <p className="text-sm sm:text-base text-gray-300 group-hover/card:text-gray-200 leading-relaxed line-clamp-2 transition-colors duration-300">
+                        <p className="text-xs sm:text-base text-gray-300 group-hover/card:text-gray-200 leading-relaxed line-clamp-2 transition-colors duration-300">
                           {truncateText(notice.body)}
                         </p>
                       </div>

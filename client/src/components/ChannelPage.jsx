@@ -47,6 +47,7 @@ const ChannelPage = () => {
   const [selectedNote, setSelectedNote] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
+  const [meetingsLoading, setMeetingsLoading] = useState(false);
   const [showChannelMenu, setShowChannelMenu] = useState(false);
   const [showEditChannelModal, setShowEditChannelModal] = useState(false);
   const [showDeleteChannelModal, setShowDeleteChannelModal] = useState(false);
@@ -242,9 +243,18 @@ const ChannelPage = () => {
     fetchNotes();
   }, [fetchNotes]);
 
+  // Simulate meetings loading (since using mock data)
+  const fetchMeetings = useCallback(async () => {
+    setMeetingsLoading(true);
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setMeetingsLoading(false);
+  }, []);
+
   useEffect(() => {
     fetchNotes();
-  }, [fetchNotes]);
+    fetchMeetings();
+  }, [fetchNotes, fetchMeetings]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -598,7 +608,15 @@ const ChannelPage = () => {
                     </div>
                   </div>
                   <div className="p-6">
-                    {meetings.length > 0 ? (
+                    {meetingsLoading ? (
+                      <div className="flex flex-col items-center justify-center py-12 sm:py-16">
+                        <div className="relative">
+                          <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-500/30"></div>
+                          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500 absolute top-0 left-0"></div>
+                        </div>
+                        <p className="text-gray-400 mt-4 text-sm">Loading meetings...</p>
+                      </div>
+                    ) : meetings.length > 0 ? (
                       <div className="space-y-3">
                         {meetings.map((meeting, index) => (
                           <div
@@ -702,13 +720,12 @@ const ChannelPage = () => {
                   </div>
                   <div className="p-6">
                     {notesLoading ? (
-                      <div className="flex items-center justify-center py-12">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                          <p className="text-gray-500 text-sm">
-                            Loading notes...
-                          </p>
+                      <div className="flex flex-col items-center justify-center py-12 sm:py-16">
+                        <div className="relative">
+                          <div className="animate-spin rounded-full h-12 w-12 border-2 border-purple-500/30"></div>
+                          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-500 absolute top-0 left-0"></div>
                         </div>
+                        <p className="text-gray-400 mt-4 text-sm">Loading notes...</p>
                       </div>
                     ) : notes.length > 0 ? (
                       <div className="space-y-3">

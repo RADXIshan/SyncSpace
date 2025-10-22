@@ -1,6 +1,7 @@
-import {Calendar, Pin, Activity,} from "lucide-react";
+import {Calendar, Pin, Activity, Plus} from "lucide-react";
 
 const JoinedOrgDash = ({ activities, tasks }) => {
+
   return (
     <>
         {/* Dashboard Grid */}
@@ -25,11 +26,23 @@ const JoinedOrgDash = ({ activities, tasks }) => {
 
         {/* Tasks */}
         <section className="col-span-6 row-span-2 bg-white backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/10 flex flex-col text-[var(--color-accent)] transition-all">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 rounded-full bg-green-500/20">
-              <Pin size={22} className="text-green-500" />
+          <div className="flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-6">
+              {/* Left section: Pin + Title */}
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-green-500/20">
+                  <Pin size={22} className="text-green-500" />
+                </div>
+                <h2 className="text-2xl font-semibold">Notice Board</h2>
+              </div>
+
+              {/* Right section: Plus button */}
+              <button 
+                className="text-green-600 hover:text-green-700 p-1.5 rounded-full hover:bg-green-50 transition-colors cursor-pointer duration-300 group"
+              >
+                <Plus size={20} className="group-hover:scale-125 group-hover:rotate-90 duration-300" />
+              </button>
             </div>
-            <h2 className="text-2xl font-semibold">Notice Board</h2>
           </div>
           <ul className="space-y-4 flex-1">
             {tasks.map((task) => (
@@ -50,7 +63,7 @@ const JoinedOrgDash = ({ activities, tasks }) => {
 
         {/* Calendar */}
         <section className="col-span-12 md:col-span-6 bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl border border-white/20 flex flex-col justify-between">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-[var(--color-accent)]">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-3 text-[var(--color-accent)]">
             <div className="bg-violet-700/20 rounded-full p-3">
               <Calendar className="text-violet-500" size={22} />
             </div>

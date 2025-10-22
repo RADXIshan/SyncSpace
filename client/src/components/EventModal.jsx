@@ -149,7 +149,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
             <button
               type="button"
               onClick={handleClose}
-              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90"
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 duration-300"
             >
               <X size={20} className="sm:w-6 sm:h-6" />
             </button>

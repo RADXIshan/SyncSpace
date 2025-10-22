@@ -181,17 +181,17 @@ const NoticeModal = ({
                 onClick={handleDelete}
                 disabled={isDeleting}
                 title="Delete Notice"
-                className="absolute top-3 right-12 sm:top-5 sm:right-16 text-red-400 hover:text-red-300 transition-colors cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-red-500/10 duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute top-3 right-12 sm:top-5 sm:right-16 text-red-400 hover:text-red-300 transition-colors cursor-pointer active:scale-95 z-10 p-2.5 rounded-full hover:bg-red-500/10 duration-300 shadow-md hover:shadow-lg hover:scale-110"
               >
-                <Trash2 size={18} className="sm:w-5 sm:h-5" />
+                <Trash2 size={20} className="sm:w-5 sm:h-5" />
               </button>
             )}
             <button
               type="button"
               onClick={handleClose}
-              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90"
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 duration-300"
             >
-              <X size={20} className="sm:w-6 sm:h-6" />
+              <X size={22} className="sm:w-6 sm:h-6" />
             </button>
 
             {/* Header */}

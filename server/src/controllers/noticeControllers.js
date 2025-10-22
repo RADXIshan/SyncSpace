@@ -81,37 +81,23 @@ export const createNotice = async (req, res) => {
 // Get Notices
 export const getNotices = async (req, res) => {
   try {
-    const userId = verifyToken(req);
-    const { org_id, channel_id } = req.query;
+    verifyToken(req); // Just verify token, don't need userId for this endpoint
+    const { org_id } = req.query;
 
     if (!org_id) {
       return res.status(400).json({ message: "Organization ID is required" });
     }
 
-    let query;
-    if (channel_id) {
-      query = sql`
-        SELECT n.notice_id, n.title, n.body, n.created_at, n.updated_at,
-               u.name AS created_by_name, u.user_photo AS created_by_photo
-        FROM org_notices n
-        LEFT JOIN users u ON n.created_by = u.user_id
-        WHERE n.org_id = ${org_id} AND n.channel_id = ${channel_id}
-        ORDER BY n.created_at DESC
-      `;
-    } else {
-      query = sql`
-        SELECT n.notice_id, n.title, n.body, n.created_at, n.updated_at,
-               u.name AS created_by_name, u.user_photo AS created_by_photo,
-               c.name AS channel_name
-        FROM org_notices n
-        LEFT JOIN users u ON n.created_by = u.user_id
-        LEFT JOIN org_channels c ON n.channel_id = c.channel_id
-        WHERE n.org_id = ${org_id}
-        ORDER BY n.created_at DESC
-      `;
-    }
-
-    const notices = await query;
+    const notices = await sql`
+      SELECT n.notice_id, n.title, n.body, n.created_at, n.updated_at,
+             u.name AS created_by_name, u.user_photo AS created_by_photo,
+             om.role AS created_by_role
+      FROM org_notices n
+      LEFT JOIN users u ON n.created_by = u.user_id
+      LEFT JOIN org_members om ON om.user_id = n.created_by AND om.org_id = n.org_id
+      WHERE n.org_id = ${org_id}
+      ORDER BY n.created_at DESC
+    `;
 
     res.status(200).json({
       message: "Notices retrieved successfully",

@@ -18,7 +18,7 @@ import {
   Pin,
   X,
   NotebookPen,
-  Video
+  Video,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
@@ -53,7 +53,7 @@ const ChannelPage = () => {
       description: "Weekly synchronization meeting with all team members",
       date: "Dec 15, 2024",
       time: "10:00 AM",
-      status: "ongoing"
+      status: "ongoing",
     },
     {
       id: 2,
@@ -61,7 +61,7 @@ const ChannelPage = () => {
       description: "Review project progress and discuss next steps",
       date: "Dec 16, 2024",
       time: "2:00 PM",
-      status: "upcoming"
+      status: "upcoming",
     },
     {
       id: 3,
@@ -69,8 +69,8 @@ const ChannelPage = () => {
       description: "Present project updates to the client",
       date: "Dec 18, 2024",
       time: "11:00 AM",
-      status: "upcoming"
-    }
+      status: "upcoming",
+    },
   ]); // Mock meetings data
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -120,7 +120,9 @@ const ChannelPage = () => {
 
   // Initialize role colors on component mount
   useEffect(() => {
-    const roleNames = [...new Set(messages.map((msg) => msg.role))].filter(Boolean);
+    const roleNames = [...new Set(messages.map((msg) => msg.role))].filter(
+      Boolean
+    );
     if (roleNames.length > 0) {
       initializeRoleColors(roleNames);
     }
@@ -144,7 +146,9 @@ const ChannelPage = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/channels/${channelId}`,
+          `${import.meta.env.VITE_BASE_URL}/api/orgs/${
+            user.org_id
+          }/channels/${channelId}`,
           { withCredentials: true }
         );
         setChannel(response.data.channel);
@@ -170,7 +174,10 @@ const ChannelPage = () => {
         const allMembers = membersRes.data.members || [];
         const filtered = allMembers.filter((member) => {
           if (member.isCreator) return true;
-          if (!Array.isArray(member.accessible_teams) || member.accessible_teams.length === 0)
+          if (
+            !Array.isArray(member.accessible_teams) ||
+            member.accessible_teams.length === 0
+          )
             return true;
           return member.accessible_teams.includes(response.data.channel.name);
         });
@@ -212,7 +219,9 @@ const ChannelPage = () => {
       try {
         setNotesLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/api/notes?org_id=${user.org_id}&channel_id=${channelId}`,
+          `${import.meta.env.VITE_BASE_URL}/api/notes?org_id=${
+            user.org_id
+          }&channel_id=${channelId}`,
           { withCredentials: true }
         );
         setNotes(sortNotes(res.data.notes || []));
@@ -278,11 +287,11 @@ const ChannelPage = () => {
         {
           org_id: user.org_id,
           channel_id: channelId,
-          ...noteData
+          ...noteData,
         },
         { withCredentials: true }
       );
-      setNotes(prev => [res.data.note, ...prev]);
+      setNotes((prev) => [res.data.note, ...prev]);
       toast.success("Note created successfully");
     } catch (err) {
       console.error("Error creating note:", err);
@@ -300,17 +309,18 @@ const ChannelPage = () => {
         noteData,
         { withCredentials: true }
       );
-      setNotes(prev => {
-        const updated = prev.map(note =>
+      setNotes((prev) => {
+        const updated = prev.map((note) =>
           note.note_id === noteId ? res.data.note : note
         );
         return sortNotes(updated);
       });
       toast.success("Note updated successfully", { id: toastId });
-
     } catch (err) {
       console.error("Error updating note:", err);
-      toast.error(err?.response?.data?.message || "Failed to update note", { id: toastId });
+      toast.error(err?.response?.data?.message || "Failed to update note", {
+        id: toastId,
+      });
       throw err;
     }
   };
@@ -321,7 +331,7 @@ const ChannelPage = () => {
         `${import.meta.env.VITE_BASE_URL}/api/notes/${noteId}`,
         { withCredentials: true }
       );
-      setNotes(prev => prev.filter(note => note.note_id !== noteId));
+      setNotes((prev) => prev.filter((note) => note.note_id !== noteId));
       toast.success("Note deleted successfully");
     } catch (err) {
       console.error("Error deleting note:", err);
@@ -346,7 +356,7 @@ const ChannelPage = () => {
 
   const handleDeleteConfirm = async () => {
     if (!selectedNote) return;
-    
+
     setDeleteLoading(true);
     try {
       await handleDeleteNote(selectedNote.note_id);
@@ -372,7 +382,10 @@ const ChannelPage = () => {
     if (diff < 60000) return "Just now";
     if (diff < 3600000) return `${Math.floor(diff / 60000)} minutes ago`;
     if (date.toDateString() === now.toDateString())
-      return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      });
     if (diff < 604800000)
       return date.toLocaleDateString("en-US", {
         weekday: "short",
@@ -402,7 +415,9 @@ const ChannelPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-white">
         <div className="bg-red-50 p-6 rounded-xl border border-red-200 mb-4 max-w-md">
-          <p className="text-red-700 font-medium text-lg mb-2">Error Loading Channel</p>
+          <p className="text-red-700 font-medium text-lg mb-2">
+            Error Loading Channel
+          </p>
           <p className="text-red-600 font-medium">{error}</p>
         </div>
         <p className="text-gray-600">Unable to load channel information</p>
@@ -413,7 +428,9 @@ const ChannelPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-white">
         <div className="bg-yellow-50 p-6 rounded-xl border border-yellow-200 mb-4 max-w-md">
-          <p className="text-yellow-700 font-medium text-lg mb-2">Channel Not Found</p>
+          <p className="text-yellow-700 font-medium text-lg mb-2">
+            Channel Not Found
+          </p>
           <p className="text-yellow-600 font-medium">
             This channel doesn't exist or you don't have access
           </p>
@@ -439,17 +456,27 @@ const ChannelPage = () => {
               <Hash size={20} className="text-purple-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{channel.name}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {channel.name}
+              </h1>
               {channel.description && (
-                <p className="text-gray-600 text-xs mt-0.5">{channel.description}</p>
+                <p className="text-gray-600 text-xs mt-0.5">
+                  {channel.description}
+                </p>
               )}
             </div>
           </div>
 
           {/* Right Section - 3 Dots */}
           <div className="pr-6 cursor-pointer">
-            <button onClick={() => setShowChannelMenu(true)} className="p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer">
-              <MoreVertical size={20} className="text-gray-700 group-hover:text-violet-700 transition-all duration-300" />
+            <button
+              onClick={() => setShowChannelMenu(true)}
+              className="p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
+            >
+              <MoreVertical
+                size={20}
+                className="text-gray-700 group-hover:text-violet-700 transition-all duration-300"
+              />
             </button>
           </div>
         </div>
@@ -492,13 +519,16 @@ const ChannelPage = () => {
                         <div className="p-3 rounded-full bg-blue-500/20">
                           <Video size={22} className="text-blue-500" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          Meetings
+                        </h3>
                       </div>
                       {userPermissions?.meeting_access && (
-                        <button 
-                          className="text-blue-600 hover:text-blue-700 p-1.5 rounded-full hover:bg-blue-50 transition-colors cursor-pointer duration-300 group"
-                        >
-                          <Plus size={20} className="group-hover:scale-120 group-hover:rotate-90 duration-300"/>
+                        <button className="text-blue-600 hover:text-blue-700 p-1.5 rounded-full hover:bg-blue-50 transition-colors cursor-pointer duration-300 group">
+                          <Plus
+                            size={20}
+                            className="group-hover:scale-120 group-hover:rotate-90 duration-300"
+                          />
                         </button>
                       )}
                     </div>
@@ -507,21 +537,44 @@ const ChannelPage = () => {
                     {meetings.length > 0 ? (
                       <div className="space-y-3">
                         {meetings.map((meeting, index) => (
-                          <div key={index} className={`p-4 rounded-lg border shadow-sm transition-all pl-4 group ${userPermissions?.meeting_access ? 'hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-purple-100 cursor-pointer' : ''} ${
-                             meeting.status === 'upcoming'
-                               ? 'border-l-4 border-blue-500 bg-gradient-to-r from-white via-white to-blue-50'
-                               : meeting.status === 'ongoing'
-                               ? 'border-l-4 border-green-500 bg-gradient-to-r from-white via-white to-green-50'
-                               : 'border-l-4 border-gray-400 bg-gradient-to-r from-white via-white to-gray-50'
-                           }`}>
+                          <div
+                            key={index}
+                            className={`p-4 rounded-lg border shadow-sm transition-all pl-4 group ${
+                              userPermissions?.meeting_access
+                                ? "hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-purple-100 cursor-pointer"
+                                : ""
+                            } ${
+                              meeting.status === "upcoming"
+                                ? "border-l-4 border-blue-500 bg-gradient-to-r from-white via-white to-blue-50"
+                                : meeting.status === "ongoing"
+                                ? "border-l-4 border-green-500 bg-gradient-to-r from-white via-white to-green-50"
+                                : "border-l-4 border-gray-400 bg-gradient-to-r from-white via-white to-gray-50"
+                            }`}
+                          >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <h4 className="font-medium text-gray-900">{meeting.title}</h4>
-                                <p className="text-sm text-gray-600 mt-1">{meeting.description}</p>
+                                <h4 className="font-medium text-gray-900">
+                                  {meeting.title}
+                                </h4>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {meeting.description}
+                                </p>
                                 <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs text-gray-500">{meeting.date}</span>
-                                  <span className="text-xs text-gray-500">{meeting.time}</span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${meeting.status === 'upcoming' ? 'bg-blue-100 text-blue-700' : meeting.status === 'ongoing' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                  <span className="text-xs text-gray-500">
+                                    {meeting.date}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {meeting.time}
+                                  </span>
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      meeting.status === "upcoming"
+                                        ? "bg-blue-100 text-blue-700"
+                                        : meeting.status === "ongoing"
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-gray-100 text-gray-700"
+                                    }`}
+                                  >
                                     {meeting.status}
                                   </span>
                                 </div>
@@ -544,15 +597,19 @@ const ChannelPage = () => {
                       <div className="text-center py-8">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                           <Hash size={24} className="text-gray-400" />
-                </div>
-                        <p className="text-gray-500 mb-2">No meetings scheduled</p>
+                        </div>
+                        <p className="text-gray-500 mb-2">
+                          No meetings scheduled
+                        </p>
                         {userPermissions?.meeting_access && (
-                          <p className="text-sm text-gray-400">Click the + button to schedule a meeting</p>
-                )}
-              </div>
+                          <p className="text-sm text-gray-400">
+                            Click the + button to schedule a meeting
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
-              </div>
+                </div>
 
                 {/* Right Side - Notes/Tasks */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -562,14 +619,19 @@ const ChannelPage = () => {
                         <div className="p-3 rounded-full bg-purple-500/20">
                           <NotebookPen size={22} className="text-purple-500" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">Notes & Tasks</h3>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          Notes & Tasks
+                        </h3>
                       </div>
                       {userPermissions?.notes_access && (
-                        <button 
+                        <button
                           onClick={() => setShowNoteModal(true)}
                           className="text-purple-600 hover:text-purple-700 p-1.5 rounded-full hover:bg-purple-50 transition-colors cursor-pointer duration-300 group"
                         >
-                          <Plus size={20} className="group-hover:scale-120 group-hover:rotate-90 duration-300"/>
+                          <Plus
+                            size={20}
+                            className="group-hover:scale-120 group-hover:rotate-90 duration-300"
+                          />
                         </button>
                       )}
                     </div>
@@ -579,38 +641,73 @@ const ChannelPage = () => {
                       <div className="flex items-center justify-center py-12">
                         <div className="text-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                          <p className="text-gray-500 text-sm">Loading notes...</p>
+                          <p className="text-gray-500 text-sm">
+                            Loading notes...
+                          </p>
                         </div>
                       </div>
                     ) : notes.length > 0 ? (
                       <div className="space-y-3">
                         {notes.map((note) => (
-                          <div key={note.note_id} className={`rounded-2xl transition-all flex ${userPermissions?.notes_access ? 'hover:shadow-lg hover:-translate-y-1' : ''} ${note.pinned ? 'bg-gradient-to-r from-purple-500 via-purple-400 to-purple-100 shadow-purple-300 shadow-md' : 'border border-gray-300 bg-gradient-to-r from-white via-white to-gray-50'}`}>
+                          <div
+                            key={note.note_id}
+                            className={`rounded-2xl transition-all flex ${
+                              userPermissions?.notes_access
+                                ? "hover:shadow-lg hover:-translate-y-1"
+                                : ""
+                            } ${
+                              note.pinned
+                                ? "bg-gradient-to-r from-purple-500 via-purple-400 to-purple-100 shadow-purple-300 shadow-md"
+                                : "border border-gray-300 bg-gradient-to-r from-white via-white to-gray-50"
+                            }`}
+                          >
                             <div className="flex items-start w-full justify-between">
                               <div className="flex-1 p-4">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className={`font-medium ${
-                                    note.pinned ? `text-white `: `text-gray-900`
-                                  }`}>{note.title}</h4>
+                                  <h4
+                                    className={`font-medium ${
+                                      note.pinned
+                                        ? `text-white `
+                                        : `text-gray-900`
+                                    }`}
+                                  >
+                                    {note.title}
+                                  </h4>
                                   {note.pinned && (
                                     <span className="px-2 py-1 bg-white/40 border border-purple-700 text-purple-700 text-xs font-medium rounded-full">
                                       Pinned
                                     </span>
                                   )}
                                 </div>
-                                <p className={`text-sm mt-1 line-clamp-3 ${
-                                 note.pinned ? `text-slate-200` : `text-gray-600` 
-                                }`}>{note.body}</p>
+                                <p
+                                  className={`text-sm mt-1 line-clamp-3 ${
+                                    note.pinned
+                                      ? `text-slate-200`
+                                      : `text-gray-600`
+                                  }`}
+                                >
+                                  {note.body}
+                                </p>
                                 <div className="flex items-center gap-2 mt-2">
-                                  <span className={`text-xs ${
-                                      note.pinned ? `text-slate-300` : `text-gray-500`
-                                    }`}>
-                                    {new Date(note.created_at).toLocaleDateString()}
+                                  <span
+                                    className={`text-xs ${
+                                      note.pinned
+                                        ? `text-slate-300`
+                                        : `text-gray-500`
+                                    }`}
+                                  >
+                                    {new Date(
+                                      note.created_at
+                                    ).toLocaleDateString()}
                                   </span>
                                   {note.created_by_name && (
-                                    <span className={`text-xs ${
-                                      note.pinned ? `text-slate-300` : `text-gray-500`
-                                    }`}>
+                                    <span
+                                      className={`text-xs ${
+                                        note.pinned
+                                          ? `text-slate-300`
+                                          : `text-gray-500`
+                                      }`}
+                                    >
                                       by {note.created_by_name}
                                     </span>
                                   )}
@@ -618,18 +715,29 @@ const ChannelPage = () => {
                               </div>
                               {userPermissions?.notes_access && (
                                 <div className="flex items-center rounded-r-2xl overflow-hidden flex-col h-full">
-                                  <button 
+                                  <button
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      handleUpdateNote(note.note_id, { title: note.title, body: note.body, pinned: !note.pinned });
+                                      handleUpdateNote(note.note_id, {
+                                        title: note.title,
+                                        body: note.body,
+                                        pinned: !note.pinned,
+                                      });
                                     }}
-                                    className={`pl-2 pb-2 pt-3 pr-3 flex-1 duration-300 cursor-pointer group hover:text-white hover:bg-purple-600 ${note.pinned ? 'text-purple-500' : 'text-gray-400'}`}
+                                    className={`pl-2 pb-2 pt-3 pr-3 flex-1 duration-300 cursor-pointer group hover:text-white hover:bg-purple-600 ${
+                                      note.pinned
+                                        ? "text-purple-500"
+                                        : "text-gray-400"
+                                    }`}
                                     title={note.pinned ? "Unpin" : "Pin"}
                                   >
-                                    <Pin size={14} className="group-hover:scale-120 duration-300"/>
+                                    <Pin
+                                      size={14}
+                                      className="group-hover:scale-120 duration-300"
+                                    />
                                   </button>
-                                  <button 
+                                  <button
                                     type="button"
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -639,13 +747,19 @@ const ChannelPage = () => {
                                     className="pt-2 pl-2 pb-2 pr-3 flex-1 hover:bg-blue-500 group text-gray-400 hover:text-white cursor-pointer duration-300"
                                     title="Edit note"
                                   >
-                                    <Edit2 size={14} className="group-hover:scale-120 duration-300"/>
+                                    <Edit2
+                                      size={14}
+                                      className="group-hover:scale-120 duration-300"
+                                    />
                                   </button>
-                                  <button 
+                                  <button
                                     onClick={() => handleDeleteNoteClick(note)}
                                     className="pt-2 pl-2 pr-3 pb-3 flex-1 hover:bg-red-500 rounded-br-2xl text-gray-400 hover:text-white cursor-pointer duration-300 group"
                                   >
-                                    <Trash2 size={14} className="group-hover:scale-120 duration-300"/>
+                                    <Trash2
+                                      size={14}
+                                      className="group-hover:scale-120 duration-300"
+                                    />
                                   </button>
                                 </div>
                               )}
@@ -658,12 +772,16 @@ const ChannelPage = () => {
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                           <Hash size={24} className="text-gray-400" />
                         </div>
-                        <p className="text-gray-500 mb-2">No notes or tasks yet</p>
+                        <p className="text-gray-500 mb-2">
+                          No notes or tasks yet
+                        </p>
                         {userPermissions?.notes_access && (
-                          <p className="text-sm text-gray-400">Click the + button to add your first note</p>
+                          <p className="text-sm text-gray-400">
+                            Click the + button to add your first note
+                          </p>
                         )}
-                    </div>
-                  )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -684,7 +802,10 @@ const ChannelPage = () => {
                 </h2>
                 <p className="text-gray-700">
                   This is the beginning of the{" "}
-                  <span className="text-purple-600 font-medium">#{channel.name}</span> channel.
+                  <span className="text-purple-600 font-medium">
+                    #{channel.name}
+                  </span>{" "}
+                  channel.
                 </p>
               </div>
 
@@ -696,7 +817,9 @@ const ChannelPage = () => {
                 return (
                   <div
                     key={message.id}
-                    className={`flex gap-3 group ${showAvatar ? "mt-4" : "mt-1"}`}
+                    className={`flex gap-3 group ${
+                      showAvatar ? "mt-4" : "mt-1"
+                    }`}
                   >
                     {showAvatar ? (
                       message.userPhoto ? (
@@ -786,37 +909,51 @@ const ChannelPage = () => {
                       type="submit"
                       disabled={!newMessage.trim() || sending}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-
                         newMessage.trim() && !sending
-                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >
                       <Send size={16} />
-                      <span>{sending ? 'Sending...' : 'Send'}</span>
+                      <span>{sending ? "Sending..." : "Send"}</span>
                     </button>
                   </div>
                 </div>
               </form>
-              
+
               <p className="text-xs text-gray-500 mt-2 text-center">
-                Press <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs border border-gray-300">Enter</kbd> to send, <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs border border-gray-300">Shift + Enter</kbd> for new line
+                Press{" "}
+                <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs border border-gray-300">
+                  Enter
+                </kbd>{" "}
+                to send,{" "}
+                <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs border border-gray-300">
+                  Shift + Enter
+                </kbd>{" "}
+                for new line
               </p>
             </div>
           </div>
         )}
 
-        {activeTab === 'members' && (
+        {activeTab === "members" && (
           <div className="h-full overflow-y-auto p-6 bg-slate-50">
             <div className="max-w-4xl mx-auto">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Channel Members</h2>
-                <p className="text-gray-600">{members.length} members in this channel</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Channel Members
+                </h2>
+                <p className="text-gray-600">
+                  {members.length} members in this channel
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {members.map((member) => (
-                  <div key={member.id} className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                  <div
+                    key={member.id}
+                    className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200"
+                  >
                     <div className="flex items-start gap-3">
                       {member.userPhoto ? (
                         <img
@@ -826,18 +963,37 @@ const ChannelPage = () => {
                         />
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold border-2 border-gray-200">
-                          {member.name?.charAt(0) || 'U'}
+                          {member.name?.charAt(0) || "U"}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">{member.name}</h3>
-                        <p className="text-sm text-gray-600 truncate">{member.email}</p>
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {member.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 truncate">
+                          {member.email}
+                        </p>
                         <div className="mt-2 flex items-center gap-2">
-                          <div className={`px-2 py-1 ${getRoleStyle(member.role).background} border ${getRoleStyle(member.role).border} rounded flex items-center gap-1`}>
+                          <div
+                            className={`px-2 py-1 ${
+                              getRoleStyle(member.role).background
+                            } border ${
+                              getRoleStyle(member.role).border
+                            } rounded flex items-center gap-1`}
+                          >
                             {member.isCreator && (
-                              <Crown size={12} className={`${getMessagesRoleStyle(member.role).text}`} />
+                              <Crown
+                                size={12}
+                                className={`${
+                                  getMessagesRoleStyle(member.role).text
+                                }`}
+                              />
                             )}
-                            <span className={`text-xs font-medium ${getMessagesRoleStyle(member.role).text} capitalize`}>
+                            <span
+                              className={`text-xs font-medium ${
+                                getMessagesRoleStyle(member.role).text
+                              } capitalize`}
+                            >
                               {member.role}
                             </span>
                           </div>
@@ -871,13 +1027,15 @@ const ChannelPage = () => {
               onClick={() => setShowChannelMenu(false)}
               className="p-2.5 rounded-full hover:bg-violet-100 hover:rotate-90 transition-all duration-300 cursor-pointer text-violet-700"
             >
-              <X size={20} className="text-gray-700 group-hover:text-violet-700 transition-all duration-300" />
+              <X
+                size={20}
+                className="text-gray-700 group-hover:text-violet-700 transition-all duration-300"
+              />
             </button>
           </div>
 
           {/* Menu items */}
           <div className="p-3 space-y-2 overflow-hidden">
-            
             {/* Edit Channel */}
             <div
               className="flex items-center gap-3 p-3 rounded-md border border-transparent 
@@ -893,7 +1051,7 @@ const ChannelPage = () => {
                 Edit Channel
               </span>
             </div>
-            
+
             {/* Delete Channel */}
             <div
               className="flex items-center gap-3 p-3 rounded-md border border-transparent 
@@ -909,11 +1067,9 @@ const ChannelPage = () => {
                 Delete Channel
               </span>
             </div>
-
           </div>
         </div>
       )}
-
 
       {/* Note Modals */}
       <NoteInputModal
@@ -921,7 +1077,7 @@ const ChannelPage = () => {
         onClose={() => setShowNoteModal(false)}
         onSubmit={handleCreateNote}
       />
-      
+
       <NoteEditModal
         isOpen={showEditModal}
         onClose={() => {
@@ -947,7 +1103,6 @@ const ChannelPage = () => {
         type="danger"
         loading={deleteLoading}
       />
-
     </div>
   );
 };

@@ -1,6 +1,6 @@
-import {Calendar, Pin, Activity, Plus} from "lucide-react";
+import {Calendar, Pin, Activity, Plus, ChevronDown} from "lucide-react";
 
-const JoinedOrgDash = ({ activities, tasks }) => {
+const JoinedOrgDash = ({ activities, notices }) => {
 
   return (
     <>
@@ -24,41 +24,57 @@ const JoinedOrgDash = ({ activities, tasks }) => {
           </ul>
         </section>
 
-        {/* Tasks */}
-        <section className="col-span-6 row-span-2 bg-white backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/10 flex flex-col text-[var(--color-accent)] transition-all">
+        {/* Notice Board */}
+        <section className="col-span-6 row-span-2 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 group/notice rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 flex flex-col transition-all">
+
           <div className="flex flex-col justify-between">
             <div className="flex items-center justify-between mb-6">
               {/* Left section: Pin + Title */}
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-green-500/20">
-                  <Pin size={22} className="text-green-500" />
+                <div className="p-3 rounded-full bg-purple-400/20">
+                  <Pin size={22} className="text-purple-400 rotate-45 group-hover/notice:rotate-0 duration-200 group-hover/notice:scale-110" />
                 </div>
-                <h2 className="text-2xl font-semibold">Notice Board</h2>
+                <h2 className="text-2xl font-semibold text-slate-100">Notice Board</h2>
               </div>
 
               {/* Right section: Plus button */}
               <button 
-                className="text-green-600 hover:text-green-700 p-1.5 rounded-full hover:bg-green-50 transition-colors cursor-pointer duration-300 group"
-              >
-                <Plus size={20} className="group-hover:scale-125 group-hover:rotate-90 duration-300" />
+                title="Add Notice"
+                className="text-purple-400 hover:text-purple-300 cursor-pointer p-1.5 rounded-full 
+                          bg-purple-400/20 hover:bg-purple-400/30 shadow-sm hover:shadow-md 
+                          duration-300 group/plus">
+                <Plus size={20} className="group-hover/plus:scale-125 group-hover/plus:rotate-90 duration-300" />
               </button>
             </div>
           </div>
-          <ul className="space-y-4 flex-1">
-            {tasks.map((task) => (
-              <li key={task.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all">
-                <input
-                  type="checkbox"
-                  checked={task.done}
-                  readOnly
-                  className="w-5 h-5 rounded border-white/20 bg-white/5 focus:ring-offset-0"
-                />
-                <span className={`text-md transition-colors ${task.done ? 'text-[var(--color-accent)] line-through' : 'text-[var(--color-accent)] hover:text-[var(--color-secondary)]'}`}>
-                  {task.text}
-                </span>
-              </li>
+          <div className="space-y-4 flex-1 overflow-y-auto p-1">
+            {notices.map((notice) => (
+              <div className="border border-purple-700/50 bg-purple-700/10 p-4 rounded-xl cursor-pointer transition-all duration-300 group/card hover:border-purple-500 hover:bg-purple-500/20">
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-lg font-semibold text-slate-400 group-hover/card:text-slate-100 duration-300 max-w-60">
+                    {notice.title}
+                  </span>
+
+                  <div className="author flex items-center gap-1">
+                    <p className="text-xs text-slate-400 group-hover/card:text-slate-300 duration-300">
+                      {notice.author}
+                    </p>
+
+                    <div className="role-placeholder relative">
+                      <div className="hover-dealer top-0 bottom-0 left-0 right-0 absolute bg-black/20 group-hover/card:bg-transparent duration-300"></div>
+
+                      {/* TODO: REPLACE THIS SPAN WITH USER ROLE */}
+                      <span className="text-white text-xs bg-slate-500 px-1 py-0.5 rounded-sm">Roles</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative max-h-10 overflow-hidden mt-1">
+                  <p className="text-sm text-violet-500/60 leading-snug group-hover/card:text-violet-300/50 duration-300">{notice.body}</p>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
 
         {/* Calendar */}

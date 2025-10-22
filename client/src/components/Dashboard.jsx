@@ -17,10 +17,47 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
     "Mira joined #frontend channel 💬",
   ];
 
-  const tasks = [
-    { id: 1, text: "Finalize sprint tasks", done: false },
-    { id: 2, text: "Review pull requests", done: true },
-    { id: 3, text: "Prepare meeting summary", done: false },
+  const notices = [
+    { 
+      id: 100,
+      title: "All - Updated Paid Leave Policy",
+      body: "The HR department has updated the paid leave policy effective from next month. Please review the changes in the HR portal.",
+      date: "2024-06-15",
+      author: "Varun Satapathy",
+      author_role: "Admin"
+    },
+    {
+      id: 101,
+      title: "Frontend - New Design System Implementation",
+      body: "We're rolling out our new design system components. Please update your components to match the new guidelines.",
+      date: "2024-06-18",
+      author: "Sarah Chen",
+      author_role: "Lead Designer"
+    },
+    {
+      id: 102,
+      title: "Backend - Database Migration Schedule",
+      body: "Scheduled database migration to PostgreSQL 15. Downtime expected on Saturday night. Please prepare your services accordingly.",
+      date: "2024-06-20",
+      author: "Mike Rodriguez",
+      author_role: "DevOps Lead"
+    },
+    {
+      id: 103,
+      title: "Marketing - Q3 Campaign Planning",
+      body: "Team meeting to discuss and finalize Q3 marketing campaign strategies. Please prepare your proposals.",
+      date: "2024-06-22",
+      author: "Emily Thompson",
+      author_role: "Marketing Director"
+    },
+    {
+      id: 104,
+      title: "All - Company Town Hall",
+      body: "Monthly town hall meeting to discuss company updates, project progress, and team achievements. Attendance is mandatory.",
+      date: "2024-06-25",
+      author: "David Kumar",
+      author_role: "CEO"
+    }
   ];
 
   const fetchOrg = async () => {
@@ -147,7 +184,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
           <JoinedOrgDash
             org={organization}
             activities={activities}
-            tasks={tasks}
+            notices={notices}
           />
         ) : (
           <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 h-[500px] flex items-center justify-center flex-col gap-4">

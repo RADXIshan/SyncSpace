@@ -48,6 +48,9 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [showRemoveMemberConfirm, setShowRemoveMemberConfirm] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState(null);
+  const [showTransferOwnership, setShowTransferOwnership] = useState(false);
+  const [selectedNewOwner, setSelectedNewOwner] = useState("");
+  const [transferConfirmation, setTransferConfirmation] = useState("");
   const [showRemoveChannelConfirm, setShowRemoveChannelConfirm] = useState(false);
   const [channelToRemove, setChannelToRemove] = useState(null);
   const [showRemoveRoleConfirm, setShowRemoveRoleConfirm] = useState(false);
@@ -80,6 +83,56 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
 
   const canEditRoles = () => {
     return userPermissions?.settings_access || userPermissions?.roles_access || false;
+  };
+
+  // Transfer ownership function
+  const handleTransferOwnership = async () => {
+    if (!selectedNewOwner) {
+      toast.error("Please select a new owner");
+      return;
+    }
+
+    if (transferConfirmation !== organization?.name) {
+      toast.error("Organization name does not match");
+      return;
+    }
+
+    setLoading(true);
+    let toastId;
+
+    try {
+      toastId = toast.loading("Transferring ownership...");
+
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/transfer-ownership`,
+        { new_owner_id: selectedNewOwner },
+        { withCredentials: true }
+      );
+
+      toast.success("Ownership transferred successfully", { id: toastId });
+      
+      // Close modal and trigger success callback
+      onClose();
+      if (onSuccess) {
+        onSuccess({ ownershipTransferred: true });
+      }
+      
+      // Refresh the page to reflect the new ownership
+      window.location.reload();
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          "Failed to transfer ownership",
+        { id: toastId }
+      );
+    } finally {
+      setLoading(false);
+      setShowTransferOwnership(false);
+      setSelectedNewOwner("");
+      setTransferConfirmation("");
+    }
   };
 
   const canManageUsers = () => {
@@ -409,8 +462,8 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       };
     }
     
-    // Fetch members when organization changes
-    if (organization?.id && activeTab === "members") {
+    // Fetch members when organization changes or when accessing members/danger tabs
+    if (organization?.id && (activeTab === "members" || activeTab === "danger")) {
       fetchMembers();
     }
   }, [organization, activeTab]);
@@ -1388,6 +1441,121 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                       Danger Zone
                     </h3>
                   </div>
+
+                  {/* Transfer Ownership Section */}
+                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <Crown size={20} className="text-orange-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-orange-300 mb-2">
+                          Transfer Ownership
+                        </h4>
+                        <p className="text-orange-400/80 text-sm mb-4 leading-relaxed">
+                          Transfer ownership of this organization to another member. You will lose all creator privileges 
+                          and the new owner will have full control over the organization.
+                        </p>
+                        
+                        {!showTransferOwnership ? (
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setShowTransferOwnership(true)}
+                              disabled={!membersLoading && members.filter(member => !member.isCreator).length === 0}
+                              className="flex items-center px-4 py-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 text-sm font-medium cursor-pointer shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Crown size={16} className="mr-2" />
+                              Transfer Ownership
+                            </button>
+                            {!membersLoading && members.filter(member => !member.isCreator).length === 0 && (
+                              <p className="text-orange-400/60 text-xs mt-2">
+                                No eligible members available for ownership transfer
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="p-4 bg-orange-600/10 border border-orange-500/30 rounded-lg space-y-3">
+                              <div>
+                                <p className="text-orange-300 text-sm font-medium mb-2">
+                                  Select new owner:
+                                </p>
+                                <select
+                                  value={selectedNewOwner}
+                                  onChange={(e) => setSelectedNewOwner(e.target.value)}
+                                  disabled={membersLoading}
+                                  className="w-full px-3 py-2 rounded-lg border border-orange-500/30 bg-orange-500/5 text-white text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50"
+                                >
+                                  <option value="">
+                                    {membersLoading ? "Loading members..." : "Select a member..."}
+                                  </option>
+                                  {!membersLoading && members
+                                    .filter(member => !member.isCreator)
+                                    .map((member) => (
+                                      <option key={member.id} value={member.id} className="bg-gray-800 text-white">
+                                        {member.name} ({member.email})
+                                      </option>
+                                    ))}
+                                  {!membersLoading && members.filter(member => !member.isCreator).length === 0 && (
+                                    <option value="" disabled className="bg-gray-800 text-gray-400">
+                                      No eligible members found
+                                    </option>
+                                  )}
+                                </select>
+                              </div>
+                              
+                              <div>
+                                <p className="text-orange-300 text-sm font-medium mb-2">
+                                  To confirm transfer, please type the organization name:
+                                </p>
+                                <p className="text-white font-mono text-sm mb-2 bg-black/20 px-3 py-2 rounded-lg border">
+                                  {organization?.name}
+                                </p>
+                                <input
+                                  type="text"
+                                  value={transferConfirmation}
+                                  onChange={(e) => setTransferConfirmation(e.target.value)}
+                                  placeholder="Type organization name here"
+                                  className="w-full px-3 py-2 rounded-lg border border-orange-500/30 bg-orange-500/5 text-white text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="flex space-x-3">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowTransferOwnership(false);
+                                  setSelectedNewOwner("");
+                                  setTransferConfirmation("");
+                                }}
+                                className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 rounded-lg text-gray-300 hover:text-gray-200 text-sm font-medium transition-all duration-200 cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleTransferOwnership}
+                                disabled={!selectedNewOwner || transferConfirmation !== organization?.name || loading || membersLoading || members.filter(member => !member.isCreator).length === 0}
+                                className="flex items-center px-4 py-2 bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40 rounded-lg text-orange-200 hover:text-orange-100 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                {loading ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-orange-200/30 border-t-orange-200 rounded-full animate-spin mr-2"></div>
+                                    Transferring...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Crown size={16} className="mr-2" />
+                                    Transfer Ownership
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   
                   <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 space-y-4">
                     <div className="flex items-start space-x-3">
@@ -1496,7 +1664,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
               </button>
               <button
                 type="submit"
-                disabled={loading || !orgName.trim()}
+                disabled={!hasUnsavedChanges || loading || !orgName.trim()}
                 className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base justify-center shadow-lg hover:shadow-xl ${
                   hasUnsavedChanges 
                     ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300" 

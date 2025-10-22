@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import {
@@ -25,10 +25,12 @@ import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 import NoteInputModal from "./NoteInputModal";
 import NoteEditModal from "./NoteEditModal";
 import ConfirmationModal from "./ConfirmationModal";
+import EditChannel from "./EditChannel";
 
 const ChannelPage = () => {
   const { channelId } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,6 +48,9 @@ const ChannelPage = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
   const [showChannelMenu, setShowChannelMenu] = useState(false);
+  const [showEditChannelModal, setShowEditChannelModal] = useState(false);
+  const [showDeleteChannelModal, setShowDeleteChannelModal] = useState(false);
+  const [channelDeleteLoading, setChannelDeleteLoading] = useState(false);
   const [meetings, setMeetings] = useState([
     {
       id: 1,
@@ -373,6 +378,62 @@ const ChannelPage = () => {
     setShowDeleteModal(true);
   };
 
+  // Channel management functions
+  const handleEditChannelSubmit = async (channelData) => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${
+          user.org_id
+        }/channels/${channelId}`,
+        channelData,
+        { withCredentials: true }
+      );
+
+      // Update the local channel state
+      setChannel(response.data.channel);
+      toast.success("Channel updated successfully");
+      setShowEditChannelModal(false);
+
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event("organizationUpdated"));
+    } catch (error) {
+      console.error("Error updating channel:", error);
+      toast.error(error.response?.data?.message || "Failed to update channel");
+    }
+  };
+
+  const handleDeleteChannelClick = () => {
+    setShowChannelMenu(false);
+    setShowDeleteChannelModal(true);
+  };
+
+  const handleDeleteChannelConfirm = async () => {
+    setChannelDeleteLoading(true);
+
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${
+          user.org_id
+        }/channels/${channelId}`,
+        { withCredentials: true }
+      );
+
+      toast.success("Channel deleted successfully");
+
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event("organizationUpdated"));
+
+      // Close modal and navigate back to dashboard
+      setShowDeleteChannelModal(false);
+      navigate("/home/dashboard");
+    } catch (error) {
+      console.error("Error deleting channel:", error);
+      toast.error(error.response?.data?.message || "Failed to delete channel");
+    } finally {
+      setChannelDeleteLoading(false);
+    }
+  };
+
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -467,17 +528,21 @@ const ChannelPage = () => {
           </div>
 
           {/* Right Section - 3 Dots */}
-          <div className="pr-6 cursor-pointer">
-            <button
-              onClick={() => setShowChannelMenu(true)}
-              className="p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
-            >
-              <MoreVertical
-                size={20}
-                className="text-gray-700 group-hover:text-violet-700 transition-all duration-300"
-              />
-            </button>
-          </div>
+          {/* Only show menu button if user has permissions for any menu items */}
+          {(userPermissions?.manage_channels ||
+            userPermissions?.settings_access) && (
+            <div className="pr-6 cursor-pointer">
+              <button
+                onClick={() => setShowChannelMenu(true)}
+                className="p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
+              >
+                <MoreVertical
+                  size={20}
+                  className="text-gray-700 group-hover:text-violet-700 transition-all duration-300"
+                />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -1015,59 +1080,106 @@ const ChannelPage = () => {
       </div>
 
       {showChannelMenu && (
-        <div
-          className="w-64 absolute top-1 right-6 bg-white/70 backdrop-blur-lg border border-gray-200/50 
-                    rounded-xl shadow-2xl z-50 animate-slideIn"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200/60">
-            <h3 className="text-lg font-bold text-gray-900">Channel Menu</h3>
-            <button
-              onClick={() => setShowChannelMenu(false)}
-              className="p-2.5 rounded-full hover:bg-violet-100 hover:rotate-90 transition-all duration-300 cursor-pointer text-violet-700"
-            >
-              <X
-                size={20}
-                className="text-gray-700 group-hover:text-violet-700 transition-all duration-300"
-              />
-            </button>
-          </div>
-
-          {/* Menu items */}
-          <div className="p-3 space-y-2 overflow-hidden">
-            {/* Edit Channel */}
-            <div
-              className="flex items-center gap-3 p-3 rounded-md border border-transparent 
-                        transition-all duration-300 cursor-pointer group 
-                        hover:translate-x-1 hover:scale-[1.02] hover:shadow-md
-                        hover:bg-gradient-to-r from-violet-50 to-indigo-100"
-            >
-              <Edit2
-                size={20}
-                className="text-gray-600 group-hover:text-violet-700 transition-all duration-300 group-hover:rotate-6"
-              />
-              <span className="text-gray-900 group-hover:text-violet-700 transition-colors duration-300">
-                Edit Channel
-              </span>
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setShowChannelMenu(false)}
+          />
+          
+          {/* Menu */}
+          <div className="absolute top-1 right-6 w-72 bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 animate-fadeIn overflow-hidden h-[calc(50vh-110px)]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-2 py-4 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-full bg-violet-500/20">
+                  <Hash size={18} className="text-violet-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Channel Settings</h3>
+              </div>
+              <button
+                onClick={() => setShowChannelMenu(false)}
+                className="absolute top-4 right-3 p-2 rounded-full hover:bg-white/20 text-white transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-90 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            {/* Delete Channel */}
-            <div
-              className="flex items-center gap-3 p-3 rounded-md border border-transparent 
-                        transition-all duration-300 cursor-pointer group 
-                        hover:translate-x-1 hover:scale-[1.02] hover:shadow-md
-                        hover:bg-gradient-to-r from-red-50 to-rose-100"
-            >
-              <Trash2
-                size={20}
-                className="text-gray-600 group-hover:text-red-600 transition-all duration-300 group-hover:-rotate-6"
-              />
-              <span className="text-gray-900 group-hover:text-red-600 transition-colors duration-300">
-                Delete Channel
-              </span>
+            {/* Menu items */}
+            <div className="p-4 space-y-2">
+              {/* Show message if no permissions */}
+              {!(userPermissions?.manage_channels || userPermissions?.settings_access) && (
+                <div className="text-center py-6">
+                  <div className="p-3 rounded-full bg-gray-500/20 w-fit mx-auto mb-3">
+                    <Hash size={24} className="text-gray-400" />
+                  </div>
+                  <p className="text-gray-300 text-sm font-medium">No actions available</p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    You don't have permission to manage this channel
+                  </p>
+                </div>
+              )}
+
+              {/* Edit Channel - Only show if user has permission */}
+              {(userPermissions?.manage_channels || userPermissions?.settings_access) && (
+                <div
+                  onClick={() => {
+                    setShowEditChannelModal(true);
+                    setShowChannelMenu(false);
+                  }}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-violet-500/10 hover:border-violet-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-500/10"
+                >
+                  <div className="p-2 rounded-lg bg-violet-500/20 group-hover:bg-violet-500/30 transition-all duration-300">
+                    <Edit2
+                      size={18}
+                      className="text-violet-400 group-hover:text-violet-300 transition-all duration-300 group-hover:rotate-12"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white font-medium group-hover:text-violet-200 transition-colors duration-300">
+                      Edit Channel
+                    </span>
+                    <p className="text-gray-400 text-xs mt-0.5 group-hover:text-violet-300/70">
+                      Modify channel name and description
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Channel - Only show if user has permission */}
+              {(userPermissions?.manage_channels || userPermissions?.settings_access) && (
+                <div
+                  onClick={handleDeleteChannelClick}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-red-500/10"
+                >
+                  <div className="p-2 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-all duration-300">
+                    <Trash2
+                      size={18}
+                      className="text-red-400 group-hover:text-red-300 transition-all duration-300 group-hover:rotate-12"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-white font-medium group-hover:text-red-200 transition-colors duration-300">
+                      Delete Channel
+                    </span>
+                    <p className="text-gray-400 text-xs mt-0.5 group-hover:text-red-300/70">
+                      Permanently remove this channel
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </>
+      )}
+
+      {showEditChannelModal && (
+        <EditChannel
+          isOpen={showEditChannelModal}
+          onClose={() => setShowEditChannelModal(false)}
+          onSubmit={handleEditChannelSubmit}
+          channel={channel}
+        />
       )}
 
       {/* Note Modals */}
@@ -1101,6 +1213,19 @@ const ChannelPage = () => {
         cancelText="Cancel"
         type="danger"
         loading={deleteLoading}
+      />
+
+      {/* Delete Channel Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteChannelModal}
+        onClose={() => setShowDeleteChannelModal(false)}
+        onConfirm={handleDeleteChannelConfirm}
+        title="Delete Channel"
+        message={`Are you sure you want to delete the channel "${channel?.name}"? This will permanently remove all notes, messages, and content in this channel. This action cannot be undone.`}
+        confirmText="Delete Channel"
+        cancelText="Cancel"
+        type="danger"
+        loading={channelDeleteLoading}
       />
     </div>
   );

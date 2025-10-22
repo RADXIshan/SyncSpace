@@ -1091,3 +1091,246 @@ export const getChannel = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// Transfer Organization Ownership
+export const transferOwnership = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const { org_id } = req.params;
+    const { new_owner_id } = req.body;
+
+    if (!new_owner_id) {
+      return res.status(400).json({ message: "New owner ID is required" });
+    }
+
+    // Check if current user is the organization creator
+    const [organization] = await sql`
+      SELECT created_by, name
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!organization) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    if (organization.created_by !== userId) {
+      return res.status(403).json({ message: "Only the organization creator can transfer ownership" });
+    }
+
+    // Check if new owner is a member of the organization
+    const [newOwner] = await sql`
+      SELECT om.user_id, u.name, u.email
+      FROM org_members om
+      LEFT JOIN users u ON u.user_id = om.user_id
+      WHERE om.org_id = ${org_id} AND om.user_id = ${new_owner_id}
+      LIMIT 1
+    `;
+
+    if (!newOwner) {
+      return res.status(400).json({ message: "New owner must be a member of the organization" });
+    }
+
+    // Start transaction
+    await sql.begin(async (sql) => {
+      // Update organization creator
+      await sql`
+        UPDATE organisations
+        SET created_by = ${new_owner_id}
+        WHERE org_id = ${org_id}
+      `;
+
+      // Update the new owner's role to 'creator' if they don't already have it
+      await sql`
+        UPDATE org_members
+        SET role = 'creator'
+        WHERE org_id = ${org_id} AND user_id = ${new_owner_id}
+      `;
+
+      // Update the old owner's role to a default role (first available role that's not creator)
+      const [defaultRole] = await sql`
+        SELECT role_name
+        FROM org_roles
+        WHERE org_id = ${org_id} AND LOWER(role_name) != 'creator'
+        ORDER BY role_name
+        LIMIT 1
+      `;
+
+      if (defaultRole) {
+        await sql`
+          UPDATE org_members
+          SET role = ${defaultRole.role_name}
+          WHERE org_id = ${org_id} AND user_id = ${userId}
+        `;
+      }
+    });
+
+    res.status(200).json({
+      message: "Ownership transferred successfully",
+      new_owner: {
+        id: newOwner.user_id,
+        name: newOwner.name,
+        email: newOwner.email,
+      },
+    });
+  } catch (error) {
+    console.error("Error transferring ownership:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Update Channel
+export const updateChannel = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const { org_id, channel_id } = req.params;
+    const { name, description } = req.body;
+
+    if (!name?.trim()) {
+      return res.status(400).json({ message: "Channel name is required" });
+    }
+
+    // Check if user has permission to manage channels
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!org) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    const isCreator = org.created_by === userId;
+
+    if (!isCreator) {
+      const [member] = await sql`
+        SELECT r.manage_channels, r.settings_access
+        FROM org_members om
+        LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+        WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
+        LIMIT 1
+      `;
+
+      if (!member || (!member.manage_channels && !member.settings_access)) {
+        return res.status(403).json({ message: "You don't have permission to update channels" });
+      }
+    }
+
+    // Check if channel exists
+    const [existingChannel] = await sql`
+      SELECT channel_id, channel_name
+      FROM org_channels
+      WHERE channel_id = ${channel_id} AND org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!existingChannel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    // Check if new name conflicts with existing channels (excluding current channel)
+    const [conflictingChannel] = await sql`
+      SELECT channel_id
+      FROM org_channels
+      WHERE org_id = ${org_id} AND LOWER(channel_name) = LOWER(${name.trim()}) AND channel_id != ${channel_id}
+      LIMIT 1
+    `;
+
+    if (conflictingChannel) {
+      return res.status(400).json({ message: "A channel with this name already exists" });
+    }
+
+    // Update the channel
+    const [updatedChannel] = await sql`
+      UPDATE org_channels
+      SET channel_name = ${name.trim()}, channel_description = ${description?.trim() || null}
+      WHERE channel_id = ${channel_id} AND org_id = ${org_id}
+      RETURNING channel_id, channel_name, channel_description
+    `;
+
+    res.status(200).json({
+      message: "Channel updated successfully",
+      channel: {
+        id: updatedChannel.channel_id,
+        name: updatedChannel.channel_name,
+        description: updatedChannel.channel_description,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating channel:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Delete Channel
+export const deleteChannel = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const { org_id, channel_id } = req.params;
+
+    // Check if user has permission to manage channels
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!org) {
+      return res.status(404).json({ message: "Organization not found" });
+    }
+
+    const isCreator = org.created_by === userId;
+
+    if (!isCreator) {
+      const [member] = await sql`
+        SELECT r.manage_channels, r.settings_access
+        FROM org_members om
+        LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+        WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
+        LIMIT 1
+      `;
+
+      if (!member || (!member.manage_channels && !member.settings_access)) {
+        return res.status(403).json({ message: "You don't have permission to delete channels" });
+      }
+    }
+
+    // Check if channel exists
+    const [existingChannel] = await sql`
+      SELECT channel_id, channel_name
+      FROM org_channels
+      WHERE channel_id = ${channel_id} AND org_id = ${org_id}
+      LIMIT 1
+    `;
+
+    if (!existingChannel) {
+      return res.status(404).json({ message: "Channel not found" });
+    }
+
+    // Delete the channel (this will cascade delete related data like notes)
+    await sql`
+      DELETE FROM org_channels
+      WHERE channel_id = ${channel_id} AND org_id = ${org_id}
+    `;
+
+    res.status(200).json({
+      message: "Channel deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting channel:", error);
+    if (error.message === "No token provided" || error.message === "Invalid token") {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

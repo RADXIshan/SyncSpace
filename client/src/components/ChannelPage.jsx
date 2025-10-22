@@ -247,7 +247,7 @@ const ChannelPage = () => {
   const fetchMeetings = useCallback(async () => {
     setMeetingsLoading(true);
     // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setMeetingsLoading(false);
   }, []);
 
@@ -614,7 +614,9 @@ const ChannelPage = () => {
                           <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-500/30"></div>
                           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500 absolute top-0 left-0"></div>
                         </div>
-                        <p className="text-gray-400 mt-4 text-sm">Loading meetings...</p>
+                        <p className="text-gray-400 mt-4 text-sm">
+                          Loading meetings...
+                        </p>
                       </div>
                     ) : meetings.length > 0 ? (
                       <div className="space-y-3">
@@ -725,7 +727,9 @@ const ChannelPage = () => {
                           <div className="animate-spin rounded-full h-12 w-12 border-2 border-purple-500/30"></div>
                           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-500 absolute top-0 left-0"></div>
                         </div>
-                        <p className="text-gray-400 mt-4 text-sm">Loading notes...</p>
+                        <p className="text-gray-400 mt-4 text-sm">
+                          Loading notes...
+                        </p>
                       </div>
                     ) : notes.length > 0 ? (
                       <div className="space-y-3">

@@ -16,7 +16,9 @@ import {
   MoreVertical,
   Plus,
   Pin,
-  X
+  X,
+  NotebookPen,
+  Video
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
@@ -51,7 +53,7 @@ const ChannelPage = () => {
       description: "Weekly synchronization meeting with all team members",
       date: "Dec 15, 2024",
       time: "10:00 AM",
-      status: "upcoming"
+      status: "ongoing"
     },
     {
       id: 2,
@@ -446,8 +448,8 @@ const ChannelPage = () => {
 
           {/* Right Section - 3 Dots */}
           <div className="pr-6 cursor-pointer">
-            <button onClick={() => setShowChannelMenu(true)} className="p-2.5 rounded-full hover:bg-blue-200/70 transition-colors cursor-pointer">
-              <MoreVertical size={20} className="text-gray-700" />
+            <button onClick={() => setShowChannelMenu(true)} className="p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer">
+              <MoreVertical size={20} className="text-gray-700 group-hover:text-violet-700 transition-all duration-300" />
             </button>
           </div>
         </div>
@@ -484,12 +486,19 @@ const ChannelPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Side - Meetings */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-6 border-b border-gray-200">
+                  <div className="px-6 py-5 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-gray-900">Meetings</h3>
+                      <div className="flex items-center gap-2">
+                        <div className="p-3 rounded-full bg-blue-500/20">
+                          <Video size={22} className="text-blue-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                      </div>
                       {userPermissions?.meeting_access && (
-                        <button className="text-purple-600 hover:text-purple-700 p-1 rounded-lg hover:bg-purple-50 transition-colors">
-                          <Plus size={18} />
+                        <button 
+                          className="text-blue-600 hover:text-blue-700 p-1.5 rounded-full hover:bg-blue-50 transition-colors cursor-pointer duration-300 group"
+                        >
+                          <Plus size={20} className="group-hover:scale-120 group-hover:rotate-90 duration-300"/>
                         </button>
                       )}
                     </div>
@@ -547,9 +556,14 @@ const ChannelPage = () => {
 
                 {/* Right Side - Notes/Tasks */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-6 border-b border-gray-200">
+                  <div className="px-6 py-5 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-gray-900">Notes & Tasks</h3>
+                      <div className="flex items-center gap-2">
+                        <div className="p-3 rounded-full bg-purple-500/20">
+                          <NotebookPen size={22} className="text-purple-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">Notes & Tasks</h3>
+                      </div>
                       {userPermissions?.notes_access && (
                         <button 
                           onClick={() => setShowNoteModal(true)}
@@ -855,7 +869,7 @@ const ChannelPage = () => {
             <h3 className="text-lg font-bold text-gray-900">Channel Menu</h3>
             <button
               onClick={() => setShowChannelMenu(false)}
-              className="p-2.5 rounded-full hover:bg-blue-100 hover:rotate-90 transition-all duration-300 cursor-pointer text-violet-700"
+              className="p-2.5 rounded-full hover:bg-violet-100 hover:rotate-90 transition-all duration-300 cursor-pointer text-violet-700"
             >
               <X size={20} className="text-gray-700 group-hover:text-violet-700 transition-all duration-300" />
             </button>

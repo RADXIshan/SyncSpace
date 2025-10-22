@@ -1,4 +1,4 @@
-import {Calendar, CheckCircle, MessageSquare, Activity,} from "lucide-react";
+import {Calendar, Pin, Activity,} from "lucide-react";
 
 const JoinedOrgDash = ({ activities, tasks }) => {
   return (
@@ -24,12 +24,12 @@ const JoinedOrgDash = ({ activities, tasks }) => {
         </section>
 
         {/* Tasks */}
-        <section className="col-span-12 md:col-span-6 bg-white backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/10 flex flex-col text-[var(--color-accent)] transition-all">
+        <section className="col-span-6 row-span-2 bg-white backdrop-blur-xl rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/10 flex flex-col text-[var(--color-accent)] transition-all">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 rounded-full bg-green-500/20">
-              <CheckCircle size={22} className="text-green-500" />
+              <Pin size={22} className="text-green-500" />
             </div>
-            <h2 className="text-2xl font-semibold">Team Tasks</h2>
+            <h2 className="text-2xl font-semibold">Notice Board</h2>
           </div>
           <ul className="space-y-4 flex-1">
             {tasks.map((task) => (
@@ -52,7 +52,7 @@ const JoinedOrgDash = ({ activities, tasks }) => {
         <section className="col-span-12 md:col-span-6 bg-white rounded-3xl p-6 shadow-lg hover:shadow-xl border border-white/20 flex flex-col justify-between">
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-[var(--color-accent)]">
             <div className="bg-violet-700/20 rounded-full p-3">
-              <Calendar className="text-slate-800" size={22} />
+              <Calendar className="text-violet-500" size={22} />
             </div>
             Meetings
           </h2>
@@ -67,24 +67,6 @@ const JoinedOrgDash = ({ activities, tasks }) => {
             View Calendar
           </button>
         </section>
-
-        {/* Chat Summary */}
-        <section className="col-span-12 md:col-span-6 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 text-white flex flex-col justify-between shadow-lg hover:shadow-xl">
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <div className="bg-slate-300/20 rounded-full p-3">
-              <MessageSquare className="text-[var(--primary)]" size={22} />
-            </div>
-             Chat Summary
-          </h2>
-          <div className="flex-1 flex flex-col justify-center items-center text-center">
-            <p className="text-5xl font-bold">12</p>
-            <p className="text-md opacity-90 mt-1">Unread messages</p>
-          </div>
-          <button className="mt-4 px-5 py-2 text-md font-semibold rounded-full bg-slate-300/20 hover:bg-slate-300/30 border border-slate-800 text-primary hover:text-slate-200 transition cursor-pointer">
-            Open Chat
-          </button>
-        </section>
-
       </main>
     </>
   )

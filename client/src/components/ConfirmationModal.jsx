@@ -40,7 +40,7 @@ const ConfirmationModal = ({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors cursor-pointer active:scale-95 disabled:opacity-50 p-2 rounded-full hover:bg-gray-800/80"
+            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-all cursor-pointer active:scale-95 disabled:opacity-50 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 transform duration-300"
           >
             <X size={20} />
           </button>

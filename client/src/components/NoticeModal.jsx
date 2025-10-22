@@ -197,7 +197,7 @@ const NoticeModal = ({
               <button
                 onClick={handleClose}
                 title="Close"
-                className="absolute top-1 right-1 text-gray-400 hover:text-white transition-colors cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10 border border-transparent shadow-md hover:shadow-lg duration-300"
+                className="absolute top-1 right-1 text-gray-400 hover:text-white transition-all transform cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10 border border-transparent shadow-md hover:shadow-lg duration-300 hover:rotate-90"
               >
                 <X size={20} />
               </button>

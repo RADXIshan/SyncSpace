@@ -43,7 +43,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
             )}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 p-2 rounded-full hover:bg-white/10 duration-300"
+              className="text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 p-2 rounded-full hover:bg-white/10 duration-300 hover:rotate-90"
               title="Close"
             >
               <X size={20} />

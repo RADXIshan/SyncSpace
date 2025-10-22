@@ -104,7 +104,7 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
             </div>
             <button
               onClick={handleClose}
-              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10 border border-transparent shadow-md hover:shadow-lg duration-300"
+              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10 border border-transparent shadow-md hover:shadow-lg duration-300 hover:rotate-90"
             >
               <X size={20} />
             </button>

@@ -177,7 +177,7 @@ const Calendar = () => {
           
                 <button
                   onClick={() => setShowInfo(false)}
-                  className="ml-2 sm:ml-4 hover:text-violet-900 cursor-pointer p-1 rounded-full hover:bg-violet-200/50 transition-all duration-200 hover:scale-110 flex-shrink-0"
+                  className="ml-2 sm:ml-4 hover:text-violet-900 cursor-pointer p-2 rounded-full hover:bg-violet-200/50 transition-all duration-300 hover:scale-110 flex-shrink-0 hover:rotate-90 transform"
                   aria-label="Dismiss info"
                 >
                   <X size={16} className="sm:w-5 sm:h-5" />

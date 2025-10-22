@@ -21,7 +21,7 @@ const LandingNav = () => {
 
           {/* Nav Links */}
           <div className="flex gap-8 text-lg font-medium">
-            {["Home", "About", "Contact"].map((item) => (
+            {["Home", "Features", "FAQs", "Contact"].map((item) => (
               <a
                 key={item}
                 href={`#${item.toLowerCase()}`}

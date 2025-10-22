@@ -1082,11 +1082,11 @@ const ChannelPage = () => {
       {showChannelMenu && (
         <>
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={() => setShowChannelMenu(false)}
           />
-          
+
           {/* Menu */}
           <div className="absolute top-1 right-6 w-72 bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 animate-fadeIn overflow-hidden h-[calc(50vh-110px)]">
             {/* Header */}
@@ -1095,7 +1095,9 @@ const ChannelPage = () => {
                 <div className="p-2 rounded-full bg-violet-500/20">
                   <Hash size={18} className="text-violet-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Channel Settings</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  Channel Settings
+                </h3>
               </div>
               <button
                 onClick={() => setShowChannelMenu(false)}
@@ -1108,12 +1110,17 @@ const ChannelPage = () => {
             {/* Menu items */}
             <div className="p-4 space-y-2">
               {/* Show message if no permissions */}
-              {!(userPermissions?.manage_channels || userPermissions?.settings_access) && (
+              {!(
+                userPermissions?.manage_channels ||
+                userPermissions?.settings_access
+              ) && (
                 <div className="text-center py-6">
                   <div className="p-3 rounded-full bg-gray-500/20 w-fit mx-auto mb-3">
                     <Hash size={24} className="text-gray-400" />
                   </div>
-                  <p className="text-gray-300 text-sm font-medium">No actions available</p>
+                  <p className="text-gray-300 text-sm font-medium">
+                    No actions available
+                  </p>
                   <p className="text-gray-400 text-xs mt-1">
                     You don't have permission to manage this channel
                   </p>
@@ -1121,7 +1128,8 @@ const ChannelPage = () => {
               )}
 
               {/* Edit Channel - Only show if user has permission */}
-              {(userPermissions?.manage_channels || userPermissions?.settings_access) && (
+              {(userPermissions?.manage_channels ||
+                userPermissions?.settings_access) && (
                 <div
                   onClick={() => {
                     setShowEditChannelModal(true);
@@ -1147,7 +1155,8 @@ const ChannelPage = () => {
               )}
 
               {/* Delete Channel - Only show if user has permission */}
-              {(userPermissions?.manage_channels || userPermissions?.settings_access) && (
+              {(userPermissions?.manage_channels ||
+                userPermissions?.settings_access) && (
                 <div
                   onClick={handleDeleteChannelClick}
                   className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-red-500/10"

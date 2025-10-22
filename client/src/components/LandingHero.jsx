@@ -3,7 +3,7 @@ import landing_page_pic from "../assets/landing_page_pic.png";
 
 const LandingHero = () => {
   return (
-    <section className="min-h-[calc(100vh-4rem)] flex mt-14 justify-center items-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 pt-28">
+    <section className="min-h-[calc(100vh-4rem)] flex mt-14 justify-center items-center py-12 px-4 sm:px-6 lg:px-8 pt-28">
         <div className="max-w-7xl mx-auto w-full">
           <div className="flex flex-col sm:flex-row items-center gap-12 mb-8 sm:mb-16">
             <div className="flex-1 space-y-8">

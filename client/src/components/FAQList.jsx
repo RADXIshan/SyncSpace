@@ -33,7 +33,7 @@ const FAQList = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-gray-100)] to-[var(--color-gray-50)] text-[var(--color-accent)] flex flex-col items-center py-20 px-6 sm:px-8 lg:px-12 transition-colors duration-500">
+      <div className="min-h-screen text-[var(--color-accent)] flex flex-col items-center py-20 px-6 sm:px-8 lg:px-12 transition-colors duration-500">
         <div className="w-full text-center mb-14">
           <header className="text-6xl font-bold tracking-tight">
             Frequently Asked <span className="gradient-text">Questions</span>

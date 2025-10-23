@@ -1105,7 +1105,7 @@ export const transferOwnership = async (req, res) => {
 
     // Check if current user is the organization creator
     const [organization] = await sql`
-      SELECT created_by, name
+      SELECT created_by, org_name
       FROM organisations
       WHERE org_id = ${org_id}
       LIMIT 1
@@ -1123,7 +1123,7 @@ export const transferOwnership = async (req, res) => {
     const [newOwner] = await sql`
       SELECT om.user_id, u.name, u.email
       FROM org_members om
-      LEFT JOIN users u ON u.user_id = om.user_id
+      JOIN users u ON u.user_id = om.user_id
       WHERE om.org_id = ${org_id} AND om.user_id = ${new_owner_id}
       LIMIT 1
     `;
@@ -1132,39 +1132,36 @@ export const transferOwnership = async (req, res) => {
       return res.status(400).json({ message: "New owner must be a member of the organization" });
     }
 
-    // Start transaction
-    await sql.begin(async (sql) => {
-      // Update organization creator
-      await sql`
-        UPDATE organisations
-        SET created_by = ${new_owner_id}
-        WHERE org_id = ${org_id}
-      `;
+    // Update organization creator
+    await sql`
+      UPDATE organisations
+      SET created_by = ${new_owner_id}
+      WHERE org_id = ${org_id}
+    `;
 
-      // Update the new owner's role to 'creator' if they don't already have it
+    // Update the new owner's role to 'creator' if they don't already have it
+    await sql`
+      UPDATE org_members
+      SET role = 'creator'
+      WHERE org_id = ${org_id} AND user_id = ${new_owner_id}
+    `;
+
+    // Update the old owner's role to a default role (first available role that's not creator)
+    const [defaultRole] = await sql`
+      SELECT role_name
+      FROM org_roles
+      WHERE org_id = ${org_id} AND LOWER(role_name) != 'creator'
+      ORDER BY role_name
+      LIMIT 1
+    `;
+
+    if (defaultRole) {
       await sql`
         UPDATE org_members
-        SET role = 'creator'
-        WHERE org_id = ${org_id} AND user_id = ${new_owner_id}
+        SET role = ${defaultRole.role_name}
+        WHERE org_id = ${org_id} AND user_id = ${userId}
       `;
-
-      // Update the old owner's role to a default role (first available role that's not creator)
-      const [defaultRole] = await sql`
-        SELECT role_name
-        FROM org_roles
-        WHERE org_id = ${org_id} AND LOWER(role_name) != 'creator'
-        ORDER BY role_name
-        LIMIT 1
-      `;
-
-      if (defaultRole) {
-        await sql`
-          UPDATE org_members
-          SET role = ${defaultRole.role_name}
-          WHERE org_id = ${org_id} AND user_id = ${userId}
-        `;
-      }
-    });
+    }
 
     res.status(200).json({
       message: "Ownership transferred successfully",

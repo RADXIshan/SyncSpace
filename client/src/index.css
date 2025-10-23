@@ -85,6 +85,27 @@
   border: none !important;
 }
 
+@media (max-width:768px) {
+  .fc-button-primary{
+    padding: 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+  .fc-header-toolbar{
+    padding: 0.5rem 0.5rem !important;
+  }
+  .fc-button-group{
+    flex-wrap: wrap !important;
+  }
+  .fc-toolbar-chunk {
+    display: flex !important;
+    flex-direction: row !important;
+  }
+  .fc-toolbar-title{
+    padding: 0rem 0.5rem !important;
+    text-align: center;
+  }
+}
+
 /* React DatePicker - Light Glassy Theme */
 .react-datepicker--light .react-datepicker {
   background: rgba(255, 255, 255, 0.95);

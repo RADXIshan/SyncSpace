@@ -738,7 +738,7 @@ const ChannelPage = () => {
                             key={note.note_id}
                             className={`rounded-2xl transition-all flex ${
                               userPermissions?.notes_access
-                                ? "hover:shadow-lg hover:-translate-y-1"
+                                ? "hover:shadow-lg hover:shadow-purple-300 hover:-translate-y-1 duration-300"
                                 : ""
                             } ${
                               note.pinned

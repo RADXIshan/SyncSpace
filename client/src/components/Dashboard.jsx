@@ -80,7 +80,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
   }
 
   return (
-    <div className="max-h-screen p-6">
+    <div className="max-h-screen p-6 bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 relative">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* ---------------- HEADER ---------------- */}
         <header className="flex justify-between items-center gap-4 p-6">

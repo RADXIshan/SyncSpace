@@ -179,7 +179,7 @@ const ChannelPage = () => {
         );
         const allMembers = membersRes.data.members || [];
         const filtered = allMembers.filter((member) => {
-          if (member.isCreator) return true;
+          if (member.isOwner) return true;
           if (
             !Array.isArray(member.accessible_teams) ||
             member.accessible_teams.length === 0
@@ -1066,7 +1066,7 @@ const ChannelPage = () => {
                               getRoleStyle(member.role).border
                             } rounded flex items-center gap-1`}
                           >
-                            {member.isCreator && (
+                            {member.isOwner && (
                               <Crown
                                 size={12}
                                 className={`${

@@ -6,7 +6,7 @@ import ConfirmationModal from "./ConfirmationModal";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 
 const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, onSuccess }) => {
-  const isCreator = userPermissions?.isCreator || false;
+  const isOwner = userPermissions?.isOwner || false;
   const [orgName, setOrgName] = useState(organization?.name || "");
   const [accessLevel, setAccessLevel] = useState(organization?.accessLevel || "invite-only");
   const [channels, setChannels] = useState(() => {
@@ -136,7 +136,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
   };
 
   const canManageUsers = () => {
-    return userPermissions?.isCreator || userPermissions?.manage_users || false;
+    return userPermissions?.isOwner || userPermissions?.manage_users || false;
   };
 
   // Check for unsaved changes
@@ -536,6 +536,12 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
       return toast.error("Please enter an organization name");
     }
 
+    // Check for Owner role in roles
+    const hasOwnerRole = roles.some((r) => r.name.trim().toLowerCase() === 'owner');
+    if (hasOwnerRole) {
+      return toast.error("The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.");
+    }
+
       if (!hasUnsavedChanges) {
          toast("No changes to update");
           return;
@@ -740,8 +746,8 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
     // Members tab is always visible to organization members
     tabs.push({ id: "members", label: "Members", icon: Users });
     
-    // Danger Zone tab - only visible to organization creators
-    if (isCreator) {
+    // Danger Zone tab - only visible to organization owners
+    if (isOwner) {
       tabs.push({ id: "danger", label: "Delete Organization", icon: AlertTriangle });
     }
     
@@ -1293,7 +1299,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                     <p className="text-sm font-medium text-white truncate">
                                       {member.name}
                                     </p>
-                                    {member.isCreator && (
+                                    {member.isOwner && (
                                       <Crown size={12} className="text-yellow-400 flex-shrink-0" />
                                     )}
                                   </div>
@@ -1319,7 +1325,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                 </div>
                               </div>
                               
-                              {canManageUsers() && !member.isCreator && (
+                              {canManageUsers() && !member.isOwner && (
                                 <div className="flex items-center space-x-2">
                                   {editingMember === member.id ? (
                                     <div className="flex items-center space-x-2">
@@ -1331,7 +1337,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                       >
                                         {organization?.roles && organization.roles.length > 0 ? (
                                           organization.roles
-                                            .filter(role => role.name.toLowerCase() !== 'creator') // Exclude Creator role from dropdown
+                                            .filter(role => role.name.toLowerCase() !== 'owner') // Exclude Owner role from dropdown
                                             .map((role) => (
                                               <option key={role.id || role.name} value={role.name} className="bg-gray-800 text-white">
                                                 {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
@@ -1433,7 +1439,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                 </div>
               )}
 
-              {activeTab === "danger" && isCreator && (
+              {activeTab === "danger" && isOwner && (
                 <div className="space-y-6">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xl font-semibold text-red-400 flex items-center gap-2">
@@ -1451,7 +1457,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                           Transfer Ownership
                         </h4>
                         <p className="text-orange-400/80 text-sm mb-4 leading-relaxed">
-                          Transfer ownership of this organization to another member. You will lose all creator privileges 
+                          Transfer ownership of this organization to another member. You will lose all owner privileges 
                           and the new owner will have full control over the organization.
                         </p>
                         
@@ -1460,7 +1466,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                             <button
                               type="button"
                               onClick={() => setShowTransferOwnership(true)}
-                              disabled={!membersLoading && members.filter(member => !member.isCreator).length === 0}
+                              disabled={!membersLoading && members.filter(member => !member.isOwner).length === 0}
                               className="flex items-center px-4 py-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 text-sm font-medium cursor-pointer shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Crown size={16} className="mr-2" />
@@ -1489,13 +1495,13 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                                     {membersLoading ? "Loading members..." : "Select a member..."}
                                   </option>
                                   {!membersLoading && members
-                                    .filter(member => !member.isCreator)
+                                    .filter(member => !member.isOwner)
                                     .map((member) => (
                                       <option key={member.id} value={member.id} className="bg-gray-800 text-white">
                                         {member.name} ({member.email})
                                       </option>
                                     ))}
-                                  {!membersLoading && members.filter(member => !member.isCreator).length === 0 && (
+                                  {!membersLoading && members.filter(member => !member.isOwner).length === 0 && (
                                     <option value="" disabled className="bg-gray-800 text-gray-400">
                                       No eligible members found
                                     </option>
@@ -1535,7 +1541,7 @@ const OrgSettingsModal = ({ organization, userRole, userPermissions, onClose, on
                               <button
                                 type="button"
                                 onClick={handleTransferOwnership}
-                                disabled={!selectedNewOwner || transferConfirmation !== organization?.name || loading || membersLoading || members.filter(member => !member.isCreator).length === 0}
+                                disabled={!selectedNewOwner || transferConfirmation !== organization?.name || loading || membersLoading || members.filter(member => !member.isOwner).length === 0}
                                 className="flex items-center px-4 py-2 bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40 rounded-lg text-orange-200 hover:text-orange-100 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                               >
                                 {loading ? (

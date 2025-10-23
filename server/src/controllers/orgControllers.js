@@ -37,10 +37,10 @@ export const createOrganization = async (req, res) => {
       RETURNING org_id, org_name, access_level, org_code, created_by
     `;
 
-    // --- Add creator with special Creator role ---
+    // --- Add owner with special Owner role ---
     await sql`
       INSERT INTO org_members (org_id, user_id, role, joined_at)
-      VALUES (${newOrg.org_id}, ${userId}, 'Creator', NOW())
+      VALUES (${newOrg.org_id}, ${userId}, 'Owner', NOW())
     `;
 
     // --- Create channels ---
@@ -70,6 +70,14 @@ export const createOrganization = async (req, res) => {
       for (const role of roles) {
         if (role.name?.trim()) {
           const roleName = role.name.trim().toLowerCase();
+          
+          // Prevent creating Owner role
+          if (roleName === 'owner') {
+            return res.status(400).json({
+              message: "The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.",
+            });
+          }
+          
           if (roleNames.has(roleName)) {
             return res.status(400).json({
               message: `Duplicate role name: ${role.name.trim()}`,
@@ -170,10 +178,10 @@ export const getOrganization = async (req, res) => {
       LIMIT 1
     `;
 
-    const isCreator = organization.created_by === userId;
+    const isOwner = organization.created_by === userId;
     const accessibleTeams = memberWithRole?.accessible_teams || null;
 
-    if (!isCreator && Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
+    if (!isOwner && Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
       channels = channels.filter(ch => accessibleTeams.includes(ch.channel_name));
     }
 
@@ -350,7 +358,7 @@ export const leaveOrganization = async (req, res) => {
       return res.status(400).json({ message: "You are not a member of any organization" });
     }
 
-    // Check if user is the creator/admin of the organization
+    // Check if user is the owner/admin of the organization
     const [org] = await sql`
       SELECT created_by
       FROM organisations
@@ -359,7 +367,7 @@ export const leaveOrganization = async (req, res) => {
     `;
 
     if (org?.created_by === userId) {
-      return res.status(400).json({ message: "Organization creator cannot leave. Please transfer ownership or delete the organization." });
+      return res.status(400).json({ message: "Organization owner cannot leave. Please transfer ownership or delete the organization." });
     }
 
     // Remove user from org_members
@@ -407,7 +415,7 @@ export const getUserRole = async (req, res) => {
       return res.status(404).json({ message: "User is not a member of this organization" });
     }
 
-    // Check if user is organization creator (has full access)
+    // Check if user is organization owner (has full access)
     const [org] = await sql`
       SELECT created_by
       FROM organisations
@@ -415,23 +423,23 @@ export const getUserRole = async (req, res) => {
       LIMIT 1
     `;
 
-    const isCreator = org?.created_by === userId;
+    const isOwner = org?.created_by === userId;
 
     res.status(200).json({
       message: "User role retrieved successfully",
       role: member.role,
       permissions: {
-        settings_access: isCreator || member.settings_access || false,
-        manage_channels: isCreator || member.manage_channels || false,
-        manage_users: isCreator || member.manage_users || false,
-        notes_access: isCreator || member.notes_access || false,
-        meeting_access: isCreator || member.meeting_access || false,
-        noticeboard_access: isCreator || member.noticeboard_access || false,
-        roles_access: isCreator || member.roles_access || false,
-        invite_access: isCreator || member.invite_access || false,
-        isCreator: isCreator, // Include isCreator in permissions object
+        settings_access: isOwner || member.settings_access || false,
+        manage_channels: isOwner || member.manage_channels || false,
+        manage_users: isOwner || member.manage_users || false,
+        notes_access: isOwner || member.notes_access || false,
+        meeting_access: isOwner || member.meeting_access || false,
+        noticeboard_access: isOwner || member.noticeboard_access || false,
+        roles_access: isOwner || member.roles_access || false,
+        invite_access: isOwner || member.invite_access || false,
+        isOwner: isOwner, // Include isOwner in permissions object
       },
-      isCreator,
+      isOwner,
     });
   } catch (error) {
     console.error("Error retrieving user role:", error);
@@ -469,10 +477,10 @@ export const updateOrganization = async (req, res) => {
       return res.status(403).json({ message: "You are not a member of this organization" });
     }
 
-    const isCreator = org?.created_by === userId;
-    const hasSettingsAccess = isCreator || member.settings_access;
-    const hasChannelAccess = isCreator || member.manage_channels;
-    const hasRolesAccess = isCreator || member.roles_access;
+    const isOwner = org?.created_by === userId;
+    const hasSettingsAccess = isOwner || member.settings_access;
+    const hasChannelAccess = isOwner || member.manage_channels;
+    const hasRolesAccess = isOwner || member.roles_access;
 
     // Determine what user is trying to update
     const updatingBasicSettings = name || accessLevel;
@@ -563,6 +571,14 @@ export const updateOrganization = async (req, res) => {
       for (const role of roles) {
         if (role.name?.trim()) {
           const roleName = role.name.trim().toLowerCase();
+          
+          // Prevent creating Owner role
+          if (roleName === 'owner') {
+            return res.status(400).json({
+              message: "The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.",
+            });
+          }
+          
           if (roleNames.has(roleName)) {
             return res.status(400).json({
               message: `Duplicate role name: ${role.name.trim()}`,
@@ -641,7 +657,7 @@ export const getOrganizationMembers = async (req, res) => {
       return res.status(403).json({ message: "You are not a member of this organization" });
     }
 
-    const isCreator = org?.created_by === userId;
+    const isOwner = org?.created_by === userId;
 
     // Get all members of the organization with user details and their role's accessible teams
     const members = await sql`
@@ -671,9 +687,9 @@ export const getOrganizationMembers = async (req, res) => {
         role: memberItem.role,
         joinedAt: memberItem.joined_at,
         accessible_teams: Array.isArray(memberItem.accessible_teams) ? memberItem.accessible_teams : [],
-        isCreator: memberItem.user_id === org?.created_by
+        isOwner: memberItem.user_id === org?.created_by
       })),
-      canManage: isCreator || member.manage_users
+      canManage: isOwner || member.manage_users
     });
   } catch (error) {
     console.error("Error retrieving organization members:", error);
@@ -717,8 +733,8 @@ export const updateMemberRole = async (req, res) => {
       return res.status(403).json({ message: "You are not a member of this organization" });
     }
 
-    const isCreator = org?.created_by === userId;
-    const canManageUsers = isCreator || currentMember.manage_users;
+    const isOwner = org?.created_by === userId;
+    const canManageUsers = isOwner || currentMember.manage_users;
 
     if (!canManageUsers) {
       return res.status(403).json({ message: "You don't have permission to manage users" });
@@ -736,14 +752,14 @@ export const updateMemberRole = async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    // Prevent changing creator's role
+    // Prevent changing owner's role
     if (targetMember.user_id === org?.created_by) {
-      return res.status(400).json({ message: "Cannot change the role of organization creator" });
+      return res.status(400).json({ message: "Cannot change the role of organization owner" });
     }
 
-    // Prevent assigning the Creator role to anyone
-    if (role.trim() === 'Creator') {
-      return res.status(400).json({ message: "The Creator role cannot be assigned. It is reserved for the organization creator." });
+    // Prevent assigning the Owner role to anyone
+    if (role.trim() === 'Owner') {
+      return res.status(400).json({ message: "The Owner role cannot be assigned. It is reserved for the organization owner." });
     }
 
     // Check if the role exists in the organization
@@ -804,8 +820,8 @@ export const removeMember = async (req, res) => {
       return res.status(403).json({ message: "You are not a member of this organization" });
     }
 
-    const isCreator = org?.created_by === userId;
-    const canManageUsers = isCreator || currentMember.manage_users;
+    const isOwner = org?.created_by === userId;
+    const canManageUsers = isOwner || currentMember.manage_users;
 
     if (!canManageUsers) {
       return res.status(403).json({ message: "You don't have permission to manage users" });
@@ -823,9 +839,9 @@ export const removeMember = async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    // Prevent removing organization creator
+    // Prevent removing organization owner
     if (targetMember.user_id === org?.created_by) {
-      return res.status(400).json({ message: "Cannot remove organization creator" });
+      return res.status(400).json({ message: "Cannot remove organization owner" });
     }
 
     // Remove member from organization
@@ -859,7 +875,7 @@ export const deleteOrganization = async (req, res) => {
     const userId = verifyToken(req);
     const org_id = req.params.org_id;
 
-    // Get organization details and verify creator
+    // Get organization details and verify owner
     const [org] = await sql`
       SELECT created_by, org_name
       FROM organisations
@@ -871,9 +887,9 @@ export const deleteOrganization = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
-    // Only organization creator can delete the organization
+    // Only organization owner can delete the organization
     if (org.created_by !== userId) {
-      return res.status(403).json({ message: "Only the organization creator can delete the organization" });
+      return res.status(403).json({ message: "Only the organization owner can delete the organization" });
     }
 
     // Delete all related data sequentially
@@ -940,7 +956,7 @@ export const sendInvitations = async (req, res) => {
       return res.status(403).json({ message: "You are not a member of this organization" });
     }
 
-    const isCreator = org?.created_by === userId;
+    const isOwner = org?.created_by === userId;
     
     // Check access level permissions based on organization settings
     const hasInviteAccess = member.invite_access === true; // Handle null/undefined values
@@ -948,23 +964,23 @@ export const sendInvitations = async (req, res) => {
     if (org?.access_level === 'public') {
       // Public: Anyone can join directly using the code, no invitation needed
       // But members can still send invitations if they have invite_access
-      if (!isCreator && member.role !== 'admin' && !hasInviteAccess) {
+      if (!isOwner && member.role !== 'admin' && !hasInviteAccess) {
         return res.status(403).json({ 
           message: "You don't have permission to send invitations. Please ask an admin or get 'Invite Access' permission." 
         });
       }
     } else if (org?.access_level === 'invite-only') {
       // Invite-only: Only permitted members can invite
-      if (!isCreator && member.role !== 'admin' && !hasInviteAccess) {
+      if (!isOwner && member.role !== 'admin' && !hasInviteAccess) {
         return res.status(403).json({ 
           message: "You don't have permission to send invitations. Please ask an admin or get 'Invite Access' permission." 
         });
       }
     } else if (org?.access_level === 'admin-only') {
-      // Admin-only: Only creator or admins can invite
-      if (!isCreator && member.role !== 'admin') {
+      // Admin-only: Only owner or admins can invite
+      if (!isOwner && member.role !== 'admin') {
         return res.status(403).json({ 
-          message: "Only the organization creator or admins can send invitations in this organization." 
+          message: "Only the organization owner or admins can send invitations in this organization." 
         });
       }
     }
@@ -1046,17 +1062,17 @@ export const getChannel = async (req, res) => {
       return res.status(404).json({ message: "Channel not found" });
     }
 
-    // Enforce channel access based on role's accessible_teams unless user is creator
-    const [orgForCreator] = await sql`
+    // Enforce channel access based on role's accessible_teams unless user is owner
+    const [orgForOwner] = await sql`
       SELECT created_by
       FROM organisations
       WHERE org_id = ${org_id}
       LIMIT 1
     `;
 
-    const isCreator = orgForCreator?.created_by === userId;
+    const isOwner = orgForOwner?.created_by === userId;
 
-    if (!isCreator) {
+    if (!isOwner) {
       const [memberWithRole] = await sql`
         SELECT r.accessible_teams
         FROM org_members om
@@ -1103,7 +1119,7 @@ export const transferOwnership = async (req, res) => {
       return res.status(400).json({ message: "New owner ID is required" });
     }
 
-    // Check if current user is the organization creator
+    // Check if current user is the organization owner
     const [organization] = await sql`
       SELECT created_by, org_name
       FROM organisations
@@ -1116,7 +1132,7 @@ export const transferOwnership = async (req, res) => {
     }
 
     if (organization.created_by !== userId) {
-      return res.status(403).json({ message: "Only the organization creator can transfer ownership" });
+      return res.status(403).json({ message: "Only the organization owner can transfer ownership" });
     }
 
     // Check if new owner is a member of the organization
@@ -1132,25 +1148,25 @@ export const transferOwnership = async (req, res) => {
       return res.status(400).json({ message: "New owner must be a member of the organization" });
     }
 
-    // Update organization creator
+    // Update organization owner
     await sql`
       UPDATE organisations
       SET created_by = ${new_owner_id}
       WHERE org_id = ${org_id}
     `;
 
-    // Update the new owner's role to 'creator' if they don't already have it
+    // Update the new owner's role to 'Owner' if they don't already have it
     await sql`
       UPDATE org_members
-      SET role = 'creator'
+      SET role = 'Owner'
       WHERE org_id = ${org_id} AND user_id = ${new_owner_id}
     `;
 
-    // Update the old owner's role to a default role (first available role that's not creator)
+    // Update the old owner's role to a default role (first available role that's not Owner)
     const [defaultRole] = await sql`
       SELECT role_name
       FROM org_roles
-      WHERE org_id = ${org_id} AND LOWER(role_name) != 'creator'
+      WHERE org_id = ${org_id} AND LOWER(role_name) != 'owner'
       ORDER BY role_name
       LIMIT 1
     `;
@@ -1203,9 +1219,9 @@ export const updateChannel = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
-    const isCreator = org.created_by === userId;
+    const isOwner = org.created_by === userId;
 
-    if (!isCreator) {
+    if (!isOwner) {
       const [member] = await sql`
         SELECT r.manage_channels, r.settings_access
         FROM org_members om
@@ -1286,9 +1302,9 @@ export const deleteChannel = async (req, res) => {
       return res.status(404).json({ message: "Organization not found" });
     }
 
-    const isCreator = org.created_by === userId;
+    const isOwner = org.created_by === userId;
 
-    if (!isCreator) {
+    if (!isOwner) {
       const [member] = await sql`
         SELECT r.manage_channels, r.settings_access
         FROM org_members om

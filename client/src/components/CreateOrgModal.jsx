@@ -184,6 +184,10 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
     const invalidRoles = roles.some((r) => !r.name.trim());
     if (invalidRoles) return toast.error("All roles must have a name");
 
+    // Check for Owner role
+    const hasOwnerRole = roles.some((r) => r.name.trim().toLowerCase() === 'owner');
+    if (hasOwnerRole) return toast.error("The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.");
+
     const roleNames = roles.map((r) => r.name.trim().toLowerCase());
     if (new Set(roleNames).size !== roleNames.length)
       return toast.error("Role names must be unique");

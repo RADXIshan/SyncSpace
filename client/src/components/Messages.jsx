@@ -32,7 +32,7 @@ const Messages = () => {
       'text-zinc-200': 'text-zinc-700',
       'text-stone-200': 'text-stone-700',
       'text-neutral-200': 'text-neutral-700',
-      'text-yellow-200': 'text-yellow-800', // Special case for Creator role
+      'text-yellow-200': 'text-yellow-800', // Special case for Owner role
       'text-gray-300': 'text-gray-700'
     };
     
@@ -80,7 +80,7 @@ const Messages = () => {
     {
       id: 4,
       name: 'David Kim',
-      role: 'Creator',
+      role: 'Owner',
       avatar: null,
       lastMessage: 'Meeting rescheduled to 3 PM tomorrow',
       timestamp: '2 hours ago',

@@ -113,10 +113,10 @@ const NoticeBoard = ({ orgId, className = "" }) => {
         
         setUserPermissions(permissions);
         
-        // User has notice access if they have the permission OR are the org creator
-        const isCreator = organization.created_by === user.user_id;
+        // User has notice access if they have the permission OR are the org owner
+        const isOwner = organization.created_by === user.user_id;
         const hasPermission = Boolean(permissions.noticeboard_access);
-        setHasNoticeAccess(isCreator || hasPermission);
+        setHasNoticeAccess(isOwner || hasPermission);
       } catch (err) {
         console.error("Error fetching permissions:", err);
         setUserPermissions(null);
@@ -273,7 +273,7 @@ const NoticeBoard = ({ orgId, className = "" }) => {
                                 <span 
                                   className={`px-2 py-1 rounded-md text-xs font-medium border ${getRoleStyle(notice.created_by_role).background} ${getRoleStyle(notice.created_by_role).border} ${getRoleStyle(notice.created_by_role).text}`}
                                 >
-                                  {notice.created_by_role}
+                                  {notice.created_by_role[0].toUpperCase() + notice.created_by_role.slice(1).toLowerCase()}
                                 </span>
                               )}
                             </div>

@@ -125,19 +125,19 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
   // Check if user can invite others
   const canInvite = () => {
     if (!userPermissions || !organization) return false;
-    const isCreator = userPermissions.isCreator || false;
+    const isOwner = userPermissions.isOwner || false;
     const hasInviteAccess = userPermissions.invite_access === true; // Handle null/undefined values
     
     // Check based on organization access level
     if (organization.accessLevel === 'public') {
       // Public: Anyone can join directly, but members need invite_access to send invitations
-      return isCreator || userRole === 'admin' || hasInviteAccess;
+      return isOwner || userRole === 'admin' || hasInviteAccess;
     } else if (organization.accessLevel === 'invite-only') {
       // Invite-only: Only permitted members can invite
-      return isCreator || userRole === 'admin' || hasInviteAccess;
+      return isOwner || userRole === 'admin' || hasInviteAccess;
     } else if (organization.accessLevel === 'admin-only') {
-      // Admin-only: Only creator or admins can invite
-      return isCreator || userRole === 'admin';
+      // Admin-only: Only owner or admins can invite
+      return isOwner || userRole === 'admin';
     }
     
     return false;
@@ -396,7 +396,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
               </div>
               {organization && userRole && (
                 <div className={`px-2 py-0.5 ${getRoleStyle(userRole).background} border ${getRoleStyle(userRole).border} rounded flex items-center gap-1 flex-shrink-0`}>
-                  {userPermissions?.isCreator && (
+                  {userPermissions?.isOwner && (
                     <Crown size={9} className={`${getRoleStyle(userRole).text} flex-shrink-0`} />
                   )}
                   <span className={`text-xs font-medium ${getRoleStyle(userRole).text} capitalize`}>

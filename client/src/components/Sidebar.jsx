@@ -259,8 +259,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
           : 'w-64'
         }
       `}>
-        <div className="p-4 border-b border-slate-700/50">
-          <h1><span className="text-2xl font-bold gradient-text">SyncSpace</span></h1>
+        <div className="p-3.5 border-b border-slate-700/50">
+          <h1><span className="text-2xl font-bold gradient-text tracking-wider">SyncSpace</span></h1>
         </div>
       
       <div className="flex-1 overflow-y-auto">
@@ -271,14 +271,14 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
               to={item.path}
               className={`flex items-center px-3 py-3 transition-all duration-300 bg-gradient-to-r font-medium group ${
                 isActive(item.path)
-                  ? 'from-purple-600 to-indigo-600 text-white shadow-purple-500/20'
-                  : 'hover:bg-slate-800 text-slate-300 hover:text-violet-300'
+                  ? 'from-purple-600 to-indigo-600 text-white shadow-purple-500/20 transition-all duration-300'
+                  : 'hover:bg-slate-800 text-slate-300 transition-all duration-300 hover:text-violet-300'
               }`}
             >
               <span className={`mr-3 transition-all duration-300 group-hover:scale-110 ${
-                isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-violet-400 duration-300'
+                isActive(item.path) ? 'text-white' : 'text-slate-400 transition-all duration-300 group-hover:text-violet-400'
               }`}>{React.cloneElement(item.icon, { size: 20 })}</span>
-              <span className="text-sm  font-medium">{item.name}</span>
+              <span className="text-md tracking-wide">{item.name}</span>
             </Link>
           ))}
         </nav>
@@ -395,11 +395,11 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
                 <p className="text-xs text-slate-400 ml-1.5 font-medium">Online</p>
               </div>
               {organization && userRole && (
-                <div className={`px-2 py-0.5 ${getRoleStyle(userRole).background} border ${getRoleStyle(userRole).border} rounded flex items-center gap-1 flex-shrink-0`}>
+                <div className={`px-2 py-1 ${getRoleStyle(userRole).background} border ${getRoleStyle(userRole).border} rounded-md flex items-center gap-1 flex-shrink-0`}>
                   {userPermissions?.isOwner && (
                     <Crown size={9} className={`${getRoleStyle(userRole).text} flex-shrink-0`} />
                   )}
-                  <span className={`text-xs font-medium ${getRoleStyle(userRole).text} capitalize`}>
+                  <span className={`text-xs font-medium ${getRoleStyle(userRole).text} capitalize `}>
                     {userRole}
                   </span>
                 </div>

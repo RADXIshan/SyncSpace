@@ -3,9 +3,15 @@ import { useNavigate } from "react-router";
 import NoticeBoard from "./NoticeBoard";
 import { useAuth } from "../context/AuthContext";
 
-const JoinedOrgDash = ({ activities }) => {
+const JoinedOrgDash = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const activities = [
+    "Alex pushed updates to repo 🚀",
+    "Meeting scheduled for 4:30 PM 📅",
+    "Mira joined #frontend channel 💬",
+  ];
 
   return (
     <>

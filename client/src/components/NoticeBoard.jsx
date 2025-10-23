@@ -193,9 +193,9 @@ const NoticeBoard = ({ orgId, className = "" }) => {
               <button 
                 onClick={() => setShowCreateModal(true)}
                 title="Create New Notice"
-                className="p-3 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg group/plus cursor-pointer"
+                className="p-2 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform active:scale-95 shadow-lg group/plus cursor-pointer"
               >
-                <Plus size={20} className="group-hover/plus:rotate-90 transition-transform duration-300" />
+                <Plus size={20} className="group-hover/plus:rotate-90 group-hover/plus:scale-120 transition-transform duration-300" />
               </button>
             )}
           </div>

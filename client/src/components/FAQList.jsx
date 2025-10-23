@@ -33,20 +33,20 @@ const FAQList = () => {
 
   return (
     <>
-      <div className="min-h-screen text-[var(--color-accent)] flex flex-col items-center py-20 px-6 sm:px-8 lg:px-12 transition-colors duration-500">
-        <div className="w-full text-center mb-14">
-          <header className="text-6xl font-bold tracking-tight">
+      <div id="faqs" className="min-h-screen text-[var(--color-accent)] flex flex-col items-center py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 transition-colors duration-500">
+        <div className="w-full text-center mb-8 sm:mb-12 lg:mb-14">
+          <header className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
             Frequently Asked <span className="gradient-text">Questions</span>
           </header>
 
-          <p className="text-[var(--color-gray-600)] mt-3 text-base sm:text-lg italic">
+          <p className="text-[var(--color-gray-600)] mt-3 text-sm sm:text-base lg:text-lg italic max-w-2xl mx-auto">
             Find quick answers to our most commonly asked questions.
           </p>
 
-          <div className="mt-4 w-24 h-1 mx-auto bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] rounded-full">
+          <div className="mt-4 w-16 sm:w-20 lg:w-24 h-1 mx-auto bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] rounded-full">
           </div>
         </div>
-        <div className="w-full max-w-3xl space-y-5">
+        <div className="w-full max-w-4xl space-y-4 sm:space-y-5">
           {faqs.map((faq, index) => (
             <div
               key={index}
@@ -58,7 +58,7 @@ const FAQList = () => {
             >
               {/* ✅ Entire row clickable now */}
               <div
-                className={`flex items-center justify-between p-6 cursor-pointer select-none transition-all duration-500 ${
+                className={`flex items-center justify-between p-4 sm:p-5 lg:p-6 cursor-pointer select-none transition-all duration-500 ${
                   openIndex === index
                     ? "bg-gradient-to-r from-[var(--color-secondary)]/10 to-[var(--color-info)]/10"
                     : "hover:bg-[var(--color-gray-100)]"
@@ -67,12 +67,12 @@ const FAQList = () => {
                   setOpenIndex(openIndex === index ? null : index)
                 }
               >
-                <p className="font-semibold text-lg sm:text-xl text-[var(--color-accent)] group-hover:text-[var(--color-secondary)] transition-colors duration-300">
+                <p className="font-semibold text-base sm:text-lg lg:text-xl text-[var(--color-accent)] group-hover:text-[var(--color-secondary)] transition-colors duration-300 pr-4">
                   {faq.q}
                 </p>
 
                 <ChevronDown
-                  className={`w-6 h-6 text-[var(--color-secondary)] transition-transform duration-300 ${
+                  className={`w-5 h-5 sm:w-6 sm:h-6 text-[var(--color-secondary)] transition-transform duration-300 flex-shrink-0 ${
                     openIndex === index
                       ? "rotate-180 text-[var(--color-info)]"
                       : ""
@@ -81,9 +81,9 @@ const FAQList = () => {
               </div>
 
               <div
-                className={`px-6 text-[var(--color-gray-700)] text-sm sm:text-base leading-relaxed overflow-hidden transition-all duration-300 ease-out ${
+                className={`px-4 sm:px-5 lg:px-6 text-[var(--color-gray-700)] text-sm sm:text-base leading-relaxed overflow-hidden transition-all duration-300 ease-out ${
                   openIndex === index
-                    ? "max-h-40 py-3 opacity-100"
+                    ? "max-h-40 py-3 sm:py-4 opacity-100"
                     : "max-h-0 opacity-0"
                 }`}
               >

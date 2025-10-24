@@ -18,17 +18,17 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
       <div className="relative w-full max-w-3xl max-h-[98vh] sm:max-h-[95vh] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
         <div className="relative overflow-y-auto max-h-[98vh] sm:max-h-[95vh] px-4 py-6 sm:px-8 sm:py-10">
           
           {/* Header */}
           <div className="flex items-center justify-between mb-6 sm:mb-8">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-purple-500/20 border border-purple-500/30">
-                <Pin size={22} className="text-purple-400" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
+                <Pin size={24} className="text-white sm:w-8 sm:h-8" />
               </div>
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-white">Notice Details</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Notice Details</h2>
               </div>
             </div>
             
@@ -45,10 +45,10 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
               )}
               <button
                 onClick={onClose}
-                className="p-2 rounded-full hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all transform hover:scale-110 active:scale-95 cursor-pointer hover:shadow-lg duration-300 hover:rotate-90"
+                className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 duration-300"
                 title="Close"
               >
-                <X size={20} />
+                <X size={22} className="sm:w-6 sm:h-6" />
               </button>
             </div>
           </div>
@@ -56,7 +56,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
           {/* Notice Content */}
           <div className="space-y-6 sm:space-y-8">
             {/* Title Section */}
-            <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-2xl p-6 border border-purple-500/20">
+            <div className="bg-gray-800/80 rounded-2xl p-6 border border-gray-600/50">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight mb-4">
                 {notice.title}
               </h1>
@@ -102,7 +102,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
 
             {/* Author Info */}
             {notice.created_by_name && (
-              <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-2xl p-6 border border-gray-600/50">
+              <div className="bg-gray-800/80 rounded-2xl p-6 border border-gray-600/50">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
                   <h3 className="text-lg font-semibold text-blue-300">Author Information</h3>
@@ -140,7 +140,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 sm:pt-8 mt-6 sm:mt-8 border-t border-gray-700/50">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-6 sm:pt-8 mt-6 sm:mt-8 border-t border-gray-700/50">
             <button
               onClick={onClose}
               className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"

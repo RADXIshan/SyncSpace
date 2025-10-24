@@ -1,4 +1,4 @@
-function Footer() {
+const FooterNote = () => {
   return (
     <footer className="gradient-bg text-white w-full min-h-100 flex flex-col items-center justify-between border-t border-[var(--color-accent)] relative overflow-hidden">
       
@@ -61,4 +61,4 @@ function Footer() {
   );
 }
 
-export default Footer;
+export default FooterNote;

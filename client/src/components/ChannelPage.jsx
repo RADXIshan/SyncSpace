@@ -947,7 +947,9 @@ const ChannelPage = () => {
                             <div
                               key={note.note_id}
                               className={`group/card relative border rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-md ${
-                                note.pinned ? `border-purple-500 bg-purple-900/10 hover:bg-purple-700/5 hover:shadow-purple-600` : `border-gray-600/50 hover:border-purple-500/50 bg-gray-800/50 hover:bg-gray-700/50`
+                                note.pinned
+                                  ? `border-purple-500 bg-purple-900/10 hover:bg-purple-700/5 hover:shadow-purple-600`
+                                  : `border-gray-600/50 hover:border-purple-500/50 bg-gray-800/50 hover:bg-gray-700/50`
                               }`}
                             >
                               {/* Hover gradient overlay */}
@@ -1323,43 +1325,54 @@ const ChannelPage = () => {
           />
 
           {/* Menu */}
-          <div className="absolute top-1 right-2 sm:right-6 w-64 sm:w-72 bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 animate-fadeIn overflow-hidden max-h-[60vh] sm:h-[calc(50vh-110px)]">
+          <div className="absolute top-1 right-2 sm:right-6 w-72 sm:w-80 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl z-50 animate-fadeIn overflow-hidden max-h-[70vh] transition-all duration-300">
+            {/* Background gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+
             {/* Header */}
-            <div className="flex items-center justify-between px-2 py-3 sm:py-4 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 sm:p-2 rounded-full bg-violet-500/20">
-                  <Hash
-                    size={16}
-                    className="text-violet-400 sm:w-[18px] sm:h-[18px]"
-                  />
+            <div className="relative z-10 flex items-center justify-between px-4 py-4 sm:py-5 border-b border-gray-700/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 sm:p-3 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover:bg-purple-500/30 transition-all duration-300">
+                  <Hash size={18} className="text-purple-400 sm:w-5 sm:h-5" />
                 </div>
-                <h3 className="text-base sm:text-lg font-semibold text-white">
-                  Channel Settings
-                </h3>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-white">
+                    Channel Settings
+                  </h3>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
+                    Manage channel options
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setShowChannelMenu(false)}
-                className="absolute top-3 sm:top-4 right-2 sm:right-3 p-1.5 sm:p-2 rounded-full hover:bg-white/20 text-white transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-90 cursor-pointer"
+                className="p-2 rounded-full hover:bg-gray-800/80 text-gray-400 hover:text-white transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-90 cursor-pointer"
               >
-                <X size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <X size={18} className="sm:w-5 sm:h-5" />
               </button>
             </div>
 
             {/* Menu items */}
-            <div className="p-3 sm:p-4 space-y-2">
+            <div className="relative z-10 p-4 sm:p-6 space-y-3">
               {/* Show message if no permissions */}
               {!(
                 userPermissions?.manage_channels ||
                 userPermissions?.settings_access
               ) && (
-                <div className="text-center py-4 sm:py-6">
-                  <div className="p-2 sm:p-3 rounded-full bg-gray-500/20 w-fit mx-auto mb-3">
-                    <Hash size={20} className="text-gray-400 sm:w-6 sm:h-6" />
+                <div className="text-center py-6 sm:py-8">
+                  <div className="relative mb-4">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-500/20 to-gray-600/20 flex items-center justify-center border border-gray-500/30 mx-auto">
+                      <Hash
+                        size={24}
+                        className="text-gray-400 opacity-60 sm:w-8 sm:h-8"
+                      />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-gray-500/30 to-gray-600/30 animate-pulse"></div>
                   </div>
-                  <p className="text-gray-300 text-sm font-medium">
+                  <h3 className="text-lg font-semibold text-gray-300 mb-2">
                     No actions available
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
+                  </h3>
+                  <p className="text-gray-400 text-sm max-w-xs mx-auto">
                     You don't have permission to manage this channel
                   </p>
                 </div>
@@ -1373,21 +1386,26 @@ const ChannelPage = () => {
                     setShowEditChannelModal(true);
                     setShowChannelMenu(false);
                   }}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-violet-500/10 hover:border-violet-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-500/10"
+                  className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-xl lg:rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
                 >
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-violet-500/20 group-hover:bg-violet-500/30 transition-all duration-300 flex-shrink-0">
-                    <Edit2
-                      size={16}
-                      className="text-violet-400 group-hover:text-violet-300 transition-all duration-300 group-hover:rotate-12 sm:w-[18px] sm:h-[18px]"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-white font-medium group-hover:text-violet-200 transition-colors duration-300 text-sm sm:text-base">
-                      Edit Channel
-                    </span>
-                    <p className="text-gray-400 text-xs mt-0.5 group-hover:text-violet-300/70">
-                      Modify channel name and description
-                    </p>
+                  {/* Hover gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/30 group-hover/card:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                      <Edit2
+                        size={20}
+                        className="text-purple-400 group-hover/card:text-purple-300 transition-all duration-300 group-hover/card:rotate-12"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white font-semibold group-hover/card:text-purple-100 transition-colors duration-300 text-base sm:text-lg">
+                        Edit Channel
+                      </h4>
+                      <p className="text-gray-400 group-hover/card:text-gray-300 text-sm mt-1 transition-colors duration-300">
+                        Modify channel name and description
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1397,21 +1415,26 @@ const ChannelPage = () => {
                 userPermissions?.settings_access) && (
                 <div
                   onClick={handleDeleteChannelClick}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-red-500/10"
+                  className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-red-500/50 rounded-xl lg:rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-red-500/10"
                 >
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-all duration-300 flex-shrink-0">
-                    <Trash2
-                      size={16}
-                      className="text-red-400 group-hover:text-red-300 transition-all duration-300 group-hover:rotate-12 sm:w-[18px] sm:h-[18px]"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-white font-medium group-hover:text-red-200 transition-colors duration-300 text-sm sm:text-base">
-                      Delete Channel
-                    </span>
-                    <p className="text-gray-400 text-xs mt-0.5 group-hover:text-red-300/70">
-                      Permanently remove this channel
-                    </p>
+                  {/* Hover gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-red-600/5 rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+
+                  <div className="relative z-10 flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-red-500/20 border border-red-500/30 group-hover/card:bg-red-500/30 transition-all duration-300 flex-shrink-0">
+                      <Trash2
+                        size={20}
+                        className="text-red-400 group-hover/card:text-red-300 transition-all duration-300 group-hover/card:rotate-12"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white font-semibold group-hover/card:text-red-100 transition-colors duration-300 text-base sm:text-lg">
+                        Delete Channel
+                      </h4>
+                      <p className="text-gray-400 group-hover/card:text-gray-300 text-sm mt-1 transition-colors duration-300">
+                        Permanently remove this channel
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

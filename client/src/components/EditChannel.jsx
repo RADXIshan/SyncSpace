@@ -94,7 +94,7 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
         <div className="relative w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-gray-900/50 to-indigo-900/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
           <div className="relative overflow-y-auto max-h-[98vh] sm:max-h-[95vh] px-4 py-6 sm:px-8 sm:py-10">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Close Button */}
@@ -108,14 +108,14 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
 
               {/* Header */}
               <div className="text-center mb-6 sm:mb-8">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
                   <Hash size={24} className="text-white sm:w-8 sm:h-8" />
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">
                   Edit Channel
                 </h2>
                 <p className="text-gray-300 text-sm sm:text-base">
-                  Edit the details of the channel
+                  Update channel name and description
                 </p>
               </div>
 
@@ -133,7 +133,7 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
                     required
                     placeholder="Enter channel name..."
                     maxLength={50}
-                    className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
+                    className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
                   />
                   <div className="text-xs text-gray-400 mt-1">
                     {formData.name.length}/50 characters
@@ -151,7 +151,7 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
                     rows="4"
                     placeholder="Enter channel description..."
                     maxLength={200}
-                    className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
+                    className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
                   />
                   <div className="text-xs text-gray-400 mt-1">
                     {formData.description.length}/200 characters
@@ -175,7 +175,7 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
                   className={`px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center shadow-lg hover:shadow-xl text-sm sm:text-base order-1 sm:order-2 ${
                     hasUnsavedChanges 
                       ? 'bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300' 
-                      : 'bg-violet-900/40 hover:bg-violet-900/60 border border-violet-700/50 text-violet-400 hover:text-violet-300'
+                      : 'bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300'
                   }`}
                 >
                   {isLoading ? (

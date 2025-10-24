@@ -1,8 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 const LandingNav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [shouldRenderMenu, setShouldRenderMenu] = useState(false);
+  const [menuAnimationClass, setMenuAnimationClass] = useState('');
+  const [navItemAnimationClass, setNavItemAnimationClass] = useState('');
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      setShouldRenderMenu(true);
+      setMenuAnimationClass('animate-slide-down-fade-in');
+      setNavItemAnimationClass('animate-fade-in-up');
+    } else {
+      setMenuAnimationClass('animate-slide-up-fade-out');
+      setNavItemAnimationClass('animate-fade-out-down');
+      const timer = setTimeout(() => {
+        setShouldRenderMenu(false);
+      }, 300); // Duration of the slide-up-fade-out animation
+      return () => clearTimeout(timer);
+    }
+  }, [isMenuOpen]);
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-white/60 backdrop-blur-lg border-b border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.05)] transition-all duration-300">
@@ -71,8 +89,8 @@ const LandingNav = () => {
       </div>
 
       {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-lg border-b border-gray-200/60 shadow-lg">
+      {shouldRenderMenu && (
+        <div className={`sm:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-lg border-b border-gray-200/60 shadow-lg ${menuAnimationClass}`}>
           <div className="px-4 py-6 space-y-4">
             {/* Mobile Nav Links */}
             <div className="space-y-3">
@@ -81,7 +99,7 @@ const LandingNav = () => {
                   key={item}
                   href={`#${item.toLowerCase()}`}
                   onClick={() => setIsMenuOpen(false)}
-                  className="block text-gray-700 hover:text-[var(--color-secondary)] font-medium text-lg py-2 px-3 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                  className={`block text-gray-700 hover:text-[var(--color-secondary)] font-medium text-lg py-2 px-3 rounded-lg hover:bg-gray-50 transition-all duration-200 ${navItemAnimationClass}`}
                 >
                   {item}
                 </a>

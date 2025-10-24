@@ -132,7 +132,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
     <div className="max-h-screen p-3 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8">
         {/* ---------------- HEADER ---------------- */}
-        <header className="flex pt-15 sm:pt-0 flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 sm:p-6">
+        <header className="flex pt-15 sm:pt-2 flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 sm:pb-2 lg:mt-5">
           {/* Welcome Message - Full width on mobile, flexible on desktop */}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 cursor-default leading-tight">
@@ -141,43 +141,46 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
           </div>
 
           {/* Right-side: Messages + Notifications + Avatar */}
-          <div className="flex items-center justify-end gap-3 sm:gap-5 flex-shrink-0">
-            <div className="relative">
+          <div className="flex items-center justify-end gap-3.5 sm:gap-3 flex-shrink-0">
+            <div className="relative group/chat hover:scale-110 hover:bg-blue-500/20 transition-all duration-300 p-2.5 rounded-full cursor-pointer">
               <MessageCircle
                 size={20}
-                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer sm:w-[23px] sm:h-[23px]"
+                className="text-gray-800 group-hover/chat:text-blue-500 transition-colors cursor-pointer sm:w-[23px] sm:h-[23px]"
                 onClick={onMessagesClick}
                 title="Messages"
               />
-              <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-500 rounded-full"></div>
+              <div className="absolute scale-0 group-hover/chat:scale-100 top-0 -right-0.5 w-2 h-2 sm:w-[11px] sm:h-[11px] bg-blue-500 rounded-full transform transition-all duration-300"></div>
             </div>
             
-            <div className="relative">
+            <div className="relative group/notifications hover:scale-110 hover:bg-red-500/20 transition-all duration-300 p-2.5 rounded-full cursor-pointer">
               <Bell
                 size={20}
-                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer sm:w-[23px] sm:h-[23px]"
+                className="text-gray-800 group-hover/notifications:text-red-500 transition-colors cursor-pointer sm:w-[23px] sm:h-[23px]"
                 onClick={onNotificationsClick}
                 title="Notifications"
               />
-              <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full"></div>
+              <div className="absolute scale-0 group-hover/notifications:scale-100 top-0 -right-0.5 w-2 h-2 sm:w-[11px] sm:h-[11px] bg-red-500 rounded-full transform transition-all duration-300"></div>
             </div>
 
-            <div
-              onClick={onSettingsClick}
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full gradient-bg flex items-center justify-center  
-                         transition-all cursor-pointer overflow-hidden border-2 border-violet-600"
-            >
-              {user?.photo ? (
-                <img
-                  src={user.photo}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-base sm:text-lg font-semibold text-white">
-                  {user?.name?.charAt(0) || "U"}
-                </span>
-              )}
+            <div className="relative group/avatar hover:scale-110 hover:bg-violet-500/20 transition-all duration-300 p-2.5 rounded-full cursor-pointer">
+              <div
+                onClick={onSettingsClick}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full gradient-bg flex items-center justify-center  
+                          transition-all cursor-pointer overflow-hidden border-2 border-violet-600"
+              >
+                {user?.photo ? (
+                  <img
+                    src={user.photo}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-base sm:text-lg font-semibold text-white">
+                    {user?.name?.charAt(0) || "U"}
+                  </span>
+                )}
+              </div>
+              <div className="absolute scale-0 group-hover/avatar:scale-100 top-0.5 right-0.5 w-2 h-2 sm:w-3 sm:h-3 bg-violet-500 rounded-full transform transition-all duration-300"></div>
             </div>
           </div>
         </header>

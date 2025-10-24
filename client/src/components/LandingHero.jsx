@@ -26,9 +26,9 @@ const LandingHero = () => {
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
               <button
                 onClick={() => (window.location.href = "/signup")}
-                className="relative px-6 sm:px-8 py-3 sm:py-[9px] rounded-md font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-lg hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer active:scale-95 text-base sm:text-lg w-full sm:w-auto"
+                className="relative px-6 sm:px-8 py-3 sm:py-[9px] rounded-md font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-lg hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer active:scale-95 text-base sm:text-lg w-full sm:w-auto hover:shadow-purple-300"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 z-10"></div>
                 <span className="relative z-10">Get Started</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-info)] to-[var(--color-secondary)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"></div>
               </button>
@@ -38,9 +38,9 @@ const LandingHero = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex justify-center items-center order-first lg:order-last">
+          <div className="flex-1 flex justify-center items-center order-first lg:order-last hover:shadow-purple-300 rounded-lg">
             <img
-              className="w-64 sm:w-80 md:w-96 lg:w-full max-w-md xl:max-w-lg transform hover:scale-105 transition-transform duration-300"
+              className="w-64 sm:w-80 md:w-96 lg:w-full max-w-md xl:max-w-lg transform hover:scale-105 rounded-full border border-transparent hover:shadow-purple-300 hover:shadow-xl duration-300 cursor-pointer"
               src={landing_page_pic}
               alt="Team collaboration illustration"
             />

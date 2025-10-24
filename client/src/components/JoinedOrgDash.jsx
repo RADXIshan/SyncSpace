@@ -36,8 +36,8 @@ const JoinedOrgDash = ({ activities }) => {
         </section>
 
         {/* Calendar - Third on mobile */}
-        <section className="order-3 lg:order-3 col-span-1 lg:col-span-6 bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg hover:shadow-xl border border-white/20 flex flex-col justify-between min-h-[300px] sm:mb-4 lg:mb-0">
-          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3 text-[var(--color-accent)]">
+        <section className="order-3 lg:order-3 col-span-1 lg:col-span-6 bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg hover:shadow-xl border border-white/20 flex flex-col justify-between max-h-full mb-4 sm:mb-0">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-4 flex items-center gap-2 sm:gap-3 text-[var(--color-accent)]">
             <div className="bg-violet-700/20 rounded-full p-2 sm:p-3">
               <Calendar className="text-violet-500 sm:w-[22px] sm:h-[22px]" size={18} />
             </div>

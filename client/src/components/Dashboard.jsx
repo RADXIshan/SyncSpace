@@ -141,7 +141,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
           </div>
 
           {/* Right-side: Messages + Notifications + Avatar */}
-          <div className="flex items-center justify-end gap-3.5 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center justify-end sm:gap-3 flex-shrink-0">
             <div className="relative group/chat hover:scale-110 hover:bg-blue-500/20 transition-all duration-300 p-2.5 rounded-full cursor-pointer">
               <MessageCircle
                 size={20}

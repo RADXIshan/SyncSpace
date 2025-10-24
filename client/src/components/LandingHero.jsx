@@ -26,12 +26,12 @@ const LandingHero = () => {
             <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
               <button
                 onClick={() => (window.location.href = "/signup")}
-                className="relative px-8 py-[9px] rounded-lg font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] hover:shadow-md transition-all duration-300 overflow-hidden group cursor-pointer active:scale-95 text-sm sm:text-base lg:text-lg shadow-purple-300"
+                className="relative px-6 sm:px-8 py-3 sm:py-[9px] rounded-md font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-lg hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer active:scale-95 text-base sm:text-lg w-full sm:w-auto"
               >
                 <span className="relative z-10">Get Started</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-info)] to-[var(--color-secondary)] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-info)] to-[var(--color-secondary)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"></div>
               </button>
-              <button className="relative px-8 py-2 sm:py-3 rounded-lg font-semibold text-base sm:text-lg bg-purple-100 text-purple-800/70 group transition-all hover:text-purple-800 hover:bg-purple-100 duration-300 cursor-pointer active:scale-95 hover:shadow-md shadow-purple-200 border w-full sm:w-auto">
+              <button className="relative px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold text-base sm:text-lg bg-purple-100 text-purple-800/70 group transition-all hover:text-purple-800 hover:bg-purple-100 duration-300 cursor-pointer active:scale-95 hover:shadow-md shadow-purple-200 border w-full sm:w-auto">
                 Learn More
               </button>
             </div>
@@ -39,7 +39,7 @@ const LandingHero = () => {
 
           <div className="flex-1 flex justify-center items-center order-first lg:order-last">
             <img
-              className="w-64 sm:w-80 md:w-96 lg:w-full max-w-md xl:max-w-lg transform hover:scale-105 duration-300 hover:shadow-xl rounded-full hover:shadow-purple-300 hover:cursor-pointer"
+              className="w-64 sm:w-80 md:w-96 lg:w-full max-w-md xl:max-w-lg transform hover:scale-105 transition-transform duration-300"
               src={landing_page_pic}
               alt="Team collaboration illustration"
             />

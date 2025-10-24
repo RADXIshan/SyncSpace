@@ -11,6 +11,55 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const activities = [
+    "Alex pushed updates to repo 🚀",
+    "Meeting scheduled for 4:30 PM 📅",
+    "Mira joined #frontend channel 💬",
+  ];
+
+  const notices = [
+    { 
+      id: 100,
+      title: "All - Updated Paid Leave Policy",
+      body: "The HR department has updated the paid leave policy effective from next month. Please review the changes in the HR portal.",
+      date: "2024-06-15",
+      author: "Varun Satapathy",
+      author_role: "Admin"
+    },
+    {
+      id: 101,
+      title: "Frontend - New Design System Implementation",
+      body: "We're rolling out our new design system components. Please update your components to match the new guidelines.",
+      date: "2024-06-18",
+      author: "Sarah Chen",
+      author_role: "Lead Designer"
+    },
+    {
+      id: 102,
+      title: "Backend - Database Migration Schedule",
+      body: "Scheduled database migration to PostgreSQL 15. Downtime expected on Saturday night. Please prepare your services accordingly.",
+      date: "2024-06-20",
+      author: "Mike Rodriguez",
+      author_role: "DevOps Lead"
+    },
+    {
+      id: 103,
+      title: "Marketing - Q3 Campaign Planning",
+      body: "Team meeting to discuss and finalize Q3 marketing campaign strategies. Please prepare your proposals.",
+      date: "2024-06-22",
+      author: "Emily Thompson",
+      author_role: "Marketing Director"
+    },
+    {
+      id: 104,
+      title: "All - Company Town Hall",
+      body: "Monthly town hall meeting to discuss company updates, project progress, and team achievements. Attendance is mandatory.",
+      date: "2024-06-25",
+      author: "David Kumar",
+      author_role: "CEO"
+    }
+  ];
+
   const fetchOrg = async () => {
     if (!user?.org_id) {
       setOrganization(null);
@@ -80,56 +129,56 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
   }
 
   return (
-    <div className="max-h-screen p-6 bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 relative">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-h-screen p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8">
         {/* ---------------- HEADER ---------------- */}
-        <header className="flex justify-between items-center gap-4 p-6">
-          <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 cursor-default">
-            Welcome back, {user?.name || "User"}
+        <header className="flex pt-15 sm:pt-0 flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 sm:p-6">
+          {/* Welcome Message - Full width on mobile, flexible on desktop */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 cursor-default leading-tight">
+              Welcome back, {user?.name || "User"}
+            </h1>
           </div>
 
           {/* Right-side: Messages + Notifications + Avatar */}
-          <div className="flex items-center gap-2.5">
-            <div className="relative group/chat hover:text-blue-500 hover:scale-120 transition-all cursor-pointer duration-300 border-2 border-transparent rounded-full p-2 hover:bg-blue-500/10 h-10 w-10 flex items-center justify-center">
+          <div className="flex items-center justify-end gap-3 sm:gap-5 flex-shrink-0">
+            <div className="relative">
               <MessageCircle
-                size={23}
-                className="text-gray-800 group-hover/chat:text-blue-500 transition-all cursor-pointer duration-300"
+                size={20}
+                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer sm:w-[23px] sm:h-[23px]"
                 onClick={onMessagesClick}
                 title="Messages"
               />
-              <div className="scale-0 group-hover/chat:scale-100 absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-500 rounded-full transition-all duration-300"></div>
+              <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-500 rounded-full"></div>
             </div>
             
-            <div className="relative group/bell hover:text-red-500 hover:scale-120 transition-all cursor-pointer duration-300 border-2 border-transparent rounded-full p-2 hover:bg-red-500/10 h-10 w-10 flex items-center justify-center">
+            <div className="relative">
               <Bell
-                size={23}
-                className="text-gray-800 group-hover/bell:text-red-500 cursor-pointer transition-all duration-300"
+                size={20}
+                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer sm:w-[23px] sm:h-[23px]"
                 onClick={onNotificationsClick}
                 title="Notifications"
               />
-              <div className="scale-0 group-hover/bell:scale-100 absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full transition-all duration-300"></div>
+              <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full"></div>
             </div>
 
-            <div className="ml-0 relative group/settings hover:text-violet-500 hover:scale-110 transition-all cursor-pointer duration-300 border-2 border-transparent rounded-full p-2 hover:bg-violet-500/10 h-full w-full flex items-center justify-center">
-              <div
-                onClick={onSettingsClick}
-                className="w-12 h-12 rounded-full gradient-bg flex items-center justify-center  
-                          transition-all cursor-pointer overflow-hidden border-2 border-violet-600"
-              >
-                {user?.photo ? (
-                  <img
-                    src={user.photo}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-lg font-semibold text-white">
-                    {user?.name?.charAt(0) || "U"}
-                  </span>
-                )}
-              </div>
-              <div className="scale-0 group-hover/settings:scale-100 absolute top-0.5 right-0.5 w-[11px] h-[11px] bg-purple-500 rounded-full transition-all duration-300"></div>
-              </div>
+            <div
+              onClick={onSettingsClick}
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full gradient-bg flex items-center justify-center  
+                         transition-all cursor-pointer overflow-hidden border-2 border-violet-600"
+            >
+              {user?.photo ? (
+                <img
+                  src={user.photo}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-base sm:text-lg font-semibold text-white">
+                  {user?.name?.charAt(0) || "U"}
+                </span>
+              )}
+            </div>
           </div>
         </header>
 
@@ -137,27 +186,29 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
         {organization ? (
           <JoinedOrgDash
             org={organization}
+            activities={activities}
+            notices={notices}
           />
         ) : (
-          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 h-[500px] flex items-center justify-center flex-col gap-4">
-            <h1 className="text-5xl font-bold text-accent text-center">
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 min-h-[400px] sm:h-[500px] flex items-center justify-center flex-col gap-4">
+            <h1 className="text-2xl sm:text-5xl font-bold text-accent text-center px-4">
               Join and collaborate with your team
             </h1>
 
-            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8 w-full max-w-sm sm:max-w-none sm:flex-row sm:justify-center">
               <button
                 onClick={onJoinOrgClick}
-                className="btn-primary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-[280px] shadow-lg text-lg"
+                className="btn-primary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
               >
-                <Users size={24} className="inline-block mr-2 text-primary" />
+                <Users size={20} className="inline-block mr-2 text-primary sm:w-6 sm:h-6" />
                 Join Organisation
               </button>
 
               <button
                 onClick={onCreateOrgClick}
-                className="btn-secondary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-[280px] shadow-lg text-lg"
+                className="btn-secondary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
               >
-                <Plus size={24} className="inline-block mr-2 text-violet-600" />
+                <Plus size={20} className="inline-block mr-2 text-violet-600 sm:w-6 sm:h-6" />
                 Create Organisation
               </button>
             </div>

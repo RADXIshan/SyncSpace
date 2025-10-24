@@ -8,7 +8,7 @@ const ConfirmationModal = ({
   message, 
   confirmText = "Confirm", 
   cancelText = "Cancel",
-  type = "danger", // "danger" or "warning"
+  type = "danger",
   loading = false 
 }) => {
   if (!isOpen) return null;
@@ -32,7 +32,7 @@ const ConfirmationModal = ({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-4 transition-all duration-300">
-      <div className="relative w-full max-w-sm sm:max-w-md bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn">
+      <div className="relative w-full max-w-sm sm:max-w-md bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn mx-auto px-4">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-gray-900/50 to-indigo-900/20"></div>
         <div className="relative p-4 sm:p-8">
           {/* Close Button */}

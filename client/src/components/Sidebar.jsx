@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { Calendar, Settings, Hash, Users, Cog, UserPlus, LogIn, Home, LogOut, Crown, MessageCircle, Bell, Menu, X } from 'lucide-react';
+import { Calendar, Settings, Hash, Users, UserPlus, Home, LogOut, Crown, MessageCircle, Bell, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
@@ -430,7 +430,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
           </button>
         </div>
       </div>
-      
+      </div>
       {/* Confirmation Modals */}
       <ConfirmationModal
         isOpen={showLeaveOrgConfirm}
@@ -455,7 +455,6 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
         type="warning"
         loading={actionLoading}
       />
-      </div>
     </>
   );
 };

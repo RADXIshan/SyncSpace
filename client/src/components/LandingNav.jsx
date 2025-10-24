@@ -47,6 +47,8 @@ const LandingNav = () => {
               onClick={() => (window.location.href = "/signup")}
               className="relative px-6 py-[9px] rounded-lg font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-md hover:shadow-lg  transition-all duration-300 overflow-hidden group cursor-pointer hover:scale-110 active:scale-95 text-lg"
             >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+  
               <span className="relative z-10">Sign Up</span>
               <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-info)] to-[var(--color-secondary)] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </button>

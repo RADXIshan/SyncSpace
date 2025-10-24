@@ -307,7 +307,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
                       className="flex-shrink-0 p-1.5 bg-blue-600/30 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-400/30 rounded-md transition-all duration-300 text-blue-300 hover:text-blue-200 cursor-pointer group shadow-lg backdrop-blur-sm hover:shadow-xl"
                       title="Organization settings"
                     >
-                      <Settings size={17} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
+                      <Settings size={18} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
                     </button>
                   )}
                 </div>

@@ -6,7 +6,6 @@
   box-sizing: border-box;
   scroll-behavior: smooth;
 }
-
 @theme {
   --color-primary: #f8fafc;
   --color-secondary: #7c3aed;

@@ -1,4 +1,4 @@
-const FooterNote = () => {
+const Footer = () => {
   return (
     <footer className="gradient-bg text-white w-full min-h-100 flex flex-col items-center justify-between border-t border-[var(--color-accent)] relative overflow-hidden">
       
@@ -33,7 +33,7 @@ const FooterNote = () => {
         </div>
         
         <button
-          className="group relative px-10 py-3 rounded-2xl bg-[var(--color-accent)] text-[var(--color-primary)] font-semibold text-lg shadow-md shadow-[var(--color-accent)]/30 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_var(--color-accent)] overflow-hidden"
+          className="group relative px-10 py-3 rounded-2xl bg-[var(--color-accent)] text-[var(--color-primary)] font-semibold text-lg shadow-md shadow-[var(--color-accent)]/30 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_var(--color-accent)] overflow-hidden cursor-pointer"
         >
           {/* Button shine effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
@@ -61,4 +61,4 @@ const FooterNote = () => {
   );
 }
 
-export default FooterNote;
+export default Footer;

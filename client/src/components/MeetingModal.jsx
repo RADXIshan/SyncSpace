@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { X, Video, Calendar, FileText } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import ConfirmationModal from "./ConfirmationModal";
 
 const MeetingModal = ({
@@ -16,9 +18,9 @@ const MeetingModal = ({
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    start_time: "",
     meeting_link: "",
   });
+  const [startDateTime, setStartDateTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [linkOption, setLinkOption] = useState("custom"); // "custom" or "generate"
@@ -43,12 +45,11 @@ const MeetingModal = ({
   useEffect(() => {
     if (isOpen && meeting) {
       const startTime = new Date(meeting.start_time);
-      const formattedDateTime = startTime.toISOString().slice(0, 16);
+      setStartDateTime(startTime);
 
       setFormData({
         title: meeting.title || "",
         description: meeting.description || "",
-        start_time: formattedDateTime,
         meeting_link: meeting.meeting_link || "",
       });
       // Determine link option based on meeting_link
@@ -62,7 +63,7 @@ const MeetingModal = ({
       // Reset form for new meeting
       const defaultTime = new Date();
       defaultTime.setHours(defaultTime.getHours() + 1);
-      const formattedDateTime = defaultTime.toISOString().slice(0, 16);
+      setStartDateTime(defaultTime);
 
       const newRoomId = Math.random().toString(36).substring(2, 10);
       setGeneratedRoomId(newRoomId);
@@ -70,7 +71,6 @@ const MeetingModal = ({
       setFormData({
         title: "",
         description: "",
-        start_time: formattedDateTime,
         meeting_link: `${getBaseUrl()}/meeting/${newRoomId}`,
       });
       setLinkOption("generate");
@@ -101,17 +101,16 @@ const MeetingModal = ({
           (linkOption === "generate" && generatedRoomId !== "")
       );
     } else {
-      const startTime = new Date(meeting.start_time);
-      const formattedDateTime = startTime.toISOString().slice(0, 16);
+      const originalStartTime = new Date(meeting.start_time);
 
       setHasUnsavedChanges(
         formData.title !== (meeting.title || "") ||
           formData.description !== (meeting.description || "") ||
-          formData.start_time !== formattedDateTime ||
+          startDateTime.getTime() !== originalStartTime.getTime() ||
           formData.meeting_link !== (meeting.meeting_link || "")
       );
     }
-  }, [formData, meeting, linkOption, generatedRoomId]);
+  }, [formData, startDateTime, meeting, linkOption, generatedRoomId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -158,7 +157,7 @@ const MeetingModal = ({
     e.preventDefault();
     setIsLoading(true);
 
-    if (!formData.title.trim() || !formData.start_time) {
+    if (!formData.title.trim() || !startDateTime) {
       toast.error("Please fill in all required fields");
       setIsLoading(false);
       return;
@@ -172,8 +171,7 @@ const MeetingModal = ({
 
     // Validate start time is in the future (only for new meetings or meetings that haven't started)
     if (!isEditing || !isMeetingStarted) {
-      const startTime = new Date(formData.start_time);
-      if (startTime <= new Date()) {
+      if (startDateTime <= new Date()) {
         toast.error("Meeting start time must be in the future");
         setIsLoading(false);
         return;
@@ -186,7 +184,7 @@ const MeetingModal = ({
         channel_id: channelId,
         title: formData.title.trim(),
         description: formData.description.trim() || null,
-        start_time: formData.start_time,
+        start_time: startDateTime.toISOString(),
         meeting_link: formData.meeting_link.trim(),
       };
 
@@ -289,20 +287,19 @@ const MeetingModal = ({
                   Date and Time
                 </label>
                 <div className="relative">
-                  <input
-                    type="datetime-local"
-                    name="start_time"
-                    value={formData.start_time}
-                    onChange={handleChange}
-                    className={`w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm ${isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""}`}
-                    required
+                  <Calendar className="absolute top-5 left-5 text-violet-400 pointer-events-none z-10" size={18} />
+                  <DatePicker
+                    selected={startDateTime}
+                    onChange={(date) => setStartDateTime(date)}
+                    showTimeSelect
+                    timeFormat="HH:mm"
+                    timeIntervals={15}
+                    dateFormat="yyyy-MM-dd h:mm aa"
                     disabled={isMeetingStarted}
-                  />
-                  <Calendar
-                    size={20}
-                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none ${
-                      isMeetingStarted ? "text-gray-500" : "text-gray-400"
-                    }`}
+                    className={`w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90 ${isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""}`}
+                    calendarClassName="react-datepicker--light"
+                    portalId="datepicker-portal"
+                    withPortal
                   />
                 </div>
                 {isMeetingStarted && (
@@ -328,7 +325,7 @@ const MeetingModal = ({
                       value="generate"
                       checked={linkOption === "generate"}
                       onChange={(e) => setLinkOption(e.target.value)}
-                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500"
+                      className="w-4 h-4 accent-violet-600 bg-gray-800 border-gray-600 focus:ring-violet-500"
                     />
                     <span className="text-sm text-gray-300">
                       Generate meeting room
@@ -341,7 +338,7 @@ const MeetingModal = ({
                       value="custom"
                       checked={linkOption === "custom"}
                       onChange={(e) => setLinkOption(e.target.value)}
-                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-2 focus:ring-blue-500"
+                      className="w-4 h-4 accent-violet-600 bg-gray-800 border-gray-600 focus:ring-violet-500"
                     />
                     <span className="text-sm text-gray-300">
                       Custom link
@@ -399,7 +396,7 @@ const MeetingModal = ({
               </button>
               <button
                 type="submit"
-                disabled={isLoading || !formData.title.trim() || !formData.start_time || !formData.meeting_link.trim()}
+                disabled={isLoading || !formData.title.trim() || !startDateTime || !formData.meeting_link.trim()}
                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center shadow-lg hover:shadow-xl ${
                   isEditing && hasUnsavedChanges
                     ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300"

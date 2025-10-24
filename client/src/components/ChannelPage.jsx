@@ -942,11 +942,13 @@ const ChannelPage = () => {
                           </p>
                         </div>
                       ) : notes.length > 0 ? (
-                        <div className="space-y-2 sm:space-y-3 max-h-full overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+                        <div className="space-y-2 sm:space-y-3 max-h-full overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 pb-2 scrollbar-track-transparent">
                           {notes.map((note) => (
                             <div
                               key={note.note_id}
-                              className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
+                              className={`group/card relative border rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-md ${
+                                note.pinned ? `border-purple-500 bg-purple-900/10 hover:bg-purple-700/5 hover:shadow-purple-600` : `border-gray-600/50 hover:border-purple-500/50 bg-gray-800/50 hover:bg-gray-700/50`
+                              }`}
                             >
                               {/* Hover gradient overlay */}
                               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
@@ -981,7 +983,7 @@ const ChannelPage = () => {
                                     </div>
                                   </div>
                                   {userPermissions?.notes_access && (
-                                    <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                                    <div className="absolute right-0 top-0 flex items-center gap-1 ml-2 flex-shrink-0">
                                       <button
                                         onClick={(e) => {
                                           e.preventDefault();
@@ -992,7 +994,7 @@ const ChannelPage = () => {
                                             pinned: !note.pinned,
                                           });
                                         }}
-                                        className={`p-1 hover:bg-purple-500/20 rounded transition-colors duration-300 ${
+                                        className={`p-2 hover:bg-purple-500/20 rounded-md transition-colors duration-300 cursor-pointer group ${
                                           note.pinned
                                             ? "text-purple-300"
                                             : "text-gray-400 hover:text-purple-300"
@@ -1001,7 +1003,7 @@ const ChannelPage = () => {
                                       >
                                         <Pin
                                           size={12}
-                                          className="sm:w-[14px] sm:h-[14px]"
+                                          className="sm:w-[14px] sm:h-[14px] duration-300 group-hover:rotate-45"
                                         />
                                       </button>
                                       <button
@@ -1011,23 +1013,23 @@ const ChannelPage = () => {
                                           e.stopPropagation();
                                           handleEditNote(note);
                                         }}
-                                        className="p-1 hover:bg-purple-500/20 rounded text-gray-400 hover:text-purple-300 transition-colors duration-300"
+                                        className="p-2 hover:bg-blue-500/20 rounded-md text-gray-400 hover:text-blue-300 transition-colors duration-300 cursor-pointer group"
                                         title="Edit note"
                                       >
                                         <Edit2
                                           size={12}
-                                          className="sm:w-[14px] sm:h-[14px]"
+                                          className="sm:w-[14px] sm:h-[14px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-300"
                                         />
                                       </button>
                                       <button
                                         onClick={() =>
                                           handleDeleteNoteClick(note)
                                         }
-                                        className="p-1 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-300 transition-colors duration-300"
+                                        className="p-2 hover:bg-red-500/20 rounded-md text-gray-400 hover:text-red-300 transition-colors duration-300 cursor-pointer group"
                                       >
                                         <Trash2
                                           size={12}
-                                          className="sm:w-[14px] sm:h-[14px]"
+                                          className="sm:w-[14px] sm:h-[14px] group-hover:scale-120 duration-300 group-hover:rotate-10"
                                         />
                                       </button>
                                     </div>

@@ -538,10 +538,14 @@ export const updateOrganization = async (req, res) => {
 
     // Update channels if provided and user has permission
     if (updatingChannels && (hasChannelAccess || hasSettingsAccess)) {
-      // Delete existing channels
-      await sql`DELETE FROM org_channels WHERE org_id = ${org_id}`;
-      
-      // Add new channels
+      // Get existing channels
+      const existingChannels = await sql`
+        SELECT channel_id, channel_name, channel_description
+        FROM org_channels
+        WHERE org_id = ${org_id}
+      `;
+
+      // Validate for duplicate channel names in the new list
       const channelNames = new Set();
       for (const channel of channels) {
         if (channel.name?.trim()) {
@@ -552,10 +556,56 @@ export const updateOrganization = async (req, res) => {
             });
           }
           channelNames.add(channelName);
+        }
+      }
 
+      // Create maps for easier lookup
+      const existingChannelMap = new Map();
+      existingChannels.forEach(ch => {
+        existingChannelMap.set(ch.channel_name.toLowerCase(), ch);
+      });
+
+      const newChannelMap = new Map();
+      channels.forEach(ch => {
+        if (ch.name?.trim()) {
+          newChannelMap.set(ch.name.trim().toLowerCase(), ch);
+        }
+      });
+
+      // Update existing channels or insert new ones
+      for (const channel of channels) {
+        if (channel.name?.trim()) {
+          const channelName = channel.name.trim();
+          const channelNameLower = channelName.toLowerCase();
+          const existingChannel = existingChannelMap.get(channelNameLower);
+
+          if (existingChannel) {
+            // Update existing channel if description changed
+            if (existingChannel.channel_description !== (channel.description || "")) {
+              await sql`
+                UPDATE org_channels
+                SET channel_description = ${channel.description || ""}
+                WHERE channel_id = ${existingChannel.channel_id}
+              `;
+            }
+          } else {
+            // Insert new channel
+            await sql`
+              INSERT INTO org_channels (org_id, channel_name, channel_description)
+              VALUES (${org_id}, ${channelName}, ${channel.description || ""})
+            `;
+          }
+        }
+      }
+
+      // Delete channels that are no longer in the new list
+      for (const existingChannel of existingChannels) {
+        const existingNameLower = existingChannel.channel_name.toLowerCase();
+        if (!newChannelMap.has(existingNameLower)) {
+          // Delete the channel (this will handle related data through cascade or manual cleanup)
           await sql`
-            INSERT INTO org_channels (org_id, channel_name, channel_description)
-            VALUES (${org_id}, ${channel.name.trim()}, ${channel.description || ""})
+            DELETE FROM org_channels
+            WHERE channel_id = ${existingChannel.channel_id}
           `;
         }
       }

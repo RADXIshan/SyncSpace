@@ -181,16 +181,27 @@ const MeetingModal = ({
     }
 
     try {
+      const meetingData = {
+        org_id: orgId,
+        channel_id: channelId,
+        title: formData.title.trim(),
+        description: formData.description.trim() || null,
+        start_time: formData.start_time,
+        meeting_link: formData.meeting_link.trim(),
+      };
+
       if (isEditing) {
         await axios.put(
-          `/api/orgs/${orgId}/channels/${channelId}/meetings/${meeting._id}`,
-          formData
+          `${import.meta.env.VITE_BASE_URL}/api/meetings/${meeting.meeting_id}`,
+          meetingData,
+          { withCredentials: true }
         );
         toast.success("Meeting updated successfully");
       } else {
         await axios.post(
-          `/api/orgs/${orgId}/channels/${channelId}/meetings`,
-          formData
+          `${import.meta.env.VITE_BASE_URL}/api/meetings`,
+          meetingData,
+          { withCredentials: true }
         );
         toast.success("Meeting created successfully");
       }

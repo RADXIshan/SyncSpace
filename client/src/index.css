@@ -516,3 +516,75 @@
 .animate-fade-out-down {
   animation: fade-out-down 0.3s ease-in forwards;
 }
+
+/* Custom Radio and Checkbox Styles */
+/* Hide default radio and checkbox inputs */
+input[type="radio"],
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Checkbox specific styling - make it round like radio */
+input[type="checkbox"] {
+  border-radius: 50%;
+}
+
+/* Hover state */
+input[type="radio"]:hover,
+input[type="checkbox"]:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.05);
+}
+
+/* Focus state */
+input[type="radio"]:focus,
+input[type="checkbox"]:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+/* Checked state */
+input[type="radio"]:checked,
+input[type="checkbox"]:checked {
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
+
+/* Inner circle/checkmark for checked state */
+input[type="radio"]:checked::before,
+input[type="checkbox"]:checked::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0.375rem;
+  height: 0.375rem;
+  background: white;
+  border-radius: 50%;
+}
+
+/* Disabled state */
+input[type="radio"]:disabled,
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input[type="radio"]:disabled:hover,
+input[type="checkbox"]:disabled:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.6);
+}

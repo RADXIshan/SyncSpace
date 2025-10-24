@@ -1,30 +1,80 @@
-import FAQList from "../components/FAQList";
-import LandingNav  from "../components/LandingNav";
+import { useRef } from "react";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Import components
+import LandingNav from "../components/LandingNav";
 import LandingHero from "../components/LandingHero";
-import LandingComparision from "../components/LandingComparison";
 import LandingFeatures from "../components/LandingFeatures";
+import LandingStats from "../components/LandingStats";
+import LandingTestimonials from "../components/LandingTestimonials";
+import LandingPricing from "../components/LandingPricing";
+import FAQList from "../components/FAQList";
 import Footer from "../components/Footer";
+import ScrollProgress from "../components/ScrollProgress";
+import ParticleSystem from "../components/ParticleSystem";
 
 const Landing = () => {
+  const containerRef = useRef();
+
+  useGSAP(() => {
+    // Smooth page entrance
+    gsap.fromTo(containerRef.current,
+      {
+        opacity: 0,
+      },
+      {
+        opacity: 1,
+        duration: 0.8,
+        ease: "power2.out"
+      }
+    );
+
+    // Add subtle parallax effect to sections
+    gsap.utils.toArray(".parallax-section").forEach((section, i) => {
+      gsap.to(section, {
+        yPercent: -10 * (i + 1),
+        ease: "none",
+        scrollTrigger: {
+          trigger: section,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 1
+        }
+      });
+    });
+
+  }, { scope: containerRef });
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 relative overflow-hidden">
-      {/* Global Background decorative elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 sm:-top-40 -right-20 sm:-right-40 w-40 sm:w-60 lg:w-80 h-40 sm:h-60 lg:h-80 bg-gradient-to-br from-purple-200/20 to-indigo-200/20 rounded-full blur-2xl sm:blur-3xl"></div>
-        <div className="absolute top-1/4 -left-20 sm:-left-40 w-48 sm:w-72 lg:w-96 h-48 sm:h-72 lg:h-96 bg-gradient-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-2xl sm:blur-3xl"></div>
-        <div className="absolute top-2/3 -right-20 sm:-right-40 w-36 sm:w-56 lg:w-72 h-36 sm:h-56 lg:h-72 bg-gradient-to-br from-indigo-200/20 to-pink-200/20 rounded-full blur-2xl sm:blur-3xl"></div>
-        <div className="absolute -bottom-20 sm:-bottom-40 -left-20 sm:-left-40 w-40 sm:w-60 lg:w-80 h-40 sm:h-60 lg:h-80 bg-gradient-to-br from-purple-200/20 to-blue-200/20 rounded-full blur-2xl sm:blur-3xl"></div>
-      </div>
+    <>
+      <ScrollProgress />
+      <ParticleSystem count={30} />
       
-      <div className="relative z-10">
+      <div ref={containerRef} className="min-h-screen bg-white overflow-hidden">
         <LandingNav />
         <LandingHero />
-        <LandingComparision />
-        <LandingFeatures />
-        <FAQList />
+        <div className="parallax-section">
+          <LandingFeatures />
+        </div>
+        <div className="parallax-section">
+          <LandingStats />
+        </div>
+        <div className="parallax-section">
+          <LandingTestimonials />
+        </div>
+        <div className="parallax-section">
+          <LandingPricing />
+        </div>
+        <div className="parallax-section">
+          <FAQList />
+        </div>
         <Footer />
       </div>
-    </div>
+    </>
   );
 };
 

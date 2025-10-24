@@ -1,109 +1,225 @@
-import { X, CheckCheck } from "lucide-react";
+import { Check, X, Star, ArrowRight, Zap, Shield, Users, BarChart3 } from "lucide-react";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useRef } from "react";
 
-const LandingComparision = () => {
+gsap.registerPlugin(ScrollTrigger);
+
+const LandingComparison = () => {
+  const sectionRef = useRef();
+  const headerRef = useRef();
+  const tableRef = useRef();
+  const ctaRef = useRef();
+
+  useGSAP(() => {
+    // Header animation
+    gsap.fromTo(headerRef.current.children,
+      {
+        opacity: 0,
+        y: 40,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: headerRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse"
+        }
+      }
+    );
+
+    // Table animation
+    gsap.fromTo(tableRef.current.children,
+      {
+        opacity: 0,
+        y: 30,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: tableRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse"
+        }
+      }
+    );
+
+    // CTA animation
+    gsap.fromTo(ctaRef.current,
+      {
+        opacity: 0,
+        scale: 0.9,
+      },
+      {
+        opacity: 1,
+        scale: 1,
+        duration: 0.7,
+        ease: "back.out(1.7)",
+        scrollTrigger: {
+          trigger: ctaRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse"
+        }
+      }
+    );
+
+  }, { scope: sectionRef });
+
+  const comparisonData = [
+    {
+      feature: "Real-time Collaboration",
+      others: false,
+      syncspace: true,
+      icon: Users
+    },
+    {
+      feature: "Advanced Analytics",
+      others: "Limited",
+      syncspace: true,
+      icon: BarChart3
+    },
+    {
+      feature: "Enterprise Security",
+      others: "Basic",
+      syncspace: true,
+      icon: Shield
+    },
+    {
+      feature: "API Integration",
+      others: false,
+      syncspace: true,
+      icon: Zap
+    },
+    {
+      feature: "24/7 Support",
+      others: "Business hours only",
+      syncspace: true,
+      icon: null
+    },
+    {
+      feature: "Custom Workflows",
+      others: false,
+      syncspace: true,
+      icon: null
+    }
+  ];
+
   return (
     <section
-        id="comparison"
-        className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8"
-      >
-        <div className="max-w-6xl mx-auto">
-          {/* Section Header */}
-          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
-              Why Choose{" "}
-              <span className="bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] bg-clip-text text-transparent">
+      ref={sectionRef}
+      id="comparison"
+      className="py-20 lg:py-28 px-4 sm:px-6 lg:px-8 bg-slate-50"
+    >
+      <div className="max-w-6xl mx-auto">
+        {/* Section Header */}
+        <div ref={headerRef} className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-6">
+            <Star className="w-4 h-4" />
+            Why Choose Us
+          </div>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+            See how we
+            <span className="block bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              stack up
+            </span>
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Compare SyncSpace with traditional collaboration tools and see why 
+            thousands of teams are making the switch.
+          </p>
+        </div>
+
+        {/* Comparison Table */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+          {/* Table Header */}
+          <div className="grid grid-cols-3 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-200">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900">Features</h3>
+            </div>
+            <div className="p-6 text-center border-l border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-600">Other Tools</h3>
+            </div>
+            <div className="p-6 text-center border-l border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 SyncSpace
-              </span>
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed px-4">
-              See the difference between traditional tools and our unified
-              collaboration platform
-            </p>
+              </h3>
+            </div>
           </div>
 
-          {/* Comparison Cards */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 xl:gap-12">
-            {/* Others Card */}
-            <div className="group relative flex flex-col">
-              <div className="absolute -inset-1 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-3xl blur-sm group-hover:blur-md transition-all duration-300"></div>
-              <div className="relative flex flex-col h-full p-4 sm:p-6 lg:p-8 xl:p-10 rounded-3xl bg-white border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 cursor-pointer">
-                {/* Header */}
-                <div className="flex items-center justify-center xl:justify-start mb-4 sm:mb-6 lg:mb-8">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-red-100 to-orange-100 flex items-center justify-center mr-2 sm:mr-3 lg:mr-4">
-                    <X className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-red-500" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-800">
-                    Others
-                  </h3>
+          {/* Table Body */}
+          <div ref={tableRef}>
+            {comparisonData.map((item, index) => (
+              <div key={index} className="grid grid-cols-3 border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                <div className="p-6 flex items-center gap-3">
+                  {item.icon && <item.icon className="w-5 h-5 text-gray-600" />}
+                  <span className="font-medium text-gray-900">{item.feature}</span>
                 </div>
-
-                {/* Content Points */}
-                {[
-                  "Scattered tools for chat, tasks, and meetings",
-                  "Generic access for all users — no role control",
-                  "Complex, bloated interfaces not suited for small teams",
-                  "Switching between multiple apps causes confusion",
-                ].map((text, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 mb-2 sm:mb-3 rounded-2xl bg-gray-300/20 hover:bg-gray-200/50 transition-all duration-300 group/item cursor-pointer"
-                  >
-                    <div className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 rounded-full bg-red-100 flex items-center justify-center mt-0.5 sm:mt-1">
-                      <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-red-500" />
-                    </div>
-                    <p className="font-medium text-xs sm:text-sm md:text-base lg:text-lg text-gray-700 leading-relaxed group-hover/item:text-gray-900 transition-colors flex-1">
-                      {text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* SyncSpace Card */}
-            <div className="group relative flex flex-col">
-              <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/30 to-indigo-500/30 rounded-3xl blur-sm group-hover:blur-md transition-all duration-300 cursor-pointer"></div>
-              <div className="relative flex flex-col h-full p-4 sm:p-6 lg:p-8 xl:p-10 rounded-3xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden cursor-pointer">
-                <div className="absolute inset-0 opacity-10">
-                  <div className="absolute top-0 right-0 w-20 sm:w-32 h-20 sm:h-32 bg-white rounded-full -translate-y-8 sm:-translate-y-16 translate-x-8 sm:translate-x-16"></div>
-                  <div className="absolute bottom-0 left-0 w-16 sm:w-24 h-16 sm:h-24 bg-white rounded-full translate-y-6 sm:translate-y-12 -translate-x-6 sm:-translate-x-12"></div>
+                <div className="p-6 text-center border-l border-gray-100 flex items-center justify-center">
+                  {typeof item.others === 'boolean' ? (
+                    item.others ? (
+                      <Check className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <X className="w-5 h-5 text-red-500" />
+                    )
+                  ) : (
+                    <span className="text-sm text-gray-600 px-3 py-1 bg-gray-100 rounded-full">
+                      {item.others}
+                    </span>
+                  )}
                 </div>
-
-                <div className="relative z-10 flex flex-col h-full">
-                  <div className="flex items-center justify-center xl:justify-start mb-4 sm:mb-6 lg:mb-8">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center mr-2 sm:mr-3 lg:mr-4">
-                      <CheckCheck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+                <div className="p-6 text-center border-l border-gray-100 bg-gradient-to-r from-purple-50/30 to-blue-50/30 flex items-center justify-center">
+                  {typeof item.syncspace === 'boolean' && item.syncspace ? (
+                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-white">
-                      SyncSpace
-                    </h3>
-                  </div>
-
-                  {/* Content Points */}
-                  {[
-                    "Unified platform combining chat, tasks, and meetings",
-                    "Role-based permissions for secure and organized teamwork",
-                    "Simple, modern UI built for students, startups, and agile teams",
-                    "Seamless workflow — everything happens in one place",
-                  ].map((text, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-2 sm:gap-3 lg:gap-4 mb-2 sm:mb-3 p-2 sm:p-3 lg:p-4 rounded-2xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300 group/item border border-white/20 cursor-pointer"
-                    >
-                      <div className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 rounded-full bg-green-400/20 flex items-center justify-center mt-0.5 sm:mt-1">
-                        <CheckCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-green-300" />
-                      </div>
-                      <p className="font-medium text-xs sm:text-sm md:text-base lg:text-lg text-white leading-relaxed group-hover/item:text-green-100 transition-colors flex-1">
-                        {text}
-                      </p>
-                    </div>
-                  ))}
+                  ) : (
+                    <span className="text-sm font-medium text-purple-600">
+                      {item.syncspace}
+                    </span>
+                  )}
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div ref={ctaRef} className="mt-16 text-center">
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 lg:p-12 text-white">
+            <h3 className="text-3xl lg:text-4xl font-bold mb-4">
+              Ready to make the switch?
+            </h3>
+            <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
+              Join thousands of teams who've already upgraded their collaboration experience.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => (window.location.href = "/signup")}
+                className="group px-8 py-4 bg-white text-purple-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                <span className="flex items-center gap-2">
+                  Start Free Trial
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                </span>
+              </button>
+              <button className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300">
+                Schedule Demo
+              </button>
             </div>
           </div>
         </div>
-      </section>
-  )
-}
+      </div>
+    </section>
+  );
+};
 
-export default LandingComparision;
+export default LandingComparison;

@@ -143,14 +143,14 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 sm:pt-8 mt-6 sm:mt-8 border-t border-gray-700/50">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base"
+              className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"
             >
               Close
             </button>
             {canEdit && (
               <button
                 onClick={() => onEdit(notice)}
-                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-violet-900/40 hover:bg-violet-900/60 border border-violet-700/50 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base flex items-center justify-center gap-2"
+                className="px-6 py-3 rounded-xl font-medium bg-gradient-to-r bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl cursor-pointer"
               >
                 <Edit size={18} />
                 Edit Notice

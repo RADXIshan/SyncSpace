@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
-import { X, Save, Video, Calendar, Clock, Link, FileText } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Video, Calendar, FileText } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import ConfirmationModal from "./ConfirmationModal";
 
-const MeetingModal = ({ 
-  isOpen, 
-  onClose, 
-  orgId, 
-  channelId = null, 
-  meeting = null, 
-  onMeetingChange, 
-  canEdit = false 
+const MeetingModal = ({
+  isOpen,
+  onClose,
+  orgId,
+  channelId = null,
+  meeting = null,
+  onMeetingChange,
+  canEdit = false,
 }) => {
   const [formData, setFormData] = useState({
     title: "",
@@ -22,82 +23,71 @@ const MeetingModal = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [linkOption, setLinkOption] = useState("custom"); // "custom" or "generate"
   const [generatedRoomId, setGeneratedRoomId] = useState("");
+  const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   const isEditing = Boolean(meeting);
-  
+
   // Check if meeting has started (either marked as started or past start time)
-  const isMeetingStarted = meeting && (
-    meeting.started || 
-    new Date(meeting.start_time) <= new Date()
-  );
+  const isMeetingStarted =
+    meeting && (meeting.started || new Date(meeting.start_time) <= new Date());
 
-  // Generate a random room ID
-  const generateRoomId = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 12; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  // Get the base URL for generated meeting links
   const getBaseUrl = () => {
-    return window.location.origin;
+    if (typeof window !== "undefined") {
+      return window.location.origin;
+    }
+    return "";
   };
 
-  // Initialize form data
+  // Initialize form data when modal opens or meeting prop changes
   useEffect(() => {
-    if (meeting) {
+    if (isOpen && meeting) {
       const startTime = new Date(meeting.start_time);
-      const formattedDateTime = startTime.toISOString().slice(0, 16); // Format for datetime-local input
-      
+      const formattedDateTime = startTime.toISOString().slice(0, 16);
+
       setFormData({
         title: meeting.title || "",
         description: meeting.description || "",
         start_time: formattedDateTime,
         meeting_link: meeting.meeting_link || "",
       });
-      
-      // Determine if it's a generated link or custom link
-      const baseUrl = getBaseUrl();
-      if (meeting.meeting_link && meeting.meeting_link.startsWith(`${baseUrl}/meeting/`)) {
+      // Determine link option based on meeting_link
+      if (meeting.meeting_link?.startsWith(getBaseUrl() + "/meeting/")) {
         setLinkOption("generate");
-        const roomId = meeting.meeting_link.replace(`${baseUrl}/meeting/`, "");
-        setGeneratedRoomId(roomId);
+        setGeneratedRoomId(meeting.meeting_link.split("/meeting/")[1]);
       } else {
         setLinkOption("custom");
       }
-    } else {
-      // Set default start time to 1 hour from now
+    } else if (isOpen && !meeting) {
+      // Reset form for new meeting
       const defaultTime = new Date();
       defaultTime.setHours(defaultTime.getHours() + 1);
       const formattedDateTime = defaultTime.toISOString().slice(0, 16);
-      
-      // Generate a new room ID for new meetings
-      const newRoomId = generateRoomId();
+
+      const newRoomId = Math.random().toString(36).substring(2, 10);
       setGeneratedRoomId(newRoomId);
-      
+
       setFormData({
         title: "",
         description: "",
         start_time: formattedDateTime,
-        meeting_link: "",
+        meeting_link: `${getBaseUrl()}/meeting/${newRoomId}`,
       });
-      
-      setLinkOption("generate"); // Default to generate for new meetings
+      setLinkOption("generate");
     }
-    setHasUnsavedChanges(false);
-  }, [meeting, isOpen]);
+  }, [isOpen, meeting]);
 
   // Update meeting link when option or room ID changes
   useEffect(() => {
     if (linkOption === "generate" && generatedRoomId) {
       const generatedLink = `${getBaseUrl()}/meeting/${generatedRoomId}`;
-      setFormData(prev => ({ ...prev, meeting_link: generatedLink }));
-    } else if (linkOption === "custom" && formData.meeting_link.startsWith(getBaseUrl())) {
+      setFormData((prev) => ({ ...prev, meeting_link: generatedLink }));
+    } else if (
+      linkOption === "custom" &&
+      formData.meeting_link.startsWith(getBaseUrl() + "/meeting/")
+    ) {
       // Clear the link if switching from generate to custom
-      setFormData(prev => ({ ...prev, meeting_link: "" }));
+      setFormData((prev) => ({ ...prev, meeting_link: "" }));
     }
   }, [linkOption, generatedRoomId]);
 
@@ -105,84 +95,102 @@ const MeetingModal = ({
   useEffect(() => {
     if (!meeting) {
       setHasUnsavedChanges(
-        formData.title.trim() !== "" || 
-        formData.description.trim() !== "" || 
-        formData.meeting_link.trim() !== ""
+        formData.title.trim() !== "" ||
+          formData.description.trim() !== "" ||
+          (linkOption === "custom" && formData.meeting_link.trim() !== "") ||
+          (linkOption === "generate" && generatedRoomId !== "")
       );
     } else {
       const startTime = new Date(meeting.start_time);
       const formattedDateTime = startTime.toISOString().slice(0, 16);
-      
+
       setHasUnsavedChanges(
         formData.title !== (meeting.title || "") ||
-        formData.description !== (meeting.description || "") ||
-        formData.start_time !== formattedDateTime ||
-        formData.meeting_link !== (meeting.meeting_link || "")
+          formData.description !== (meeting.description || "") ||
+          formData.start_time !== formattedDateTime ||
+          formData.meeting_link !== (meeting.meeting_link || "")
       );
     }
-  }, [formData, meeting]);
+  }, [formData, meeting, linkOption, generatedRoomId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleGenerateRoomId = () => {
+    const newRoomId = Math.random().toString(36).substring(2, 10);
+    setGeneratedRoomId(newRoomId);
+    setLinkOption("generate");
+    setFormData((prev) => ({
+      ...prev,
+      meeting_link: `${getBaseUrl()}/meeting/${newRoomId}`,
+    }));
+  };
 
   const handleClose = () => {
-    if (hasUnsavedChanges) {
-      if (window.confirm("You have unsaved changes. Are you sure you want to close?")) {
-        onClose();
-      }
+    if (isEditing && hasUnsavedChanges) {
+      setPendingAction(() => onClose);
+      setShowUnsavedChangesModal(true);
     } else {
       onClose();
     }
   };
 
+  const discardChanges = () => {
+    setShowUnsavedChangesModal(false);
+    setHasUnsavedChanges(false);
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  };
+
+  const cancelUnsavedChanges = () => {
+    setShowUnsavedChangesModal(false);
+    setPendingAction(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.title.trim()) {
-      toast.error("Meeting title is required");
+    setIsLoading(true);
+
+    if (!formData.title.trim() || !formData.start_time) {
+      toast.error("Please fill in all required fields");
+      setIsLoading(false);
       return;
     }
-    
-    if (!formData.start_time) {
-      toast.error("Meeting start time is required");
-      return;
-    }
-    
-    if (!formData.meeting_link.trim()) {
-      toast.error("Meeting link is required");
+
+    if (linkOption === "custom" && !formData.meeting_link.trim()) {
+      toast.error("Please provide a meeting link");
+      setIsLoading(false);
       return;
     }
 
     // Validate start time is in the future (only for new meetings or meetings that haven't started)
-    if (!isMeetingStarted) {
+    if (!isEditing || !isMeetingStarted) {
       const startTime = new Date(formData.start_time);
       if (startTime <= new Date()) {
         toast.error("Meeting start time must be in the future");
+        setIsLoading(false);
         return;
       }
     }
 
-    setIsLoading(true);
-
     try {
-      const meetingData = {
-        org_id: orgId,
-        channel_id: channelId,
-        title: formData.title.trim(),
-        description: formData.description.trim() || null,
-        start_time: formData.start_time,
-        meeting_link: formData.meeting_link.trim(),
-      };
-
       if (isEditing) {
         await axios.put(
-          `${import.meta.env.VITE_BASE_URL}/api/meetings/${meeting.meeting_id}`,
-          meetingData,
-          { withCredentials: true }
+          `/api/orgs/${orgId}/channels/${channelId}/meetings/${meeting._id}`,
+          formData
         );
         toast.success("Meeting updated successfully");
       } else {
         await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/api/meetings`,
-          meetingData,
-          { withCredentials: true }
+          `/api/orgs/${orgId}/channels/${channelId}/meetings`,
+          formData
         );
         toast.success("Meeting created successfully");
       }
@@ -191,7 +199,8 @@ const MeetingModal = ({
       onClose();
     } catch (error) {
       console.error("Error saving meeting:", error);
-      const errorMessage = error.response?.data?.message || "Failed to save meeting";
+      const errorMessage =
+        error.response?.data?.message || "Failed to save meeting";
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -203,9 +212,8 @@ const MeetingModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
       <div className="relative w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-gray-900/50 to-indigo-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
         <div className="relative overflow-y-auto max-h-[98vh] sm:max-h-[95vh] px-4 py-6 sm:px-8 sm:py-10">
-          
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Close Button */}
             <button
@@ -218,14 +226,16 @@ const MeetingModal = ({
 
             {/* Header */}
             <div className="text-center mb-6 sm:mb-8">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
                 <Video size={24} className="text-white sm:w-8 sm:h-8" />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
                 {isEditing ? "Edit Meeting" : "Schedule Meeting"}
               </h2>
               <p className="text-gray-300 text-sm sm:text-base">
-                {isEditing ? "Update meeting details" : "Create a new meeting for your team"}
+                {isEditing
+                  ? "Update meeting details"
+                  : "Create a new meeting for your team"}
               </p>
             </div>
 
@@ -238,66 +248,56 @@ const MeetingModal = ({
                 </label>
                 <input
                   type="text"
+                  name="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={handleChange}
+                  placeholder="Team Sync, Project Review, etc."
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
                   required
-                  placeholder="Enter meeting title..."
-                  maxLength={255}
-                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
                 />
-                <div className="text-xs text-gray-400 mt-1">
-                  {formData.title.length}/255 characters
-                </div>
               </div>
 
               {/* Description Input */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
-                  Description
+                  Description (Optional)
                 </label>
                 <textarea
+                  name="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows="4"
-                  placeholder="Enter meeting description..."
-                  maxLength={1000}
-                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
-                />
-                <div className="text-xs text-gray-400 mt-1">
-                  {formData.description.length}/1000 characters
-                </div>
+                  onChange={handleChange}
+                  rows="3"
+                  placeholder="Brief agenda or key discussion points"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
+                ></textarea>
               </div>
 
-              {/* Start Time Input */}
+              {/* Date and Time Input */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
-                  Start Time
-                  {isMeetingStarted && (
-                    <span className="ml-2 text-xs text-yellow-400 font-normal">
-                      (Cannot be changed - meeting has started)
-                    </span>
-                  )}
+                  Date and Time
                 </label>
                 <div className="relative">
                   <input
                     type="datetime-local"
+                    name="start_time"
                     value={formData.start_time}
-                    onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm ${isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""}`}
                     required
                     disabled={isMeetingStarted}
-                    className={`w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border text-sm sm:text-base focus:outline-none transition-all duration-200 ${
-                      isMeetingStarted
-                        ? 'border-gray-700/50 bg-gray-700/50 text-gray-400 cursor-not-allowed'
-                        : 'border-gray-600/50 bg-gray-800/80 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 shadow-sm hover:shadow-md hover:bg-gray-800/90'
+                  />
+                  <Calendar
+                    size={20}
+                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none ${
+                      isMeetingStarted ? "text-gray-500" : "text-gray-400"
                     }`}
                   />
-                  <Calendar size={20} className={`absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none ${
-                    isMeetingStarted ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
                 </div>
                 {isMeetingStarted && (
                   <div className="text-xs text-yellow-400 mt-1">
-                    The meeting time cannot be changed because the meeting has already started.
+                    The meeting time cannot be changed because the meeting has
+                    already started.
                   </div>
                 )}
               </div>
@@ -305,9 +305,9 @@ const MeetingModal = ({
               {/* Meeting Link Options */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
-                  Meeting Link *
+                  Meeting Link
                 </label>
-                
+
                 {/* Link Option Selector */}
                 <div className="flex gap-4 mb-4">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -319,7 +319,9 @@ const MeetingModal = ({
                       onChange={(e) => setLinkOption(e.target.value)}
                       className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-300">Generate meeting room</span>
+                    <span className="text-sm text-gray-300">
+                      Generate meeting room
+                    </span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -328,70 +330,55 @@ const MeetingModal = ({
                       value="custom"
                       checked={linkOption === "custom"}
                       onChange={(e) => setLinkOption(e.target.value)}
-                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-blue-500"
+                      className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 focus:ring-2 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-300">Custom meeting link</span>
+                    <span className="text-sm text-gray-300">
+                      Custom link
+                    </span>
                   </label>
                 </div>
 
                 {linkOption === "generate" ? (
-                  <div className="space-y-3">
-                    {/* Generated Room ID Input */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-2">
-                        Room ID
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={generatedRoomId}
-                          onChange={(e) => setGeneratedRoomId(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
-                          placeholder="room-id"
-                          className="flex-1 px-3 py-2 rounded-lg border border-gray-600/50 bg-gray-800/80 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400"
-                          maxLength={20}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setGeneratedRoomId(generateRoomId())}
-                          className="px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 rounded-lg text-sm transition-all"
-                        >
-                          Generate
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Generated Link Preview */}
-                    <div className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/30">
-                      <div className="text-xs text-gray-400 mb-1">Generated meeting link:</div>
-                      <div className="text-sm text-blue-400 font-mono break-all">
-                        {getBaseUrl()}/meeting/{generatedRoomId || 'room-id'}
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={`${getBaseUrl()}/meeting/${generatedRoomId}`}
+                      readOnly
+                      className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm cursor-not-allowed"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGenerateRoomId}
+                      className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap"
+                    >
+                      Generate ID
+                    </button>
                   </div>
                 ) : (
                   <div className="relative">
                     <input
                       type="url"
                       value={formData.meeting_link}
-                      onChange={(e) => setFormData({ ...formData, meeting_link: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, meeting_link: e.target.value })
+                      }
                       required
-                      placeholder="https://meet.google.com/abc-defg-hij or https://zoom.us/j/123456789"
-                      className="w-full px-3 py-3 sm:px-4 sm:py-4 pl-12 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
+                      placeholder="https://meet.google.com/abc-defg-hij"
+                      className="w-full px-3 py-3 sm:px-4 sm:py-4 pl-12 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
                     />
                   </div>
                 )}
-                
+
                 <div className="text-xs text-gray-400 mt-2">
-                  {linkOption === "generate" 
+                  {linkOption === "generate"
                     ? "Generate a meeting room that opens in a new page with the room ID"
-                    : "Enter the full meeting URL (Google Meet, Zoom, Teams, etc.)"
-                  }
+                    : "Enter the full meeting URL (Google Meet, Zoom, Teams, etc.)"}
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 sm:pt-8 border-t border-gray-700/50">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-6 sm:pt-8 border-t border-gray-700/50">
               <button
                 type="button"
                 onClick={handleClose}
@@ -402,19 +389,48 @@ const MeetingModal = ({
               <button
                 type="submit"
                 disabled={isLoading || !formData.title.trim() || !formData.start_time || !formData.meeting_link.trim()}
-                className={`w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl transition-all font-medium flex items-center justify-center gap-2 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 ${
-                  hasUnsavedChanges 
-                    ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-green-600/50 disabled:to-green-700/50 text-white shadow-lg shadow-green-500/25 border border-green-500/30' 
-                    : 'px-6 py-3 rounded-xl font-medium bg-gradient-to-r bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl cursor-pointer'
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center shadow-lg hover:shadow-xl ${
+                  isEditing && hasUnsavedChanges
+                    ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300"
+                    : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
                 }`}
               >
-                <Save size={18} />
-                {isLoading ? "Saving..." : hasUnsavedChanges ? "Save Changes" : isEditing ? "Update Meeting" : "Schedule Meeting"}
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileText size={16} />
+                    <span>
+                      {isEditing && hasUnsavedChanges
+                        ? "Save Changes*"
+                        : "Save Changes"}
+                    </span>
+                    {isEditing && hasUnsavedChanges && (
+                      <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
+                    )}
+                  </>
+                )}
               </button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Unsaved Changes Modal */}
+      <ConfirmationModal
+        isOpen={showUnsavedChangesModal}
+        onClose={cancelUnsavedChanges}
+        onConfirm={discardChanges}
+        title="Unsaved Changes"
+        message="You have unsaved changes that will be lost if you continue. Are you sure you want to discard these changes?"
+        confirmText="Discard Changes"
+        cancelText="Keep Editing"
+        type="warning"
+        loading={false}
+      />
     </div>
   );
 };

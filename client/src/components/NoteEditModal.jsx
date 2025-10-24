@@ -120,7 +120,7 @@ const NoteEditModal = ({ isOpen, onClose, onSubmit, note }) => {
               type="button"
               onClick={handleClose}
               disabled={isSaving}
-              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 duration-300"
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 duration-300"
             >
               <X size={22} className="sm:w-6 sm:h-6" />
             </button>
@@ -215,7 +215,7 @@ const NoteEditModal = ({ isOpen, onClose, onSubmit, note }) => {
               <button
                 type="submit"
                 disabled={isSaving || !title.trim() || !body.trim()}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 cursor-pointer active:scale-95 flex items-center gap-2 justify-center shadow-lg hover:shadow-xl ${
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center shadow-lg hover:shadow-xl ${
                   isSaving ? "opacity-50 cursor-not-allowed" : ""
                 } ${
                   hasUnsavedChanges

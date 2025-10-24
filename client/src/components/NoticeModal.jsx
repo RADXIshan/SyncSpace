@@ -171,7 +171,7 @@ const NoticeModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
       <div className="relative w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-gray-900/50 to-indigo-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
         <div className="relative overflow-y-auto max-h-[98vh] sm:max-h-[95vh] px-4 py-6 sm:px-8 sm:py-10">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Close Button and Delete Button */}
@@ -189,7 +189,7 @@ const NoticeModal = ({
             <button
               type="button"
               onClick={handleClose}
-              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 duration-300"
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 duration-300"
             >
               <X size={22} className="sm:w-6 sm:h-6" />
             </button>
@@ -221,7 +221,7 @@ const NoticeModal = ({
                   required
                   placeholder="Enter notice title..."
                   maxLength={100}
-                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
                 />
                 <div className="text-xs text-gray-400 mt-1">
                   {formData.title.length}/100 characters
@@ -240,7 +240,7 @@ const NoticeModal = ({
                   placeholder="Enter notice content..."
                   maxLength={500}
                   required
-                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 shadow-sm"
                 />
                 <div className="text-xs text-gray-400 mt-1">
                   {formData.body.length}/500 characters
@@ -249,41 +249,37 @@ const NoticeModal = ({
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-gray-700/50">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-6 sm:pt-8 border-t border-gray-700/50">
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={isLoading}
-                className="px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 text-gray-300 hover:text-white font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 shadow-lg hover:shadow-xl text-sm sm:text-base order-2 sm:order-1"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading || !formData.title.trim() || !formData.body.trim()}
-                className={`px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 justify-center shadow-lg hover:shadow-xl text-sm sm:text-base order-1 sm:order-2 ${
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center shadow-lg hover:shadow-xl ${
                   hasUnsavedChanges
-                    ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300"
-                    : "bg-violet-900/40 hover:bg-violet-900/60 border border-violet-700/50 text-violet-400 hover:text-violet-300"
+                    ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                    : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 }`}
               >
                 {isLoading ? (
                   <>
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span className="hidden sm:inline">Updating...</span>
-                    <span className="sm:hidden">Saving...</span>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Saving...</span>
                   </>
                 ) : (
                   <>
-                    <Save size={14} className="sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">
+                    <Save size={16} />
+                    <span>
                       {hasUnsavedChanges ? "Save Changes*" : "Save Changes"}
                     </span>
-                    <span className="sm:hidden">
-                      {hasUnsavedChanges ? "Save*" : "Save"}
-                    </span>
                     {hasUnsavedChanges && (
-                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-400 rounded-full animate-pulse" />
+                      <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
                     )}
                   </>
                 )}

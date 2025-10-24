@@ -37,7 +37,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
               {canEdit && (
                 <button
                   onClick={() => onEdit(notice)}
-                  className="p-2.5 rounded-full hover:bg-blue-500/30 text-blue-400 hover:text-blue-300 transition-all transform hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg duration-300"
+                  className="p-2.5 rounded-full hover:bg-blue-500/30 text-blue-400 hover:text-blue-300 transition-all transform hover:scale-110 active:scale-95 cursor-pointer hover:shadow-lg duration-300"
                   title="Edit Notice"
                 >
                   <Edit size={18} />
@@ -45,7 +45,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
               )}
               <button
                 onClick={onClose}
-                className="p-2 rounded-full hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all transform hover:scale-110 active:scale-95 cursor-pointer shadow-md hover:shadow-lg duration-300 hover:rotate-90"
+                className="p-2 rounded-full hover:bg-gray-700/50 text-gray-300 hover:text-white transition-all transform hover:scale-110 active:scale-95 cursor-pointer hover:shadow-lg duration-300 hover:rotate-90"
                 title="Close"
               >
                 <X size={20} />
@@ -150,7 +150,7 @@ const NoticeViewModal = ({ isOpen, onClose, notice, onEdit, canEdit = false }) =
             {canEdit && (
               <button
                 onClick={() => onEdit(notice)}
-                className="px-6 py-3 rounded-xl font-medium bg-gradient-to-r bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl cursor-pointer"
+                className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl cursor-pointer"
               >
                 <Edit size={18} />
                 Edit Notice

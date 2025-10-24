@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { X, Video, Calendar, FileText } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -372,7 +372,7 @@ const MeetingModal = ({
                       }
                       required
                       placeholder="https://meet.google.com/abc-defg-hij"
-                      className="w-full px-3 py-3 sm:px-4 sm:py-4 pl-12 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
+                      className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
                     />
                   </div>
                 )}

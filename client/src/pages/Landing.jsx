@@ -3,7 +3,7 @@ import LandingNav  from "../components/LandingNav";
 import LandingHero from "../components/LandingHero";
 import LandingComparision from "../components/LandingComparison";
 import LandingFeatures from "../components/LandingFeatures";
-import Footer from "../components/footernote";
+import FooterNote from "../components/FooterNote";
 
 const Landing = () => {
   return (
@@ -22,7 +22,7 @@ const Landing = () => {
         <LandingComparision />
         <LandingFeatures />
         <FAQList />
-        <Footer />
+        <FooterNote />
       </div>
     </div>
   );

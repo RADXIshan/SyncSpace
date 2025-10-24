@@ -22,8 +22,8 @@ export const roleColors = [
   { background: 'bg-neutral-500/20', border: 'border-neutral-400', text: 'text-neutral-200' },
 ];
 
-// Reserved Creator role styling
-const CREATOR_STYLE = {
+// Reserved Owner role styling
+const OWNER_STYLE = {
   background: 'bg-gradient-to-r from-yellow-500/25 to-orange-500/25',
   border: 'border-yellow-400',
   text: 'text-yellow-200'
@@ -47,9 +47,9 @@ export const getRoleStyle = (role, allRoles = []) => {
   
   const normalizedRole = role.toLowerCase();
   
-  // Special case for Creator role - always gets the same reserved style
-  if (normalizedRole === 'creator') {
-    return CREATOR_STYLE;
+  // Special case for Owner role - always gets the same reserved style
+  if (normalizedRole === 'owner') {
+    return OWNER_STYLE;
   }
   
   // If we already have a color assigned to this role, return it
@@ -89,7 +89,7 @@ export const initializeRoleColors = (roles) => {
   
   // Sort roles to ensure consistent assignment order
   const sortedRoles = [...roles]
-    .filter(role => role && role.toLowerCase() !== 'creator') // Exclude creator from assignment
+    .filter(role => role && role.toLowerCase() !== 'owner') // Exclude owner from assignment
     .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   
   // Assign colors in order

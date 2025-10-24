@@ -184,6 +184,10 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
     const invalidRoles = roles.some((r) => !r.name.trim());
     if (invalidRoles) return toast.error("All roles must have a name");
 
+    // Check for Owner role
+    const hasOwnerRole = roles.some((r) => r.name.trim().toLowerCase() === 'owner');
+    if (hasOwnerRole) return toast.error("The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.");
+
     const roleNames = roles.map((r) => r.name.trim().toLowerCase());
     if (new Set(roleNames).size !== roleNames.length)
       return toast.error("Role names must be unique");
@@ -266,7 +270,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10"
+              className="absolute top-5 right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-white/10 hover:rotate-90 duration-300"
             >
               <X size={22} />
             </button>

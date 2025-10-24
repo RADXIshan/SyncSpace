@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import {
@@ -25,10 +25,13 @@ import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 import NoteInputModal from "./NoteInputModal";
 import NoteEditModal from "./NoteEditModal";
 import ConfirmationModal from "./ConfirmationModal";
+import EditChannel from "./EditChannel";
+import MeetingModal from "./MeetingModal";
 
 const ChannelPage = () => {
   const { channelId } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -45,33 +48,18 @@ const ChannelPage = () => {
   const [selectedNote, setSelectedNote] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
+  const [meetingsLoading, setMeetingsLoading] = useState(false);
   const [showChannelMenu, setShowChannelMenu] = useState(false);
-  const [meetings, setMeetings] = useState([
-    {
-      id: 1,
-      title: "Weekly Team Sync",
-      description: "Weekly synchronization meeting with all team members",
-      date: "Dec 15, 2024",
-      time: "10:00 AM",
-      status: "ongoing",
-    },
-    {
-      id: 2,
-      title: "Project Review",
-      description: "Review project progress and discuss next steps",
-      date: "Dec 16, 2024",
-      time: "2:00 PM",
-      status: "upcoming",
-    },
-    {
-      id: 3,
-      title: "Client Presentation",
-      description: "Present project updates to the client",
-      date: "Dec 18, 2024",
-      time: "11:00 AM",
-      status: "upcoming",
-    },
-  ]); // Mock meetings data
+  const [showEditChannelModal, setShowEditChannelModal] = useState(false);
+  const [showDeleteChannelModal, setShowDeleteChannelModal] = useState(false);
+  const [channelDeleteLoading, setChannelDeleteLoading] = useState(false);
+  const [meetings, setMeetings] = useState([]);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [showEditMeetingModal, setShowEditMeetingModal] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [showDeleteMeetingModal, setShowDeleteMeetingModal] = useState(false);
+  const [meetingToDelete, setMeetingToDelete] = useState(null);
+  const [meetingDeleteLoading, setMeetingDeleteLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -173,7 +161,7 @@ const ChannelPage = () => {
         );
         const allMembers = membersRes.data.members || [];
         const filtered = allMembers.filter((member) => {
-          if (member.isCreator) return true;
+          if (member.isOwner) return true;
           if (
             !Array.isArray(member.accessible_teams) ||
             member.accessible_teams.length === 0
@@ -237,9 +225,32 @@ const ChannelPage = () => {
     fetchNotes();
   }, [fetchNotes]);
 
+  // Fetch meetings for the channel
+  const fetchMeetings = useCallback(async () => {
+    if (!user?.org_id || !channelId) return;
+    try {
+      setMeetingsLoading(true);
+
+      const res = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/api/meetings?org_id=${
+          user.org_id
+        }&channel_id=${channelId}`,
+        { withCredentials: true }
+      );
+
+      setMeetings(res.data.meetings || []);
+    } catch (err) {
+      console.error("Error fetching meetings:", err);
+      setMeetings([]);
+    } finally {
+      setMeetingsLoading(false);
+    }
+  }, [user?.org_id, channelId]);
+
   useEffect(() => {
     fetchNotes();
-  }, [fetchNotes]);
+    fetchMeetings();
+  }, [fetchNotes, fetchMeetings]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -373,6 +384,156 @@ const ChannelPage = () => {
     setShowDeleteModal(true);
   };
 
+  // Meeting management functions
+  const refreshMeetings = useCallback(() => {
+    fetchMeetings();
+  }, [fetchMeetings]);
+
+  const handleEditMeeting = (meeting) => {
+    setSelectedMeeting(meeting);
+    setShowEditMeetingModal(true);
+  };
+
+  const handleDeleteMeetingClick = (meeting) => {
+    setMeetingToDelete(meeting);
+    setShowDeleteMeetingModal(true);
+  };
+
+  const handleDeleteMeetingConfirm = async () => {
+    if (!meetingToDelete) return;
+
+    setMeetingDeleteLoading(true);
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/api/meetings/${
+          meetingToDelete.meeting_id
+        }`,
+        { withCredentials: true }
+      );
+      toast.success("Meeting deleted successfully");
+      refreshMeetings();
+      setShowDeleteMeetingModal(false);
+      setMeetingToDelete(null);
+    } catch (error) {
+      console.error("Error deleting meeting:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete meeting";
+      toast.error(errorMessage);
+    } finally {
+      setMeetingDeleteLoading(false);
+    }
+  };
+
+  const handleStartMeeting = async (meetingId) => {
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_BASE_URL}/api/meetings/${meetingId}/start`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success("Meeting started successfully");
+      refreshMeetings();
+    } catch (error) {
+      console.error("Error starting meeting:", error);
+      const errorMessage =
+        error.response?.data?.message || "Failed to start meeting";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleJoinMeeting = (meetingLink) => {
+    window.open(meetingLink, "_blank");
+  };
+
+  const formatMeetingTime = (startTime) => {
+    const date = new Date(startTime);
+    const now = new Date();
+    const diffTime = date.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    if (diffDays > 1 && diffDays <= 7) return `In ${diffDays} days`;
+    if (diffDays < -1 && diffDays >= -7)
+      return `${Math.abs(diffDays)} days ago`;
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    });
+  };
+
+  const getMeetingStatus = (startTime, started) => {
+    if (started) return "ongoing";
+
+    const now = new Date();
+    const meetingTime = new Date(startTime);
+    const diffMinutes = (meetingTime.getTime() - now.getTime()) / (1000 * 60);
+
+    if (diffMinutes < -30) return "ended"; // Meeting ended more than 30 minutes ago
+    if (diffMinutes < 0) return "ongoing"; // Meeting should be ongoing
+    if (diffMinutes < 15) return "starting-soon"; // Meeting starts in less than 15 minutes
+    return "upcoming";
+  };
+
+  // Channel management functions
+  const handleEditChannelSubmit = async (channelData) => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${
+          user.org_id
+        }/channels/${channelId}`,
+        channelData,
+        { withCredentials: true }
+      );
+
+      // Update the local channel state
+      setChannel(response.data.channel);
+      toast.success("Channel updated successfully");
+      setShowEditChannelModal(false);
+
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event("organizationUpdated"));
+    } catch (error) {
+      console.error("Error updating channel:", error);
+      toast.error(error.response?.data?.message || "Failed to update channel");
+    }
+  };
+
+  const handleDeleteChannelClick = () => {
+    setShowChannelMenu(false);
+    setShowDeleteChannelModal(true);
+  };
+
+  const handleDeleteChannelConfirm = async () => {
+    setChannelDeleteLoading(true);
+
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/api/orgs/${
+          user.org_id
+        }/channels/${channelId}`,
+        { withCredentials: true }
+      );
+
+      toast.success("Channel deleted successfully");
+
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event("organizationUpdated"));
+
+      // Close modal and navigate back to dashboard
+      setShowDeleteChannelModal(false);
+      navigate("/home/dashboard");
+    } catch (error) {
+      console.error("Error deleting channel:", error);
+      toast.error(error.response?.data?.message || "Failed to delete channel");
+    } finally {
+      setChannelDeleteLoading(false);
+    }
+  };
+
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -447,19 +608,19 @@ const ChannelPage = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100">
-        <div className="flex items-center justify-between p-4">
+      <div className="bg-gradient-to-br pt-15 sm:pt-0 from-violet-50 via-indigo-50 to-purple-100">
+        <div className="flex items-center justify-between p-2 sm:p-4">
           {/* Left Section */}
-          <div className="flex items-center px-6">
-            <div className="bg-gradient-to-br from-purple-100 to-indigo-100 p-2.5 rounded-lg mr-3">
-              <Hash size={20} className="text-purple-600" />
+          <div className="flex items-center px-2 sm:px-6">
+            <div className="bg-gradient-to-br from-purple-100 to-indigo-100 p-1.5 sm:p-2.5 rounded-lg mr-2 sm:mr-3">
+              <Hash size={16} className="text-purple-600 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                 {channel.name}
               </h1>
               {channel.description && (
-                <p className="text-gray-600 text-xs mt-0.5">
+                <p className="text-gray-600 text-xs mt-0.5 hidden sm:block">
                   {channel.description}
                 </p>
               )}
@@ -467,35 +628,42 @@ const ChannelPage = () => {
           </div>
 
           {/* Right Section - 3 Dots */}
-          <div className="pr-6 cursor-pointer">
-            <button
-              onClick={() => setShowChannelMenu(true)}
-              className="p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
-            >
-              <MoreVertical
-                size={20}
-                className="text-gray-700 group-hover:text-violet-700 transition-all duration-300"
-              />
-            </button>
-          </div>
+          {/* Only show menu button if user has permissions for any menu items */}
+          {(userPermissions?.manage_channels ||
+            userPermissions?.settings_access) && (
+            <div className="pr-2 sm:pr-6 cursor-pointer">
+              <button
+                onClick={() => setShowChannelMenu(true)}
+                className="p-1.5 sm:p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
+              >
+                <MoreVertical
+                  size={18}
+                  className="text-gray-700 group-hover:text-violet-700 transition-all duration-300 sm:w-5 sm:h-5"
+                />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center w-full border-0">
+        <div className="flex pt-3 sm:pt-0 items-center w-full border-0 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-1 items-center justify-center gap-2 py-3 font-semibold text-lg transition-all duration-200 rounded-t-lg cursor-pointer ${
+                className={`flex flex-1 items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 font-semibold text-sm sm:text-lg transition-all duration-200 rounded-t-lg cursor-pointer whitespace-nowrap min-w-0 ${
                   activeTab === tab.id
                     ? "text-purple-600 bg-slate-50"
                     : "text-purple-400 hover:text-purple-600 hover:bg-slate-200"
                 }`}
               >
-                <Icon size={18} />
-                {tab.label}
+                <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden text-xs">
+                  {tab.label.split(" ")[0]}
+                </span>
               </button>
             );
           })}
@@ -506,281 +674,397 @@ const ChannelPage = () => {
       <div className="flex-1 overflow-hidden">
         {/* HOME TAB */}
         {activeTab === "home" && (
-          <div className="h-full overflow-y-auto p-6 bg-slate-50">
+          <div className="h-full overflow-y-auto p-3 sm:p-6 bg-slate-50">
             <div className="max-w-7xl mx-auto">
               {/* Two Column Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
                 {/* Left Side - Meetings */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="px-6 py-5 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="p-3 rounded-full bg-blue-500/20">
-                          <Video size={22} className="text-blue-500" />
+                <div className="relative bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden group/meetings flex flex-col transition-all duration-500 hover:scale-[1.02]">
+                  {/* Background gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+
+                  <div className="relative z-10 p-4 sm:p-6 lg:p-8 flex flex-col h-full">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
+                      <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
+                        <div className="p-2 sm:p-3 lg:p-4 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover/meetings:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                          <Video
+                            size={18}
+                            className="text-purple-400 group-hover/meetings:scale-110 transition-all duration-300 sm:w-6 sm:h-6"
+                          />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          Meetings
-                        </h3>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white group-hover/meetings:text-purple-100 transition-colors duration-300 truncate">
+                            Meetings
+                          </h3>
+                          <p className="text-gray-400 text-xs sm:text-sm mt-1 hidden sm:block">
+                            Scheduled meetings
+                          </p>
+                        </div>
                       </div>
+
+                      {/* Action button */}
                       {userPermissions?.meeting_access && (
-                        <button className="text-blue-600 hover:text-blue-700 p-1.5 rounded-full hover:bg-blue-50 transition-colors cursor-pointer duration-300 group">
+                        <button
+                          onClick={() => setShowMeetingModal(true)}
+                          title="Schedule New Meeting"
+                          className="p-2 sm:p-3 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg group/plus cursor-pointer flex-shrink-0"
+                        >
                           <Plus
-                            size={20}
-                            className="group-hover:scale-120 group-hover:rotate-90 duration-300"
+                            size={16}
+                            className="group-hover/plus:rotate-90 transition-transform duration-300 sm:w-5 sm:h-5"
                           />
                         </button>
                       )}
                     </div>
-                  </div>
-                  <div className="p-6">
-                    {meetings.length > 0 ? (
-                      <div className="space-y-3">
-                        {meetings.map((meeting, index) => (
-                          <div
-                            key={index}
-                            className={`p-4 rounded-lg border shadow-sm transition-all pl-4 group ${
-                              userPermissions?.meeting_access
-                                ? "hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-purple-100 cursor-pointer"
-                                : ""
-                            } ${
-                              meeting.status === "upcoming"
-                                ? "border-l-4 border-blue-500 bg-gradient-to-r from-white via-white to-blue-50"
-                                : meeting.status === "ongoing"
-                                ? "border-l-4 border-green-500 bg-gradient-to-r from-white via-white to-green-50"
-                                : "border-l-4 border-gray-400 bg-gradient-to-r from-white via-white to-gray-50"
-                            }`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-gray-900">
-                                  {meeting.title}
-                                </h4>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {meeting.description}
-                                </p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span className="text-xs text-gray-500">
-                                    {meeting.date}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {meeting.time}
-                                  </span>
-                                  <span
-                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                      meeting.status === "upcoming"
-                                        ? "bg-blue-100 text-blue-700"
-                                        : meeting.status === "ongoing"
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-gray-100 text-gray-700"
-                                    }`}
-                                  >
-                                    {meeting.status}
-                                  </span>
+                    {/* Content Area */}
+                    <div className="flex-1 overflow-hidden">
+                      {meetingsLoading ? (
+                        <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16">
+                          <div className="relative">
+                            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-2 border-purple-500/30"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-purple-500 absolute top-0 left-0"></div>
+                          </div>
+                          <p className="text-gray-400 mt-4 text-xs sm:text-sm">
+                            Loading meetings...
+                          </p>
+                        </div>
+                      ) : meetings.length > 0 ? (
+                        <div className="space-y-2 sm:space-y-3 max-h-full overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+                          {meetings.map((meeting) => {
+                            const status = getMeetingStatus(
+                              meeting.start_time,
+                              meeting.started
+                            );
+                            const meetingDate = new Date(meeting.start_time);
+
+                            return (
+                              <div
+                                key={meeting.meeting_id}
+                                className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
+                              >
+                                {/* Hover gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+
+                                <div className="relative z-10">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-medium text-white group-hover/card:text-purple-100 text-sm sm:text-base lg:text-lg truncate transition-colors duration-300">
+                                        {meeting.title}
+                                      </h4>
+                                      {meeting.description && (
+                                        <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 mt-1 line-clamp-2 transition-colors duration-300">
+                                          {meeting.description}
+                                        </p>
+                                      )}
+                                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
+                                        <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
+                                          {formatMeetingTime(
+                                            meeting.start_time
+                                          )}
+                                        </span>
+                                        <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
+                                          {meetingDate.toLocaleTimeString(
+                                            "en-US",
+                                            {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            }
+                                          )}
+                                        </span>
+                                        <span
+                                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${
+                                            status === "upcoming"
+                                              ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                                              : status === "ongoing" ||
+                                                status === "starting-soon"
+                                              ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-500/30"
+                                          }`}
+                                        >
+                                          {status === "starting-soon"
+                                            ? "Starting Soon"
+                                            : status}
+                                        </span>
+                                        {meeting.created_by_name && (
+                                          <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
+                                            by {meeting.created_by_name}
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Action buttons for joining/starting */}
+                                      <div className="flex items-center gap-2 mt-3">
+                                        {(status === "ongoing" ||
+                                          status === "starting-soon") && (
+                                          <button
+                                            onClick={() =>
+                                              handleJoinMeeting(
+                                                meeting.meeting_link
+                                              )
+                                            }
+                                            className="px-3 py-1.5 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-green-500/30"
+                                          >
+                                            <Video size={12} />
+                                            Join Meeting
+                                          </button>
+                                        )}
+                                        {status === "upcoming" &&
+                                          !meeting.started &&
+                                          userPermissions?.meeting_access && (
+                                            <button
+                                              onClick={() =>
+                                                handleStartMeeting(
+                                                  meeting.meeting_id
+                                                )
+                                              }
+                                              className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-purple-500/30"
+                                            >
+                                              <Video size={12} />
+                                              Start Meeting
+                                            </button>
+                                          )}
+                                      </div>
+                                    </div>
+
+                                    {userPermissions?.meeting_access && (
+                                      <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                                        <button
+                                          onClick={() =>
+                                            handleEditMeeting(meeting)
+                                          }
+                                          className="p-1 hover:bg-purple-500/20 rounded text-gray-400 hover:text-purple-300 transition-colors duration-300"
+                                        >
+                                          <Edit2
+                                            size={12}
+                                            className="sm:w-[14px] sm:h-[14px]"
+                                          />
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            handleDeleteMeetingClick(meeting)
+                                          }
+                                          className="p-1 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-300 transition-colors duration-300"
+                                        >
+                                          <Trash2
+                                            size={12}
+                                            className="sm:w-[14px] sm:h-[14px]"
+                                          />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                              {userPermissions?.meeting_access && (
-                                <div className="flex items-center gap-1 ml-2">
-                                  <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600">
-                                    <Edit2 size={14} />
-                                  </button>
-                                  <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-red-600">
-                                    <Trash2 size={14} />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Hash size={24} className="text-gray-400" />
+                            );
+                          })}
                         </div>
-                        <p className="text-gray-500 mb-2">
-                          No meetings scheduled
-                        </p>
-                        {userPermissions?.meeting_access && (
-                          <p className="text-sm text-gray-400">
-                            Click the + button to schedule a meeting
-                          </p>
-                        )}
-                      </div>
-                    )}
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16 text-center px-4">
+                          <div className="relative mb-4 sm:mb-6">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/30">
+                              <Video
+                                size={24}
+                                className="text-purple-400 opacity-60 sm:w-8 sm:h-8"
+                              />
+                            </div>
+                            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 animate-pulse"></div>
+                          </div>
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-300 mb-2">
+                            No meetings scheduled
+                          </h3>
+                          {userPermissions?.meeting_access ? (
+                            <p className="text-gray-400 text-xs sm:text-sm max-w-xs">
+                              Click the + button above to schedule your first
+                              meeting
+                            </p>
+                          ) : (
+                            <p className="text-gray-400 text-xs sm:text-sm max-w-xs">
+                              Only users with meeting access can schedule
+                              meetings
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Right Side - Notes/Tasks */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="px-6 py-5 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="p-3 rounded-full bg-purple-500/20">
-                          <NotebookPen size={22} className="text-purple-500" />
+                <div className="relative bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden group/notes flex flex-col transition-all duration-500 hover:scale-[1.02]">
+                  {/* Background gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+
+                  <div className="relative z-10 p-4 sm:p-6 lg:p-8 flex flex-col h-full">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
+                      <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
+                        <div className="p-2 sm:p-3 lg:p-4 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover/notes:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                          <NotebookPen
+                            size={18}
+                            className="text-purple-400 group-hover/notes:scale-110 transition-all duration-300 sm:w-6 sm:h-6"
+                          />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          Notes & Tasks
-                        </h3>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white group-hover/notes:text-purple-100 transition-colors duration-300 truncate">
+                            Notes & Tasks
+                          </h3>
+                          <p className="text-gray-400 text-xs sm:text-sm mt-1 hidden sm:block">
+                            Channel notes and tasks
+                          </p>
+                        </div>
                       </div>
+
+                      {/* Action button */}
                       {userPermissions?.notes_access && (
                         <button
                           onClick={() => setShowNoteModal(true)}
-                          className="text-purple-600 hover:text-purple-700 p-1.5 rounded-full hover:bg-purple-50 transition-colors cursor-pointer duration-300 group"
+                          title="Create New Note"
+                          className="p-2 sm:p-3 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg group/plus cursor-pointer flex-shrink-0"
                         >
                           <Plus
-                            size={20}
-                            className="group-hover:scale-120 group-hover:rotate-90 duration-300"
+                            size={16}
+                            className="group-hover/plus:rotate-90 transition-transform duration-300 sm:w-5 sm:h-5"
                           />
                         </button>
                       )}
                     </div>
-                  </div>
-                  <div className="p-6">
-                    {notesLoading ? (
-                      <div className="flex items-center justify-center py-12">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                          <p className="text-gray-500 text-sm">
+                    {/* Content Area */}
+                    <div className="flex-1 overflow-hidden">
+                      {notesLoading ? (
+                        <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16">
+                          <div className="relative">
+                            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-2 border-purple-500/30"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-purple-500 absolute top-0 left-0"></div>
+                          </div>
+                          <p className="text-gray-400 mt-4 text-xs sm:text-sm">
                             Loading notes...
                           </p>
                         </div>
-                      </div>
-                    ) : notes.length > 0 ? (
-                      <div className="space-y-3">
-                        {notes.map((note) => (
-                          <div
-                            key={note.note_id}
-                            className={`rounded-2xl transition-all flex ${
-                              userPermissions?.notes_access
-                                ? "hover:shadow-lg hover:-translate-y-1"
-                                : ""
-                            } ${
-                              note.pinned
-                                ? "bg-gradient-to-r from-purple-500 via-purple-400 to-purple-100 shadow-purple-300 shadow-md"
-                                : "border border-gray-300 bg-gradient-to-r from-white via-white to-gray-50"
-                            }`}
-                          >
-                            <div className="flex items-start w-full justify-between">
-                              <div className="flex-1 p-4">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h4
-                                    className={`font-medium ${
-                                      note.pinned
-                                        ? `text-white `
-                                        : `text-gray-900`
-                                    }`}
-                                  >
-                                    {note.title}
-                                  </h4>
-                                  {note.pinned && (
-                                    <span className="px-2 py-1 bg-white/40 border border-purple-700 text-purple-700 text-xs font-medium rounded-full">
-                                      Pinned
-                                    </span>
-                                  )}
-                                </div>
-                                <p
-                                  className={`text-sm mt-1 line-clamp-3 ${
-                                    note.pinned
-                                      ? `text-slate-200`
-                                      : `text-gray-600`
-                                  }`}
-                                >
-                                  {note.body}
-                                </p>
-                                <div className="flex items-center gap-2 mt-2">
-                                  <span
-                                    className={`text-xs ${
-                                      note.pinned
-                                        ? `text-slate-300`
-                                        : `text-gray-500`
-                                    }`}
-                                  >
-                                    {new Date(
-                                      note.created_at
-                                    ).toLocaleDateString()}
-                                  </span>
-                                  {note.created_by_name && (
-                                    <span
-                                      className={`text-xs ${
-                                        note.pinned
-                                          ? `text-slate-300`
-                                          : `text-gray-500`
-                                      }`}
-                                    >
-                                      by {note.created_by_name}
-                                    </span>
+                      ) : notes.length > 0 ? (
+                        <div className="space-y-2 sm:space-y-3 max-h-full overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 pb-2 scrollbar-track-transparent">
+                          {notes.map((note) => (
+                            <div
+                              key={note.note_id}
+                              className={`group/card relative border rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-md ${
+                                note.pinned ? `border-purple-500 bg-purple-900/10 hover:bg-purple-700/5 hover:shadow-purple-600` : `border-gray-600/50 hover:border-purple-500/50 bg-gray-800/50 hover:bg-gray-700/50`
+                              }`}
+                            >
+                              {/* Hover gradient overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+
+                              <div className="relative z-10">
+                                <div className="flex items-start w-full justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h4 className="font-medium text-sm sm:text-base lg:text-lg text-white group-hover/card:text-purple-100 transition-colors duration-300 truncate">
+                                        {note.title}
+                                      </h4>
+                                      {note.pinned && (
+                                        <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium rounded-full flex-shrink-0">
+                                          Pinned
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 mt-1 line-clamp-2 sm:line-clamp-3 transition-colors duration-300">
+                                      {note.body}
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
+                                      <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
+                                        {new Date(
+                                          note.created_at
+                                        ).toLocaleDateString()}
+                                      </span>
+                                      {note.created_by_name && (
+                                        <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
+                                          by {note.created_by_name}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {userPermissions?.notes_access && (
+                                    <div className="absolute right-0 top-0 flex items-center gap-1 ml-2 flex-shrink-0">
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleUpdateNote(note.note_id, {
+                                            title: note.title,
+                                            body: note.body,
+                                            pinned: !note.pinned,
+                                          });
+                                        }}
+                                        className={`p-2 hover:bg-purple-500/20 rounded-md transition-colors duration-300 cursor-pointer group ${
+                                          note.pinned
+                                            ? "text-purple-300"
+                                            : "text-gray-400 hover:text-purple-300"
+                                        }`}
+                                        title={note.pinned ? "Unpin" : "Pin"}
+                                      >
+                                        <Pin
+                                          size={12}
+                                          className="sm:w-[14px] sm:h-[14px] duration-300 group-hover:rotate-45"
+                                        />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleEditNote(note);
+                                        }}
+                                        className="p-2 hover:bg-blue-500/20 rounded-md text-gray-400 hover:text-blue-300 transition-colors duration-300 cursor-pointer group"
+                                        title="Edit note"
+                                      >
+                                        <Edit2
+                                          size={12}
+                                          className="sm:w-[14px] sm:h-[14px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-300"
+                                        />
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteNoteClick(note)
+                                        }
+                                        className="p-2 hover:bg-red-500/20 rounded-md text-gray-400 hover:text-red-300 transition-colors duration-300 cursor-pointer group"
+                                      >
+                                        <Trash2
+                                          size={12}
+                                          className="sm:w-[14px] sm:h-[14px] group-hover:scale-120 duration-300 group-hover:rotate-10"
+                                        />
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
                               </div>
-                              {userPermissions?.notes_access && (
-                                <div className="flex items-center rounded-r-2xl overflow-hidden flex-col h-full">
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleUpdateNote(note.note_id, {
-                                        title: note.title,
-                                        body: note.body,
-                                        pinned: !note.pinned,
-                                      });
-                                    }}
-                                    className={`pl-2 pb-2 pt-3 pr-3 flex-1 duration-300 cursor-pointer group hover:text-white hover:bg-purple-600 ${
-                                      note.pinned
-                                        ? "text-purple-500"
-                                        : "text-gray-400"
-                                    }`}
-                                    title={note.pinned ? "Unpin" : "Pin"}
-                                  >
-                                    <Pin
-                                      size={14}
-                                      className="group-hover:scale-120 duration-300"
-                                    />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleEditNote(note);
-                                    }}
-                                    className="pt-2 pl-2 pb-2 pr-3 flex-1 hover:bg-blue-500 group text-gray-400 hover:text-white cursor-pointer duration-300"
-                                    title="Edit note"
-                                  >
-                                    <Edit2
-                                      size={14}
-                                      className="group-hover:scale-120 duration-300"
-                                    />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteNoteClick(note)}
-                                    className="pt-2 pl-2 pr-3 pb-3 flex-1 hover:bg-red-500 rounded-br-2xl text-gray-400 hover:text-white cursor-pointer duration-300 group"
-                                  >
-                                    <Trash2
-                                      size={14}
-                                      className="group-hover:scale-120 duration-300"
-                                    />
-                                  </button>
-                                </div>
-                              )}
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <Hash size={24} className="text-gray-400" />
+                          ))}
                         </div>
-                        <p className="text-gray-500 mb-2">
-                          No notes or tasks yet
-                        </p>
-                        {userPermissions?.notes_access && (
-                          <p className="text-sm text-gray-400">
-                            Click the + button to add your first note
-                          </p>
-                        )}
-                      </div>
-                    )}
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16 text-center px-4">
+                          <div className="relative mb-4 sm:mb-6">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/30">
+                              <NotebookPen
+                                size={24}
+                                className="text-purple-400 opacity-60 sm:w-8 sm:h-8"
+                              />
+                            </div>
+                            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 animate-pulse"></div>
+                          </div>
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-300 mb-2">
+                            No notes or tasks yet
+                          </h3>
+                          {userPermissions?.notes_access ? (
+                            <p className="text-gray-400 text-xs sm:text-sm max-w-xs">
+                              Click the + button above to add your first note
+                            </p>
+                          ) : (
+                            <p className="text-gray-400 text-xs sm:text-sm max-w-xs">
+                              Only users with notes access can create notes
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -791,15 +1075,15 @@ const ChannelPage = () => {
         {/* CHATS TAB */}
         {activeTab === "chats" && (
           <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6 text-center">
-                <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-purple-300">
-                  <Hash size={32} className="text-purple-600" />
+            <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 bg-slate-50">
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 sm:p-6 text-center">
+                <div className="bg-white w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 border-2 border-purple-300">
+                  <Hash size={24} className="text-purple-600 sm:w-8 sm:h-8" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                   Welcome to #{channel.name}
                 </h2>
-                <p className="text-gray-700">
+                <p className="text-sm sm:text-base text-gray-700">
                   This is the beginning of the{" "}
                   <span className="text-purple-600 font-medium">
                     #{channel.name}
@@ -816,8 +1100,8 @@ const ChannelPage = () => {
                 return (
                   <div
                     key={message.id}
-                    className={`flex gap-3 group ${
-                      showAvatar ? "mt-4" : "mt-1"
+                    className={`flex gap-2 sm:gap-3 group ${
+                      showAvatar ? "mt-3 sm:mt-4" : "mt-1"
                     }`}
                   >
                     {showAvatar ? (
@@ -825,40 +1109,46 @@ const ChannelPage = () => {
                         <img
                           src={message.userPhoto}
                           alt={message.userName}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm border-2 border-gray-200 flex-shrink-0">
                           {message.userName?.charAt(0) || "U"}
                         </div>
                       )
                     ) : (
-                      <div className="w-10"></div>
+                      <div className="w-8 sm:w-10 flex-shrink-0"></div>
                     )}
 
                     <div className="flex-1 min-w-0">
                       {showAvatar && (
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-900 text-sm">
+                          <span className="font-semibold text-gray-900 text-sm truncate">
                             {message.userName}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 flex-shrink-0">
                             {formatTime(message.timestamp)}
                           </span>
                         </div>
                       )}
 
                       <div className="flex items-start gap-2">
-                        <p className="text-gray-800 text-sm leading-relaxed break-words">
+                        <p className="text-gray-800 text-sm leading-relaxed break-words flex-1">
                           {message.content}
                         </p>
                         {isOwnMessage && (
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 flex-shrink-0">
                             <button className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-blue-600">
-                              <Edit2 size={14} />
+                              <Edit2
+                                size={12}
+                                className="sm:w-[14px] sm:h-[14px]"
+                              />
                             </button>
                             <button className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600">
-                              <Trash2 size={14} />
+                              <Trash2
+                                size={12}
+                                className="sm:w-[14px] sm:h-[14px]"
+                              />
                             </button>
                           </div>
                         )}
@@ -872,7 +1162,7 @@ const ChannelPage = () => {
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-gray-200 bg-white p-4">
+            <div className="border-t border-gray-200 bg-white p-2 sm:p-4">
               <form onSubmit={handleSendMessage} className="relative">
                 <div className="bg-gray-50 border border-gray-300 rounded-xl focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-200 transition-all duration-200">
                   <textarea
@@ -881,46 +1171,51 @@ const ChannelPage = () => {
                     onChange={handleTextareaChange}
                     onKeyDown={handleKeyDown}
                     placeholder={`Message #${channel.name}`}
-                    className="w-full bg-transparent text-gray-900 placeholder-gray-500 px-4 py-3 pr-24 resize-none outline-none text-sm max-h-[150px]"
+                    className="w-full bg-transparent text-gray-900 placeholder-gray-500 px-3 sm:px-4 py-2 sm:py-3 pr-16 sm:pr-24 resize-none outline-none text-sm max-h-[120px] sm:max-h-[150px]"
                     rows="1"
                     disabled={sending}
                   />
 
-                  <div className="flex items-center justify-between px-3 pb-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between px-2 sm:px-3 pb-2 sm:pb-3">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       <button
                         type="button"
-                        className="p-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900"
+                        className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900"
                         title="Add emoji"
                       >
-                        <Smile size={18} />
+                        <Smile size={16} className="sm:w-[18px] sm:h-[18px]" />
                       </button>
                       <button
                         type="button"
-                        className="p-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900"
+                        className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900"
                         title="Attach file"
                       >
-                        <Paperclip size={18} />
+                        <Paperclip
+                          size={16}
+                          className="sm:w-[18px] sm:h-[18px]"
+                        />
                       </button>
                     </div>
 
                     <button
                       type="submit"
                       disabled={!newMessage.trim() || sending}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                      className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                         newMessage.trim() && !sending
                           ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >
-                      <Send size={16} />
-                      <span>{sending ? "Sending..." : "Send"}</span>
+                      <Send size={14} className="sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">
+                        {sending ? "Sending..." : "Send"}
+                      </span>
                     </button>
                   </div>
                 </div>
               </form>
 
-              <p className="text-xs text-gray-500 mt-2 text-center">
+              <p className="text-xs text-gray-500 mt-2 text-center hidden sm:block">
                 Press{" "}
                 <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs border border-gray-300">
                   Enter
@@ -936,56 +1231,56 @@ const ChannelPage = () => {
         )}
 
         {activeTab === "members" && (
-          <div className="h-full overflow-y-auto p-6 bg-slate-50">
+          <div className="h-full overflow-y-auto p-3 sm:p-6 bg-slate-50">
             <div className="max-w-4xl mx-auto">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <div className="mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   Channel Members
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                   {members.length} members in this channel
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {members.map((member) => (
                   <div
                     key={member.id}
-                    className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200"
+                    className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-shadow duration-200"
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2 sm:gap-3">
                       {member.userPhoto ? (
                         <img
                           src={member.userPhoto}
                           alt={member.name}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold border-2 border-gray-200">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 flex-shrink-0">
                           {member.name?.charAt(0) || "U"}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {member.name}
                         </h3>
-                        <p className="text-sm text-gray-600 truncate">
+                        <p className="text-xs sm:text-sm text-gray-600 truncate">
                           {member.email}
                         </p>
                         <div className="mt-2 flex items-center gap-2">
                           <div
-                            className={`px-2 py-1 ${
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 ${
                               getRoleStyle(member.role).background
                             } border ${
                               getRoleStyle(member.role).border
                             } rounded flex items-center gap-1`}
                           >
-                            {member.isCreator && (
+                            {member.isOwner && (
                               <Crown
-                                size={12}
+                                size={10}
                                 className={`${
                                   getMessagesRoleStyle(member.role).text
-                                }`}
+                                } sm:w-3 sm:h-3`}
                               />
                             )}
                             <span
@@ -1004,9 +1299,14 @@ const ChannelPage = () => {
               </div>
 
               {members.length === 0 && (
-                <div className="text-center py-12">
-                  <Users size={48} className="mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-600">No members found</p>
+                <div className="text-center py-8 sm:py-12">
+                  <Users
+                    size={36}
+                    className="mx-auto text-gray-400 mb-4 sm:w-12 sm:h-12"
+                  />
+                  <p className="text-sm sm:text-base text-gray-600">
+                    No members found
+                  </p>
                 </div>
               )}
             </div>
@@ -1015,59 +1315,118 @@ const ChannelPage = () => {
       </div>
 
       {showChannelMenu && (
-        <div
-          className="w-64 absolute top-1 right-6 bg-white/70 backdrop-blur-lg border border-gray-200/50 
-                    rounded-xl shadow-2xl z-50 animate-slideIn"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200/60">
-            <h3 className="text-lg font-bold text-gray-900">Channel Menu</h3>
-            <button
-              onClick={() => setShowChannelMenu(false)}
-              className="p-2.5 rounded-full hover:bg-violet-100 hover:rotate-90 transition-all duration-300 cursor-pointer text-violet-700"
-            >
-              <X
-                size={20}
-                className="text-gray-700 group-hover:text-violet-700 transition-all duration-300"
-              />
-            </button>
-          </div>
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowChannelMenu(false)}
+          />
 
-          {/* Menu items */}
-          <div className="p-3 space-y-2 overflow-hidden">
-            {/* Edit Channel */}
-            <div
-              className="flex items-center gap-3 p-3 rounded-md border border-transparent 
-                        transition-all duration-300 cursor-pointer group 
-                        hover:translate-x-1 hover:scale-[1.02] hover:shadow-md
-                        hover:bg-gradient-to-r from-violet-50 to-indigo-100"
-            >
-              <Edit2
-                size={20}
-                className="text-gray-600 group-hover:text-violet-700 transition-all duration-300 group-hover:rotate-6"
-              />
-              <span className="text-gray-900 group-hover:text-violet-700 transition-colors duration-300">
-                Edit Channel
-              </span>
+          {/* Menu */}
+          <div className="absolute top-1 right-2 sm:right-6 w-64 sm:w-72 bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 animate-fadeIn overflow-hidden max-h-[60vh] sm:h-[calc(50vh-110px)]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-2 py-3 sm:py-4 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 sm:p-2 rounded-full bg-violet-500/20">
+                  <Hash
+                    size={16}
+                    className="text-violet-400 sm:w-[18px] sm:h-[18px]"
+                  />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-white">
+                  Channel Settings
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowChannelMenu(false)}
+                className="absolute top-3 sm:top-4 right-2 sm:right-3 p-1.5 sm:p-2 rounded-full hover:bg-white/20 text-white transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-90 cursor-pointer"
+              >
+                <X size={16} className="sm:w-[18px] sm:h-[18px]" />
+              </button>
             </div>
 
-            {/* Delete Channel */}
-            <div
-              className="flex items-center gap-3 p-3 rounded-md border border-transparent 
-                        transition-all duration-300 cursor-pointer group 
-                        hover:translate-x-1 hover:scale-[1.02] hover:shadow-md
-                        hover:bg-gradient-to-r from-red-50 to-rose-100"
-            >
-              <Trash2
-                size={20}
-                className="text-gray-600 group-hover:text-red-600 transition-all duration-300 group-hover:-rotate-6"
-              />
-              <span className="text-gray-900 group-hover:text-red-600 transition-colors duration-300">
-                Delete Channel
-              </span>
+            {/* Menu items */}
+            <div className="p-3 sm:p-4 space-y-2">
+              {/* Show message if no permissions */}
+              {!(
+                userPermissions?.manage_channels ||
+                userPermissions?.settings_access
+              ) && (
+                <div className="text-center py-4 sm:py-6">
+                  <div className="p-2 sm:p-3 rounded-full bg-gray-500/20 w-fit mx-auto mb-3">
+                    <Hash size={20} className="text-gray-400 sm:w-6 sm:h-6" />
+                  </div>
+                  <p className="text-gray-300 text-sm font-medium">
+                    No actions available
+                  </p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    You don't have permission to manage this channel
+                  </p>
+                </div>
+              )}
+
+              {/* Edit Channel - Only show if user has permission */}
+              {(userPermissions?.manage_channels ||
+                userPermissions?.settings_access) && (
+                <div
+                  onClick={() => {
+                    setShowEditChannelModal(true);
+                    setShowChannelMenu(false);
+                  }}
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-violet-500/10 hover:border-violet-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-500/10"
+                >
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-violet-500/20 group-hover:bg-violet-500/30 transition-all duration-300 flex-shrink-0">
+                    <Edit2
+                      size={16}
+                      className="text-violet-400 group-hover:text-violet-300 transition-all duration-300 group-hover:rotate-12 sm:w-[18px] sm:h-[18px]"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-white font-medium group-hover:text-violet-200 transition-colors duration-300 text-sm sm:text-base">
+                      Edit Channel
+                    </span>
+                    <p className="text-gray-400 text-xs mt-0.5 group-hover:text-violet-300/70">
+                      Modify channel name and description
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Delete Channel - Only show if user has permission */}
+              {(userPermissions?.manage_channels ||
+                userPermissions?.settings_access) && (
+                <div
+                  onClick={handleDeleteChannelClick}
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-red-500/10"
+                >
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-all duration-300 flex-shrink-0">
+                    <Trash2
+                      size={16}
+                      className="text-red-400 group-hover:text-red-300 transition-all duration-300 group-hover:rotate-12 sm:w-[18px] sm:h-[18px]"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-white font-medium group-hover:text-red-200 transition-colors duration-300 text-sm sm:text-base">
+                      Delete Channel
+                    </span>
+                    <p className="text-gray-400 text-xs mt-0.5 group-hover:text-red-300/70">
+                      Permanently remove this channel
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </>
+      )}
+
+      {showEditChannelModal && (
+        <EditChannel
+          isOpen={showEditChannelModal}
+          onClose={() => setShowEditChannelModal(false)}
+          onSubmit={handleEditChannelSubmit}
+          channel={channel}
+        />
       )}
 
       {/* Note Modals */}
@@ -1101,6 +1460,58 @@ const ChannelPage = () => {
         cancelText="Cancel"
         type="danger"
         loading={deleteLoading}
+      />
+
+      {/* Delete Channel Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteChannelModal}
+        onClose={() => setShowDeleteChannelModal(false)}
+        onConfirm={handleDeleteChannelConfirm}
+        title="Delete Channel"
+        message={`Are you sure you want to delete the channel "${channel?.name}"? This will permanently remove all notes, messages, and content in this channel. This action cannot be undone.`}
+        confirmText="Delete Channel"
+        cancelText="Cancel"
+        type="danger"
+        loading={channelDeleteLoading}
+      />
+
+      {/* Meeting Modals */}
+      <MeetingModal
+        isOpen={showMeetingModal}
+        onClose={() => setShowMeetingModal(false)}
+        orgId={user?.org_id}
+        channelId={channelId}
+        onMeetingChange={refreshMeetings}
+        canEdit={userPermissions?.meeting_access}
+      />
+
+      <MeetingModal
+        isOpen={showEditMeetingModal}
+        onClose={() => {
+          setShowEditMeetingModal(false);
+          setSelectedMeeting(null);
+        }}
+        orgId={user?.org_id}
+        channelId={channelId}
+        meeting={selectedMeeting}
+        onMeetingChange={refreshMeetings}
+        canEdit={userPermissions?.meeting_access}
+      />
+
+      {/* Delete Meeting Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteMeetingModal}
+        onClose={() => {
+          setShowDeleteMeetingModal(false);
+          setMeetingToDelete(null);
+        }}
+        onConfirm={handleDeleteMeetingConfirm}
+        title="Delete Meeting"
+        message={`Are you sure you want to delete the meeting "${meetingToDelete?.title}"? This action cannot be undone.`}
+        confirmText="Delete Meeting"
+        cancelText="Cancel"
+        type="danger"
+        loading={meetingDeleteLoading}
       />
     </div>
   );

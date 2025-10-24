@@ -17,7 +17,7 @@ const verifyToken = (req) => {
 
 // Helper function to check notes_access permission
 const checkNotesAccess = async (userId, orgId) => {
-  // Check if user is organization creator (has full access)
+  // Check if user is organization owner (has full access)
   const [org] = await sql`
     SELECT created_by
     FROM organisations

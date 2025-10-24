@@ -113,10 +113,10 @@ const NoticeBoard = ({ orgId, className = "" }) => {
         
         setUserPermissions(permissions);
         
-        // User has notice access if they have the permission OR are the org creator
-        const isCreator = organization.created_by === user.user_id;
+        // User has notice access if they have the permission OR are the org owner
+        const isOwner = organization.created_by === user.user_id;
         const hasPermission = Boolean(permissions.noticeboard_access);
-        setHasNoticeAccess(isCreator || hasPermission);
+        setHasNoticeAccess(isOwner || hasPermission);
       } catch (err) {
         console.error("Error fetching permissions:", err);
         setUserPermissions(null);
@@ -169,103 +169,128 @@ const NoticeBoard = ({ orgId, className = "" }) => {
 
   return (
     <>
-      <section className={`bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 group/notice rounded-2xl p-6 shadow-lg hover:shadow-xl border border-white/20 flex flex-col transition-all ${className}`}>
-        <div className="flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-6">
-            {/* Left section: Pin + Title */}
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-purple-400/20">
-                <Pin size={22} className="text-purple-400 rotate-45 group-hover/notice:rotate-0 duration-200 group-hover/notice:scale-110" />
+      <section className={`relative bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden group/notice flex flex-col transition-all duration-500 hover:scale-[1.02] ${className}`}>
+        {/* Background gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+        
+        <div className="relative z-10 p-4 sm:p-6 lg:p-8 flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
+              <div className="p-2 sm:p-3 lg:p-4 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover/notice:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                <Pin size={18} className="text-purple-400 rotate-45 group-hover/notice:rotate-0 group-hover/notice:scale-110 transition-all duration-300 sm:w-6 sm:h-6" />
               </div>
-              <h2 className="text-2xl font-semibold text-slate-100">
-                Notice Board
-              </h2>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white group-hover/notice:text-purple-100 transition-colors duration-300 truncate">
+                  Notice Board
+                </h2>
+                <p className="text-gray-400 text-xs sm:text-sm mt-1 hidden sm:block">Organization announcements</p>
+              </div>
             </div>
 
-            {/* Right section: Plus button */}
+            {/* Action button */}
             {hasNoticeAccess && (
               <button 
                 onClick={() => setShowCreateModal(true)}
-                title="Add Notice"
-                className="text-purple-400 hover:text-purple-300 cursor-pointer p-1.5 rounded-full 
-                          bg-purple-400/20 hover:bg-purple-400/30 shadow-sm hover:shadow-md 
-                          duration-300 group/plus"
+                title="Create New Notice"
+                className="p-2 sm:p-3 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg group/plus cursor-pointer flex-shrink-0"
               >
-                <Plus size={20} className="group-hover/plus:scale-125 group-hover/plus:rotate-90 duration-300" />
+                <Plus size={16} className="group-hover/plus:rotate-90 transition-transform duration-300 sm:w-5 sm:h-5" />
               </button>
             )}
           </div>
-        </div>
 
-        <div className="space-y-4 flex-1 overflow-y-auto p-1">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
-            </div>
-          ) : notices.length === 0 ? (
-            <div className="text-center py-8">
-              <Pin size={48} className="text-gray-500 mx-auto mb-4 opacity-50" />
-              <p className="text-gray-400 text-lg">No notices yet</p>
-              {hasNoticeAccess ? (
-                <p className="text-gray-500 text-sm mt-2">
-                  Click the + button to create the first notice
-                </p>
-              ) : (
-                <p className="text-gray-500 text-sm mt-2">
-                  Only users with noticeboard access can create notices
-                </p>
-              )}
-            </div>
-          ) : (
-            notices.map((notice) => (
-              <div 
-                key={notice.notice_id}
-                className="border border-purple-700/50 bg-purple-700/20 p-4 rounded-xl cursor-pointer transition-all duration-300 group/card hover:border-purple-500 hover:bg-purple-500/20 transform hover:shadow-lg hover:shadow-purple-500/10"
-                onClick={() => handleNoticeClick(notice)}
-              >
-                <div className="flex justify-between items-start gap-4 mb-3">
-                  <span className="text-lg font-semibold text-slate-300 group-hover/card:text-slate-100 duration-300 flex-1 line-clamp-2">
-                    {notice.title}
-                  </span>
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Eye size={16} className="text-gray-500 group-hover/card:text-gray-300 opacity-0 group-hover/card:opacity-100 transition-opacity" />
-                  </div>
+          {/* Content Area */}
+          <div className="flex-1 overflow-hidden">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-2 border-purple-500/30"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-purple-500 absolute top-0 left-0"></div>
                 </div>
-
-                <div className="relative max-h-12 overflow-hidden mb-3">
-                  <p className="text-sm text-violet-500/60 leading-snug group-hover/card:text-violet-300/70 duration-300">
-                    {truncateText(notice.body)}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    {notice.created_by_name && (
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 text-slate-500 group-hover/card:text-slate-400">
-                          <User size={12} />
-                          <span>{notice.created_by_name}</span>
-                        </div>
-                        {notice.created_by_role && (
-                          <span 
-                            className={`px-2 py-1 rounded text-xs border ${getRoleStyle(notice.created_by_role).background} ${getRoleStyle(notice.created_by_role).border} ${getRoleStyle(notice.created_by_role).text}`}
-                          >
-                            {notice.created_by_role}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-1 text-slate-500 group-hover/card:text-slate-400">
-                    <Calendar size={12} />
-                    <span>{formatDate(notice.created_at)}</span>
-                  </div>
-                </div>
+                <p className="text-gray-400 mt-4 text-xs sm:text-sm">Loading notices...</p>
               </div>
-            ))
-          )}
+            ) : notices.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16 text-center px-4">
+                <div className="relative mb-4 sm:mb-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/30">
+                    <Pin size={24} className="text-purple-400 opacity-60 sm:w-8 sm:h-8" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 animate-pulse"></div>
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-300 mb-2">No notices yet</h3>
+                {hasNoticeAccess ? (
+                  <p className="text-gray-400 text-xs sm:text-sm max-w-xs">
+                    Click the + button above to create your first notice and keep everyone informed
+                  </p>
+                ) : (
+                  <p className="text-gray-400 text-xs sm:text-sm max-w-xs">
+                    Only users with noticeboard access can create notices
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2 sm:space-y-3 max-h-full overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+                {notices.map((notice) => (
+                  <div 
+                    key={notice.notice_id}
+                    className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
+                    onClick={() => handleNoticeClick(notice)}
+                  >
+                    {/* Hover gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+                    
+                    <div className="relative z-10">
+                      {/* Header */}
+                      <div className="flex justify-between items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-white group-hover/card:text-purple-100 transition-colors duration-300 flex-1 line-clamp-2 leading-tight">
+                          {notice.title}
+                        </h3>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="p-1 sm:p-1.5 rounded-full bg-purple-500/20 opacity-0 group-hover/card:opacity-100 transition-all duration-300 transform scale-90 group-hover/card:scale-100">
+                            <Eye size={12} className="text-purple-400 sm:w-[14px] sm:h-[14px]" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content preview */}
+                      <div className="mb-3 sm:mb-4">
+                        <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 leading-relaxed line-clamp-2 transition-colors duration-300">
+                          {truncateText(notice.body, window.innerWidth < 640 ? 80 : 120)}
+                        </p>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 text-xs">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          {notice.created_by_name && (
+                            <div className="flex items-center gap-1 sm:gap-2 min-w-0">
+                              <div className="flex items-center gap-1 sm:gap-2 text-gray-400 group-hover/card:text-gray-300 transition-colors min-w-0">
+                                <User size={12} className="flex-shrink-0 sm:w-[14px] sm:h-[14px]" />
+                                <span className="font-medium truncate text-xs sm:text-sm">{notice.created_by_name}</span>
+                              </div>
+                              {notice.created_by_role && (
+                                <span 
+                                  className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs font-medium border flex-shrink-0 ${getRoleStyle(notice.created_by_role).background} ${getRoleStyle(notice.created_by_role).border} ${getRoleStyle(notice.created_by_role).text}`}
+                                >
+                                  {notice.created_by_role[0].toUpperCase() + notice.created_by_role.slice(1).toLowerCase()}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-gray-400 group-hover/card:text-gray-300 transition-colors">
+                          <Calendar size={14} />
+                          <span className="font-medium">{formatDate(notice.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

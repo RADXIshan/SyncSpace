@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { Calendar, Settings, Hash, Users, Cog, UserPlus, LogIn, Home, LogOut, Crown, MessageCircle, Bell, Menu, X } from 'lucide-react';
+import { Calendar, Settings, Hash, Users, UserPlus, Home, LogOut, Crown, MessageCircle, Bell, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
@@ -125,19 +125,19 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
   // Check if user can invite others
   const canInvite = () => {
     if (!userPermissions || !organization) return false;
-    const isCreator = userPermissions.isCreator || false;
+    const isOwner = userPermissions.isOwner || false;
     const hasInviteAccess = userPermissions.invite_access === true; // Handle null/undefined values
     
     // Check based on organization access level
     if (organization.accessLevel === 'public') {
       // Public: Anyone can join directly, but members need invite_access to send invitations
-      return isCreator || userRole === 'admin' || hasInviteAccess;
+      return isOwner || userRole === 'admin' || hasInviteAccess;
     } else if (organization.accessLevel === 'invite-only') {
       // Invite-only: Only permitted members can invite
-      return isCreator || userRole === 'admin' || hasInviteAccess;
+      return isOwner || userRole === 'admin' || hasInviteAccess;
     } else if (organization.accessLevel === 'admin-only') {
-      // Admin-only: Only creator or admins can invite
-      return isCreator || userRole === 'admin';
+      // Admin-only: Only owner or admins can invite
+      return isOwner || userRole === 'admin';
     }
     
     return false;
@@ -253,7 +253,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
       <div className={`
         h-min-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col
         ${isMobile 
-          ? `fixed top-0 left-0 z-40 w-64 mobile-sidebar transition-transform duration-300 ${
+          ? `fixed top-0 left-0 bottom-0 z-40 w-64 mobile-sidebar transition-transform duration-300 ${
               isMobileOpen ? 'translate-x-0' : '-translate-x-full'
             }` 
           : 'w-64'
@@ -396,7 +396,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
               </div>
               {organization && userRole && (
                 <div className={`px-2 py-0.5 ${getRoleStyle(userRole).background} border ${getRoleStyle(userRole).border} rounded flex items-center gap-1 flex-shrink-0`}>
-                  {userPermissions?.isCreator && (
+                  {userPermissions?.isOwner && (
                     <Crown size={9} className={`${getRoleStyle(userRole).text} flex-shrink-0`} />
                   )}
                   <span className={`text-xs font-medium ${getRoleStyle(userRole).text} capitalize`}>
@@ -430,7 +430,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
           </button>
         </div>
       </div>
-      
+      </div>
       {/* Confirmation Modals */}
       <ConfirmationModal
         isOpen={showLeaveOrgConfirm}
@@ -452,10 +452,9 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
         message="Are you sure you want to logout? You will need to sign in again to access your account."
         confirmText="Logout"
         cancelText="Cancel"
-        type="warning"
+        type="danger"
         loading={actionLoading}
       />
-      </div>
     </>
   );
 };

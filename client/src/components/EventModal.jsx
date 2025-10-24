@@ -149,7 +149,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
             <button
               type="button"
               onClick={handleClose}
-              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-colors text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80"
+              className="absolute top-3 right-3 sm:top-5 sm:right-5 text-gray-400 hover:text-white transition-all transform text-xl cursor-pointer active:scale-95 z-10 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 duration-300"
             >
               <X size={20} className="sm:w-6 sm:h-6" />
             </button>
@@ -205,7 +205,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                       timeIntervals={15}
                       dateFormat="yyyy-MM-dd h:mm aa"
                       className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90"
-                      calendarClassName="react-datepicker--dark-theme"
+                      calendarClassName="react-datepicker--light"
                       portalId="datepicker-portal"
                       withPortal
                     />

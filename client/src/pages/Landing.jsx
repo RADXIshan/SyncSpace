@@ -22,6 +22,7 @@ const Landing = () => {
         <LandingComparision />
         <LandingFeatures />
         <FAQList />
+        <Footer />
       </div>
     </div>
   );

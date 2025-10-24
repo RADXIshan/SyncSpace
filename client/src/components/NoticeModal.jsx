@@ -181,7 +181,7 @@ const NoticeModal = ({
                 onClick={handleDelete}
                 disabled={isDeleting}
                 title="Delete Notice"
-                className="absolute top-3 right-12 sm:top-5 sm:right-16 text-red-400 hover:text-red-300 transition-colors cursor-pointer active:scale-95 z-10 p-2.5 rounded-full hover:bg-red-500/10 duration-300 shadow-md hover:shadow-lg hover:scale-110"
+                className="absolute top-3 right-12 sm:top-5 sm:right-16 text-red-400 hover:text-red-300 cursor-pointer active:scale-95 hover:shadow-lg hover:scale-110 z-10 p-2.5 rounded-full hover:bg-red-500/10 transition-all duration-300"
               >
                 <Trash2 size={20} className="sm:w-5 sm:h-5" />
               </button>

@@ -28,6 +28,7 @@ const LandingHero = () => {
                 onClick={() => (window.location.href = "/signup")}
                 className="relative px-6 sm:px-8 py-3 sm:py-[9px] rounded-md font-semibold text-white bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-info)] shadow-lg hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer active:scale-95 text-base sm:text-lg w-full sm:w-auto"
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 <span className="relative z-10">Get Started</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-info)] to-[var(--color-secondary)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"></div>
               </button>

@@ -518,19 +518,19 @@ const ChannelPage = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100">
-        <div className="flex items-center justify-between p-4">
+      <div className="bg-gradient-to-br pt-15 sm:pt-0 from-violet-50 via-indigo-50 to-purple-100">
+        <div className="flex items-center justify-between p-2 sm:p-4">
           {/* Left Section */}
-          <div className="flex items-center px-6">
-            <div className="bg-gradient-to-br from-purple-100 to-indigo-100 p-2.5 rounded-lg mr-3">
-              <Hash size={20} className="text-purple-600" />
+          <div className="flex items-center px-2 sm:px-6">
+            <div className="bg-gradient-to-br from-purple-100 to-indigo-100 p-1.5 sm:p-2.5 rounded-lg mr-2 sm:mr-3">
+              <Hash size={16} className="text-purple-600 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
                 {channel.name}
               </h1>
               {channel.description && (
-                <p className="text-gray-600 text-xs mt-0.5">
+                <p className="text-gray-600 text-xs mt-0.5 hidden sm:block">
                   {channel.description}
                 </p>
               )}
@@ -541,14 +541,14 @@ const ChannelPage = () => {
           {/* Only show menu button if user has permissions for any menu items */}
           {(userPermissions?.manage_channels ||
             userPermissions?.settings_access) && (
-            <div className="pr-6 cursor-pointer">
+            <div className="pr-2 sm:pr-6 cursor-pointer">
               <button
                 onClick={() => setShowChannelMenu(true)}
-                className="p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
               >
                 <MoreVertical
-                  size={20}
-                  className="text-gray-700 group-hover:text-violet-700 transition-all duration-300"
+                  size={18}
+                  className="text-gray-700 group-hover:text-violet-700 transition-all duration-300 sm:w-5 sm:h-5"
                 />
               </button>
             </div>
@@ -556,21 +556,24 @@ const ChannelPage = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center w-full border-0">
+        <div className="flex pt-3 sm:pt-0 items-center w-full border-0 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-1 items-center justify-center gap-2 py-3 font-semibold text-lg transition-all duration-200 rounded-t-lg cursor-pointer ${
+                className={`flex flex-1 items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3 font-semibold text-sm sm:text-lg transition-all duration-200 rounded-t-lg cursor-pointer whitespace-nowrap min-w-0 ${
                   activeTab === tab.id
                     ? "text-purple-600 bg-slate-50"
                     : "text-purple-400 hover:text-purple-600 hover:bg-slate-200"
                 }`}
               >
-                <Icon size={18} />
-                {tab.label}
+                <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden text-xs">
+                  {tab.label.split(" ")[0]}
+                </span>
               </button>
             );
           })}
@@ -581,49 +584,52 @@ const ChannelPage = () => {
       <div className="flex-1 overflow-hidden">
         {/* HOME TAB */}
         {activeTab === "home" && (
-          <div className="h-full overflow-y-auto p-6 bg-slate-50">
+          <div className="h-full overflow-y-auto p-3 sm:p-6 bg-slate-50">
             <div className="max-w-7xl mx-auto">
               {/* Two Column Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
                 {/* Left Side - Meetings */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="px-6 py-5 border-b border-gray-200">
+                  <div className="px-3 sm:px-6 py-3 sm:py-5 border-b border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="p-3 rounded-full bg-blue-500/20">
-                          <Video size={22} className="text-blue-500" />
+                        <div className="p-2 sm:p-3 rounded-full bg-blue-500/20">
+                          <Video
+                            size={18}
+                            className="text-blue-500 sm:w-[22px] sm:h-[22px]"
+                          />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900">
                           Meetings
                         </h3>
                       </div>
                       {userPermissions?.meeting_access && (
-                        <button className="text-blue-600 hover:text-blue-700 p-1.5 rounded-full hover:bg-blue-50 transition-colors cursor-pointer duration-300 group">
+                        <button className="text-blue-600 hover:text-blue-700 p-1 sm:p-1.5 rounded-full hover:bg-blue-50 transition-colors cursor-pointer duration-300 group">
                           <Plus
-                            size={20}
-                            className="group-hover:scale-120 group-hover:rotate-90 duration-300"
+                            size={18}
+                            className="group-hover:scale-120 group-hover:rotate-90 duration-300 sm:w-5 sm:h-5"
                           />
                         </button>
                       )}
                     </div>
                   </div>
-                  <div className="p-6">
+                  <div className="p-3 sm:p-6">
                     {meetingsLoading ? (
-                      <div className="flex flex-col items-center justify-center py-12 sm:py-16">
+                      <div className="flex flex-col items-center justify-center py-8 sm:py-12">
                         <div className="relative">
-                          <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-500/30"></div>
-                          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500 absolute top-0 left-0"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-2 border-blue-500/30"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-blue-500 absolute top-0 left-0"></div>
                         </div>
                         <p className="text-gray-400 mt-4 text-sm">
                           Loading meetings...
                         </p>
                       </div>
                     ) : meetings.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2 sm:space-y-3">
                         {meetings.map((meeting, index) => (
                           <div
                             key={index}
-                            className={`p-4 rounded-lg border shadow-sm transition-all pl-4 group ${
+                            className={`p-3 sm:p-4 rounded-lg border shadow-sm transition-all pl-3 sm:pl-4 group ${
                               userPermissions?.meeting_access
                                 ? "hover:shadow-lg hover:-translate-y-1 hover:ring-2 hover:ring-purple-100 cursor-pointer"
                                 : ""
@@ -636,14 +642,14 @@ const ChannelPage = () => {
                             }`}
                           >
                             <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-gray-900">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">
                                   {meeting.title}
                                 </h4>
-                                <p className="text-sm text-gray-600 mt-1">
+                                <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
                                   {meeting.description}
                                 </p>
-                                <div className="flex items-center gap-2 mt-2">
+                                <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
                                   <span className="text-xs text-gray-500">
                                     {meeting.date}
                                   </span>
@@ -651,7 +657,7 @@ const ChannelPage = () => {
                                     {meeting.time}
                                   </span>
                                   <span
-                                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                                       meeting.status === "upcoming"
                                         ? "bg-blue-100 text-blue-700"
                                         : meeting.status === "ongoing"
@@ -664,12 +670,18 @@ const ChannelPage = () => {
                                 </div>
                               </div>
                               {userPermissions?.meeting_access && (
-                                <div className="flex items-center gap-1 ml-2">
+                                <div className="flex items-center gap-1 ml-2 flex-shrink-0">
                                   <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-blue-600">
-                                    <Edit2 size={14} />
+                                    <Edit2
+                                      size={12}
+                                      className="sm:w-[14px] sm:h-[14px]"
+                                    />
                                   </button>
                                   <button className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-red-600">
-                                    <Trash2 size={14} />
+                                    <Trash2
+                                      size={12}
+                                      className="sm:w-[14px] sm:h-[14px]"
+                                    />
                                   </button>
                                 </div>
                               )}
@@ -697,46 +709,49 @@ const ChannelPage = () => {
 
                 {/* Right Side - Notes/Tasks */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="px-6 py-5 border-b border-gray-200">
+                  <div className="px-3 sm:px-6 py-3 sm:py-5 border-b border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="p-3 rounded-full bg-purple-500/20">
-                          <NotebookPen size={22} className="text-purple-500" />
+                        <div className="p-2 sm:p-3 rounded-full bg-purple-500/20">
+                          <NotebookPen
+                            size={18}
+                            className="text-purple-500 sm:w-[22px] sm:h-[22px]"
+                          />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900">
                           Notes & Tasks
                         </h3>
                       </div>
                       {userPermissions?.notes_access && (
                         <button
                           onClick={() => setShowNoteModal(true)}
-                          className="text-purple-600 hover:text-purple-700 p-1.5 rounded-full hover:bg-purple-50 transition-colors cursor-pointer duration-300 group"
+                          className="text-purple-600 hover:text-purple-700 p-1 sm:p-1.5 rounded-full hover:bg-purple-50 transition-colors cursor-pointer duration-300 group"
                         >
                           <Plus
-                            size={20}
-                            className="group-hover:scale-120 group-hover:rotate-90 duration-300"
+                            size={18}
+                            className="group-hover:scale-120 group-hover:rotate-90 duration-300 sm:w-5 sm:h-5"
                           />
                         </button>
                       )}
                     </div>
                   </div>
-                  <div className="p-6">
+                  <div className="p-3 sm:p-6">
                     {notesLoading ? (
-                      <div className="flex flex-col items-center justify-center py-12 sm:py-16">
+                      <div className="flex flex-col items-center justify-center py-8 sm:py-12">
                         <div className="relative">
-                          <div className="animate-spin rounded-full h-12 w-12 border-2 border-purple-500/30"></div>
-                          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-500 absolute top-0 left-0"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-2 border-purple-500/30"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-purple-500 absolute top-0 left-0"></div>
                         </div>
                         <p className="text-gray-400 mt-4 text-sm">
                           Loading notes...
                         </p>
                       </div>
                     ) : notes.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2 sm:space-y-3">
                         {notes.map((note) => (
                           <div
                             key={note.note_id}
-                            className={`rounded-2xl transition-all flex ${
+                            className={`rounded-xl sm:rounded-2xl transition-all flex ${
                               userPermissions?.notes_access
                                 ? "hover:shadow-lg hover:-translate-y-1"
                                 : ""
@@ -747,10 +762,10 @@ const ChannelPage = () => {
                             }`}
                           >
                             <div className="flex items-start w-full justify-between">
-                              <div className="flex-1 p-4">
+                              <div className="flex-1 p-3 sm:p-4 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <h4
-                                    className={`font-medium ${
+                                    className={`font-medium text-sm sm:text-base truncate ${
                                       note.pinned
                                         ? `text-white `
                                         : `text-gray-900`
@@ -759,13 +774,13 @@ const ChannelPage = () => {
                                     {note.title}
                                   </h4>
                                   {note.pinned && (
-                                    <span className="px-2 py-1 bg-white/40 border border-purple-700 text-purple-700 text-xs font-medium rounded-full">
+                                    <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white/40 border border-purple-700 text-purple-700 text-xs font-medium rounded-full flex-shrink-0">
                                       Pinned
                                     </span>
                                   )}
                                 </div>
                                 <p
-                                  className={`text-sm mt-1 line-clamp-3 ${
+                                  className={`text-xs sm:text-sm mt-1 line-clamp-2 sm:line-clamp-3 ${
                                     note.pinned
                                       ? `text-slate-200`
                                       : `text-gray-600`
@@ -773,7 +788,7 @@ const ChannelPage = () => {
                                 >
                                   {note.body}
                                 </p>
-                                <div className="flex items-center gap-2 mt-2">
+                                <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
                                   <span
                                     className={`text-xs ${
                                       note.pinned
@@ -799,7 +814,7 @@ const ChannelPage = () => {
                                 </div>
                               </div>
                               {userPermissions?.notes_access && (
-                                <div className="flex items-center rounded-r-2xl overflow-hidden flex-col h-full">
+                                <div className="flex sm:flex-col items-center rounded-r-xl sm:rounded-r-2xl overflow-hidden flex-row sm:h-full">
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -810,7 +825,7 @@ const ChannelPage = () => {
                                         pinned: !note.pinned,
                                       });
                                     }}
-                                    className={`pl-2 pb-2 pt-3 pr-3 flex-1 duration-300 cursor-pointer group hover:text-white hover:bg-purple-600 ${
+                                    className={`p-2 sm:pl-2 sm:pb-2 sm:pt-3 sm:pr-3 sm:flex-1 duration-300 cursor-pointer group hover:text-white hover:bg-purple-600 ${
                                       note.pinned
                                         ? "text-purple-500"
                                         : "text-gray-400"
@@ -818,8 +833,8 @@ const ChannelPage = () => {
                                     title={note.pinned ? "Unpin" : "Pin"}
                                   >
                                     <Pin
-                                      size={14}
-                                      className="group-hover:scale-120 duration-300"
+                                      size={12}
+                                      className="group-hover:scale-120 duration-300 sm:w-[14px] sm:h-[14px]"
                                     />
                                   </button>
                                   <button
@@ -829,21 +844,21 @@ const ChannelPage = () => {
                                       e.stopPropagation();
                                       handleEditNote(note);
                                     }}
-                                    className="pt-2 pl-2 pb-2 pr-3 flex-1 hover:bg-blue-500 group text-gray-400 hover:text-white cursor-pointer duration-300"
+                                    className="p-2 sm:pt-2 sm:pl-2 sm:pb-2 sm:pr-3 sm:flex-1 hover:bg-blue-500 group text-gray-400 hover:text-white cursor-pointer duration-300"
                                     title="Edit note"
                                   >
                                     <Edit2
-                                      size={14}
-                                      className="group-hover:scale-120 duration-300"
+                                      size={12}
+                                      className="group-hover:scale-120 duration-300 sm:w-[14px] sm:h-[14px]"
                                     />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteNoteClick(note)}
-                                    className="pt-2 pl-2 pr-3 pb-3 flex-1 hover:bg-red-500 rounded-br-2xl text-gray-400 hover:text-white cursor-pointer duration-300 group"
+                                    className="p-2 sm:pt-2 sm:pl-2 sm:pr-3 sm:pb-3 sm:flex-1 hover:bg-red-500 sm:rounded-br-2xl text-gray-400 hover:text-white cursor-pointer duration-300 group"
                                   >
                                     <Trash2
-                                      size={14}
-                                      className="group-hover:scale-120 duration-300"
+                                      size={12}
+                                      className="group-hover:scale-120 duration-300 sm:w-[14px] sm:h-[14px]"
                                     />
                                   </button>
                                 </div>
@@ -877,15 +892,15 @@ const ChannelPage = () => {
         {/* CHATS TAB */}
         {activeTab === "chats" && (
           <div className="h-full flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6 text-center">
-                <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-purple-300">
-                  <Hash size={32} className="text-purple-600" />
+            <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 bg-slate-50">
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 sm:p-6 text-center">
+                <div className="bg-white w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 border-2 border-purple-300">
+                  <Hash size={24} className="text-purple-600 sm:w-8 sm:h-8" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                   Welcome to #{channel.name}
                 </h2>
-                <p className="text-gray-700">
+                <p className="text-sm sm:text-base text-gray-700">
                   This is the beginning of the{" "}
                   <span className="text-purple-600 font-medium">
                     #{channel.name}
@@ -902,8 +917,8 @@ const ChannelPage = () => {
                 return (
                   <div
                     key={message.id}
-                    className={`flex gap-3 group ${
-                      showAvatar ? "mt-4" : "mt-1"
+                    className={`flex gap-2 sm:gap-3 group ${
+                      showAvatar ? "mt-3 sm:mt-4" : "mt-1"
                     }`}
                   >
                     {showAvatar ? (
@@ -911,40 +926,46 @@ const ChannelPage = () => {
                         <img
                           src={message.userPhoto}
                           alt={message.userName}
-                          className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm border-2 border-gray-200 flex-shrink-0">
                           {message.userName?.charAt(0) || "U"}
                         </div>
                       )
                     ) : (
-                      <div className="w-10"></div>
+                      <div className="w-8 sm:w-10 flex-shrink-0"></div>
                     )}
 
                     <div className="flex-1 min-w-0">
                       {showAvatar && (
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-900 text-sm">
+                          <span className="font-semibold text-gray-900 text-sm truncate">
                             {message.userName}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 flex-shrink-0">
                             {formatTime(message.timestamp)}
                           </span>
                         </div>
                       )}
 
                       <div className="flex items-start gap-2">
-                        <p className="text-gray-800 text-sm leading-relaxed break-words">
+                        <p className="text-gray-800 text-sm leading-relaxed break-words flex-1">
                           {message.content}
                         </p>
                         {isOwnMessage && (
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 flex-shrink-0">
                             <button className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-blue-600">
-                              <Edit2 size={14} />
+                              <Edit2
+                                size={12}
+                                className="sm:w-[14px] sm:h-[14px]"
+                              />
                             </button>
                             <button className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600">
-                              <Trash2 size={14} />
+                              <Trash2
+                                size={12}
+                                className="sm:w-[14px] sm:h-[14px]"
+                              />
                             </button>
                           </div>
                         )}
@@ -958,7 +979,7 @@ const ChannelPage = () => {
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-gray-200 bg-white p-4">
+            <div className="border-t border-gray-200 bg-white p-2 sm:p-4">
               <form onSubmit={handleSendMessage} className="relative">
                 <div className="bg-gray-50 border border-gray-300 rounded-xl focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-200 transition-all duration-200">
                   <textarea
@@ -967,46 +988,51 @@ const ChannelPage = () => {
                     onChange={handleTextareaChange}
                     onKeyDown={handleKeyDown}
                     placeholder={`Message #${channel.name}`}
-                    className="w-full bg-transparent text-gray-900 placeholder-gray-500 px-4 py-3 pr-24 resize-none outline-none text-sm max-h-[150px]"
+                    className="w-full bg-transparent text-gray-900 placeholder-gray-500 px-3 sm:px-4 py-2 sm:py-3 pr-16 sm:pr-24 resize-none outline-none text-sm max-h-[120px] sm:max-h-[150px]"
                     rows="1"
                     disabled={sending}
                   />
 
-                  <div className="flex items-center justify-between px-3 pb-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between px-2 sm:px-3 pb-2 sm:pb-3">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       <button
                         type="button"
-                        className="p-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900"
+                        className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900"
                         title="Add emoji"
                       >
-                        <Smile size={18} />
+                        <Smile size={16} className="sm:w-[18px] sm:h-[18px]" />
                       </button>
                       <button
                         type="button"
-                        className="p-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900"
+                        className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-lg text-gray-600 hover:text-gray-900"
                         title="Attach file"
                       >
-                        <Paperclip size={18} />
+                        <Paperclip
+                          size={16}
+                          className="sm:w-[18px] sm:h-[18px]"
+                        />
                       </button>
                     </div>
 
                     <button
                       type="submit"
                       disabled={!newMessage.trim() || sending}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                      className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                         newMessage.trim() && !sending
                           ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md"
                           : "bg-gray-300 text-gray-500 cursor-not-allowed"
                       }`}
                     >
-                      <Send size={16} />
-                      <span>{sending ? "Sending..." : "Send"}</span>
+                      <Send size={14} className="sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">
+                        {sending ? "Sending..." : "Send"}
+                      </span>
                     </button>
                   </div>
                 </div>
               </form>
 
-              <p className="text-xs text-gray-500 mt-2 text-center">
+              <p className="text-xs text-gray-500 mt-2 text-center hidden sm:block">
                 Press{" "}
                 <kbd className="px-1.5 py-0.5 bg-gray-200 rounded text-xs border border-gray-300">
                   Enter
@@ -1022,45 +1048,45 @@ const ChannelPage = () => {
         )}
 
         {activeTab === "members" && (
-          <div className="h-full overflow-y-auto p-6 bg-slate-50">
+          <div className="h-full overflow-y-auto p-3 sm:p-6 bg-slate-50">
             <div className="max-w-4xl mx-auto">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <div className="mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   Channel Members
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                   {members.length} members in this channel
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {members.map((member) => (
                   <div
                     key={member.id}
-                    className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200"
+                    className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-shadow duration-200"
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2 sm:gap-3">
                       {member.userPhoto ? (
                         <img
                           src={member.userPhoto}
                           alt={member.name}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold border-2 border-gray-200">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 flex-shrink-0">
                           {member.name?.charAt(0) || "U"}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {member.name}
                         </h3>
-                        <p className="text-sm text-gray-600 truncate">
+                        <p className="text-xs sm:text-sm text-gray-600 truncate">
                           {member.email}
                         </p>
                         <div className="mt-2 flex items-center gap-2">
                           <div
-                            className={`px-2 py-1 ${
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 ${
                               getRoleStyle(member.role).background
                             } border ${
                               getRoleStyle(member.role).border
@@ -1068,10 +1094,10 @@ const ChannelPage = () => {
                           >
                             {member.isOwner && (
                               <Crown
-                                size={12}
+                                size={10}
                                 className={`${
                                   getMessagesRoleStyle(member.role).text
-                                }`}
+                                } sm:w-3 sm:h-3`}
                               />
                             )}
                             <span
@@ -1090,9 +1116,14 @@ const ChannelPage = () => {
               </div>
 
               {members.length === 0 && (
-                <div className="text-center py-12">
-                  <Users size={48} className="mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-600">No members found</p>
+                <div className="text-center py-8 sm:py-12">
+                  <Users
+                    size={36}
+                    className="mx-auto text-gray-400 mb-4 sm:w-12 sm:h-12"
+                  />
+                  <p className="text-sm sm:text-base text-gray-600">
+                    No members found
+                  </p>
                 </div>
               )}
             </div>
@@ -1109,35 +1140,38 @@ const ChannelPage = () => {
           />
 
           {/* Menu */}
-          <div className="absolute top-1 right-6 w-72 bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 animate-fadeIn overflow-hidden h-[calc(50vh-110px)]">
+          <div className="absolute top-1 right-2 sm:right-6 w-64 sm:w-72 bg-gradient-to-b from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-50 animate-fadeIn overflow-hidden max-h-[60vh] sm:h-[calc(50vh-110px)]">
             {/* Header */}
-            <div className="flex items-center justify-between px-2 py-4 border-b border-white/10">
+            <div className="flex items-center justify-between px-2 py-3 sm:py-4 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-full bg-violet-500/20">
-                  <Hash size={18} className="text-violet-400" />
+                <div className="p-1.5 sm:p-2 rounded-full bg-violet-500/20">
+                  <Hash
+                    size={16}
+                    className="text-violet-400 sm:w-[18px] sm:h-[18px]"
+                  />
                 </div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-base sm:text-lg font-semibold text-white">
                   Channel Settings
                 </h3>
               </div>
               <button
                 onClick={() => setShowChannelMenu(false)}
-                className="absolute top-4 right-3 p-2 rounded-full hover:bg-white/20 text-white transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-90 cursor-pointer"
+                className="absolute top-3 sm:top-4 right-2 sm:right-3 p-1.5 sm:p-2 rounded-full hover:bg-white/20 text-white transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-90 cursor-pointer"
               >
-                <X size={18} />
+                <X size={16} className="sm:w-[18px] sm:h-[18px]" />
               </button>
             </div>
 
             {/* Menu items */}
-            <div className="p-4 space-y-2">
+            <div className="p-3 sm:p-4 space-y-2">
               {/* Show message if no permissions */}
               {!(
                 userPermissions?.manage_channels ||
                 userPermissions?.settings_access
               ) && (
-                <div className="text-center py-6">
-                  <div className="p-3 rounded-full bg-gray-500/20 w-fit mx-auto mb-3">
-                    <Hash size={24} className="text-gray-400" />
+                <div className="text-center py-4 sm:py-6">
+                  <div className="p-2 sm:p-3 rounded-full bg-gray-500/20 w-fit mx-auto mb-3">
+                    <Hash size={20} className="text-gray-400 sm:w-6 sm:h-6" />
                   </div>
                   <p className="text-gray-300 text-sm font-medium">
                     No actions available
@@ -1156,16 +1190,16 @@ const ChannelPage = () => {
                     setShowEditChannelModal(true);
                     setShowChannelMenu(false);
                   }}
-                  className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-violet-500/10 hover:border-violet-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-500/10"
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-violet-500/10 hover:border-violet-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-violet-500/10"
                 >
-                  <div className="p-2 rounded-lg bg-violet-500/20 group-hover:bg-violet-500/30 transition-all duration-300">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-violet-500/20 group-hover:bg-violet-500/30 transition-all duration-300 flex-shrink-0">
                     <Edit2
-                      size={18}
-                      className="text-violet-400 group-hover:text-violet-300 transition-all duration-300 group-hover:rotate-12"
+                      size={16}
+                      className="text-violet-400 group-hover:text-violet-300 transition-all duration-300 group-hover:rotate-12 sm:w-[18px] sm:h-[18px]"
                     />
                   </div>
-                  <div className="flex-1">
-                    <span className="text-white font-medium group-hover:text-violet-200 transition-colors duration-300">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-white font-medium group-hover:text-violet-200 transition-colors duration-300 text-sm sm:text-base">
                       Edit Channel
                     </span>
                     <p className="text-gray-400 text-xs mt-0.5 group-hover:text-violet-300/70">
@@ -1180,16 +1214,16 @@ const ChannelPage = () => {
                 userPermissions?.settings_access) && (
                 <div
                   onClick={handleDeleteChannelClick}
-                  className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-red-500/10"
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 transition-all duration-300 cursor-pointer group transform hover:scale-[1.02] hover:shadow-lg hover:shadow-red-500/10"
                 >
-                  <div className="p-2 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-all duration-300">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-red-500/20 group-hover:bg-red-500/30 transition-all duration-300 flex-shrink-0">
                     <Trash2
-                      size={18}
-                      className="text-red-400 group-hover:text-red-300 transition-all duration-300 group-hover:rotate-12"
+                      size={16}
+                      className="text-red-400 group-hover:text-red-300 transition-all duration-300 group-hover:rotate-12 sm:w-[18px] sm:h-[18px]"
                     />
                   </div>
-                  <div className="flex-1">
-                    <span className="text-white font-medium group-hover:text-red-200 transition-colors duration-300">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-white font-medium group-hover:text-red-200 transition-colors duration-300 text-sm sm:text-base">
                       Delete Channel
                     </span>
                     <p className="text-gray-400 text-xs mt-0.5 group-hover:text-red-300/70">

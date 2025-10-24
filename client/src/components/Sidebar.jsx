@@ -253,7 +253,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
       <div className={`
         h-min-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col
         ${isMobile 
-          ? `fixed top-0 left-0 z-40 w-64 mobile-sidebar transition-transform duration-300 ${
+          ? `fixed top-0 left-0 bottom-0 z-40 w-64 mobile-sidebar transition-transform duration-300 ${
               isMobileOpen ? 'translate-x-0' : '-translate-x-full'
             }` 
           : 'w-64'

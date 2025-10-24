@@ -129,39 +129,42 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
   }
 
   return (
-    <div className="max-h-screen p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-h-screen p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8">
         {/* ---------------- HEADER ---------------- */}
-        <header className="flex justify-between items-center gap-4 p-6">
-          <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 cursor-default">
-            Welcome back, {user?.name || "User"}
+        <header className="flex pt-15 sm:pt-0 flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 sm:p-6">
+          {/* Welcome Message - Full width on mobile, flexible on desktop */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 cursor-default leading-tight">
+              Welcome back, {user?.name || "User"}
+            </h1>
           </div>
 
           {/* Right-side: Messages + Notifications + Avatar */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center justify-end gap-3 sm:gap-5 flex-shrink-0">
             <div className="relative">
               <MessageCircle
-                size={23}
-                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer"
+                size={20}
+                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer sm:w-[23px] sm:h-[23px]"
                 onClick={onMessagesClick}
                 title="Messages"
               />
-              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
+              <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-500 rounded-full"></div>
             </div>
             
             <div className="relative">
               <Bell
-                size={23}
-                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer"
+                size={20}
+                className="text-gray-800 hover:text-violet-500 transition-colors cursor-pointer sm:w-[23px] sm:h-[23px]"
                 onClick={onNotificationsClick}
                 title="Notifications"
               />
-              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+              <div className="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full"></div>
             </div>
 
             <div
               onClick={onSettingsClick}
-              className="w-12 h-12 rounded-full gradient-bg flex items-center justify-center  
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full gradient-bg flex items-center justify-center  
                          transition-all cursor-pointer overflow-hidden border-2 border-violet-600"
             >
               {user?.photo ? (
@@ -171,7 +174,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-lg font-semibold text-white">
+                <span className="text-base sm:text-lg font-semibold text-white">
                   {user?.name?.charAt(0) || "U"}
                 </span>
               )}
@@ -187,25 +190,25 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
             notices={notices}
           />
         ) : (
-          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 h-[500px] flex items-center justify-center flex-col gap-4">
-            <h1 className="text-5xl font-bold text-accent text-center">
+          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 min-h-[400px] sm:h-[500px] flex items-center justify-center flex-col gap-4">
+            <h1 className="text-2xl sm:text-5xl font-bold text-accent text-center px-4">
               Join and collaborate with your team
             </h1>
 
-            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8 w-full max-w-sm sm:max-w-none sm:flex-row sm:justify-center">
               <button
                 onClick={onJoinOrgClick}
-                className="btn-primary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-[280px] shadow-lg text-lg"
+                className="btn-primary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
               >
-                <Users size={24} className="inline-block mr-2 text-primary" />
+                <Users size={20} className="inline-block mr-2 text-primary sm:w-6 sm:h-6" />
                 Join Organisation
               </button>
 
               <button
                 onClick={onCreateOrgClick}
-                className="btn-secondary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-[280px] shadow-lg text-lg"
+                className="btn-secondary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
               >
-                <Plus size={24} className="inline-block mr-2 text-violet-600" />
+                <Plus size={20} className="inline-block mr-2 text-violet-600 sm:w-6 sm:h-6" />
                 Create Organisation
               </button>
             </div>

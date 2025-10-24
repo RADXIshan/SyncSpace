@@ -31,39 +31,39 @@ const ConfirmationModal = ({
   const styles = typeStyles[type];
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all duration-300">
-      <div className="relative w-full max-w-md bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-4 transition-all duration-300">
+      <div className="relative w-full max-w-sm sm:max-w-md bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-gray-900/50 to-indigo-900/20"></div>
-        <div className="relative p-8">
+        <div className="relative p-4 sm:p-8">
           {/* Close Button */}
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-all cursor-pointer active:scale-95 disabled:opacity-50 p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 transform duration-300"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-all cursor-pointer active:scale-95 disabled:opacity-50 p-1.5 sm:p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 transform duration-300"
           >
-            <X size={20} />
+            <X size={18} className="sm:w-5 sm:h-5" />
           </button>
 
           {/* Content */}
           <div className="text-center">
             {/* Icon */}
-            <div className={`w-20 h-20 ${styles.bg} ${styles.border} border rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm`}>
-              <AlertTriangle size={36} className={styles.icon} />
+            <div className={`w-16 h-16 sm:w-20 sm:h-20 ${styles.bg} ${styles.border} border rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-sm`}>
+              <AlertTriangle size={28} className={`${styles.icon} sm:w-9 sm:h-9`} />
             </div>
 
             {/* Title */}
-            <h3 className="text-2xl font-bold text-white mb-4">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 px-2">
               {title}
             </h3>
 
             {/* Message */}
-            <p className="text-gray-300 text-base leading-relaxed mb-8">
+            <p className="text-gray-300 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8 px-2">
               {message}
             </p>
 
             {/* Actions */}
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
               <button
                 type="button"
                 onClick={(e) => {
@@ -72,7 +72,7 @@ const ConfirmationModal = ({
                   onClose();
                 }}
                 disabled={loading}
-                className="flex-1 px-6 py-3 bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 rounded-xl text-gray-300 hover:text-white font-semibold transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl active:scale-95"
+                className="w-full sm:flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 rounded-lg sm:rounded-xl text-gray-300 hover:text-white font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl active:scale-95"
               >
                 {cancelText}
               </button>
@@ -84,12 +84,12 @@ const ConfirmationModal = ({
                   onConfirm();
                 }}
                 disabled={loading}
-                className={`flex-1 px-6 py-3 border rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl active:scale-95 ${styles.button}`}
+                className={`w-full sm:flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl active:scale-95 ${styles.button}`}
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Processing...
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                    <span className="text-xs sm:text-sm">Processing...</span>
                   </div>
                 ) : (
                   confirmText

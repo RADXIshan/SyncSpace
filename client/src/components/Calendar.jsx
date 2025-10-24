@@ -152,7 +152,7 @@ const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 relative overflow-hidden">
+    <div className="pt-10 sm:pt-0 min-h-screen bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 relative overflow-hidden">
       {/* Animated gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-violet-200/20 via-indigo-200/15 to-purple-200/25 animate-pulse"></div>
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/10 to-violet-100/20"></div>

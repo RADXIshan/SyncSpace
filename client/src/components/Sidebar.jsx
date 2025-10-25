@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { Calendar, Settings, Hash, Users, UserPlus, Home, LogOut, Crown, MessageCircle, Bell, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import ConfirmationModal from './ConfirmationModal';
@@ -11,6 +12,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
   const location = useLocation();
   const path = location.pathname;
   const { user, checkAuth, logout } = useAuth();
+  const { isConnected } = useSocket();
   const navigate = useNavigate();
   const [organization, setOrganization] = useState(null);
   const [loadingOrg, setLoadingOrg] = useState(false);
@@ -372,6 +374,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
             </div>
           </div>
         )}
+
+
       </div>
       
       <div className="border-t border-slate-600/50 bg-slate-900/50">
@@ -391,8 +395,10 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
             <p className="font-medium text-white text-base leading-tight truncate">{user?.name || 'User Name'}</p>
             <div className='flex items-center mt-1 gap-2'>
               <div className='flex items-center'>
-                <div className='bg-green-500 h-2 w-2 rounded-full'></div>
-                <p className="text-xs text-slate-400 ml-1.5 font-medium">Online</p>
+                <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+                <p className={`text-xs ml-1.5 font-medium ${isConnected ? 'text-green-400' : 'text-gray-400'}`}>
+                  {isConnected ? 'Online' : 'Offline'}
+                </p>
               </div>
               {organization && userRole && (
                 <div className={`px-2 py-0.5 ${getRoleStyle(userRole).background} border ${getRoleStyle(userRole).border} rounded flex items-center gap-1 flex-shrink-0`}>
@@ -408,26 +414,28 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
           </div>
         </div>
         
-        <div className="flex px-3 pb-3 pt-0 gap-2">
-          <button
-            onClick={onSettingsClick}
-            className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md transition-all duration-300 hover:bg-slate-700/60 hover:border-violet-500/80 border border-slate-600/30 cursor-pointer group text-slate-300 hover:text-violet-300 shadow-lg hover:shadow-xl"
-          >
-            <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-violet-400 transition-alls duration-300">
-              <Settings size={16} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
-            </span>
-            <span className='font-medium text-sm'>Settings</span>
-          </button>
-          
-          <button 
-            onClick={handleLogout} 
-            className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-lg hover:shadow-xl"
-          >
-            <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-red-400 transition-all duration-300">
-              <LogOut size={16} className="rotate-180 group-hover:scale-110 transition-transform duration-300" />
-            </span>
-            <span className='font-medium text-sm'>Logout</span>
-          </button>
+        <div className="px-3 pb-3 pt-0">
+          <div className="flex gap-2">
+            <button
+              onClick={onSettingsClick}
+              className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md transition-all duration-300 hover:bg-slate-700/60 hover:border-violet-500/80 border border-slate-600/30 cursor-pointer group text-slate-300 hover:text-violet-300 shadow-lg hover:shadow-xl"
+            >
+              <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-violet-400 transition-alls duration-300">
+                <Settings size={16} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
+              </span>
+              <span className='font-medium text-sm'>Settings</span>
+            </button>
+            
+            <button 
+              onClick={handleLogout} 
+              className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-lg hover:shadow-xl"
+            >
+              <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-red-400 transition-all duration-300">
+                <LogOut size={16} className="rotate-180 group-hover:scale-110 transition-transform duration-300" />
+              </span>
+              <span className='font-medium text-sm'>Logout</span>
+            </button>
+          </div>
         </div>
       </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useSocket } from "../context/SocketContext";
 import axios from "axios";
 import {
   Hash,
@@ -27,10 +28,13 @@ import NoteEditModal from "./NoteEditModal";
 import ConfirmationModal from "./ConfirmationModal";
 import EditChannel from "./EditChannel";
 import MeetingModal from "./MeetingModal";
+import OnlineStatus from "./OnlineStatus";
+import OnlineCounter from "./OnlineCounter";
 
 const ChannelPage = () => {
   const { channelId } = useParams();
   const { user } = useAuth();
+  const { joinChannel, leaveChannel, isUserOnline } = useSocket();
   const navigate = useNavigate();
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -180,6 +184,19 @@ const ChannelPage = () => {
 
     fetchChannel();
   }, [channelId, user?.org_id]);
+
+  // Handle socket channel join/leave
+  useEffect(() => {
+    if (channelId && joinChannel) {
+      joinChannel(channelId);
+      
+      return () => {
+        if (leaveChannel) {
+          leaveChannel(channelId);
+        }
+      };
+    }
+  }, [channelId, joinChannel, leaveChannel]);
 
   // Fetch user permissions
   useEffect(() => {
@@ -1241,29 +1258,43 @@ const ChannelPage = () => {
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   Channel Members
                 </h2>
-                <p className="text-sm sm:text-base text-gray-600">
-                  {members.length} members in this channel
-                </p>
+                <OnlineCounter members={members} />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {members.map((member) => (
+                {members
+                  .sort((a, b) => {
+                    const aOnline = isUserOnline(a.id);
+                    const bOnline = isUserOnline(b.id);
+                    
+                    if (aOnline && !bOnline) return -1;
+                    if (!aOnline && bOnline) return 1;
+                    
+                    // If both have same online status, sort by name
+                    return (a.name || a.email).localeCompare(b.name || b.email);
+                  })
+                  .map((member) => (
                   <div
                     key={member.id}
                     className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-shadow duration-200"
                   >
                     <div className="flex items-start gap-2 sm:gap-3">
-                      {member.userPhoto ? (
-                        <img
-                          src={member.userPhoto}
-                          alt={member.name}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 flex-shrink-0">
-                          {member.name?.charAt(0) || "U"}
+                      <div className="relative">
+                        {member.userPhoto ? (
+                          <img
+                            src={member.userPhoto}
+                            alt={member.name}
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 flex-shrink-0">
+                            {member.name?.charAt(0) || "U"}
+                          </div>
+                        )}
+                        <div className="absolute -bottom-0.5 -right-0.5">
+                          <OnlineStatus userId={member.id} size="sm" />
                         </div>
-                      )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                           {member.name}

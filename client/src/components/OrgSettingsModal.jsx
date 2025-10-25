@@ -20,6 +20,9 @@ import {
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import ConfirmationModal from "./ConfirmationModal";
+import OnlineStatus from "./OnlineStatus";
+import OnlineCounter from "./OnlineCounter";
+import { useSocket } from "../context/SocketContext";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 
 const OrgSettingsModal = ({
@@ -30,6 +33,7 @@ const OrgSettingsModal = ({
   onSuccess,
 }) => {
   const isOwner = userPermissions?.isOwner || false;
+  const { isUserOnline, onlineUsers } = useSocket();
   const [orgName, setOrgName] = useState(organization?.name || "");
   const [accessLevel, setAccessLevel] = useState(
     organization?.accessLevel || "invite-only"
@@ -448,13 +452,25 @@ const OrgSettingsModal = ({
     if (statusFilter !== "all") {
       filteredMembers = filteredMembers.filter((member) => {
         if (statusFilter === "online") {
-          return member.isOnline === true;
+          return isUserOnline(member.id);
         } else if (statusFilter === "offline") {
-          return member.isOnline === false;
+          return !isUserOnline(member.id);
         }
         return true;
       });
     }
+
+    // Sort members: online first, then by name
+    filteredMembers.sort((a, b) => {
+      const aOnline = isUserOnline(a.id);
+      const bOnline = isUserOnline(b.id);
+      
+      if (aOnline && !bOnline) return -1;
+      if (!aOnline && bOnline) return 1;
+      
+      // If both have same online status, sort by name
+      return (a.name || a.email).localeCompare(b.name || b.email);
+    });
 
     return filteredMembers;
   };
@@ -1264,9 +1280,13 @@ const OrgSettingsModal = ({
                         <Users size={18} className="sm:w-5 sm:h-5" />
                         Organization Members
                       </h3>
-                      <div className="text-xs sm:text-sm text-gray-400">
-                        {getFilteredMembers().length} of {members.length} member
-                        {members.length !== 1 ? "s" : ""}
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs sm:text-sm text-gray-400">
+                        <OnlineCounter members={members} className="text-xs sm:text-sm" />
+                        <div className="hidden sm:block text-gray-500">•</div>
+                        <div>
+                          {getFilteredMembers().length} of {members.length} member
+                          {members.length !== 1 ? "s" : ""} shown
+                        </div>
                       </div>
                     </div>
 
@@ -1483,13 +1503,9 @@ const OrgSettingsModal = ({
                                       )}
                                     </div>
                                     {/* Online Status Indicator */}
-                                    <div
-                                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-4 sm:h-4 border-2 border-gray-800 rounded-full ${
-                                        member.isOnline
-                                          ? "bg-green-500"
-                                          : "bg-gray-500"
-                                      }`}
-                                    ></div>
+                                    <div className="absolute -bottom-0.5 -right-0.5">
+                                      <OnlineStatus userId={member.id} size="md" />
+                                    </div>
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center space-x-2">
@@ -1517,24 +1533,7 @@ const OrgSettingsModal = ({
                                         {member.role}
                                       </span>
                                       <div className="flex items-center gap-1">
-                                        <div
-                                          className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
-                                            member.isOnline
-                                              ? "bg-green-500"
-                                              : "bg-gray-500"
-                                          }`}
-                                        ></div>
-                                        <span
-                                          className={`text-xs font-medium ${
-                                            member.isOnline
-                                              ? "text-green-400"
-                                              : "text-gray-400"
-                                          }`}
-                                        >
-                                          {member.isOnline
-                                            ? "Online"
-                                            : "Offline"}
-                                        </span>
+                                        <OnlineStatus userId={member.id} showText={true} size="xs" />
                                       </div>
                                       <span className="text-xs text-gray-500 hidden sm:inline">
                                         Joined{" "}

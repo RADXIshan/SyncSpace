@@ -110,6 +110,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
   const confirmDelete = () => {
     onDelete(event.event_id || event.id);
     setShowDeleteConfirmModal(false);
+    onClose(); // Close modal after successful deletion
   };
 
   const cancelDelete = () => {

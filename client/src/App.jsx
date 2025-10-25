@@ -26,7 +26,45 @@ const App = () => {
           <SocketProvider>
             <NotificationProvider>
               <div>
-                <Toaster />
+                <Toaster
+                  position="top-right"
+                  reverseOrder={false}
+                  gutter={8}
+                  containerClassName=""
+                  containerStyle={{
+                    top: 20,
+                    right: 20,
+                  }}
+                  toastOptions={{
+                    // Default options for all toasts
+                    duration: 4000,
+                    style: {
+                      background: "#fff",
+                      color: "#363636",
+                    },
+                    // Default options for specific types
+                    success: {
+                      duration: 3000,
+                      iconTheme: {
+                        primary: "#10b981",
+                        secondary: "#fff",
+                      },
+                    },
+                    error: {
+                      duration: 5000,
+                      iconTheme: {
+                        primary: "#ef4444",
+                        secondary: "#fff",
+                      },
+                    },
+                    loading: {
+                      iconTheme: {
+                        primary: "#6366f1",
+                        secondary: "#fff",
+                      },
+                    },
+                  }}
+                />
                 <Routes>
                   <Route path="/" element={<Landing />} />
                   <Route

@@ -804,3 +804,18 @@ input[type="checkbox"]:disabled:hover {
     var(--color-secondary)
   );
 }
+
+/* Reduce gap between icon and text in react-hot-toast */
+.react-hot-toast div[role="status"] > div {
+  gap: 6px !important;
+}
+
+/* Alternative targeting for toast icon spacing */
+.react-hot-toast .toast-icon {
+  margin-right: 6px !important;
+}
+
+/* Target the toast content wrapper */
+.react-hot-toast div[data-rich-colors="true"] > div {
+  gap: 6px !important;
+}

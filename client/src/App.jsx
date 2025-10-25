@@ -14,15 +14,17 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import MeetingRoom from "./components/MeetingRoom";
 import SocketDebug from "./components/SocketDebug";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const App = () => {
   return (
     <AuthProvider>
-      <SocketProvider>
-        <div>
-          <Toaster />
-          <SocketDebug />
-          <Routes>
+      <ErrorBoundary>
+        <SocketProvider>
+          <div>
+            <Toaster />
+            <SocketDebug />
+            <Routes>
             <Route path="/" element={<Landing />} />
             <Route
               path="/login"
@@ -77,6 +79,7 @@ const App = () => {
           </Routes>
         </div>
       </SocketProvider>
+      </ErrorBoundary>
     </AuthProvider>
   );
 };

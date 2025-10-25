@@ -1,5 +1,6 @@
 import express from 'express';
 import { getOnlineUsersByOrg, getAllOnlineUsers, isUserOnline } from '../configs/socket.js';
+import { OnlineUsersDB } from '../configs/onlineUsers.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -21,6 +22,32 @@ router.get('/test-token', authenticateToken, async (req, res) => {
   }
 });
 
+// Set user as online (heartbeat endpoint)
+router.post('/online', authenticateToken, async (req, res) => {
+  try {
+    const { userId, name, email } = req.user;
+    const { org_id } = req.body;
+    
+    await OnlineUsersDB.setUserOnline(userId, {
+      name: name || 'Unknown',
+      email: email || 'Unknown',
+      photo: req.body.photo || null,
+      org_id: org_id
+    });
+    
+    res.json({
+      success: true,
+      message: 'User marked as online'
+    });
+  } catch (error) {
+    console.error('Error setting user online:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to set user online' 
+    });
+  }
+});
+
 // Get online users for the current user's organization
 router.get('/online', authenticateToken, async (req, res) => {
   try {
@@ -33,7 +60,14 @@ router.get('/online', authenticateToken, async (req, res) => {
       });
     }
 
-    const onlineUsers = getOnlineUsersByOrg(org_id);
+    // Try database first (for serverless), fallback to in-memory
+    let onlineUsers;
+    try {
+      onlineUsers = await OnlineUsersDB.getOnlineUsersByOrg(org_id);
+    } catch (dbError) {
+      console.warn('Database query failed, using in-memory fallback:', dbError);
+      onlineUsers = getOnlineUsersByOrg(org_id);
+    }
     
     res.json({
       success: true,
@@ -45,6 +79,26 @@ router.get('/online', authenticateToken, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Failed to fetch online users' 
+    });
+  }
+});
+
+// Set user as offline
+router.delete('/online', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.user;
+    
+    await OnlineUsersDB.setUserOffline(userId);
+    
+    res.json({
+      success: true,
+      message: 'User marked as offline'
+    });
+  } catch (error) {
+    console.error('Error setting user offline:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to set user offline' 
     });
   }
 });

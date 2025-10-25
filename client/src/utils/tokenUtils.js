@@ -51,6 +51,11 @@ export const shouldRefreshToken = (token) => {
   const info = getTokenInfo(token);
   if (!info) return true;
   
-  // Refresh if token is expired or missing required fields
-  return info.isExpired || !info.hasRequiredFields;
+  // Only refresh if token is expired (be more lenient about missing fields in development)
+  if (info.isExpired) return true;
+  
+  // In production, also check for required fields
+  if (import.meta.env.PROD && !info.hasRequiredFields) return true;
+  
+  return false;
 };

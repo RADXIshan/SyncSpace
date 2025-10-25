@@ -2,12 +2,13 @@ import { useSocket } from "../context/SocketContext";
 import { useAuth } from "../context/AuthContext";
 
 const SocketDebug = () => {
-  const { socket, isConnected, onlineUsers } = useSocket();
+  const { socket, isConnected, onlineUsers, useHttpFallback } = useSocket();
   const { user } = useAuth();
 
   if (!user) return null;
 
   const getConnectionInfo = () => {
+    if (useHttpFallback) return "HTTP Fallback";
     if (!socket) return "No socket";
     if (!isConnected) return "Disconnected";
 

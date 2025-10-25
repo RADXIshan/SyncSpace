@@ -96,27 +96,17 @@ export const SocketProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       
       if (token) {
-        // Check token validity and refresh if needed
+        // Check token validity (but don't auto-refresh to prevent loops)
         const tokenInfo = getTokenInfo(token);
         
         if (shouldRefreshToken(token)) {
           if (tokenInfo?.isExpired) {
             console.warn('⚠️ Token is expired. Please log out and log back in.');
-          } else if (!tokenInfo?.hasRequiredFields) {
-            console.warn('⚠️ Token is missing required fields. Please log out and log back in for full functionality.');
-            
-            // Try to refresh the token automatically
-            refreshTokenOnServer()
-              .then(() => {
-                console.log('✅ Token automatically refreshed');
-                // The effect will re-run with the new token when localStorage changes
-              })
-              .catch((error) => {
-                console.error('❌ Automatic token refresh failed:', error);
-              });
-            
-            // Don't continue with socket initialization while refreshing
+            // Don't initialize socket with expired token
             return;
+          } else if (!tokenInfo?.hasRequiredFields) {
+            console.warn('⚠️ Token is missing required fields. Socket connection may have limited functionality.');
+            // Continue with socket initialization even with incomplete token
           }
           console.log('Token info:', tokenInfo);
         }

@@ -15,7 +15,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import MeetingRoom from "./components/MeetingRoom";
 import ErrorBoundary from "./components/ErrorBoundary";
-import TokenRefreshNotification from "./components/TokenRefreshNotification";
+import TokenRefreshButton from "./components/TokenRefreshButton";
 
 const App = () => {
   return (
@@ -24,7 +24,7 @@ const App = () => {
         <SocketProvider>
           <div>
             <Toaster />
-            <TokenRefreshNotification />
+            <TokenRefreshButton />
             <Routes>
             <Route path="/" element={<Landing />} />
             <Route

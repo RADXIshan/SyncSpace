@@ -1,11 +1,23 @@
 import axios from 'axios';
+import { requestDebouncer } from './requestDebouncer';
 
-// Create axios interceptor to automatically add Authorization header
+// Simple request interceptor to add Authorization header and rate limiting
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Rate limiting for GET requests to prevent spam
+    if (config.method === 'get') {
+      const url = `${config.method}:${config.url}`;
+      if (!requestDebouncer.shouldAllowRequest(url, 10)) {
+        return Promise.reject(new Error('Rate limited: Too many requests'));
+      }
+    }
+
+    // Only add token if it doesn't already exist in headers
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -14,35 +26,20 @@ axios.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle token refresh
+// Simple response interceptor for logging (no automatic retry to prevent loops)
 axios.interceptors.response.use(
   (response) => {
     return response;
   },
-  async (error) => {
-    const originalRequest = error.config;
+  (error) => {
+    // Just log 401 errors, don't automatically retry
+    if (error.response?.status === 401) {
+      console.warn('Authentication error detected. You may need to refresh your session.');
+    }
     
-    // If we get a 401 and haven't already tried to refresh
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        // Try to refresh the token
-        const { refreshTokenOnServer } = await import('./tokenUtils');
-        await refreshTokenOnServer();
-        
-        // Retry the original request with the new token
-        const newToken = localStorage.getItem('token');
-        if (newToken) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return axios(originalRequest);
-        }
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        // Redirect to login or handle as needed
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-      }
+    // Don't log rate limiting errors to console
+    if (error.message?.includes('Rate limited')) {
+      return Promise.reject(error);
     }
     
     return Promise.reject(error);

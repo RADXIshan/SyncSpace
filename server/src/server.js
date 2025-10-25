@@ -122,7 +122,7 @@ app.get("/", (_, res) => {
 });
 
 // Health check endpoint
-app.get("/health", async (req, res) => {
+app.get("/health", async (_, res) => {
   try {
     // Test database connection
     const result = await sql`SELECT 1 as test`;

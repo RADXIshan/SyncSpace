@@ -63,11 +63,6 @@ export const shouldRefreshToken = (token) => {
 // Function to refresh token on the server
 export const refreshTokenOnServer = async () => {
   try {
-    // Emit refreshing event
-    window.dispatchEvent(new CustomEvent('tokenRefresh', {
-      detail: { type: 'refreshing', message: 'Refreshing authentication...' }
-    }));
-
     const token = localStorage.getItem('token');
     if (!token) throw new Error('No token found');
 
@@ -90,21 +85,9 @@ export const refreshTokenOnServer = async () => {
     localStorage.setItem('token', data.token);
     
     console.log('✅ Token refreshed successfully');
-    
-    // Emit success event
-    window.dispatchEvent(new CustomEvent('tokenRefresh', {
-      detail: { type: 'success', message: 'Authentication updated successfully' }
-    }));
-    
     return data;
   } catch (error) {
     console.error('❌ Token refresh failed:', error);
-    
-    // Emit error event
-    window.dispatchEvent(new CustomEvent('tokenRefresh', {
-      detail: { type: 'error', message: 'Authentication refresh failed' }
-    }));
-    
     // Clear invalid token
     localStorage.removeItem('token');
     throw error;

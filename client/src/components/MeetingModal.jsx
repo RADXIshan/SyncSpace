@@ -285,8 +285,8 @@ const MeetingModal = ({
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
                   Date and Time
                 </label>
-                <div className="relative">
-                  <Calendar className="absolute top-5 left-5 text-violet-400 pointer-events-none z-10" size={18} />
+                <div className={`relative w-full pl-5 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90 flex items-center gap-1.5 ${isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""}`}>
+                  <Calendar className="text-violet-400 pointer-events-none z-10" size={20} />
                   <DatePicker
                     selected={startDateTime}
                     onChange={(date) => setStartDateTime(date)}
@@ -295,7 +295,7 @@ const MeetingModal = ({
                     timeIntervals={15}
                     dateFormat="yyyy-MM-dd h:mm aa"
                     disabled={isMeetingStarted}
-                    className={`w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90 ${isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className="w-full px-2"
                     calendarClassName="react-datepicker--light"
                     portalId="datepicker-portal"
                     withPortal

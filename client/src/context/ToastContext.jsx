@@ -64,72 +64,13 @@ export const ToastProvider = ({ children }) => {
     return toast.loading(message, options);
   }, []);
 
-  // Notification toast for real-time updates
+  // Simple notification display using existing toast system
   const showNotification = useCallback((notification) => {
     const { type, title, message, priority = 'medium' } = notification;
     
-    let icon = '🔔';
-    let duration = 4000;
-    
-    switch (type) {
-      case 'mention':
-        icon = '💬';
-        duration = 6000;
-        break;
-      case 'meeting':
-        icon = '📅';
-        duration = 8000;
-        break;
-      case 'member_joined':
-        icon = '👋';
-        break;
-      case 'notice':
-        icon = '📢';
-        duration = 6000;
-        break;
-      case 'task':
-        icon = '✅';
-        break;
-      case 'channel_update':
-        icon = '🔄';
-        break;
-      default:
-        icon = '🔔';
-    }
-
-    if (priority === 'high') {
-      duration = 10000;
-    }
-
-    toast(
-      (t) => (
-        <div className="flex items-start gap-3 max-w-sm">
-          <span className="text-lg">{icon}</span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-gray-900 text-sm">{title}</p>
-            <p className="text-gray-600 text-xs mt-1 line-clamp-2">{message}</p>
-          </div>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="text-gray-400 hover:text-gray-600 ml-2"
-          >
-            ×
-          </button>
-        </div>
-      ),
-      {
-        duration,
-        position: 'top-center',
-        style: {
-          background: 'white',
-          border: '1px solid #e5e7eb',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          minWidth: '300px',
-          textAlign: 'center',
-        },
-      }
-    );
+    // Format message
+    const notificationMessage = `${title}: ${message}`;
+    toast(notificationMessage, { icon: '📢' });
   }, []);
 
   const value = {

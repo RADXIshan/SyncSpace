@@ -120,6 +120,8 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [notifications]);
 
+
+
   // Socket event handlers
   useEffect(() => {
     if (!socket || !user) return;
@@ -207,6 +209,41 @@ export const NotificationProvider = ({ children }) => {
       });
     };
 
+    // Listen for message notifications (when mentioned or in important channels)
+    const handleNewMessage = (data) => {
+      if (data.mentioned || data.important) {
+        addNotification({
+          type: data.mentioned ? 'mention' : 'message',
+          title: data.mentioned ? `${data.userName} mentioned you` : 'New Message',
+          message: `In ${data.channelName}: "${data.message.substring(0, 50)}${data.message.length > 50 ? '...' : ''}"`,
+          priority: data.mentioned ? 'high' : 'medium',
+          actionUrl: `/channels/${data.channelId}`,
+        });
+      }
+    };
+
+    // Listen for meeting updates
+    const handleMeetingUpdate = (data) => {
+      addNotification({
+        type: 'meeting',
+        title: 'Meeting Updated',
+        message: `${data.title} has been updated`,
+        priority: 'medium',
+        actionUrl: `/meetings/${data.id}`,
+      });
+    };
+
+    // Listen for organization updates
+    const handleOrgUpdate = (data) => {
+      addNotification({
+        type: 'system',
+        title: 'Organization Updated',
+        message: data.message || 'Your organization settings have been updated',
+        priority: 'low',
+        actionUrl: '/settings',
+      });
+    };
+
     // Listen for mentions
     const handleMention = (data) => {
       addNotification({
@@ -228,6 +265,9 @@ export const NotificationProvider = ({ children }) => {
     socket.on('new_task', handleNewTask);
     socket.on('new_note', handleNewNote);
     socket.on('user_mentioned', handleMention);
+    socket.on('new_message', handleNewMessage);
+    socket.on('meeting_updated', handleMeetingUpdate);
+    socket.on('organization_updated', handleOrgUpdate);
 
     return () => {
       socket.off('new_notification', handleNewNotification);
@@ -239,6 +279,9 @@ export const NotificationProvider = ({ children }) => {
       socket.off('new_task', handleNewTask);
       socket.off('new_note', handleNewNote);
       socket.off('user_mentioned', handleMention);
+      socket.off('new_message', handleNewMessage);
+      socket.off('meeting_updated', handleMeetingUpdate);
+      socket.off('organization_updated', handleOrgUpdate);
     };
   }, [socket, user, addNotification]);
 

@@ -2,6 +2,7 @@ import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { generateInviteEmail } from "../templates/inviteTemplate.js";
+import { createNotificationForOrg } from "./notificationControllers.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -355,6 +356,42 @@ export const joinOrganization = async (req, res) => {
       SET org_id = ${organization.org_id}
       WHERE user_id = ${userId}
     `;
+
+    // Get user details for notification
+    const [newMember] = await sql`
+      SELECT name, email, user_photo
+      FROM users
+      WHERE user_id = ${userId}
+    `;
+
+    // Create notifications for existing org members about new member
+    try {
+      await createNotificationForOrg(
+        organization.org_id,
+        'member_joined',
+        'New Member Joined',
+        `${newMember.name} has joined your organization`,
+        {
+          relatedId: userId,
+          relatedType: 'user',
+          link: '/members'
+        }
+      );
+
+      // Emit socket event for real-time notification
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`org_${organization.org_id}`).emit('member_joined', {
+          userId: userId,
+          userName: newMember.name,
+          userEmail: newMember.email,
+          userPhoto: newMember.user_photo
+        });
+      }
+    } catch (notificationError) {
+      console.error('Failed to create member joined notifications:', notificationError);
+      // Don't fail the join if notifications fail
+    }
 
     res.status(200).json({
       message: "Successfully joined organization",

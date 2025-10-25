@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-import { getTokenInfo, shouldRefreshToken, refreshTokenOnServer } from '../utils/tokenUtils';
+
 import axios from 'axios';
 
 const SocketContext = createContext();
@@ -91,24 +91,22 @@ export const SocketProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    // Cleanup existing socket first
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
+      setIsConnected(false);
+    }
+
     if (user) {
       // Get token from localStorage
       const token = localStorage.getItem('token');
       
       if (token) {
-        // Check token validity (but don't auto-refresh to prevent loops)
-        const tokenInfo = getTokenInfo(token);
-        
-        if (shouldRefreshToken(token)) {
-          if (tokenInfo?.isExpired) {
-            console.warn('⚠️ Token is expired. Please log out and log back in.');
-            // Don't initialize socket with expired token
-            return;
-          } else if (!tokenInfo?.hasRequiredFields) {
-            console.warn('⚠️ Token is missing required fields. Socket connection may have limited functionality.');
-            // Continue with socket initialization even with incomplete token
-          }
-          console.log('Token info:', tokenInfo);
+        // Minimal token validation - just check if it exists
+        if (!token) {
+          console.warn('No authentication token found');
+          return;
         }
         
         // Get server URL
@@ -116,10 +114,7 @@ export const SocketProvider = ({ children }) => {
         // Check if we're connecting to Vercel (which doesn't support WebSockets)
         const isVercelDeployment = serverUrl.includes('vercel.app');
         
-        console.log('Initializing socket connection to:', serverUrl);
-        console.log('Token:', token.substring(0, 20) + '...');
-        console.log('Environment:', import.meta.env.MODE);
-        console.log('Transport mode:', isVercelDeployment ? 'Polling only (Vercel)' : 'WebSocket + Polling');
+        // Reduced logging for cleaner console
         
         // Initialize socket connection with appropriate configuration
         const newSocket = io(serverUrl, {
@@ -141,8 +136,6 @@ export const SocketProvider = ({ children }) => {
 
         // Connection event handlers
         newSocket.on('connect', () => {
-          console.log('✅ Connected to server via', newSocket.io.engine.transport.name);
-          console.log('Socket ID:', newSocket.id);
           setIsConnected(true);
           
           // Send user online status
@@ -159,45 +152,16 @@ export const SocketProvider = ({ children }) => {
           }
         });
 
-        newSocket.on('disconnect', (reason) => {
-          console.log('❌ Disconnected from server. Reason:', reason);
+        newSocket.on('disconnect', () => {
           setIsConnected(false);
         });
 
-        newSocket.on('reconnect', (attemptNumber) => {
-          console.log('🔄 Reconnected to server after', attemptNumber, 'attempts');
-        });
-
-        newSocket.on('reconnect_attempt', (attemptNumber) => {
-          console.log('🔄 Attempting to reconnect... Attempt:', attemptNumber);
-        });
-
-        newSocket.on('reconnect_error', (error) => {
-          console.error('❌ Reconnection failed:', error);
-        });
-
+        // Only log critical errors
         newSocket.on('reconnect_failed', () => {
-          console.error('❌ Failed to reconnect after maximum attempts');
-        });
-
-        // Transport upgrade events for debugging
-        newSocket.io.on('upgrade', () => {
-          console.log('🚀 Upgraded to', newSocket.io.engine.transport.name);
-        });
-
-        newSocket.io.on('upgradeError', (error) => {
-          console.error('❌ Upgrade error:', error);
+          console.error('Failed to reconnect to server');
         });
 
         newSocket.on('connect_error', (error) => {
-          console.error('Socket connection error:', error.message);
-          console.error('Error details:', error);
-          
-          // If it's an authentication error, suggest re-login
-          if (error.message.includes('Authentication error')) {
-            console.warn('💡 Tip: If you see authentication errors, try logging out and logging back in to refresh your session.');
-          }
-          
           setIsConnected(false);
           
           // Switch to HTTP fallback after connection failures
@@ -205,7 +169,6 @@ export const SocketProvider = ({ children }) => {
               error.message.includes('polling error') ||
               error.message.includes('xhr poll error') ||
               error.message.includes('Transport unknown')) {
-            console.warn('🔄 Socket.IO failed, switching to HTTP fallback for online status');
             setUseHttpFallback(true);
           }
         });
@@ -280,7 +243,7 @@ export const SocketProvider = ({ children }) => {
         setIsConnected(false);
       }
     }
-  }, [user]);
+  }, [user?.user_id]); // Only reconnect when user ID changes, not on every user object change
 
   // Update organization when user's org_id changes
   useEffect(() => {
@@ -293,13 +256,10 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!useHttpFallback || !user) return;
 
-    console.log('🔄 Using HTTP fallback for online status');
-    
     // Set user as online initially and get current online users
     const initializeFallback = async () => {
       await httpSetUserOnline();
       const users = await httpGetOnlineUsers();
-      console.log('📊 HTTP Fallback: Initial online users:', users);
       setOnlineUsers(users);
     };
     
@@ -308,7 +268,6 @@ export const SocketProvider = ({ children }) => {
     // Poll for online users every 30 seconds
     const pollInterval = setInterval(async () => {
       const users = await httpGetOnlineUsers();
-      console.log('📊 HTTP Fallback: Updated online users:', users);
       setOnlineUsers(users);
       
       // Send heartbeat to stay online
@@ -386,7 +345,6 @@ export const SocketProvider = ({ children }) => {
   const refreshOnlineUsers = async () => {
     if (useHttpFallback) {
       const users = await httpGetOnlineUsers();
-      console.log('🔄 Manual refresh: Updated online users:', users);
       setOnlineUsers(users);
     }
   };

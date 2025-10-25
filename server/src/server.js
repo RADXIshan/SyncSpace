@@ -12,6 +12,7 @@ import noteRoutes from "./routes/noteRoutes.js";
 import noticeRoutes from "./routes/noticeRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import { setupSocketHandlers } from "./configs/socket.js";
 import sql from "./database/db.js";
 
@@ -60,6 +61,7 @@ app.use("/api/notes", noteRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Debug endpoint for organization issues
 app.get("/debug/org/:org_id", async (req, res) => {

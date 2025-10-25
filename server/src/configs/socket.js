@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { createNotification, createNotificationForOrg } from '../controllers/notificationControllers.js';
 
 // Store online users with their socket IDs and user info
 const onlineUsers = new Map();
@@ -45,17 +46,10 @@ export const setupSocketHandlers = (io) => {
       socket.userEmail = decoded.email || 'Unknown';
       socket.userName = decoded.name || 'Unknown User';
       
-      // Log token structure for debugging
+      // Only log warnings for incomplete token data
       if (!decoded.email || !decoded.name) {
-        console.warn(`⚠️  User ${decoded.userId} has incomplete token data:`, {
-          hasEmail: !!decoded.email,
-          hasName: !!decoded.name,
-          userId: decoded.userId,
-          tokenKeys: Object.keys(decoded)
-        });
+        console.warn(`⚠️  User ${decoded.userId} has incomplete token data`);
       }
-      
-      console.log(`Socket authentication successful for user: ${decoded.email || decoded.name || `User-${decoded.userId}`} (ID: ${decoded.userId})`);
       next();
     } catch (err) {
       console.error('Socket authentication error:', err.message);
@@ -73,7 +67,7 @@ export const setupSocketHandlers = (io) => {
   });
 
   io.on('connection', (socket) => {
-    console.log(`✅ User ${getUserIdentifier(socket)} (ID: ${socket.userId}) connected with socket ID: ${socket.id}`);
+    // Reduced logging - only log connection without details
 
     // Handle user going online
     socket.on('user_online', (userData) => {
@@ -98,7 +92,6 @@ export const setupSocketHandlers = (io) => {
         // Join organization room if user has one
         if (userData.org_id) {
           socket.join(`org_${userData.org_id}`);
-          console.log(`👥 User ${getUserIdentifier(socket)} joined organization room: org_${userData.org_id}`);
           
           // Broadcast to organization members that user is online
           socket.to(`org_${userData.org_id}`).emit('user_status_changed', {
@@ -111,13 +104,19 @@ export const setupSocketHandlers = (io) => {
               photo: userData.photo
             }
           });
+
+          // Emit member joined notification to other org members
+          socket.to(`org_${userData.org_id}`).emit('member_joined', {
+            userId: userId,
+            userName: userData.name,
+            userEmail: socket.userEmail,
+            userPhoto: userData.photo
+          });
         }
 
         // Send current online users to the newly connected user
         const orgOnlineUsers = getOnlineUsersByOrg(userData.org_id);
         socket.emit('online_users_list', orgOnlineUsers);
-
-        console.log(`✅ User ${getUserIdentifier(socket)} is now online. Total online users: ${onlineUsers.size}`);
       } catch (error) {
         console.error('❌ Error handling user_online event:', error);
       }
@@ -162,7 +161,7 @@ export const setupSocketHandlers = (io) => {
         onlineUsers.set(userId, user);
       }
 
-      console.log(`User ${getUserIdentifier(socket)} joined organization ${orgId}`);
+      // Silently join organization
     });
 
     socket.on('leave_organization', (orgId) => {
@@ -176,7 +175,7 @@ export const setupSocketHandlers = (io) => {
         onlineUsers.set(userId, user);
       }
 
-      console.log(`User ${getUserIdentifier(socket)} left organization ${orgId}`);
+      // Silently leave organization
     });
 
     // Handle disconnection
@@ -205,7 +204,7 @@ export const setupSocketHandlers = (io) => {
         userSockets.delete(userId);
       }
 
-      console.log(`User ${getUserIdentifier(socket)} disconnected. Total online users: ${onlineUsers.size}`);
+      // Silently handle disconnection
     });
 
     // Handle typing indicators for channels
@@ -227,12 +226,12 @@ export const setupSocketHandlers = (io) => {
     // Handle joining/leaving channel rooms
     socket.on('join_channel', (channelId) => {
       socket.join(`channel_${channelId}`);
-      console.log(`User ${getUserIdentifier(socket)} joined channel ${channelId}`);
+      // Silently join channel
     });
 
     socket.on('leave_channel', (channelId) => {
       socket.leave(`channel_${channelId}`);
-      console.log(`User ${getUserIdentifier(socket)} left channel ${channelId}`);
+      // Silently leave channel
     });
   });
 };

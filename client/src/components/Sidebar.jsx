@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { Calendar, Settings, Hash, Users, UserPlus, Home, LogOut, Crown, MessageCircle, Bell, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
-import { toast } from 'react-hot-toast';
+import { useNotifications } from '../context/NotificationContext';
+import { useToast } from '../context/ToastContext';
 import axios from 'axios';
 import ConfirmationModal from './ConfirmationModal';
 import { getRoleStyle, initializeRoleColors } from '../utils/roleColors';
@@ -13,6 +14,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
   const path = location.pathname;
   const { user, checkAuth, logout } = useAuth();
   const { isConnected } = useSocket();
+  const { unreadCount } = useNotifications();
+  const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
   const [organization, setOrganization] = useState(null);
   const [loadingOrg, setLoadingOrg] = useState(false);
@@ -27,7 +30,12 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
     { name: 'Dashboard', icon: <Home size={23} />, path: '/home/dashboard' },
     { name: 'Calendar', icon: <Calendar size={23} />, path: '/home/calendar' },
     { name: 'Messages', icon: <MessageCircle size={23} />, path: '/home/messages' },
-    { name: 'Notifications', icon: <Bell size={23} />, path: '/home/notifications' },
+    { 
+      name: 'Notifications', 
+      icon: <Bell size={23} />, 
+      path: '/home/notifications',
+      badge: unreadCount > 0 ? unreadCount : null
+    },
   ];
 
   const isActive = (itemPath) => {
@@ -86,23 +94,22 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
     if (!organization) return;
 
     setActionLoading(true);
-    let toastId;
+    const toastId = showSuccess("Leaving organization...");
     try {
-      toastId = toast.loading("Leaving organization...");
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/leave`,
         {},
         { withCredentials: true }
       );
       
-      toast.success("Left organization successfully", { id: toastId });
+      showSuccess("Left organization successfully", { id: toastId });
       setOrganization(null);
       setShowLeaveOrgConfirm(false);
       await checkAuth(); // Refresh user data
       navigate('/home/dashboard');
     } catch (err) {
       console.error("Error leaving organization:", err);
-      toast.error(
+      showError(
         err?.response?.data?.message || "Failed to leave organization",
         { id: toastId }
       );
@@ -115,7 +122,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
   const handleInvite = () => {
     if (!organization) return;
     if (!canInvite()) {
-      toast.error("You don't have permission to send invitations");
+      showError("You don't have permission to send invitations");
       return;
     }
     if (onInviteClick) {
@@ -148,7 +155,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
   // Handle organization settings
   const handleOrgSettings = () => {
     if (!canManageOrg()) {
-      toast.error("You don't have permission to manage organization settings");
+      showError("You don't have permission to manage organization settings");
       return;
     }
     
@@ -170,9 +177,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
 
   const confirmLogout = async () => {
     setActionLoading(true);
-    let toastId;
+    const toastId = showSuccess("Logging out...");
     try {
-      toastId = toast.loading("Logging out...");
       await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/logout`, {}, { 
         withCredentials: true,
         headers: {
@@ -182,12 +188,12 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
       });
       await logout();
       localStorage.removeItem("token");
-      toast.success("Logged out successfully", { id: toastId });
+      showSuccess("Logged out successfully", { id: toastId });
       setShowLogoutConfirm(false);
       // Force redirect to login page with cache busting
       window.location.href = "/login?t=" + new Date().getTime();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to log out", { id: toastId });
+      showError(err?.response?.data?.message || "Failed to log out", { id: toastId });
       // Even if server request fails, clear local state and redirect
       localStorage.removeItem("token");
       window.location.href = "/login";
@@ -280,7 +286,12 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
               <span className={`mr-3 transition-all duration-300 group-hover:scale-110 ${
                 isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-violet-400 duration-300'
               }`}>{React.cloneElement(item.icon, { size: 20 })}</span>
-              <span className="text-sm  font-medium">{item.name}</span>
+              <span className="text-sm font-medium flex-1">{item.name}</span>
+              {item.badge && (
+                <span className="ml-2 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full min-w-[20px] text-center">
+                  {item.badge > 99 ? '99+' : item.badge}
+                </span>
+              )}
             </Link>
           ))}
         </nav>

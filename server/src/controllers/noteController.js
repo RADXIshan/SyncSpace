@@ -1,5 +1,6 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
+import { createNotificationForOrg } from "./notificationControllers.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -68,6 +69,42 @@ export const createNote = async (req, res) => {
       VALUES (${org_id}, ${channel_id || null}, ${userId}, ${title.trim()}, ${body.trim()}, ${pinned || false})
       RETURNING note_id, title, body, pinned, created_at, updated_at
     `;
+
+    // Create notifications for all org members if it's a channel note
+    if (channel_id) {
+      try {
+        // Get channel name for notification
+        const [channel] = await sql`
+          SELECT channel_name FROM org_channels WHERE channel_id = ${channel_id}
+        `;
+
+        await createNotificationForOrg(
+          org_id,
+          'task',
+          'New Note Added',
+          `New note in ${channel?.channel_name || 'channel'}: ${title.trim()}`,
+          {
+            relatedId: newNote.note_id,
+            relatedType: 'note',
+            link: `/channels/${channel_id}`
+          }
+        );
+
+        // Emit socket event for real-time notification
+        const io = req.app.get('io');
+        if (io) {
+          io.to(`org_${org_id}`).emit('new_note', {
+            id: newNote.note_id,
+            title: newNote.title,
+            channelId: channel_id,
+            channelName: channel?.channel_name || 'channel'
+          });
+        }
+      } catch (notificationError) {
+        console.error('Failed to create note notifications:', notificationError);
+        // Don't fail the note creation if notifications fail
+      }
+    }
 
     res.status(201).json({
       message: "Note created successfully",

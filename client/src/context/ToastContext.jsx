@@ -64,13 +64,78 @@ export const ToastProvider = ({ children }) => {
     return toast.loading(message, options);
   }, []);
 
-  // Simple notification display using existing toast system
+  // Enhanced notification display using existing toast system
   const showNotification = useCallback((notification) => {
     const { type, title, message, priority = 'medium' } = notification;
     
+    // Get appropriate icon and styling based on type and priority
+    let icon = '📢';
+    let toastOptions = {
+      duration: 4000,
+    };
+
+    // Set icon based on notification type
+    switch (type) {
+      case 'mention':
+        icon = '👤';
+        break;
+      case 'meeting':
+        icon = '📅';
+        toastOptions.duration = 6000; // Longer for meetings
+        break;
+      case 'member_joined':
+        icon = '👋';
+        break;
+      case 'notice':
+        icon = '📋';
+        break;
+      case 'task':
+        icon = '✅';
+        break;
+      case 'channel_update':
+        icon = '🔄';
+        break;
+      case 'system':
+        icon = '⚙️';
+        break;
+      case 'success':
+        icon = '✅';
+        break;
+      case 'alert':
+        icon = '⚠️';
+        break;
+      case 'info':
+        icon = 'ℹ️';
+        break;
+      default:
+        icon = '📢';
+    }
+
+    // Adjust styling based on priority
+    if (priority === 'high') {
+      toastOptions.duration = 8000; // Longer duration for high priority
+      toastOptions.style = {
+        background: '#fef2f2',
+        border: '1px solid #fecaca',
+        color: '#dc2626',
+      };
+    } else if (priority === 'low') {
+      toastOptions.duration = 6000; // Shorter for low priority
+      toastOptions.style = {
+        background: '#f9fafb',
+        border: '1px solid #e5e7eb',
+        color: '#6b7280',
+      };
+    }
+    
     // Format message
-    const notificationMessage = `${title}: ${message}`;
-    toast(notificationMessage, { icon: '📢' });
+    const notificationMessage = `${title}${message ? `: ${message}` : ''}`;
+    
+    // Show the toast
+    toast(notificationMessage, { 
+      icon,
+      ...toastOptions
+    });
   }, []);
 
   const value = {

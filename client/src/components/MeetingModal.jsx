@@ -274,7 +274,7 @@ const MeetingModal = ({
               {/* Description Input */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
-                  Description (Optional)
+                  Description
                 </label>
                 <textarea
                   name="description"

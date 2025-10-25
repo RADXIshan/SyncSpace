@@ -18,9 +18,11 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deletingIds, setDeletingIds] = useState(new Set());
   const { socket } = useSocket();
   const { user } = useAuth();
-  const { showNotification } = useToast();
+  const { showNotification, showSuccess, showError } = useToast();
 
   // Fetch notifications from server
   const fetchNotifications = useCallback(async () => {
@@ -102,6 +104,7 @@ export const NotificationProvider = ({ children }) => {
 
   // Delete notification
   const deleteNotification = useCallback(async (notificationId) => {
+    setDeletingIds(prev => new Set(prev).add(notificationId));
     try {
       await axios.delete(
         `${import.meta.env.VITE_BASE_URL}/api/notifications/${notificationId}`,
@@ -115,10 +118,63 @@ export const NotificationProvider = ({ children }) => {
       if (notification && !notification.isRead) {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
+
+      // Removed success toast for individual deletes to reduce noise
     } catch (error) {
       console.error('Failed to delete notification:', error);
+      showError('Failed to delete notification');
+      throw error;
+    } finally {
+      setDeletingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(notificationId);
+        return newSet;
+      });
     }
-  }, [notifications]);
+  }, [notifications, showSuccess, showError]);
+
+  // Delete all notifications
+  const deleteAllNotifications = useCallback(async () => {
+    setDeletingAll(true);
+    const startTime = Date.now();
+    
+    try {
+      console.log('Starting delete all notifications...');
+      
+      const response = await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/api/notifications`,
+        { 
+          withCredentials: true,
+          timeout: 30000 // 30 second timeout
+        }
+      );
+
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      console.log(`Delete all completed in ${duration}ms`);
+      
+      setNotifications([]);
+      setUnreadCount(0);
+      
+      const deletedCount = response.data.deletedCount || 0;
+      showSuccess(`Successfully deleted ${deletedCount} notifications (${duration}ms)`);
+    } catch (error) {
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      console.error(`Failed to delete all notifications after ${duration}ms:`, error);
+      
+      if (error.code === 'ECONNABORTED') {
+        showError('Delete operation timed out. Please try again.');
+      } else {
+        showError('Failed to delete all notifications');
+      }
+      throw error;
+    } finally {
+      setDeletingAll(false);
+    }
+  }, [showSuccess, showError]);
 
 
 
@@ -294,9 +350,12 @@ export const NotificationProvider = ({ children }) => {
     notifications,
     unreadCount,
     loading,
+    deletingAll,
+    deletingIds,
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    deleteAllNotifications,
     fetchNotifications,
   };
 

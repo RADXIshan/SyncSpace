@@ -4,7 +4,8 @@ import jwt from "jsonwebtoken";
 // Get notifications for a user
 export const getNotifications = async (req, res) => {
   try {
-    const authToken = req.cookies.jwt || req.headers.authorization?.split(" ")[1];
+    const authToken =
+      req.cookies.jwt || req.headers.authorization?.split(" ")[1];
     if (!authToken) {
       return res.status(401).json({ message: "No token provided" });
     }
@@ -18,7 +19,8 @@ export const getNotifications = async (req, res) => {
     }
 
     // Get user's organization
-    const [user] = await sql`SELECT org_id FROM users WHERE user_id = ${userId}`;
+    const [user] =
+      await sql`SELECT org_id FROM users WHERE user_id = ${userId}`;
     if (!user || !user.org_id) {
       return res.json({ notifications: [], unreadCount: 0 });
     }
@@ -41,19 +43,19 @@ export const getNotifications = async (req, res) => {
     `;
 
     res.json({
-      notifications: notifications.map(n => ({
+      notifications: notifications.map((n) => ({
         id: n.id,
         type: n.type,
         title: n.title,
         message: n.message,
-        priority: 'medium', // Default since your schema doesn't have priority
+        priority: "medium", // Default since your schema doesn't have priority
         isRead: n.read_at !== null,
         timestamp: n.created_at,
         actionUrl: n.link,
         relatedId: n.related_id,
         relatedType: n.related_type,
       })),
-      unreadCount: parseInt(unreadResult.count)
+      unreadCount: parseInt(unreadResult.count),
     });
   } catch (error) {
     console.error("Error fetching notifications:", error);
@@ -65,8 +67,9 @@ export const getNotifications = async (req, res) => {
 export const markNotificationAsRead = async (req, res) => {
   try {
     const { notificationId } = req.params;
-    const authToken = req.cookies.jwt || req.headers.authorization?.split(" ")[1];
-    
+    const authToken =
+      req.cookies.jwt || req.headers.authorization?.split(" ")[1];
+
     if (!authToken) {
       return res.status(401).json({ message: "No token provided" });
     }
@@ -97,8 +100,9 @@ export const markNotificationAsRead = async (req, res) => {
 // Mark all notifications as read
 export const markAllNotificationsAsRead = async (req, res) => {
   try {
-    const authToken = req.cookies.jwt || req.headers.authorization?.split(" ")[1];
-    
+    const authToken =
+      req.cookies.jwt || req.headers.authorization?.split(" ")[1];
+
     if (!authToken) {
       return res.status(401).json({ message: "No token provided" });
     }
@@ -112,7 +116,8 @@ export const markAllNotificationsAsRead = async (req, res) => {
     }
 
     // Get user's organization
-    const [user] = await sql`SELECT org_id FROM users WHERE user_id = ${userId}`;
+    const [user] =
+      await sql`SELECT org_id FROM users WHERE user_id = ${userId}`;
     if (!user || !user.org_id) {
       return res.json({ message: "No notifications to mark" });
     }
@@ -137,8 +142,9 @@ export const markAllNotificationsAsRead = async (req, res) => {
 export const deleteNotification = async (req, res) => {
   try {
     const { notificationId } = req.params;
-    const authToken = req.cookies.jwt || req.headers.authorization?.split(" ")[1];
-    
+    const authToken =
+      req.cookies.jwt || req.headers.authorization?.split(" ")[1];
+
     if (!authToken) {
       return res.status(401).json({ message: "No token provided" });
     }
@@ -165,16 +171,79 @@ export const deleteNotification = async (req, res) => {
   }
 };
 
+// Delete all notifications
+export const deleteAllNotifications = async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    const authToken =
+      req.cookies.jwt || req.headers.authorization?.split(" ")[1];
 
+    if (!authToken) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    let userId;
+    try {
+      const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
+      userId = decoded.userId;
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    // Get user's organization
+    const [user] =
+      await sql`SELECT org_id FROM users WHERE user_id = ${userId}`;
+    if (!user || !user.org_id) {
+      return res.json({ message: "No notifications to delete" });
+    }
+
+    // First, get count of notifications to be deleted for logging
+    const [countResult] = await sql`
+      SELECT COUNT(*) as count FROM notifications 
+      WHERE org_id = ${user.org_id}
+      AND user_id = ${userId}
+    `;
+
+    const notificationCount = parseInt(countResult.count);
+    console.log(`Deleting ${notificationCount} notifications for user ${userId}`);
+
+    // Delete all notifications for the user
+    const result = await sql`
+      DELETE FROM notifications 
+      WHERE org_id = ${user.org_id}
+      AND user_id = ${userId}
+    `;
+
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    
+    console.log(`Successfully deleted ${notificationCount} notifications in ${duration}ms`);
+
+    res.json({ 
+      message: "All notifications deleted",
+      deletedCount: notificationCount,
+      duration: duration
+    });
+  } catch (error) {
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    console.error(`Error deleting all notifications after ${duration}ms:`, error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 // Create notification (internal function for other controllers to use)
-export const createNotification = async (userId, orgId, type, title, message, options = {}) => {
+export const createNotification = async (
+  userId,
+  orgId,
+  type,
+  title,
+  message,
+  options = {}
+) => {
   try {
-    const {
-      relatedId = null,
-      relatedType = null,
-      link = null,
-    } = options;
+    const { relatedId = null, relatedType = null, link = null } = options;
 
     const [notification] = await sql`
       INSERT INTO notifications (
@@ -206,10 +275,16 @@ export const createNotification = async (userId, orgId, type, title, message, op
 };
 
 // Create notification for all org members except the creator
-export const createNotificationForOrg = async (orgId, type, title, message, options = {}) => {
+export const createNotificationForOrg = async (
+  orgId,
+  type,
+  title,
+  message,
+  options = {}
+) => {
   try {
     const { excludeUserId } = options;
-    
+
     // Get all users in the organization except the creator
     let orgMembers;
     if (excludeUserId) {
@@ -226,11 +301,11 @@ export const createNotificationForOrg = async (orgId, type, title, message, opti
     const notifications = [];
     for (const member of orgMembers) {
       const notification = await createNotification(
-        member.user_id, 
-        orgId, 
-        type, 
-        title, 
-        message, 
+        member.user_id,
+        orgId,
+        type,
+        title,
+        message,
         options
       );
       notifications.push(notification);

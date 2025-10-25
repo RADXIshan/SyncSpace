@@ -21,12 +21,30 @@ export const SocketProvider = ({ children }) => {
   const [useHttpFallback, setUseHttpFallback] = useState(false);
   const { user } = useAuth();
 
+  // Get server URL helper function
+  const getServerUrl = () => {
+    let serverUrl = import.meta.env.VITE_BASE_URL;
+    
+    if (!serverUrl) {
+      // Fallback logic for production
+      if (import.meta.env.PROD) {
+        // In production, try to use the same domain as the frontend
+        serverUrl = window.location.origin.replace(/:\d+$/, '') + ':3000';
+      } else {
+        serverUrl = 'http://localhost:3000';
+      }
+    }
+    
+    return serverUrl;
+  };
+
   // HTTP fallback functions for when Socket.IO doesn't work
   const httpSetUserOnline = async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token || !user) return;
 
+      const serverUrl = getServerUrl();
       await axios.post(`${serverUrl}/api/users/online`, {
         org_id: user.org_id,
         photo: user.photo || user.user_photo
@@ -44,6 +62,7 @@ export const SocketProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (!token) return [];
 
+      const serverUrl = getServerUrl();
       const response = await axios.get(`${serverUrl}/api/users/online`, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
@@ -61,6 +80,7 @@ export const SocketProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
+      const serverUrl = getServerUrl();
       await axios.delete(`${serverUrl}/api/users/online`, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
@@ -88,18 +108,8 @@ export const SocketProvider = ({ children }) => {
           console.log('Token info:', tokenInfo);
         }
         
-        // Determine server URL with production fallback
-        let serverUrl = import.meta.env.VITE_BASE_URL;
-        
-        if (!serverUrl) {
-          // Fallback logic for production
-          if (import.meta.env.PROD) {
-            // In production, try to use the same domain as the frontend
-            serverUrl = window.location.origin.replace(/:\d+$/, '') + ':3000';
-          } else {
-            serverUrl = 'http://localhost:3000';
-          }
-        }
+        // Get server URL
+        const serverUrl = getServerUrl();
         // Check if we're connecting to Vercel (which doesn't support WebSockets)
         const isVercelDeployment = serverUrl.includes('vercel.app');
         
@@ -286,6 +296,7 @@ export const SocketProvider = ({ children }) => {
     const initializeFallback = async () => {
       await httpSetUserOnline();
       const users = await httpGetOnlineUsers();
+      console.log('📊 HTTP Fallback: Initial online users:', users);
       setOnlineUsers(users);
     };
     
@@ -294,6 +305,7 @@ export const SocketProvider = ({ children }) => {
     // Poll for online users every 30 seconds
     const pollInterval = setInterval(async () => {
       const users = await httpGetOnlineUsers();
+      console.log('📊 HTTP Fallback: Updated online users:', users);
       setOnlineUsers(users);
       
       // Send heartbeat to stay online
@@ -345,12 +357,35 @@ export const SocketProvider = ({ children }) => {
   };
 
   const isUserOnline = (userId) => {
-    return onlineUsers.some(user => user.id === userId || user.user_id === userId);
+    if (!userId || !onlineUsers.length) return false;
+    
+    // Convert to string for comparison to handle type mismatches
+    const userIdStr = String(userId);
+    const isOnline = onlineUsers.some(user => 
+      String(user.id) === userIdStr || 
+      String(user.user_id) === userIdStr
+    );
+    
+    return isOnline;
   };
 
   const getUserStatus = (userId) => {
-    const user = onlineUsers.find(u => u.id === userId || u.user_id === userId);
+    if (!userId || !onlineUsers.length) return 'offline';
+    
+    const userIdStr = String(userId);
+    const user = onlineUsers.find(u => 
+      String(u.id) === userIdStr || 
+      String(u.user_id) === userIdStr
+    );
     return user ? user.status || 'online' : 'offline';
+  };
+
+  const refreshOnlineUsers = async () => {
+    if (useHttpFallback) {
+      const users = await httpGetOnlineUsers();
+      console.log('🔄 Manual refresh: Updated online users:', users);
+      setOnlineUsers(users);
+    }
   };
 
   const value = {
@@ -364,7 +399,8 @@ export const SocketProvider = ({ children }) => {
     stopTyping,
     isUserOnline,
     getUserStatus,
-    useHttpFallback
+    useHttpFallback,
+    refreshOnlineUsers
   };
 
   return (

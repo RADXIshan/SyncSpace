@@ -34,7 +34,7 @@ import OnlineCounter from "./OnlineCounter";
 const ChannelPage = () => {
   const { channelId } = useParams();
   const { user } = useAuth();
-  const { joinChannel, leaveChannel, isUserOnline } = useSocket();
+  const { joinChannel, leaveChannel, isUserOnline, onlineUsers, refreshOnlineUsers, useHttpFallback } = useSocket();
   const navigate = useNavigate();
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -197,6 +197,20 @@ const ChannelPage = () => {
       };
     }
   }, [channelId, joinChannel, leaveChannel]);
+
+  // Refresh online users when members tab is accessed
+  useEffect(() => {
+    if (activeTab === "members" && useHttpFallback && refreshOnlineUsers) {
+      refreshOnlineUsers();
+    }
+  }, [activeTab, useHttpFallback, refreshOnlineUsers]);
+
+  // Force re-render when online users change (for HTTP fallback)
+  useEffect(() => {
+    // This effect ensures the component re-renders when onlineUsers state changes
+    // which is important for HTTP fallback mode where online status updates come
+    // from periodic polling rather than real-time socket events
+  }, [onlineUsers]);
 
   // Fetch user permissions
   useEffect(() => {
@@ -1258,7 +1272,18 @@ const ChannelPage = () => {
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   Channel Members
                 </h2>
-                <OnlineCounter members={members} />
+                <div className="flex items-center gap-4">
+                  <OnlineCounter members={members} />
+                  {useHttpFallback && (
+                    <button
+                      onClick={refreshOnlineUsers}
+                      className="text-xs text-purple-600 hover:text-purple-700 transition-colors cursor-pointer"
+                      title="Refresh online status"
+                    >
+                      Refresh Status
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">

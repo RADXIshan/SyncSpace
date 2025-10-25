@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, Sparkles, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -154,44 +154,43 @@ const LandingNav = () => {
       ref={navRef}
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
         isScrolled
-          ? "bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-200/50"
-          : "bg-white/80 backdrop-blur-lg shadow-sm border-b border-gray-100/50"
+          ? "bg-white/95 backdrop-blur-xl shadow-xl border-b border-gray-200/50"
+          : "bg-white/85 backdrop-blur-lg shadow-lg border-b border-gray-100/50"
       }`}
     >
-      {/* Dynamic gradient line */}
+      {/* Enhanced Dynamic gradient line */}
       <div
-        className={`absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 transition-all duration-500 ${
-          isScrolled ? "opacity-100" : "opacity-60"
+        className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 transition-all duration-500 ${
+          isScrolled ? "opacity-100 shadow-lg shadow-purple-500/20" : "opacity-70"
         }`}
       />
+      
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-50/10 to-transparent opacity-50"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className={`flex items-center justify-between transition-all duration-300 ${
-            isScrolled ? "py-3" : "py-4"
+            isScrolled ? "py-3" : "py-4.5"
           }`}
         >
-          {/* Brand */}
+          {/* Enhanced Brand */}
           <div
             ref={brandRef}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-3 cursor-pointer group relative"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             <div className="relative">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+                <img src="/icon.png" alt="SyncSpace Logo" className="w-full h-full" />
               </div>
-              <div className="absolute -inset-1 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-xl sm:text-3xl font-bold tracking-tight group-hover:scale-105 transition-transform duration-300">
+                <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   SyncSpace
                 </span>
               </h1>
-              <span className="text-xs text-gray-500 -mt-1 hidden sm:block">
-                Collaborate Seamlessly
-              </span>
             </div>
           </div>
 
@@ -214,17 +213,18 @@ const LandingNav = () => {
           <div ref={buttonsRef} className="hidden sm:flex items-center gap-3">
             <button
               onClick={() => (window.location.href = "/login")}
-              className="relative px-5 py-2.5 text-gray-700 hover:text-indigo-600 font-medium text-sm transition-all duration-300 rounded-lg hover:bg-gray-50 group cursor-pointer"
+              className="relative px-6 py-[13px] border-2 border-gray-300 text-gray-700 font-semibold text-sm rounded-lg shadow-lg hover:shadow-2xl hover:border-violet-300 hover:text-violet-600 transition-all duration-300 group overflow-hidden cursor-pointer transform hover:scale-110 bg-white/80 hover:bg-white/90"
             >
               <span className="relative z-10">Login</span>
             </button>
 
             <button
               onClick={() => (window.location.href = "/signup")}
-              className="relative px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden cursor-pointer"
+              className="relative px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold text-sm rounded-lg shadow-xl shadow-purple-500/20 hover:shadow-2xl transition-all duration-300 group overflow-hidden cursor-pointer transform hover:scale-110"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 animate-pulse" />
               <span className="relative z-10 flex items-center gap-2">
                 Get Started
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />

@@ -156,49 +156,52 @@ const LandingTestimonials = () => {
           </p>
         </div>
 
-        {/* Testimonials Carousel */}
+        {/* Enhanced Testimonials Carousel */}
         <div className="relative">
           <div ref={carouselRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             {getVisibleTestimonials().map((testimonial, index) => (
               <div
                 key={`${testimonial.name}-${currentIndex}-${index}`}
-                className={`group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-gray-200 ${
-                  index === 1 ? 'lg:scale-105 lg:shadow-2xl' : ''
+                className={`group relative bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-gray-200 cursor-pointer transform hover:scale-105 hover:-translate-y-2 ${
+                  index === 1 ? 'lg:scale-110 lg:shadow-2xl lg:border-indigo-200 lg:bg-gradient-to-br lg:from-white lg:to-indigo-50/30' : ''
                 }`}
               >
-                {/* Quote icon */}
-                <div className="absolute top-6 right-6 w-8 h-8 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center">
-                  <Quote className="w-4 h-4 text-indigo-600" />
+                {/* Enhanced Quote icon */}
+                <div className="absolute top-6 right-6 w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <Quote className="w-5 h-5 text-indigo-600 group-hover:text-purple-600 transition-colors duration-300" />
                 </div>
 
-                {/* Rating */}
+                {/* Enhanced Rating */}
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current group-hover:scale-110 transition-transform duration-300" style={{ transitionDelay: `${i * 50}ms` }} />
                   ))}
                 </div>
 
                 {/* Testimonial text */}
-                <p className="text-gray-700 leading-relaxed mb-6 text-lg">
+                <p className="text-gray-700 leading-relaxed mb-6 text-lg group-hover:text-gray-800 transition-colors duration-300">
                   "{testimonial.text}"
                 </p>
 
-                {/* Highlight */}
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full text-sm font-medium text-indigo-700 mb-6">
-                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                {/* Enhanced Highlight */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-full text-sm font-medium text-indigo-700 mb-6 group-hover:from-indigo-100 group-hover:via-purple-100 group-hover:to-pink-100 transition-all duration-300 shadow-sm">
+                  <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-pulse"></div>
                   {testimonial.highlight}
                 </div>
 
-                {/* Author */}
+                {/* Enhanced Author */}
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                  <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
                     {testimonial.avatar}
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                    <p className="text-sm text-gray-600">{testimonial.role} at {testimonial.company}</p>
+                    <h4 className="font-semibold text-gray-900 group-hover:text-gray-800 transition-colors duration-300">{testimonial.name}</h4>
+                    <p className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors duration-300">{testimonial.role} at {testimonial.company}</p>
                   </div>
                 </div>
+
+                {/* Hover effect overlay */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </div>
             ))}
           </div>

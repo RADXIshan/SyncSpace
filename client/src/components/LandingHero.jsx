@@ -153,15 +153,19 @@ const LandingHero = () => {
       id="home"
       className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-23 pb-16 overflow-hidden"
     >
-      {/* Background Elements */}
+      {/* Enhanced Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/40 via-transparent to-purple-100/40"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-100/30 via-transparent to-pink-100/30"></div>
       
-      {/* Floating Elements */}
+      {/* Enhanced Floating Elements */}
       <div ref={floatingElementsRef} className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-16 h-16 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-2xl rotate-12"></div>
-        <div className="absolute top-40 right-20 w-12 h-12 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full"></div>
-        <div className="absolute bottom-40 left-20 w-20 h-20 bg-gradient-to-br from-pink-400/20 to-indigo-400/20 rounded-3xl -rotate-12"></div>
-        <div className="absolute bottom-20 right-10 w-14 h-14 bg-gradient-to-br from-purple-400/20 to-indigo-400/20 rounded-xl rotate-45"></div>
+        <div className="absolute top-20 left-10 w-16 h-16 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-2xl rotate-12 backdrop-blur-sm border border-white/20"></div>
+        <div className="absolute top-40 right-20 w-12 h-12 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full backdrop-blur-sm border border-white/20"></div>
+        <div className="absolute bottom-40 left-20 w-20 h-20 bg-gradient-to-br from-pink-400/20 to-indigo-400/20 rounded-3xl -rotate-12 backdrop-blur-sm border border-white/20"></div>
+        <div className="absolute bottom-20 right-10 w-14 h-14 bg-gradient-to-br from-purple-400/20 to-indigo-400/20 rounded-xl rotate-45 backdrop-blur-sm border border-white/20"></div>
+        <div className="absolute top-1/3 left-1/4 w-8 h-8 bg-gradient-to-br from-cyan-400/15 to-blue-400/15 rounded-full backdrop-blur-sm"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-10 h-10 bg-gradient-to-br from-emerald-400/15 to-teal-400/15 rounded-2xl rotate-12 backdrop-blur-sm"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto w-full">
@@ -192,25 +196,27 @@ const LandingHero = () => {
               </p>
             </div>
 
-            {/* CTA Buttons */}
+            {/* Enhanced CTA Buttons */}
             <div
               ref={buttonsRef}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
               <button
                 onClick={() => (window.location.href = "/signup")}
-                className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer"
+                className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden cursor-pointer transform hover:scale-105"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 animate-pulse"></div>
                 <span className="relative z-10 flex items-center gap-2">
                   Start Free Trial
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </span>
               </button>
 
-              <button className="group px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-indigo-300 hover:text-indigo-600 transition-all duration-300 cursor-pointer">
-                <span className="flex items-center gap-2">
+              <button className="group relative px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:border-violet-300 hover:text-violet-600 transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm bg-white/80 hover:bg-white/90">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <span className="relative z-10 flex items-center gap-2">
                   <Play className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
                   Watch Demo
                 </span>
@@ -253,38 +259,54 @@ const LandingHero = () => {
             </div>
           </div>
 
-          {/* Image Section */}
+          {/* Enhanced Image Section */}
           <div className="relative">
             <div className="relative z-10">
-              <div className="absolute -inset-4 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 rounded-3xl blur-2xl"></div>
+              <div className="absolute -inset-6 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 rounded-3xl blur-3xl animate-pulse"></div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-indigo-400/10 to-purple-400/10 rounded-2xl"></div>
               <img
                 ref={imageRef}
                 src={landing_page_pic}
                 alt="Team collaboration dashboard"
-                className="relative z-10 w-full max-w-lg mx-auto rounded-2xl shadow-2xl"
+                className="relative z-10 w-full max-w-lg mx-auto rounded-2xl shadow-2xl border border-white/20 backdrop-blur-sm hover:scale-105 transition-transform duration-500"
               />
             </div>
             
-            {/* Floating badges */}
+            {/* Enhanced Floating badges */}
             <div ref={badgesRef}>
-              <div className="absolute -top-4 -left-4 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
+              <div className="absolute -top-4 -left-4 bg-white/90 backdrop-blur-md rounded-xl shadow-xl p-3 border border-gray-100/50 hover:scale-110 transition-transform duration-300">
                 <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-indigo-600" />
-                  <span className="text-sm font-medium text-gray-900">50+ Teams</span>
+                  <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <Users className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">50K+ Teams</span>
                 </div>
               </div>
               
-              <div className="absolute top-1/2 -right-6 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
+              <div className="absolute top-1/2 -right-6 bg-white/90 backdrop-blur-md rounded-xl shadow-xl p-3 border border-gray-100/50 hover:scale-110 transition-transform duration-300">
                 <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-purple-600" />
+                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-white" />
+                  </div>
                   <span className="text-sm font-medium text-gray-900">Real-time</span>
                 </div>
               </div>
 
-              <div className="absolute -bottom-4 -left-6 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
+              <div className="absolute -bottom-4 -left-6 bg-white/90 backdrop-blur-md rounded-xl shadow-xl p-3 border border-gray-100/50 hover:scale-110 transition-transform duration-300">
                 <div className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium text-gray-900">Secure</span>
+                  <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">Enterprise Secure</span>
+                </div>
+              </div>
+
+              <div className="absolute top-1/4 -left-8 bg-white/90 backdrop-blur-md rounded-xl shadow-xl p-3 border border-gray-100/50 hover:scale-110 transition-transform duration-300">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">99.9% Uptime</span>
                 </div>
               </div>
             </div>

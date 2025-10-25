@@ -288,7 +288,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
               }`}>{React.cloneElement(item.icon, { size: 20 })}</span>
               <span className="text-sm font-medium flex-1">{item.name}</span>
               {item.badge && (
-                <span className="ml-2 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full min-w-[20px] text-center">
+                <span className="ml-2 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full h-5 w-5 flex items-center justify-center">
                   {item.badge > 99 ? '99+' : item.badge}
                 </span>
               )}

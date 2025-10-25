@@ -74,16 +74,56 @@ const LandingNav = () => {
       "-=0.2"
     );
 
-    // Scroll-based navbar transformation
+    // Enhanced scroll-based navbar shrinking effect
     ScrollTrigger.create({
       trigger: "body",
-      start: "top -50",
+      start: "top -10",
       end: "bottom bottom",
       onUpdate: (self) => {
-        if (self.direction === 1 && self.progress > 0.01) {
+        const scrollY = window.scrollY;
+        
+        if (scrollY > 50) {
           setIsScrolled(true);
-        } else if (self.direction === -1 && self.progress < 0.01) {
+          
+          // Smooth shrinking animation
+          gsap.to(navRef.current, {
+            duration: 0.3,
+            ease: "power2.out"
+          });
+          
+          // Shrink brand logo and text
+          gsap.to(brandRef.current.querySelector('div'), {
+            scale: 0.85,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+          
+          gsap.to(brandRef.current.querySelector('h1'), {
+            scale: 0.9,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+          
+        } else {
           setIsScrolled(false);
+          
+          // Return to original size
+          gsap.to(navRef.current, {
+            duration: 0.3,
+            ease: "power2.out"
+          });
+          
+          gsap.to(brandRef.current.querySelector('div'), {
+            scale: 1,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+          
+          gsap.to(brandRef.current.querySelector('h1'), {
+            scale: 1,
+            duration: 0.3,
+            ease: "power2.out"
+          });
         }
       },
     });
@@ -152,16 +192,18 @@ const LandingNav = () => {
   return (
     <nav
       ref={navRef}
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-out ${
         isScrolled
-          ? "bg-white/95 backdrop-blur-xl shadow-xl border-b border-gray-200/50"
+          ? "bg-white/98 backdrop-blur-xl shadow-2xl border-b border-gray-200/60"
           : "bg-white/85 backdrop-blur-lg shadow-lg border-b border-gray-100/50"
       }`}
     >
-      {/* Enhanced Dynamic gradient line */}
+      {/* Enhanced Dynamic gradient line with shrinking effect */}
       <div
-        className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 transition-all duration-500 ${
-          isScrolled ? "opacity-100 shadow-lg shadow-purple-500/20" : "opacity-70"
+        className={`absolute top-0 left-0 w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 transition-all duration-500 ${
+          isScrolled 
+            ? "h-0.5 opacity-100 shadow-lg shadow-purple-500/30" 
+            : "h-1 opacity-70"
         }`}
       />
       
@@ -170,23 +212,27 @@ const LandingNav = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
-          className={`flex items-center justify-between transition-all duration-300 ${
-            isScrolled ? "py-3" : "py-4.5"
+          className={`flex items-center justify-between transition-all duration-500 ease-out ${
+            isScrolled ? "py-2 sm:py-2.5" : "py-4 sm:py-5"
           }`}
         >
-          {/* Enhanced Brand */}
+          {/* Enhanced Brand with Shrinking Effect */}
           <div
             ref={brandRef}
             className="flex items-center gap-3 cursor-pointer group relative"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             <div className="relative">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center group-hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
-                <img src="/icon.png" alt="SyncSpace Logo" className="w-full h-full" />
+              <div className={`rounded-full flex items-center justify-center group-hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 ${
+                isScrolled ? "w-9 h-9 sm:w-10 sm:h-10" : "w-11 h-11 sm:w-12 sm:h-12"
+              }`}>
+                <img src="/icon.png" alt="SyncSpace Logo" className="w-full h-full transition-all duration-500" />
               </div>
             </div>
             <div className="flex flex-col">
-              <h1 className="text-xl sm:text-3xl font-bold tracking-tight group-hover:scale-105 transition-transform duration-300">
+              <h1 className={`font-bold tracking-tight group-hover:scale-105 transition-all duration-500 ${
+                isScrolled ? "text-lg sm:text-2xl" : "text-xl sm:text-3xl"
+              }`}>
                 <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   SyncSpace
                 </span>
@@ -194,13 +240,17 @@ const LandingNav = () => {
             </div>
           </div>
 
-          {/* Desktop Navigation */}
-          <div ref={linksRef} className="hidden lg:flex items-center gap-8">
+          {/* Desktop Navigation with Shrinking Effect */}
+          <div ref={linksRef} className={`hidden lg:flex items-center transition-all duration-500 ${
+            isScrolled ? "gap-6" : "gap-8"
+          }`}>
             {navLinks.map((item) => (
               <button
                 key={item.name}
                 onClick={() => scrollToSection(item.href)}
-                className="relative px-4 py-2 text-gray-700 hover:text-indigo-600 font-medium text-base transition-all duration-300 group cursor-pointer"
+                className={`relative px-3 py-2 text-gray-700 hover:text-indigo-600 font-medium transition-all duration-500 group cursor-pointer ${
+                  isScrolled ? "text-sm" : "text-base"
+                }`}
               >
                 <span className="relative z-10">{item.name}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/10 to-purple-600/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100" />
@@ -209,39 +259,55 @@ const LandingNav = () => {
             ))}
           </div>
 
-          {/* Desktop Buttons */}
-          <div ref={buttonsRef} className="hidden sm:flex items-center gap-3">
+          {/* Desktop Buttons with Shrinking Effect */}
+          <div ref={buttonsRef} className={`hidden sm:flex items-center transition-all duration-500 ${
+            isScrolled ? "gap-2" : "gap-3"
+          }`}>
             <button
               onClick={() => (window.location.href = "/login")}
-              className="relative px-6 py-[13px] border-2 border-gray-300 text-gray-700 font-semibold text-sm rounded-lg shadow-lg hover:shadow-2xl hover:border-violet-300 hover:text-violet-600 transition-all duration-300 group overflow-hidden cursor-pointer transform hover:scale-110 bg-white/80 hover:bg-white/90"
+              className={`relative border-2 border-gray-300 text-gray-700 font-semibold rounded-lg shadow-lg hover:shadow-2xl hover:border-violet-300 hover:text-violet-600 transition-all duration-500 group overflow-hidden cursor-pointer transform hover:scale-110 bg-white/80 hover:bg-white/90 ${
+                isScrolled ? "px-4 py-2 text-xs" : "px-6 py-[13px] text-sm"
+              }`}
             >
               <span className="relative z-10">Login</span>
             </button>
 
             <button
               onClick={() => (window.location.href = "/signup")}
-              className="relative px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold text-sm rounded-lg shadow-xl shadow-purple-500/20 hover:shadow-2xl transition-all duration-300 group overflow-hidden cursor-pointer transform hover:scale-110"
+              className={`relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold rounded-lg shadow-xl shadow-purple-500/20 hover:shadow-2xl transition-all duration-500 group overflow-hidden cursor-pointer transform hover:scale-110 ${
+                isScrolled ? "px-4 py-2.5 text-xs" : "px-6 py-3.5 text-sm"
+              }`}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 animate-pulse" />
               <span className="relative z-10 flex items-center gap-2">
                 Get Started
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                <ArrowRight className={`group-hover:translate-x-1 transition-transform duration-300 ${
+                  isScrolled ? "w-3 h-3" : "w-4 h-4"
+                }`} />
               </span>
             </button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button with Shrinking Effect */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="sm:hidden relative p-2.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-300 group cursor-pointer"
+            className={`sm:hidden relative rounded-lg bg-gray-50 hover:bg-gray-100 transition-all duration-500 group cursor-pointer ${
+              isScrolled ? "p-2" : "p-2.5"
+            }`}
           >
-            <div className="w-6 h-6 flex items-center justify-center">
+            <div className={`flex items-center justify-center transition-all duration-500 ${
+              isScrolled ? "w-5 h-5" : "w-6 h-6"
+            }`}>
               {isMenuOpen ? (
-                <X className="w-5 h-5 text-gray-700 group-hover:text-indigo-600 transition-colors duration-300" />
+                <X className={`text-gray-700 group-hover:text-indigo-600 transition-colors duration-300 ${
+                  isScrolled ? "w-4 h-4" : "w-5 h-5"
+                }`} />
               ) : (
-                <Menu className="w-5 h-5 text-gray-700 group-hover:text-indigo-600 transition-colors duration-300" />
+                <Menu className={`text-gray-700 group-hover:text-indigo-600 transition-colors duration-300 ${
+                  isScrolled ? "w-4 h-4" : "w-5 h-5"
+                }`} />
               )}
             </div>
           </button>

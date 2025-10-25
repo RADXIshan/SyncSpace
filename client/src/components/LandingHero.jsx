@@ -172,7 +172,7 @@ const LandingHero = () => {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           
           {/* Content Section */}
-          <div className="text-center lg:text-left space-y-8">
+          <div className="text-center lg:text-left space-y-8 pt-2.5">
             <div className="space-y-6">
               <h1
                 ref={titleRef}

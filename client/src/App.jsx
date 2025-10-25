@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router";
 import { Toaster } from "react-hot-toast";
+import "./utils/axiosConfig"; // Import axios configuration
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -13,7 +14,6 @@ import { SocketProvider } from "./context/SocketContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import MeetingRoom from "./components/MeetingRoom";
-import SocketDebug from "./components/SocketDebug";
 import ErrorBoundary from "./components/ErrorBoundary";
 import TokenRefreshNotification from "./components/TokenRefreshNotification";
 
@@ -24,7 +24,6 @@ const App = () => {
         <SocketProvider>
           <div>
             <Toaster />
-            <SocketDebug />
             <TokenRefreshNotification />
             <Routes>
             <Route path="/" element={<Landing />} />

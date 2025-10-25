@@ -554,10 +554,16 @@ const MeetingPrep = () => {
 
       if (isStartingMeeting) {
         // Mark the meeting as started on the server
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
         await axios.patch(
           `${import.meta.env.VITE_BASE_URL}/api/meetings/${meetingId}/start`,
           {},
-          { withCredentials: true }
+          { 
+            withCredentials: true,
+            headers
+          }
         );
         toast.success("Meeting started successfully");
       }

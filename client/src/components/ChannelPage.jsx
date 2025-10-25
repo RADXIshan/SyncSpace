@@ -419,10 +419,16 @@ const ChannelPage = () => {
     const toastId = toast.loading("Updating note...");
 
     try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/notes/${noteId}`,
         noteData,
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers
+        }
       );
       refreshNotes(); // Refresh notes after update
       toast.success("Note updated successfully", { id: toastId });
@@ -570,12 +576,18 @@ const ChannelPage = () => {
   // Channel management functions
   const handleEditChannelSubmit = async (channelData) => {
     try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       const response = await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${
           user.org_id
         }/channels/${channelId}`,
         channelData,
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers
+        }
       );
 
       // Update the local channel state

@@ -188,10 +188,16 @@ const MeetingModal = ({
       };
 
       if (isEditing) {
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
         await axios.put(
           `${import.meta.env.VITE_BASE_URL}/api/meetings/${meeting.meeting_id}`,
           meetingData,
-          { withCredentials: true }
+          { 
+            withCredentials: true,
+            headers
+          }
         );
         toast.success("Meeting updated successfully");
       } else {

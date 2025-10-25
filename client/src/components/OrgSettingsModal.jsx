@@ -294,12 +294,18 @@ const OrgSettingsModal = ({
   const saveMemberRole = async (memberId) => {
     setMemberActionLoading(true);
     try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${
           organization.id
         }/members/${memberId}/role`,
         { role: tempRole },
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers
+        }
       );
       toast.success("Member role updated successfully");
       fetchMembers(); // Refresh members list
@@ -647,6 +653,9 @@ const OrgSettingsModal = ({
     try {
       toastId = toast.loading("Updating organization settings...");
 
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       const response = await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}`,
         {
@@ -655,7 +664,10 @@ const OrgSettingsModal = ({
           channels: channels.filter((ch) => ch.name.trim()),
           roles: roles.filter((role) => role.name.trim()),
         },
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers
+        }
       );
 
       toast.success("Organization settings updated successfully", {

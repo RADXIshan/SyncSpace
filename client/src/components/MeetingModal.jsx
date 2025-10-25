@@ -13,7 +13,6 @@ const MeetingModal = ({
   channelId = null,
   meeting = null,
   onMeetingChange,
-  canEdit = false,
 }) => {
   const [formData, setFormData] = useState({
     title: "",

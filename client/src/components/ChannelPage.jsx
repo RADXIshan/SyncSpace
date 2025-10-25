@@ -21,6 +21,7 @@ import {
   NotebookPen,
   Video,
 } from "lucide-react";
+import { toast as hotToast } from "react-hot-toast";
 import { useToast } from "../context/ToastContext";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 import NoteInputModal from "./NoteInputModal";
@@ -315,7 +316,7 @@ const ChannelPage = () => {
       setNotes(sortNotes(res.data.notes || []));
     } catch (err) {
       console.error("Error fetching notes", err);
-      toast.error(err?.response?.data?.message || "Failed to load notes");
+      hotToast.error(err?.response?.data?.message || "Failed to load notes");
       setNotes([]);
     } finally {
       setNotesLoading(false);
@@ -408,16 +409,17 @@ const ChannelPage = () => {
         { withCredentials: true }
       );
       refreshNotes(); // Refresh notes after creation
-      toast.success("Note created successfully");
+      hotToast.success("Note created successfully");
+      // Modal closing is handled by NoteInputModal component itself
     } catch (err) {
       console.error("Error creating note:", err);
-      toast.error(err?.response?.data?.message || "Failed to create note");
+      hotToast.error(err?.response?.data?.message || "Failed to create note");
       throw err; // Re-throw to handle in modal
     }
   };
 
   const handleUpdateNote = async (noteId, noteData) => {
-    const toastId = toast.loading("Updating note...");
+    const toastId = hotToast.loading("Updating note...");
 
     try {
       const token = localStorage.getItem("token");
@@ -432,10 +434,10 @@ const ChannelPage = () => {
         }
       );
       refreshNotes(); // Refresh notes after update
-      toast.success("Note updated successfully", { id: toastId });
+      hotToast.success("Note updated successfully", { id: toastId });
     } catch (err) {
       console.error("Error updating note:", err);
-      toast.error(err?.response?.data?.message || "Failed to update note", {
+      hotToast.error(err?.response?.data?.message || "Failed to update note", {
         id: toastId,
       });
       throw err;
@@ -449,10 +451,10 @@ const ChannelPage = () => {
         { withCredentials: true }
       );
       refreshNotes(); // Refresh notes after deletion
-      toast.success("Note deleted successfully");
+      hotToast.success("Note deleted successfully");
     } catch (err) {
       console.error("Error deleting note:", err);
-      toast.error(err?.response?.data?.message || "Failed to delete note");
+      hotToast.error(err?.response?.data?.message || "Failed to delete note");
     }
   };
 
@@ -464,8 +466,7 @@ const ChannelPage = () => {
   const handleEditSubmit = async (noteData) => {
     try {
       await handleUpdateNote(selectedNote.note_id, noteData);
-      setShowEditModal(false);
-      setSelectedNote(null);
+      // Modal closing and state reset is handled by NoteEditModal's onClose callback
     } catch (error) {
       // Error is already handled in handleUpdateNote
     }
@@ -477,10 +478,12 @@ const ChannelPage = () => {
     setDeleteLoading(true);
     try {
       await handleDeleteNote(selectedNote.note_id);
+      // Close modal and reset state after successful deletion
       setShowDeleteModal(false);
       setSelectedNote(null);
     } catch (error) {
       // Error is already handled in handleDeleteNote
+      console.error("Error in handleDeleteConfirm:", error);
     } finally {
       setDeleteLoading(false);
     }
@@ -517,15 +520,19 @@ const ChannelPage = () => {
         }`,
         { withCredentials: true }
       );
-      toast.success("Meeting deleted successfully");
-      refreshMeetings();
+      hotToast.success("Meeting deleted successfully");
+      
+      // Close modal and reset state first
       setShowDeleteMeetingModal(false);
       setMeetingToDelete(null);
+      
+      // Then refresh meetings
+      refreshMeetings();
     } catch (error) {
       console.error("Error deleting meeting:", error);
       const errorMessage =
         error.response?.data?.message || "Failed to delete meeting";
-      toast.error(errorMessage);
+      hotToast.error(errorMessage);
     } finally {
       setMeetingDeleteLoading(false);
     }
@@ -593,14 +600,14 @@ const ChannelPage = () => {
 
       // Update the local channel state
       setChannel(response.data.channel);
-      toast.success("Channel updated successfully");
+      hotToast.success("Channel updated successfully");
       setShowEditChannelModal(false);
 
       // Trigger sidebar refresh
       window.dispatchEvent(new Event("organizationUpdated"));
     } catch (error) {
       console.error("Error updating channel:", error);
-      toast.error(error.response?.data?.message || "Failed to update channel");
+      hotToast.error(error.response?.data?.message || "Failed to update channel");
     }
   };
 
@@ -620,7 +627,7 @@ const ChannelPage = () => {
         { withCredentials: true }
       );
 
-      toast.success("Channel deleted successfully");
+      hotToast.success("Channel deleted successfully");
 
       // Trigger sidebar refresh
       window.dispatchEvent(new Event("organizationUpdated"));
@@ -630,7 +637,7 @@ const ChannelPage = () => {
       navigate("/home/dashboard");
     } catch (error) {
       console.error("Error deleting channel:", error);
-      toast.error(error.response?.data?.message || "Failed to delete channel");
+      hotToast.error(error.response?.data?.message || "Failed to delete channel");
     } finally {
       setChannelDeleteLoading(false);
     }

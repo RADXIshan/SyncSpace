@@ -57,6 +57,9 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
     setIsLoading(true);
     try {
       await onSubmit(formData);
+      // Close modal after successful submission
+      setFormData({ name: "", description: "" });
+      onClose();
     } catch (error) {
       // Error is handled in the parent component
     } finally {

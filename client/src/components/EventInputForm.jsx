@@ -38,6 +38,7 @@ const EventInputForm = ({ onAddEvent, onClose, initialDate }) => {
       setTitle("");
       setDateTime(null);
       setDescription("");
+      onClose(); // Close modal after successful creation
     } catch (err) {
       console.error("Error adding event:", err);
     } finally {

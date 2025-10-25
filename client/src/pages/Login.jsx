@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Eye, EyeOff, Check, X, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
-import { toast } from "react-hot-toast";
+import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
@@ -16,6 +16,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { checkAuth } = useAuth();
+  const { showError, showSuccess, showLoading } = useToast();
 
   const validateField = (name, value) => {
     let isValid = false;
@@ -66,9 +67,8 @@ const Login = () => {
       email: formData.email,
       password: formData.password,
     };
-    let toastId;
+    const toastId = showLoading("Logging in...");
     try {
-      toastId = toast.loading("Logging in...");
       const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/login`, payload, { withCredentials: true });
       // Persist token for fallback authentication
       if(res.data?.token){
@@ -80,9 +80,9 @@ const Login = () => {
           message: "Login Successful",
         },
       });
-      toast.success("Login Successful", { id: toastId });
+      showSuccess("Login Successful", { id: toastId });
     } catch (err) {
-      toast.error(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
+      showError(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
       console.error("Login error:", err);
     } finally {
       setLoading(false);

@@ -21,7 +21,7 @@ import {
   NotebookPen,
   Video,
 } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { useToast } from "../context/ToastContext";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 import NoteInputModal from "./NoteInputModal";
 import NoteEditModal from "./NoteEditModal";
@@ -35,6 +35,7 @@ const ChannelPage = () => {
   const { channelId } = useParams();
   const { user } = useAuth();
   const { joinChannel, leaveChannel, isUserOnline, onlineUsers, refreshOnlineUsers, useHttpFallback } = useSocket();
+  const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -372,7 +373,7 @@ const ChannelPage = () => {
       if (textareaRef.current) textareaRef.current.style.height = "auto";
     } catch (err) {
       console.error("Error sending message:", err);
-      toast.error("Failed to send message");
+      showError("Failed to send message");
     } finally {
       setSending(false);
     }

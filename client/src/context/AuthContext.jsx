@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -6,27 +6,48 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastAuthCheck, setLastAuthCheck] = useState(null);
 
-  const checkAuth = async () => {
-  try {
+  const checkAuth = useCallback(async (force = false) => {
+    // Debounce auth checks - only check if it's been more than 30 seconds
+    const now = Date.now();
+    if (!force && lastAuthCheck && (now - lastAuthCheck) < 30000) {
+      return;
+    }
+
+    try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/auth/getMe`,
         { token }, // send token as fallback if cookie is missing
         { withCredentials: true }
       );
-      setUser({ ...response.data.user, photo: response.data.user.user_photo });  // Ensure user state is updated
+      setUser({ ...response.data.user, photo: response.data.user.user_photo });
+      setLastAuthCheck(now);
     } catch (error) {
-      console.error("Authentication check failed:", error);
-      setUser(null);  // Update state to null if authentication fails
+      // Only log error if it's not a 401 (which is expected when not authenticated)
+      if (error.response?.status !== 401) {
+        console.error("Authentication check failed:", error);
+      }
+      setUser(null);
+      // Clear invalid token
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [lastAuthCheck]);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
+    checkAuth(true); // Force initial check
+  }, [checkAuth]);
 
   const logout = async () => {
     try {

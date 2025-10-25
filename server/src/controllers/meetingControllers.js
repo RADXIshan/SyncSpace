@@ -1,5 +1,6 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
+import { createNotificationForOrg } from "./notificationControllers.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -73,6 +74,34 @@ export const createMeeting = async (req, res) => {
       VALUES (${org_id}, ${channel_id || null}, ${userId}, ${title.trim()}, ${description?.trim() || null}, ${start_time}, ${meeting_link.trim()})
       RETURNING meeting_id, title, description, start_time, meeting_link, started, created_at
     `;
+
+    // Create notifications for all org members
+    try {
+      await createNotificationForOrg(
+        org_id,
+        'meeting',
+        'New Meeting Scheduled',
+        `${title.trim()} - ${new Date(start_time).toLocaleString()}`,
+        {
+          relatedId: newMeeting.meeting_id,
+          relatedType: 'meeting',
+          link: `/meeting-prep/${newMeeting.meeting_id}`
+        }
+      );
+
+      // Emit socket event for real-time notification
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`org_${org_id}`).emit('new_meeting', {
+          id: newMeeting.meeting_id,
+          title: newMeeting.title,
+          start_time: newMeeting.start_time,
+        });
+      }
+    } catch (notificationError) {
+      console.error('Failed to create meeting notifications:', notificationError);
+      // Don't fail the meeting creation if notifications fail
+    }
 
     res.status(201).json({
       message: "Meeting created successfully",

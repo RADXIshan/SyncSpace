@@ -1,5 +1,6 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
+import { createNotificationForOrg } from "./notificationControllers.js";
 
 // Helper: Verify JWT token
 const verifyToken = (req) => {
@@ -64,6 +65,33 @@ export const createNotice = async (req, res) => {
       VALUES (${org_id}, ${userId}, ${title.trim()}, ${body.trim()})
       RETURNING notice_id, title, body, created_at, updated_at
     `;
+
+    // Create notifications for all org members
+    try {
+      await createNotificationForOrg(
+        org_id,
+        'notice',
+        'New Notice Posted',
+        title.trim(),
+        {
+          relatedId: newNotice.notice_id,
+          relatedType: 'notice',
+          link: '/notices'
+        }
+      );
+
+      // Emit socket event for real-time notification
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`org_${org_id}`).emit('new_notice', {
+          id: newNotice.notice_id,
+          title: newNotice.title,
+        });
+      }
+    } catch (notificationError) {
+      console.error('Failed to create notice notifications:', notificationError);
+      // Don't fail the notice creation if notifications fail
+    }
 
     res.status(201).json({
       message: "Notice created successfully",

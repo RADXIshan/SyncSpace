@@ -87,6 +87,72 @@ export const createMeeting = async (req, res) => {
   }
 };
 
+// Get Single Meeting
+export const getMeeting = async (req, res) => {
+  try {
+    const userId = verifyToken(req);
+    const { meeting_id } = req.params;
+
+    if (!meeting_id) {
+      return res.status(400).json({ message: "Meeting ID is required" });
+    }
+
+    const [meeting] = await sql`
+      SELECT m.meeting_id, m.org_id, m.channel_id, m.title, m.description, 
+             m.start_time, m.meeting_link, m.started, m.created_at,
+             u.name AS created_by_name, u.user_photo AS created_by_photo,
+             om.role AS created_by_role,
+             c.channel_name
+      FROM org_meetings m
+      LEFT JOIN users u ON m.created_by = u.user_id
+      LEFT JOIN org_members om ON om.user_id = m.created_by AND om.org_id = m.org_id
+      LEFT JOIN org_channels c ON c.channel_id = m.channel_id
+      WHERE m.meeting_id = ${meeting_id}
+      LIMIT 1
+    `;
+
+    if (!meeting) {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+
+    // Check if user has access to this meeting's organization
+    const [userMember] = await sql`
+      SELECT om.user_id
+      FROM org_members om
+      WHERE om.org_id = ${meeting.org_id} AND om.user_id = ${userId}
+      LIMIT 1
+    `;
+
+    // Check if user is org owner
+    const [org] = await sql`
+      SELECT created_by
+      FROM organisations
+      WHERE org_id = ${meeting.org_id}
+      LIMIT 1
+    `;
+
+    const isOwner = org?.created_by === userId;
+    const isMember = Boolean(userMember);
+
+    if (!isOwner && !isMember) {
+      return res.status(403).json({ 
+        message: "You don't have access to this meeting" 
+      });
+    }
+
+    res.status(200).json({
+      message: "Meeting retrieved successfully",
+      meeting,
+    });
+  } catch (error) {
+    console.error("Error retrieving meeting:", error);
+    if (["No token provided", "Invalid token", "Token expired"].includes(error.message)) {
+      return res.status(401).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // Get Meetings
 export const getMeetings = async (req, res) => {
   try {

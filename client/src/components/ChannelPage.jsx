@@ -424,25 +424,14 @@ const ChannelPage = () => {
     }
   };
 
-  const handleStartMeeting = async (meetingId) => {
-    try {
-      await axios.patch(
-        `${import.meta.env.VITE_BASE_URL}/api/meetings/${meetingId}/start`,
-        {},
-        { withCredentials: true }
-      );
-      toast.success("Meeting started successfully");
-      refreshMeetings();
-    } catch (error) {
-      console.error("Error starting meeting:", error);
-      const errorMessage =
-        error.response?.data?.message || "Failed to start meeting";
-      toast.error(errorMessage);
-    }
+  const handleStartMeeting = (meetingId) => {
+    // Navigate to meeting preparation page instead of starting immediately
+    navigate(`/meeting-prep/${meetingId}`);
   };
 
-  const handleJoinMeeting = (meetingLink) => {
-    window.open(meetingLink, "_blank");
+  const handleJoinMeeting = (meetingId) => {
+    // Navigate to meeting preparation page for joining
+    navigate(`/meeting-prep/${meetingId}`);
   };
 
   const formatMeetingTime = (startTime) => {
@@ -807,10 +796,10 @@ const ChannelPage = () => {
                                             <button
                                               onClick={() =>
                                                 handleJoinMeeting(
-                                                  meeting.meeting_link
+                                                  meeting.meeting_id
                                                 )
                                               }
-                                              className="px-3 py-1.5 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-green-500/30"
+                                              className="px-3 py-1.5 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-green-500/30 cursor-pointer"
                                             >
                                               <Video size={12} />
                                               Join Meeting
@@ -825,7 +814,7 @@ const ChannelPage = () => {
                                                     meeting.meeting_id
                                                   )
                                                 }
-                                                className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-purple-500/30"
+                                                className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-purple-500/30 cursor-pointer"
                                               >
                                                 <Video size={12} />
                                                 Start Meeting

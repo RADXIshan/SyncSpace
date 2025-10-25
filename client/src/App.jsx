@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import VerifyMail from "./pages/VerifyMail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import MeetingPrep from "./pages/MeetingPrep";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -52,6 +53,14 @@ const App = () => {
             }
           />
           <Route path="/reset-password/:email" element={<ResetPassword />} />
+          <Route
+            path="/meeting-prep/:meetingId"
+            element={
+              <ProtectedRoute>
+                <MeetingPrep />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/meeting/:roomId" element={<MeetingRoom />} />
           <Route
             path="/home/*"

@@ -20,38 +20,48 @@ const Calendar = () => {
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Centralized fetcher so we can refresh events after CRUD operations
-  const getEvents = useCallback(() => {
-    if (!user) return;
+  // Fetch events function
+  const fetchEvents = async (showToast = true) => {
+    if (!user?.user_id) return;
+    
     setLoading(true);
-    let toastId = toast.loading("Fetching events...");
-    const token = localStorage.getItem("token");
-    axios
-      .get(`${import.meta.env.VITE_BASE_URL}/api/events`, {
+    let toastId;
+    if (showToast) {
+      toastId = toast.loading("Fetching events...");
+    }
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/events`, {
         params: { user_id: user.user_id },
         withCredentials: true,
         headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
-      .then((res) => {
-        const formatted = res.data.map((ev) => {
-          const startStr = ev.time || ev.start;
-          const startDate = startStr ? new Date(startStr) : null;
-          return { ...ev, start: startDate };
-        });
-        setEvents(formatted);
-        toast.success("Events loaded successfully", { id: toastId });
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        toast.error("Failed to load events", { id: toastId });
-        setLoading(false);
       });
-  }, [user]);
+      
+      const formatted = response.data.map((ev) => {
+        const startStr = ev.time || ev.start;
+        const startDate = startStr ? new Date(startStr) : null;
+        return { ...ev, start: startDate };
+      });
+      
+      setEvents(formatted);
+      
+      if (showToast) {
+        toast.success("Events loaded successfully", { id: toastId });
+      }
+    } catch (err) {
+      console.error(err);
+      if (showToast) {
+        toast.error("Failed to load events", { id: toastId });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const refreshEvents = useCallback(() => {
-    getEvents();
-  }, [getEvents]);
+  // Memoized version for use in effects
+  const getEvents = useCallback(() => fetchEvents(true), [user?.user_id]);
+  const refreshEvents = useCallback(() => fetchEvents(false), [user?.user_id]);
 
   // Check if screen is mobile
   useEffect(() => {
@@ -66,8 +76,10 @@ const Calendar = () => {
 
   // Fetch events on initial load / user change
   useEffect(() => {
-    getEvents();
-  }, [getEvents]);
+    if (user?.user_id) {
+      fetchEvents(true);
+    }
+  }, [user?.user_id]);
 
   if (loading) {
     return (

@@ -214,7 +214,6 @@ const Calendar = () => {
               eventStartEditable={true}
               eventDurationEditable={true}
               eventResizableFromStart={true}
-              eventResizableFromEnd={true}
               eventOverlap={false}
               slotMinTime="06:00:00"
               slotMaxTime="22:00:00"

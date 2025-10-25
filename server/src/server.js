@@ -13,6 +13,7 @@ import noticeRoutes from "./routes/noticeRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import { setupSocketHandlers } from "./configs/socket.js";
+import sql from "./database/db.js";
 
 dotenv.config();
 
@@ -58,6 +59,39 @@ app.use("/api/notices", noticeRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/users", userRoutes);
 
+// Debug endpoint for organization issues
+app.get("/debug/org/:org_id", async (req, res) => {
+  try {
+    const { org_id } = req.params;
+    
+    // Check if organization exists
+    const org = await sql`SELECT * FROM organisations WHERE org_id = ${org_id}`;
+    
+    // Check members
+    const members = await sql`SELECT * FROM org_members WHERE org_id = ${org_id}`;
+    
+    // Check roles
+    const roles = await sql`SELECT * FROM org_roles WHERE org_id = ${org_id}`;
+    
+    // Check channels
+    const channels = await sql`SELECT * FROM org_channels WHERE org_id = ${org_id}`;
+    
+    res.json({
+      org_id,
+      organization: org[0] || null,
+      members_count: members.length,
+      roles_count: roles.length,
+      channels_count: channels.length,
+      members: members.map(m => ({ user_id: m.user_id, role: m.role })),
+      roles: roles.map(r => ({ role_name: r.role_name })),
+      channels: channels.map(c => ({ channel_name: c.channel_name }))
+    });
+  } catch (error) {
+    console.error("Debug endpoint error:", error);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
 connectCloudinary();
 
 // Setup Socket.IO handlers
@@ -65,6 +99,27 @@ setupSocketHandlers(io);
 
 app.get("/", (_, res) => {
     res.json({ message: "Server is live!" });
+})
+
+// Health check endpoint
+app.get("/health", async (req, res) => {
+    try {
+        // Test database connection
+        const result = await sql`SELECT 1 as test`;
+        res.json({ 
+            status: "healthy", 
+            database: "connected",
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error("Health check failed:", error);
+        res.status(500).json({ 
+            status: "unhealthy", 
+            database: "disconnected",
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 })
 
 server.listen(PORT, () => {

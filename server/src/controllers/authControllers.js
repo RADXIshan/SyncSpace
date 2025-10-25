@@ -466,3 +466,73 @@ export const authUser = async (req, res) => {
 
   return res.json({ user });
 };
+
+export const refreshToken = async (req, res) => {
+  try {
+    const authToken =
+      req.cookies.jwt || req.body.token || req.headers.authorization?.split(" ")[1];
+
+    if (!authToken) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    if (!decoded.userId) {
+      return res.status(401).json({ message: "Invalid token structure" });
+    }
+
+    // Get fresh user data from database
+    const [user] = await sql`
+      SELECT user_id, name, email, user_photo, org_id
+      FROM users
+      WHERE user_id = ${decoded.userId}
+    `;
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Generate new token with all required fields
+    const newToken = jwt.sign(
+      {
+        userId: user.user_id,
+        email: user.email,
+        name: user.name,
+      },
+      process.env.JWT_SECRET_KEY,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    // Set new cookie
+    res.cookie("jwt", newToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+      path: "/",
+    });
+
+    res.status(200).json({
+      message: "Token refreshed successfully",
+      token: newToken,
+      user: {
+        user_id: user.user_id,
+        name: user.name,
+        email: user.email,
+        photo: user.user_photo,
+        org_id: user.org_id,
+      },
+    });
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

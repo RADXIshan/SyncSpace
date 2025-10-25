@@ -15,6 +15,7 @@ import PublicRoute from "./components/PublicRoute";
 import MeetingRoom from "./components/MeetingRoom";
 import SocketDebug from "./components/SocketDebug";
 import ErrorBoundary from "./components/ErrorBoundary";
+import TokenRefreshNotification from "./components/TokenRefreshNotification";
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
           <div>
             <Toaster />
             <SocketDebug />
+            <TokenRefreshNotification />
             <Routes>
             <Route path="/" element={<Landing />} />
             <Route

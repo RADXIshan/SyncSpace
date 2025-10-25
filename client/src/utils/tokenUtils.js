@@ -51,11 +51,62 @@ export const shouldRefreshToken = (token) => {
   const info = getTokenInfo(token);
   if (!info) return true;
   
-  // Only refresh if token is expired (be more lenient about missing fields in development)
+  // Refresh if token is expired
   if (info.isExpired) return true;
   
-  // In production, also check for required fields
-  if (import.meta.env.PROD && !info.hasRequiredFields) return true;
+  // Refresh if token is missing required fields (email or name)
+  if (!info.hasRequiredFields) return true;
   
   return false;
+};
+
+// Function to refresh token on the server
+export const refreshTokenOnServer = async () => {
+  try {
+    // Emit refreshing event
+    window.dispatchEvent(new CustomEvent('tokenRefresh', {
+      detail: { type: 'refreshing', message: 'Refreshing authentication...' }
+    }));
+
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No token found');
+
+    const response = await fetch(`${import.meta.env.VITE_BASE_URL}/api/auth/refresh-token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error('Token refresh failed');
+    }
+
+    const data = await response.json();
+    
+    // Update localStorage with new token
+    localStorage.setItem('token', data.token);
+    
+    console.log('✅ Token refreshed successfully');
+    
+    // Emit success event
+    window.dispatchEvent(new CustomEvent('tokenRefresh', {
+      detail: { type: 'success', message: 'Authentication updated successfully' }
+    }));
+    
+    return data;
+  } catch (error) {
+    console.error('❌ Token refresh failed:', error);
+    
+    // Emit error event
+    window.dispatchEvent(new CustomEvent('tokenRefresh', {
+      detail: { type: 'error', message: 'Authentication refresh failed' }
+    }));
+    
+    // Clear invalid token
+    localStorage.removeItem('token');
+    throw error;
+  }
 };

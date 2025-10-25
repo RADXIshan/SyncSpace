@@ -11,8 +11,27 @@ const verifyToken = (req) => {
 
   try {
     const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
+    
+    // Log token structure for debugging
+    if (!decoded.userId) {
+      console.error("Token missing userId:", decoded);
+      throw new Error("Invalid token structure - missing userId");
+    }
+    
+    // Check for missing fields and suggest token refresh
+    if (!decoded.email || !decoded.name) {
+      console.warn(`Token for user ${decoded.userId} missing optional fields:`, {
+        hasEmail: !!decoded.email,
+        hasName: !!decoded.name
+      });
+      
+      // For now, just warn but don't fail - the client should handle token refresh
+      // In the future, we could force a token refresh here
+    }
+    
     return decoded.userId;
-  } catch {
+  } catch (error) {
+    console.error("Token verification failed:", error.message);
     throw new Error("Invalid token");
   }
 };
@@ -147,6 +166,14 @@ export const getOrganization = async (req, res) => {
     const userId = verifyToken(req);
     const org_id = req.params.org_id;
 
+    console.log(`[getOrganization] User ${userId} requesting org ${org_id}`);
+
+    // Validate org_id parameter
+    if (!org_id || isNaN(org_id)) {
+      console.error(`[getOrganization] Invalid org_id: ${org_id}`);
+      return res.status(400).json({ message: "Invalid organization ID" });
+    }
+
     // Get organization details
     const org = await sql`
       SELECT org_id, org_name, access_level, org_code, created_by
@@ -154,6 +181,8 @@ export const getOrganization = async (req, res) => {
       WHERE org_id = ${org_id}
       LIMIT 1
     `;
+
+    console.log(`[getOrganization] Found ${org.length} organizations for ID ${org_id}`);
 
     if (org.length === 0) {
       return res.status(404).json({ message: "Organization not found" });
@@ -227,11 +256,15 @@ export const getOrganization = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error retrieving organization:", error);
+    console.error("[getOrganization] Error retrieving organization:", error);
+    console.error("[getOrganization] Error stack:", error.stack);
     if (error.message === "No token provided" || error.message === "Invalid token") {
       return res.status(401).json({ message: error.message });
     }
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ 
+      message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -401,6 +434,14 @@ export const getUserRole = async (req, res) => {
     const userId = verifyToken(req);
     const org_id = req.params.org_id;
 
+    console.log(`[getUserRole] User ${userId} requesting role for org ${org_id}`);
+
+    // Validate org_id parameter
+    if (!org_id || isNaN(org_id)) {
+      console.error(`[getUserRole] Invalid org_id: ${org_id}`);
+      return res.status(400).json({ message: "Invalid organization ID" });
+    }
+
     // Get user's role and permissions in the organization
     const [member] = await sql`
       SELECT om.role, r.settings_access, r.manage_channels, r.manage_users,
@@ -410,6 +451,8 @@ export const getUserRole = async (req, res) => {
       WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
       LIMIT 1
     `;
+
+    console.log(`[getUserRole] Found member:`, member ? 'Yes' : 'No');
 
     if (!member) {
       return res.status(404).json({ message: "User is not a member of this organization" });
@@ -442,11 +485,15 @@ export const getUserRole = async (req, res) => {
       isOwner,
     });
   } catch (error) {
-    console.error("Error retrieving user role:", error);
+    console.error("[getUserRole] Error retrieving user role:", error);
+    console.error("[getUserRole] Error stack:", error.stack);
     if (error.message === "No token provided" || error.message === "Invalid token") {
       return res.status(401).json({ message: error.message });
     }
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ 
+      message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

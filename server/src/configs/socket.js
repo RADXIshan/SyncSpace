@@ -37,8 +37,8 @@ export const setupSocketHandlers = (io) => {
       
       // Validate required fields
       if (!decoded.userId) {
-        console.error('Invalid token: missing userId');
-        return next(new Error('Authentication error: Invalid token structure'));
+        console.error('Invalid token: missing userId', decoded);
+        return next(new Error('Authentication error: Invalid token structure - missing userId'));
       }
       
       socket.userId = decoded.userId;
@@ -50,7 +50,8 @@ export const setupSocketHandlers = (io) => {
         console.warn(`⚠️  User ${decoded.userId} has incomplete token data:`, {
           hasEmail: !!decoded.email,
           hasName: !!decoded.name,
-          userId: decoded.userId
+          userId: decoded.userId,
+          tokenKeys: Object.keys(decoded)
         });
       }
       
@@ -58,6 +59,15 @@ export const setupSocketHandlers = (io) => {
       next();
     } catch (err) {
       console.error('Socket authentication error:', err.message);
+      console.error('Socket authentication error details:', err);
+      
+      // Provide more specific error messages
+      if (err.name === 'TokenExpiredError') {
+        return next(new Error('Authentication error: Token expired'));
+      } else if (err.name === 'JsonWebTokenError') {
+        return next(new Error('Authentication error: Invalid token format'));
+      }
+      
       next(new Error('Authentication error: Invalid token'));
     }
   });

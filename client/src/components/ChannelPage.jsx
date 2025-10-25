@@ -176,7 +176,27 @@ const ChannelPage = () => {
         setMembers(filtered);
       } catch (err) {
         console.error("Error fetching channel:", err);
-        setError(err?.response?.data?.message || "Failed to load channel");
+        console.error("Error details:", {
+          status: err.response?.status,
+          message: err.response?.data?.message,
+          orgId: user.org_id,
+          channelId: channelId
+        });
+        
+        // Provide more specific error messages
+        let errorMessage = "Failed to load channel";
+        if (err.response?.status === 500) {
+          errorMessage = "Server error - please try again in a moment";
+          console.warn("💡 Server error detected. This might be a temporary database issue.");
+        } else if (err.response?.status === 401) {
+          errorMessage = "Authentication error - please log out and log back in";
+        } else if (err.response?.status === 404) {
+          errorMessage = "Channel not found or you don't have access";
+        } else if (err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+        
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -212,24 +232,73 @@ const ChannelPage = () => {
     // from periodic polling rather than real-time socket events
   }, [onlineUsers]);
 
-  // Fetch user permissions
+  // Fetch user permissions (with caching to prevent repeated calls)
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchPermissions = async () => {
       if (!user?.org_id) return;
+      
+      // Simple cache key
+      const cacheKey = `permissions_${user.org_id}_${user.user_id}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      
+      // Use cached data if available and less than 5 minutes old
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes
+            if (isMounted) setUserPermissions(data);
+            return;
+          }
+        } catch (e) {
+          // Invalid cache, continue with API call
+        }
+      }
+      
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/role`,
           { withCredentials: true }
         );
-        setUserPermissions(res.data.permissions || null);
+        
+        const permissions = res.data.permissions || null;
+        
+        if (isMounted) {
+          setUserPermissions(permissions);
+          
+          // Cache the result
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            data: permissions,
+            timestamp: Date.now()
+          }));
+        }
       } catch (err) {
-        console.error("Error fetching permissions", err);
-        setUserPermissions(null);
+        console.error("Error fetching permissions:", err);
+        console.error("Error details:", {
+          status: err.response?.status,
+          message: err.response?.data?.message,
+          orgId: user.org_id,
+          userId: user.user_id
+        });
+        
+        // Show user-friendly error message
+        if (err.response?.status === 500) {
+          console.warn("💡 Server error detected. This might be a temporary issue or a database problem.");
+        } else if (err.response?.status === 401) {
+          console.warn("💡 Authentication error. You might need to log out and log back in.");
+        }
+        
+        if (isMounted) setUserPermissions(null);
       }
     };
 
     fetchPermissions();
-  }, [user?.org_id]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.org_id, user?.user_id]);
 
   // Fetch notes for the channel
   const fetchNotes = useCallback(async () => {

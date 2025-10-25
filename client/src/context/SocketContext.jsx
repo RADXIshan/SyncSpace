@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
-import { getTokenInfo, shouldRefreshToken } from '../utils/tokenUtils';
+import { getTokenInfo, shouldRefreshToken, refreshTokenOnServer } from '../utils/tokenUtils';
 import axios from 'axios';
 
 const SocketContext = createContext();
@@ -96,7 +96,7 @@ export const SocketProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       
       if (token) {
-        // Check token validity
+        // Check token validity and refresh if needed
         const tokenInfo = getTokenInfo(token);
         
         if (shouldRefreshToken(token)) {
@@ -104,6 +104,19 @@ export const SocketProvider = ({ children }) => {
             console.warn('⚠️ Token is expired. Please log out and log back in.');
           } else if (!tokenInfo?.hasRequiredFields) {
             console.warn('⚠️ Token is missing required fields. Please log out and log back in for full functionality.');
+            
+            // Try to refresh the token automatically
+            refreshTokenOnServer()
+              .then(() => {
+                console.log('✅ Token automatically refreshed');
+                // The effect will re-run with the new token when localStorage changes
+              })
+              .catch((error) => {
+                console.error('❌ Automatic token refresh failed:', error);
+              });
+            
+            // Don't continue with socket initialization while refreshing
+            return;
           }
           console.log('Token info:', tokenInfo);
         }

@@ -747,13 +747,29 @@ const ChannelPage = () => {
                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
                                 <div className="relative z-10">
-                                  <div className="flex items-start justify-between">
+                                  <div className="flex items-start w-full justify-between">
                                     <div className="flex-1 min-w-0">
-                                      <h4 className="font-medium text-white group-hover/card:text-purple-100 text-sm sm:text-base lg:text-lg truncate transition-colors duration-300">
-                                        {meeting.title}
-                                      </h4>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-medium text-sm sm:text-base lg:text-lg text-white group-hover/card:text-purple-100 transition-colors duration-300 truncate">
+                                          {meeting.title}
+                                        </h4>
+                                        <span
+                                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border flex-shrink-0 ${
+                                            status === "upcoming"
+                                              ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                                              : status === "ongoing" ||
+                                                status === "starting-soon"
+                                              ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                              : "bg-gray-500/20 text-gray-300 border-gray-500/30"
+                                          }`}
+                                        >
+                                          {status === "starting-soon"
+                                            ? "Starting Soon"
+                                            : status}
+                                        </span>
+                                      </div>
                                       {meeting.description && (
-                                        <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 mt-1 line-clamp-2 transition-colors duration-300">
+                                        <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 mt-1 line-clamp-2 sm:line-clamp-3 transition-colors duration-300">
                                           {meeting.description}
                                         </p>
                                       )}
@@ -772,20 +788,6 @@ const ChannelPage = () => {
                                             }
                                           )}
                                         </span>
-                                        <span
-                                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${
-                                            status === "upcoming"
-                                              ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                                              : status === "ongoing" ||
-                                                status === "starting-soon"
-                                              ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                              : "bg-gray-500/20 text-gray-300 border-gray-500/30"
-                                          }`}
-                                        >
-                                          {status === "starting-soon"
-                                            ? "Starting Soon"
-                                            : status}
-                                        </span>
                                         {meeting.created_by_name && (
                                           <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
                                             by {meeting.created_by_name}
@@ -794,61 +796,72 @@ const ChannelPage = () => {
                                       </div>
 
                                       {/* Action buttons for joining/starting */}
-                                      <div className="flex items-center gap-2 mt-3">
-                                        {(status === "ongoing" ||
-                                          status === "starting-soon") && (
-                                          <button
-                                            onClick={() =>
-                                              handleJoinMeeting(
-                                                meeting.meeting_link
-                                              )
-                                            }
-                                            className="px-3 py-1.5 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-green-500/30"
-                                          >
-                                            <Video size={12} />
-                                            Join Meeting
-                                          </button>
-                                        )}
-                                        {status === "upcoming" &&
+                                      {(status === "ongoing" ||
+                                        status === "starting-soon" ||
+                                        (status === "upcoming" &&
                                           !meeting.started &&
-                                          userPermissions?.meeting_access && (
+                                          userPermissions?.meeting_access)) && (
+                                        <div className="flex items-center gap-2 mt-3">
+                                          {(status === "ongoing" ||
+                                            status === "starting-soon") && (
                                             <button
                                               onClick={() =>
-                                                handleStartMeeting(
-                                                  meeting.meeting_id
+                                                handleJoinMeeting(
+                                                  meeting.meeting_link
                                                 )
                                               }
-                                              className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-purple-500/30"
+                                              className="px-3 py-1.5 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-green-500/30"
                                             >
                                               <Video size={12} />
-                                              Start Meeting
+                                              Join Meeting
                                             </button>
                                           )}
-                                      </div>
+                                          {status === "upcoming" &&
+                                            !meeting.started &&
+                                            userPermissions?.meeting_access && (
+                                              <button
+                                                onClick={() =>
+                                                  handleStartMeeting(
+                                                    meeting.meeting_id
+                                                  )
+                                                }
+                                                className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-purple-500/30"
+                                              >
+                                                <Video size={12} />
+                                                Start Meeting
+                                              </button>
+                                            )}
+                                        </div>
+                                      )}
                                     </div>
-
                                     {userPermissions?.meeting_access && (
-                                      <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                                      <div className="absolute right-0 top-0 flex items-center gap-1 ml-2 flex-shrink-0">
                                         <button
-                                          onClick={() =>
-                                            handleEditMeeting(meeting)
-                                          }
-                                          className="p-1 hover:bg-purple-500/20 rounded text-gray-400 hover:text-purple-300 transition-colors duration-300"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleEditMeeting(meeting);
+                                          }}
+                                          className="p-2 hover:bg-blue-500/20 rounded-md text-gray-400 hover:text-blue-300 transition-colors duration-300 cursor-pointer group"
+                                          title="Edit meeting"
                                         >
                                           <Edit2
                                             size={12}
-                                            className="sm:w-[14px] sm:h-[14px]"
+                                            className="sm:w-[14px] sm:h-[14px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-300"
                                           />
                                         </button>
                                         <button
-                                          onClick={() =>
-                                            handleDeleteMeetingClick(meeting)
-                                          }
-                                          className="p-1 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-300 transition-colors duration-300"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleDeleteMeetingClick(meeting);
+                                          }}
+                                          className="p-2 hover:bg-red-500/20 rounded-md text-gray-400 hover:text-red-300 transition-colors duration-300 cursor-pointer group"
+                                          title="Delete meeting"
                                         >
                                           <Trash2
                                             size={12}
-                                            className="sm:w-[14px] sm:h-[14px]"
+                                            className="sm:w-[14px] sm:h-[14px] group-hover:scale-120 duration-300 group-hover:rotate-10"
                                           />
                                         </button>
                                       </div>

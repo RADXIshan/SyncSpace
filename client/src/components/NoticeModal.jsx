@@ -212,7 +212,7 @@ const NoticeModal = ({
               {/* Title Input */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
-                  Title *
+                  Title
                 </label>
                 <input
                   type="text"
@@ -231,7 +231,7 @@ const NoticeModal = ({
               {/* Body Input */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
-                  Content *
+                  Content
                 </label>
                 <textarea
                   value={formData.body}

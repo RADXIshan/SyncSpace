@@ -4,7 +4,6 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
-  createSampleNotifications,
 } from "../controllers/notificationControllers.js";
 
 const router = express.Router();
@@ -20,8 +19,5 @@ router.patch("/read-all", markAllNotificationsAsRead);
 
 // Delete notification
 router.delete("/:notificationId", deleteNotification);
-
-// Create sample notifications (DEBUG ENDPOINT)
-router.post("/sample", createSampleNotifications);
 
 export default router;

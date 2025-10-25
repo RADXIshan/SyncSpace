@@ -9,16 +9,12 @@ import {
   CheckCircle,
   Info,
   X,
-  Plus,
 } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
-import { useToast } from "../context/ToastContext";
-import axios from "axios";
 
 const Notifications = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all"); // all, unread, mentions, system
-  const [creatingSample, setCreatingSample] = useState(false);
 
   const {
     notifications,
@@ -27,29 +23,7 @@ const Notifications = () => {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    fetchNotifications,
   } = useNotifications();
-
-  const { showSuccess, showError } = useToast();
-
-  // Create sample notifications for testing
-  const createSampleNotifications = async () => {
-    setCreatingSample(true);
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/notifications/sample`,
-        {},
-        { withCredentials: true }
-      );
-      showSuccess("Sample notifications created successfully!");
-      fetchNotifications(); // Refresh the notifications
-    } catch (error) {
-      console.error("Failed to create sample notifications:", error);
-      showError("Failed to create sample notifications");
-    } finally {
-      setCreatingSample(false);
-    }
-  };
 
   // Filter notifications based on search and filter
   const filteredNotifications = notifications.filter((notification) => {
@@ -164,18 +138,6 @@ const Notifications = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Sample Data Button - Only show if no real notifications */}
-            {!loading && notifications.length === 0 && (
-              <button
-                onClick={createSampleNotifications}
-                disabled={creatingSample}
-                className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Plus size={16} />
-                {creatingSample ? "Creating..." : "Add Sample Data"}
-              </button>
-            )}
-
             <div className="relative">
               <Search
                 size={20}

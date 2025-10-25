@@ -84,21 +84,30 @@ export const createNote = async (req, res) => {
           'New Note Added',
           `New note in ${channel?.channel_name || 'channel'}: ${title.trim()}`,
           {
+            excludeUserId: userId,
             relatedId: newNote.note_id,
             relatedType: 'note',
             link: `/channels/${channel_id}`
           }
         );
 
-        // Emit socket event for real-time notification
+        // Emit socket event for real-time notification (exclude creator)
         const io = req.app.get('io');
         if (io) {
-          io.to(`org_${org_id}`).emit('new_note', {
-            id: newNote.note_id,
-            title: newNote.title,
-            channelId: channel_id,
-            channelName: channel?.channel_name || 'channel'
-          });
+          const orgRoom = io.sockets.adapter.rooms.get(`org_${org_id}`);
+          if (orgRoom) {
+            orgRoom.forEach(socketId => {
+              const socket = io.sockets.sockets.get(socketId);
+              if (socket && socket.userId !== userId) {
+                socket.emit('new_note', {
+                  id: newNote.note_id,
+                  title: newNote.title,
+                  channelId: channel_id,
+                  channelName: channel?.channel_name || 'channel'
+                });
+              }
+            });
+          }
         }
       } catch (notificationError) {
         console.error('Failed to create note notifications:', notificationError);

@@ -104,14 +104,6 @@ export const setupSocketHandlers = (io) => {
               photo: userData.photo
             }
           });
-
-          // Emit member joined notification to other org members
-          socket.to(`org_${userData.org_id}`).emit('member_joined', {
-            userId: userId,
-            userName: userData.name,
-            userEmail: socket.userEmail,
-            userPhoto: userData.photo
-          });
         }
 
         // Send current online users to the newly connected user

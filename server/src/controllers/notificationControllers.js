@@ -165,84 +165,7 @@ export const deleteNotification = async (req, res) => {
   }
 };
 
-// Create sample notifications for testing (DEBUG ENDPOINT)
-export const createSampleNotifications = async (req, res) => {
-  try {
-    const authToken = req.cookies.jwt || req.headers.authorization?.split(" ")[1];
-    
-    if (!authToken) {
-      return res.status(401).json({ message: "No token provided" });
-    }
 
-    let userId;
-    try {
-      const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
-      userId = decoded.userId;
-    } catch (error) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-
-    // Get user's organization
-    const [user] = await sql`SELECT org_id FROM users WHERE user_id = ${userId}`;
-    if (!user || !user.org_id) {
-      return res.status(400).json({ message: "User not in an organization" });
-    }
-
-    // Sample notifications data
-    const sampleNotifications = [
-      {
-        type: 'mention',
-        title: 'Sarah Johnson mentioned you',
-        message: 'Sarah mentioned you in #general: "Can you review the latest design mockups?"',
-        link: '/channels/general'
-      },
-      {
-        type: 'meeting',
-        title: 'New Meeting Scheduled',
-        message: 'Weekly Team Sync - Today at 3:00 PM',
-        link: '/meeting-prep/123'
-      },
-      {
-        type: 'member_joined',
-        title: 'New Member Joined',
-        message: 'Alex Thompson has joined your organization',
-        link: '/members'
-      },
-      {
-        type: 'notice',
-        title: 'New Notice Posted',
-        message: 'Important: Office closure on Friday for maintenance',
-        link: '/notices'
-      },
-      {
-        type: 'task',
-        title: 'New Note Added',
-        message: 'New note in #development: "API Documentation Update"',
-        link: '/channels/development'
-      }
-    ];
-
-    // Insert sample notifications
-    for (const notification of sampleNotifications) {
-      await createNotification(
-        userId,
-        user.org_id,
-        notification.type,
-        notification.title,
-        notification.message,
-        { link: notification.link }
-      );
-    }
-
-    res.json({ 
-      message: "Sample notifications created successfully",
-      count: sampleNotifications.length
-    });
-  } catch (error) {
-    console.error("Error creating sample notifications:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
 
 // Create notification (internal function for other controllers to use)
 export const createNotification = async (userId, orgId, type, title, message, options = {}) => {
@@ -282,13 +205,23 @@ export const createNotification = async (userId, orgId, type, title, message, op
   }
 };
 
-// Create notification for all org members
+// Create notification for all org members except the creator
 export const createNotificationForOrg = async (orgId, type, title, message, options = {}) => {
   try {
-    // Get all users in the organization
-    const orgMembers = await sql`
-      SELECT user_id FROM org_members WHERE org_id = ${orgId}
-    `;
+    const { excludeUserId } = options;
+    
+    // Get all users in the organization except the creator
+    let orgMembers;
+    if (excludeUserId) {
+      orgMembers = await sql`
+        SELECT user_id FROM org_members 
+        WHERE org_id = ${orgId} AND user_id != ${excludeUserId}
+      `;
+    } else {
+      orgMembers = await sql`
+        SELECT user_id FROM org_members WHERE org_id = ${orgId}
+      `;
+    }
 
     const notifications = [];
     for (const member of orgMembers) {

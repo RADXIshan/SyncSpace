@@ -75,7 +75,7 @@ export const createMeeting = async (req, res) => {
       RETURNING meeting_id, title, description, start_time, meeting_link, started, created_at
     `;
 
-    // Create notifications for all org members
+    // Create notifications for all org members except the creator
     try {
       await createNotificationForOrg(
         org_id,
@@ -83,20 +83,30 @@ export const createMeeting = async (req, res) => {
         'New Meeting Scheduled',
         `${title.trim()} - ${new Date(start_time).toLocaleString()}`,
         {
+          excludeUserId: userId,
           relatedId: newMeeting.meeting_id,
           relatedType: 'meeting',
           link: `/meeting-prep/${newMeeting.meeting_id}`
         }
       );
 
-      // Emit socket event for real-time notification
+      // Emit socket event for real-time notification (exclude creator)
       const io = req.app.get('io');
       if (io) {
-        io.to(`org_${org_id}`).emit('new_meeting', {
-          id: newMeeting.meeting_id,
-          title: newMeeting.title,
-          start_time: newMeeting.start_time,
-        });
+        // Get all sockets in the org room except the creator
+        const orgRoom = io.sockets.adapter.rooms.get(`org_${org_id}`);
+        if (orgRoom) {
+          orgRoom.forEach(socketId => {
+            const socket = io.sockets.sockets.get(socketId);
+            if (socket && socket.userId !== userId) {
+              socket.emit('new_meeting', {
+                id: newMeeting.meeting_id,
+                title: newMeeting.title,
+                start_time: newMeeting.start_time,
+              });
+            }
+          });
+        }
       }
     } catch (notificationError) {
       console.error('Failed to create meeting notifications:', notificationError);

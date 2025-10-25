@@ -364,7 +364,7 @@ export const joinOrganization = async (req, res) => {
       WHERE user_id = ${userId}
     `;
 
-    // Create notifications for existing org members about new member
+    // Create notifications for existing org members about new member (exclude the new member)
     try {
       await createNotificationForOrg(
         organization.org_id,
@@ -372,21 +372,30 @@ export const joinOrganization = async (req, res) => {
         'New Member Joined',
         `${newMember.name} has joined your organization`,
         {
+          excludeUserId: userId,
           relatedId: userId,
           relatedType: 'user',
           link: '/members'
         }
       );
 
-      // Emit socket event for real-time notification
+      // Emit socket event for real-time notification (exclude the new member)
       const io = req.app.get('io');
       if (io) {
-        io.to(`org_${organization.org_id}`).emit('member_joined', {
-          userId: userId,
-          userName: newMember.name,
-          userEmail: newMember.email,
-          userPhoto: newMember.user_photo
-        });
+        const orgRoom = io.sockets.adapter.rooms.get(`org_${organization.org_id}`);
+        if (orgRoom) {
+          orgRoom.forEach(socketId => {
+            const socket = io.sockets.sockets.get(socketId);
+            if (socket && socket.userId !== userId) {
+              socket.emit('member_joined', {
+                userId: userId,
+                userName: newMember.name,
+                userEmail: newMember.email,
+                userPhoto: newMember.user_photo
+              });
+            }
+          });
+        }
       }
     } catch (notificationError) {
       console.error('Failed to create member joined notifications:', notificationError);

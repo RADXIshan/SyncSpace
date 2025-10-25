@@ -66,7 +66,7 @@ export const createNotice = async (req, res) => {
       RETURNING notice_id, title, body, created_at, updated_at
     `;
 
-    // Create notifications for all org members
+    // Create notifications for all org members except the creator
     try {
       await createNotificationForOrg(
         org_id,
@@ -74,19 +74,28 @@ export const createNotice = async (req, res) => {
         'New Notice Posted',
         title.trim(),
         {
+          excludeUserId: userId,
           relatedId: newNotice.notice_id,
           relatedType: 'notice',
           link: '/notices'
         }
       );
 
-      // Emit socket event for real-time notification
+      // Emit socket event for real-time notification (exclude creator)
       const io = req.app.get('io');
       if (io) {
-        io.to(`org_${org_id}`).emit('new_notice', {
-          id: newNotice.notice_id,
-          title: newNotice.title,
-        });
+        const orgRoom = io.sockets.adapter.rooms.get(`org_${org_id}`);
+        if (orgRoom) {
+          orgRoom.forEach(socketId => {
+            const socket = io.sockets.sockets.get(socketId);
+            if (socket && socket.userId !== userId) {
+              socket.emit('new_notice', {
+                id: newNotice.notice_id,
+                title: newNotice.title,
+              });
+            }
+          });
+        }
       }
     } catch (notificationError) {
       console.error('Failed to create notice notifications:', notificationError);

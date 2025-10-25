@@ -33,19 +33,43 @@ export const SocketProvider = ({ children }) => {
           console.warn('⚠️ Token is expired or incomplete. Please log out and log back in.');
         }
         
-        console.log('Initializing socket connection with token:', token.substring(0, 20) + '...');
+        // Determine server URL with production fallback
+        let serverUrl = import.meta.env.VITE_BASE_URL;
         
-        // Initialize socket connection
-        const newSocket = io(import.meta.env.VITE_BASE_URL || 'http://localhost:3000', {
+        if (!serverUrl) {
+          // Fallback logic for production
+          if (import.meta.env.PROD) {
+            // In production, try to use the same domain as the frontend
+            serverUrl = window.location.origin.replace(/:\d+$/, '') + ':3000';
+          } else {
+            serverUrl = 'http://localhost:3000';
+          }
+        }
+        console.log('Initializing socket connection to:', serverUrl);
+        console.log('Token:', token.substring(0, 20) + '...');
+        console.log('Environment:', import.meta.env.MODE);
+        
+        // Initialize socket connection with production-ready configuration
+        const newSocket = io(serverUrl, {
           auth: {
             token: token
           },
-          autoConnect: true
+          autoConnect: true,
+          transports: ['websocket', 'polling'],
+          upgrade: true,
+          rememberUpgrade: true,
+          timeout: 20000,
+          forceNew: false,
+          reconnection: true,
+          reconnectionDelay: 1000,
+          reconnectionAttempts: 5,
+          maxReconnectionAttempts: 5
         });
 
         // Connection event handlers
         newSocket.on('connect', () => {
-          console.log('Connected to server');
+          console.log('✅ Connected to server via', newSocket.io.engine.transport.name);
+          console.log('Socket ID:', newSocket.id);
           setIsConnected(true);
           
           // Send user online status
@@ -62,9 +86,34 @@ export const SocketProvider = ({ children }) => {
           }
         });
 
-        newSocket.on('disconnect', () => {
-          console.log('Disconnected from server');
+        newSocket.on('disconnect', (reason) => {
+          console.log('❌ Disconnected from server. Reason:', reason);
           setIsConnected(false);
+        });
+
+        newSocket.on('reconnect', (attemptNumber) => {
+          console.log('🔄 Reconnected to server after', attemptNumber, 'attempts');
+        });
+
+        newSocket.on('reconnect_attempt', (attemptNumber) => {
+          console.log('🔄 Attempting to reconnect... Attempt:', attemptNumber);
+        });
+
+        newSocket.on('reconnect_error', (error) => {
+          console.error('❌ Reconnection failed:', error);
+        });
+
+        newSocket.on('reconnect_failed', () => {
+          console.error('❌ Failed to reconnect after maximum attempts');
+        });
+
+        // Transport upgrade events for debugging
+        newSocket.io.on('upgrade', () => {
+          console.log('🚀 Upgraded to', newSocket.io.engine.transport.name);
+        });
+
+        newSocket.io.on('upgradeError', (error) => {
+          console.error('❌ Upgrade error:', error);
         });
 
         newSocket.on('connect_error', (error) => {

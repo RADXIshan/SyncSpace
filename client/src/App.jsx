@@ -13,6 +13,7 @@ import { SocketProvider } from "./context/SocketContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import MeetingRoom from "./components/MeetingRoom";
+import SocketDebug from "./components/SocketDebug";
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
       <SocketProvider>
         <div>
           <Toaster />
+          <SocketDebug />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route

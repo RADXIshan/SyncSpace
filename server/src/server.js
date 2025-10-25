@@ -24,14 +24,23 @@ const PORT = process.env.PORT || 3000;
 // Configure CORS for both Express and Socket.IO
 const corsOptions = {
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST"]
 };
 
 app.use(cors(corsOptions));
 
-// Initialize Socket.IO with CORS
+// Initialize Socket.IO with production-ready configuration
 const io = new Server(server, {
-  cors: corsOptions
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+    methods: ["GET", "POST"]
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 app.use(express.json({ limit: '10mb' }));

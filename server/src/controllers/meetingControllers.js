@@ -1,6 +1,6 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
-import { createNotificationForOrg } from "./notificationControllers.js";
+import { createNotificationForOrg, createNotificationForChannel } from "./notificationControllers.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -75,37 +75,77 @@ export const createMeeting = async (req, res) => {
       RETURNING meeting_id, title, description, start_time, meeting_link, started, created_at
     `;
 
-    // Create notifications for all org members except the creator
+    // Create notifications for org members or channel members except the creator
     try {
-      await createNotificationForOrg(
-        org_id,
-        'meeting',
-        'New Meeting Scheduled',
-        `${title.trim()} - ${new Date(start_time).toLocaleString()}`,
-        {
-          excludeUserId: userId,
-          relatedId: newMeeting.meeting_id,
-          relatedType: 'meeting',
-          link: `/meeting-prep/${newMeeting.meeting_id}`
-        }
-      );
+      if (channel_id) {
+        // Channel-specific meeting - notify only users with access to the channel
+        await createNotificationForChannel(
+          org_id,
+          channel_id,
+          'meeting',
+          'New Meeting Scheduled',
+          `${title.trim()} - ${new Date(start_time).toLocaleString()}`,
+          {
+            excludeUserId: userId,
+            relatedId: newMeeting.meeting_id,
+            relatedType: 'meeting',
+            link: `/meeting-prep/${newMeeting.meeting_id}`
+          }
+        );
 
-      // Emit socket event for real-time notification (exclude creator)
-      const io = req.app.get('io');
-      if (io) {
-        // Get all sockets in the org room except the creator
-        const orgRoom = io.sockets.adapter.rooms.get(`org_${org_id}`);
-        if (orgRoom) {
-          orgRoom.forEach(socketId => {
-            const socket = io.sockets.sockets.get(socketId);
-            if (socket && socket.userId !== userId) {
-              socket.emit('new_meeting', {
-                id: newMeeting.meeting_id,
-                title: newMeeting.title,
-                start_time: newMeeting.start_time,
-              });
+        // Emit socket event for real-time notification (exclude creator)
+        const io = req.app.get('io');
+        if (io) {
+          // Import the helper function dynamically to avoid circular imports
+          const { getOnlineUsersWithChannelAccess } = await import('../configs/socket.js');
+          const usersWithAccess = await getOnlineUsersWithChannelAccess(org_id, channel_id);
+          
+          // Send notification only to users with channel access (excluding creator)
+          usersWithAccess.forEach(user => {
+            if (user.id !== userId && user.socketId) {
+              const socket = io.sockets.sockets.get(user.socketId);
+              if (socket) {
+                socket.emit('new_meeting', {
+                  id: newMeeting.meeting_id,
+                  title: newMeeting.title,
+                  start_time: newMeeting.start_time,
+                });
+              }
             }
           });
+        }
+      } else {
+        // Organization-wide meeting - notify all org members
+        await createNotificationForOrg(
+          org_id,
+          'meeting',
+          'New Meeting Scheduled',
+          `${title.trim()} - ${new Date(start_time).toLocaleString()}`,
+          {
+            excludeUserId: userId,
+            relatedId: newMeeting.meeting_id,
+            relatedType: 'meeting',
+            link: `/meeting-prep/${newMeeting.meeting_id}`
+          }
+        );
+
+        // Emit socket event for real-time notification (exclude creator)
+        const io = req.app.get('io');
+        if (io) {
+          // Get all sockets in the org room except the creator
+          const orgRoom = io.sockets.adapter.rooms.get(`org_${org_id}`);
+          if (orgRoom) {
+            orgRoom.forEach(socketId => {
+              const socket = io.sockets.sockets.get(socketId);
+              if (socket && socket.userId !== userId) {
+                socket.emit('new_meeting', {
+                  id: newMeeting.meeting_id,
+                  title: newMeeting.title,
+                  start_time: newMeeting.start_time,
+                });
+              }
+            });
+          }
         }
       }
     } catch (notificationError) {

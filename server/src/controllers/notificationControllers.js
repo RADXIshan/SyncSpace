@@ -1,6 +1,55 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
 
+// Helper function to check if a user has access to a specific channel
+const checkChannelAccess = async (userId, channelId, orgId) => {
+  try {
+    // Get channel details
+    const [channel] = await sql`
+      SELECT channel_name FROM org_channels 
+      WHERE channel_id = ${channelId} AND org_id = ${orgId}
+    `;
+
+    if (!channel) {
+      return false; // Channel doesn't exist
+    }
+
+    // Check if user is organization owner (has access to all channels)
+    const [org] = await sql`
+      SELECT created_by FROM organisations WHERE org_id = ${orgId}
+    `;
+
+    if (org?.created_by === userId) {
+      return true; // Organization owner has access to all channels
+    }
+
+    // Get user's role and accessible teams
+    const [memberWithRole] = await sql`
+      SELECT om.role, r.accessible_teams
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${orgId} AND om.user_id = ${userId}
+    `;
+
+    if (!memberWithRole) {
+      return false; // User is not a member of the organization
+    }
+
+    const accessibleTeams = memberWithRole.accessible_teams;
+
+    // If accessible_teams is null or empty, user has access to all channels
+    if (!Array.isArray(accessibleTeams) || accessibleTeams.length === 0) {
+      return true;
+    }
+
+    // Check if user has access to this specific channel
+    return accessibleTeams.includes(channel.channel_name);
+  } catch (error) {
+    console.error("Error checking channel access:", error);
+    return false;
+  }
+};
+
 // Get notifications for a user
 export const getNotifications = async (req, res) => {
   try {
@@ -26,21 +75,86 @@ export const getNotifications = async (req, res) => {
     }
 
     // Get notifications for the user's organization
-    const notifications = await sql`
-      SELECT * FROM notifications 
-      WHERE org_id = ${user.org_id} 
-      AND user_id = ${userId}
-      ORDER BY created_at DESC 
-      LIMIT 50
+    const allNotifications = await sql`
+      SELECT n.*, c.channel_name 
+      FROM notifications n
+      LEFT JOIN org_channels c ON n.related_id = c.channel_id AND n.related_type = 'channel'
+      WHERE n.org_id = ${user.org_id} 
+      AND n.user_id = ${userId}
+      ORDER BY n.created_at DESC 
+      LIMIT 100
     `;
 
-    // Get unread count
-    const [unreadResult] = await sql`
-      SELECT COUNT(*) as count FROM notifications 
-      WHERE org_id = ${user.org_id} 
-      AND user_id = ${userId}
-      AND read_at IS NULL
+    // Filter notifications based on channel access
+    const notifications = [];
+    for (const notification of allNotifications) {
+      // If notification is not channel-specific, include it
+      if (
+        !notification.related_type ||
+        notification.related_type !== "channel"
+      ) {
+        notifications.push(notification);
+        continue;
+      }
+
+      // If notification is channel-specific, check access
+      if (notification.related_id) {
+        const hasAccess = await checkChannelAccess(
+          userId,
+          notification.related_id,
+          user.org_id
+        );
+        if (hasAccess) {
+          notifications.push(notification);
+        }
+      } else {
+        // Include notifications without specific channel ID
+        notifications.push(notification);
+      }
+
+      // Limit to 50 notifications after filtering
+      if (notifications.length >= 50) {
+        break;
+      }
+    }
+
+    // Get unread count (need to filter by channel access)
+    const allUnreadNotifications = await sql`
+      SELECT n.*, c.channel_name 
+      FROM notifications n
+      LEFT JOIN org_channels c ON n.related_id = c.channel_id AND n.related_type = 'channel'
+      WHERE n.org_id = ${user.org_id} 
+      AND n.user_id = ${userId}
+      AND n.read_at IS NULL
     `;
+
+    // Filter unread notifications based on channel access
+    let unreadCount = 0;
+    for (const notification of allUnreadNotifications) {
+      // If notification is not channel-specific, count it
+      if (
+        !notification.related_type ||
+        notification.related_type !== "channel"
+      ) {
+        unreadCount++;
+        continue;
+      }
+
+      // If notification is channel-specific, check access
+      if (notification.related_id) {
+        const hasAccess = await checkChannelAccess(
+          userId,
+          notification.related_id,
+          user.org_id
+        );
+        if (hasAccess) {
+          unreadCount++;
+        }
+      } else {
+        // Count notifications without specific channel ID
+        unreadCount++;
+      }
+    }
 
     res.json({
       notifications: notifications.map((n) => ({
@@ -55,7 +169,7 @@ export const getNotifications = async (req, res) => {
         relatedId: n.related_id,
         relatedType: n.related_type,
       })),
-      unreadCount: parseInt(unreadResult.count),
+      unreadCount: unreadCount,
     });
   } catch (error) {
     console.error("Error fetching notifications:", error);
@@ -122,14 +236,51 @@ export const markAllNotificationsAsRead = async (req, res) => {
       return res.json({ message: "No notifications to mark" });
     }
 
-    // Update all notifications for the user's organization
-    await sql`
-      UPDATE notifications 
-      SET read_at = CURRENT_TIMESTAMP 
-      WHERE org_id = ${user.org_id}
-      AND user_id = ${userId}
-      AND read_at IS NULL
+    // Get all unread notifications for filtering
+    const allUnreadNotifications = await sql`
+      SELECT n.id, n.related_id, n.related_type
+      FROM notifications n
+      WHERE n.org_id = ${user.org_id}
+      AND n.user_id = ${userId}
+      AND n.read_at IS NULL
     `;
+
+    // Filter notifications based on channel access and collect IDs to update
+    const notificationIdsToUpdate = [];
+    for (const notification of allUnreadNotifications) {
+      // If notification is not channel-specific, include it
+      if (
+        !notification.related_type ||
+        notification.related_type !== "channel"
+      ) {
+        notificationIdsToUpdate.push(notification.id);
+        continue;
+      }
+
+      // If notification is channel-specific, check access
+      if (notification.related_id) {
+        const hasAccess = await checkChannelAccess(
+          userId,
+          notification.related_id,
+          user.org_id
+        );
+        if (hasAccess) {
+          notificationIdsToUpdate.push(notification.id);
+        }
+      } else {
+        // Include notifications without specific channel ID
+        notificationIdsToUpdate.push(notification.id);
+      }
+    }
+
+    // Update only the notifications the user has access to
+    if (notificationIdsToUpdate.length > 0) {
+      await sql`
+        UPDATE notifications 
+        SET read_at = CURRENT_TIMESTAMP 
+        WHERE id = ANY(${notificationIdsToUpdate})
+      `;
+    }
 
     res.json({ message: "All notifications marked as read" });
   } catch (error) {
@@ -174,7 +325,7 @@ export const deleteNotification = async (req, res) => {
 // Delete all notifications
 export const deleteAllNotifications = async (req, res) => {
   const startTime = Date.now();
-  
+
   try {
     const authToken =
       req.cookies.jwt || req.headers.authorization?.split(" ")[1];
@@ -198,37 +349,75 @@ export const deleteAllNotifications = async (req, res) => {
       return res.json({ message: "No notifications to delete" });
     }
 
-    // First, get count of notifications to be deleted for logging
-    const [countResult] = await sql`
-      SELECT COUNT(*) as count FROM notifications 
-      WHERE org_id = ${user.org_id}
-      AND user_id = ${userId}
+    // Get all notifications for filtering
+    const allNotifications = await sql`
+      SELECT n.id, n.related_id, n.related_type
+      FROM notifications n
+      WHERE n.org_id = ${user.org_id}
+      AND n.user_id = ${userId}
     `;
 
-    const notificationCount = parseInt(countResult.count);
-    console.log(`Deleting ${notificationCount} notifications for user ${userId}`);
+    // Filter notifications based on channel access and collect IDs to delete
+    const notificationIdsToDelete = [];
+    for (const notification of allNotifications) {
+      // If notification is not channel-specific, include it
+      if (
+        !notification.related_type ||
+        notification.related_type !== "channel"
+      ) {
+        notificationIdsToDelete.push(notification.id);
+        continue;
+      }
 
-    // Delete all notifications for the user
-    const result = await sql`
-      DELETE FROM notifications 
-      WHERE org_id = ${user.org_id}
-      AND user_id = ${userId}
-    `;
+      // If notification is channel-specific, check access
+      if (notification.related_id) {
+        const hasAccess = await checkChannelAccess(
+          userId,
+          notification.related_id,
+          user.org_id
+        );
+        if (hasAccess) {
+          notificationIdsToDelete.push(notification.id);
+        }
+      } else {
+        // Include notifications without specific channel ID
+        notificationIdsToDelete.push(notification.id);
+      }
+    }
+
+    const notificationCount = notificationIdsToDelete.length;
+    console.log(
+      `Deleting ${notificationCount} notifications for user ${userId}`
+    );
+
+    // Delete only the notifications the user has access to
+    let result = null;
+    if (notificationIdsToDelete.length > 0) {
+      result = await sql`
+        DELETE FROM notifications 
+        WHERE id = ANY(${notificationIdsToDelete})
+      `;
+    }
 
     const endTime = Date.now();
     const duration = endTime - startTime;
-    
-    console.log(`Successfully deleted ${notificationCount} notifications in ${duration}ms`);
 
-    res.json({ 
+    console.log(
+      `Successfully deleted ${notificationCount} notifications in ${duration}ms`
+    );
+
+    res.json({
       message: "All notifications deleted",
       deletedCount: notificationCount,
-      duration: duration
+      duration: duration,
     });
   } catch (error) {
     const endTime = Date.now();
     const duration = endTime - startTime;
-    console.error(`Error deleting all notifications after ${duration}ms:`, error);
+    console.error(
+      `Error deleting all notifications after ${duration}ms:`,
+      error
+    );
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -283,6 +472,63 @@ export const createNotificationForOrg = async (
   options = {}
 ) => {
   try {
+    const { excludeUserId, channelId } = options;
+
+    // Get all users in the organization except the creator
+    let orgMembers;
+    if (excludeUserId) {
+      orgMembers = await sql`
+        SELECT user_id FROM org_members 
+        WHERE org_id = ${orgId} AND user_id != ${excludeUserId}
+      `;
+    } else {
+      orgMembers = await sql`
+        SELECT user_id FROM org_members WHERE org_id = ${orgId}
+      `;
+    }
+
+    const notifications = [];
+    for (const member of orgMembers) {
+      // If this is a channel-specific notification, check access
+      if (channelId) {
+        const hasAccess = await checkChannelAccess(
+          member.user_id,
+          channelId,
+          orgId
+        );
+        if (!hasAccess) {
+          continue; // Skip this user if they don't have access to the channel
+        }
+      }
+
+      const notification = await createNotification(
+        member.user_id,
+        orgId,
+        type,
+        title,
+        message,
+        options
+      );
+      notifications.push(notification);
+    }
+
+    return notifications;
+  } catch (error) {
+    console.error("Error creating notifications for org:", error);
+    throw error;
+  }
+};
+
+// Create notification for channel members only
+export const createNotificationForChannel = async (
+  orgId,
+  channelId,
+  type,
+  title,
+  message,
+  options = {}
+) => {
+  try {
     const { excludeUserId } = options;
 
     // Get all users in the organization except the creator
@@ -300,20 +546,34 @@ export const createNotificationForOrg = async (
 
     const notifications = [];
     for (const member of orgMembers) {
+      // Check if user has access to this channel
+      const hasAccess = await checkChannelAccess(
+        member.user_id,
+        channelId,
+        orgId
+      );
+      if (!hasAccess) {
+        continue; // Skip this user if they don't have access to the channel
+      }
+
       const notification = await createNotification(
         member.user_id,
         orgId,
         type,
         title,
         message,
-        options
+        {
+          ...options,
+          relatedId: channelId,
+          relatedType: "channel",
+        }
       );
       notifications.push(notification);
     }
 
     return notifications;
   } catch (error) {
-    console.error("Error creating notifications for org:", error);
+    console.error("Error creating notifications for channel:", error);
     throw error;
   }
 };

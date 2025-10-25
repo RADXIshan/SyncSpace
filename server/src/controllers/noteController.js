@@ -1,6 +1,6 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
-import { createNotificationForOrg } from "./notificationControllers.js";
+import { createNotificationForOrg, createNotificationForChannel } from "./notificationControllers.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -78,8 +78,9 @@ export const createNote = async (req, res) => {
           SELECT channel_name FROM org_channels WHERE channel_id = ${channel_id}
         `;
 
-        await createNotificationForOrg(
+        await createNotificationForChannel(
           org_id,
+          channel_id,
           'task',
           'New Note Added',
           `New note in ${channel?.channel_name || 'channel'}: ${title.trim()}`,
@@ -94,11 +95,15 @@ export const createNote = async (req, res) => {
         // Emit socket event for real-time notification (exclude creator)
         const io = req.app.get('io');
         if (io) {
-          const orgRoom = io.sockets.adapter.rooms.get(`org_${org_id}`);
-          if (orgRoom) {
-            orgRoom.forEach(socketId => {
-              const socket = io.sockets.sockets.get(socketId);
-              if (socket && socket.userId !== userId) {
+          // Import the helper function dynamically to avoid circular imports
+          const { getOnlineUsersWithChannelAccess } = await import('../configs/socket.js');
+          const usersWithAccess = await getOnlineUsersWithChannelAccess(org_id, channel_id);
+          
+          // Send notification only to users with channel access (excluding creator)
+          usersWithAccess.forEach(user => {
+            if (user.id !== userId && user.socketId) {
+              const socket = io.sockets.sockets.get(user.socketId);
+              if (socket) {
                 socket.emit('new_note', {
                   id: newNote.note_id,
                   title: newNote.title,
@@ -106,8 +111,8 @@ export const createNote = async (req, res) => {
                   channelName: channel?.channel_name || 'channel'
                 });
               }
-            });
-          }
+            }
+          });
         }
       } catch (notificationError) {
         console.error('Failed to create note notifications:', notificationError);

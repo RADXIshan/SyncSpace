@@ -277,5 +277,81 @@ export const getUserSocketId = (userId) => {
   return userSockets.get(userId);
 };
 
+// Helper function to check if a user has access to a specific channel
+const checkChannelAccess = async (userId, channelId, orgId) => {
+  try {
+    const sql = (await import('../database/db.js')).default;
+    
+    // Get channel details
+    const [channel] = await sql`
+      SELECT channel_name FROM org_channels 
+      WHERE channel_id = ${channelId} AND org_id = ${orgId}
+    `;
+    
+    if (!channel) {
+      return false; // Channel doesn't exist
+    }
+
+    // Check if user is organization owner (has access to all channels)
+    const [org] = await sql`
+      SELECT created_by FROM organisations WHERE org_id = ${orgId}
+    `;
+    
+    if (org?.created_by === userId) {
+      return true; // Organization owner has access to all channels
+    }
+
+    // Get user's role and accessible teams
+    const [memberWithRole] = await sql`
+      SELECT om.role, r.accessible_teams
+      FROM org_members om
+      LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
+      WHERE om.org_id = ${orgId} AND om.user_id = ${userId}
+    `;
+
+    if (!memberWithRole) {
+      return false; // User is not a member of the organization
+    }
+
+    const accessibleTeams = memberWithRole.accessible_teams;
+    
+    // If accessible_teams is null or empty, user has access to all channels
+    if (!Array.isArray(accessibleTeams) || accessibleTeams.length === 0) {
+      return true;
+    }
+
+    // Check if user has access to this specific channel
+    return accessibleTeams.includes(channel.channel_name);
+  } catch (error) {
+    console.error('Error checking channel access:', error);
+    return false;
+  }
+};
+
+// Helper function to get online users with access to a specific channel
+export const getOnlineUsersWithChannelAccess = async (orgId, channelId) => {
+  if (!orgId || !channelId) return [];
+  
+  const orgUsers = [];
+  for (const [userId, user] of onlineUsers) {
+    if (user.org_id === orgId) {
+      const hasAccess = await checkChannelAccess(userId, channelId, orgId);
+      if (hasAccess) {
+        orgUsers.push({
+          id: userId,
+          email: user.email,
+          name: user.name,
+          photo: user.photo,
+          status: user.status || 'online',
+          customStatus: user.customStatus,
+          lastSeen: user.lastSeen,
+          socketId: user.socketId
+        });
+      }
+    }
+  }
+  return orgUsers;
+};
+
 // Export the maps for use in other modules
 export { onlineUsers, userSockets };

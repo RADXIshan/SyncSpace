@@ -89,29 +89,29 @@ const LandingPricing = () => {
   return (
     <section
       id="pricing"
-      className="py-10 lg:py-16 px-4 sm:px-6 lg:px-8 relative"
+      className="py-8 sm:py-10 lg:py-16 px-4 sm:px-6 lg:px-8 relative"
     >
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 glass rounded-full px-6 py-3 text-sm font-medium text-white/90 mb-8">
-            <Star className="w-4 h-4 text-yellow-400" />
+        <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+          <div className="inline-flex items-center gap-2 glass rounded-full px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white/90 mb-6 sm:mb-8">
+            <Star className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400" />
             Future-Ready Pricing
           </div>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 lg:mb-8 px-4">
             Invest in Your
-            <span className="block gradient-text-purple">Team's Future</span>
+            <span className="block gradient-text-purple mt-2">Team's Future</span>
           </h2>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed mb-10">
+          <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8 lg:mb-10 px-4">
             Choose the plan that matches your ambition. Every plan includes
             revolutionary AI features that will transform how your team works.
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-4 p-2 glass rounded-2xl">
+          <div className="inline-flex items-center gap-2 sm:gap-4 p-1.5 sm:p-2 glass rounded-xl sm:rounded-2xl">
             <button
               onClick={() => setIsAnnual(false)}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 cursor-pointer ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-medium transition-all duration-300 cursor-pointer text-sm sm:text-base ${
                 !isAnnual
                   ? "glass-button text-white"
                   : "text-white/70 hover:text-white"
@@ -121,14 +121,14 @@ const LandingPricing = () => {
             </button>
             <button
               onClick={() => setIsAnnual(true)}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 relative cursor-pointer ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-medium transition-all duration-300 relative cursor-pointer text-sm sm:text-base ${
                 isAnnual
                   ? "glass-button text-white"
                   : "text-white/70 hover:text-white"
               }`}
             >
               Annual
-              <span className="absolute -top-2 -right-2 px-2 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs rounded-full">
+              <span className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] sm:text-xs rounded-full">
                 Save 30%
               </span>
             </button>
@@ -136,49 +136,49 @@ const LandingPricing = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16 lg:mb-20">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`relative glass rounded-3xl hover:bg-white/20 transition-all duration-300 group ${
-                plan.popular ? "scale-105" : ""
+              className={`relative glass rounded-2xl sm:rounded-3xl hover:bg-white/20 transition-all duration-300 group ${
+                plan.popular ? "md:scale-105" : ""
               }`}
             >
               {/* Popular badge */}
               {plan.popular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="glass-button-enhanced px-6 py-2 rounded-full text-sm font-semibold text-white">
+                <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="glass-button-enhanced px-4 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold text-white whitespace-nowrap">
                     Most Popular
                   </div>
                 </div>
               )}
 
-              <div className="p-8">
+              <div className="p-6 sm:p-8">
                 {/* Plan header */}
-                <div className="text-center mb-8">
+                <div className="text-center mb-6 sm:mb-8">
                   <div
-                    className={`w-18 h-18 bg-gradient-to-br ${plan.color} rounded-2xl flex items-center justify-center mx-auto mb-6`}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 bg-gradient-to-br ${plan.color} rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6`}
                   >
-                    <plan.icon className="w-10 h-10 text-white" />
+                    <plan.icon className="w-7 h-7 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">
                     {plan.name}
                   </h3>
-                  <p className="text-white/70">{plan.description}</p>
+                  <p className="text-sm sm:text-base text-white/70">{plan.description}</p>
                 </div>
 
                 {/* Pricing */}
-                <div className="text-center mb-8">
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-bold text-white">
+                <div className="text-center mb-6 sm:mb-8">
+                  <div className="flex items-baseline justify-center gap-1 sm:gap-2">
+                    <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
                       ${isAnnual ? plan.annualPrice : plan.monthlyPrice}
                     </span>
-                    <span className="text-white/70">
+                    <span className="text-sm sm:text-base text-white/70">
                       {plan.monthlyPrice === 0 ? "" : "/month"}
                     </span>
                   </div>
                   {isAnnual && plan.monthlyPrice > 0 && (
-                    <p className="text-sm text-white/60 mt-2">
+                    <p className="text-xs sm:text-sm text-white/60 mt-2">
                       Billed annually ($
                       {(isAnnual ? plan.annualPrice : plan.monthlyPrice) * 12}
                       /year)
@@ -187,17 +187,17 @@ const LandingPricing = () => {
                 </div>
 
                 {/* Features */}
-                <div className="space-y-4 mb-8">
+                <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                   {plan.features.map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                      <span className="text-white/90">{feature}</span>
+                    <div key={idx} className="flex items-center gap-2 sm:gap-3">
+                      <Check className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
+                      <span className="text-sm sm:text-base text-white/90">{feature}</span>
                     </div>
                   ))}
                   {plan.limitations.map((limitation, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <X className="w-5 h-5 text-white/40 flex-shrink-0" />
-                      <span className="text-white/60">{limitation}</span>
+                    <div key={idx} className="flex items-center gap-2 sm:gap-3">
+                      <X className="w-4 h-4 sm:w-5 sm:h-5 text-white/40 flex-shrink-0" />
+                      <span className="text-sm sm:text-base text-white/60">{limitation}</span>
                     </div>
                   ))}
                 </div>
@@ -211,14 +211,14 @@ const LandingPricing = () => {
                       window.location.href = "/signup";
                     }
                   }}
-                  className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer ${
+                  className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer text-sm sm:text-base ${
                     plan.popular
                       ? "glass-button text-white"
                       : "glass text-white/90 hover:text-white"
                   }`}
                 >
                   {plan.cta}
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>

@@ -59,7 +59,7 @@ const Home = () => {
         isMobileOpen={isMobileSidebarOpen}
         onMobileToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
       />
-      <main className="flex-1 overflow-y-auto main-content">
+      <main className="flex-1 overflow-y-auto main-content w-full md:w-auto">
         <Routes>
           <Route path="/" element={<Navigate to="/home/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard 

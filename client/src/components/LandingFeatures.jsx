@@ -93,22 +93,22 @@ const LandingFeatures = () => {
   return (
     <section
       id="features"
-      className="py-10 lg:py-16 px-4 sm:px-6 lg:px-8 relative"
+      className="py-8 sm:py-10 lg:py-16 px-4 sm:px-6 lg:px-8 relative"
     >
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-20 lg:mb-24">
-          <div className="inline-flex items-center gap-2 glass rounded-full px-6 py-3 text-sm font-medium text-white/90 mb-8">
-            <Sparkles className="w-4 h-4 text-purple-400" />
+        <div className="text-center mb-12 sm:mb-16 lg:mb-24">
+          <div className="inline-flex items-center gap-2 glass rounded-full px-4 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-white/90 mb-6 sm:mb-8">
+            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
             Powerful Features
           </div>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 lg:mb-8 px-4">
             Everything You Need for
-            <span className="block gradient-text-purple">
+            <span className="block gradient-text-purple mt-2">
               Team Collaboration
             </span>
           </h2>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-3xl mx-auto leading-relaxed px-4">
             A comprehensive platform with real-time messaging, video meetings,
             calendar integration, and organization management tools designed for
             modern teams.
@@ -116,33 +116,33 @@ const LandingFeatures = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12 sm:mb-16 lg:mb-20">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="glass rounded-3xl p-6 hover:bg-white/20 transition-all duration-300 group"
+              className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 hover:bg-white/20 transition-all duration-300 group"
             >
               <div
-                className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6`}
+                className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${feature.color} rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6`}
               >
-                <feature.icon className="w-7 h-7 text-white" />
+                <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
 
-              <h3 className="text-xl font-bold text-white mb-4">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
                 {feature.title}
               </h3>
 
-              <p className="text-white/70 mb-6 leading-relaxed text-sm">
+              <p className="text-white/70 mb-4 sm:mb-6 leading-relaxed text-sm">
                 {feature.description}
               </p>
 
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {feature.benefits.map((benefit, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-3 text-white/80 text-sm"
+                    className="flex items-center gap-2 sm:gap-3 text-white/80 text-xs sm:text-sm"
                   >
-                    <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400 flex-shrink-0" />
                     <span>{benefit}</span>
                   </li>
                 ))}
@@ -152,26 +152,26 @@ const LandingFeatures = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center">
-          <div className="glass rounded-3xl p-8 lg:p-12 relative overflow-hidden">
+        <div className="text-center px-4">
+          <div className="glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 relative overflow-hidden">
             {/* Background gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl sm:rounded-3xl"></div>
 
             <div className="relative z-10">
-              <h3 className="text-3xl lg:text-4xl font-bold mb-6 text-white">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 sm:mb-6 text-white">
                 Ready to Get Started?
               </h3>
-              <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-white/80 mb-6 sm:mb-8 lg:mb-10 max-w-2xl mx-auto">
                 Join thousands of teams already using our platform to streamline
                 their communication and collaboration.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <button
                   onClick={() => (window.location.href = "/signup")}
-                  className="glass-button px-8 py-4 text-white font-semibold rounded-2xl flex items-center justify-center gap-2 group cursor-pointer"
+                  className="glass-button px-6 sm:px-8 py-3 sm:py-4 text-white font-semibold rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 group cursor-pointer text-sm sm:text-base"
                 >
                   Start Collaborating
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </div>

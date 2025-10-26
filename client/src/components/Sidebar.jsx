@@ -282,34 +282,35 @@ const Sidebar = ({
       {isMobile && (
         <button
           onClick={onMobileToggle}
-          className={`fixed top-4 z-50 p-3 glass-button rounded-xl text-white hover:text-purple-300 transition-all duration-300 shadow-lg hover:shadow-xl group cursor-pointer ${
-            isMobileOpen ? "left-68" : "left-4"
+          className={`fixed top-4 sm:top-4 z-50 p-3 sm:p-3 rounded-xl sm:rounded-xl text-white hover:text-purple-300 transition-all duration-300 shadow-lg hover:shadow-xl group cursor-pointer bg-black/40 ${
+            isMobileOpen ? "left-68" : "left-4 sm:left-4"
           }`}
+          aria-label={isMobileOpen ? "Close menu" : "Open menu"}
         >
           {isMobileOpen ? (
             <X
               size={20}
-              className="group-hover:rotate-90 transition-transform duration-300"
+              className="sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300"
             />
           ) : (
             <Menu
               size={20}
-              className="group-hover:scale-110 transition-transform duration-300"
+              className="sm:w-5 sm:h-5 group-hover:scale-110 transition-transform duration-300"
             />
           )}
         </button>
       )}
 
       {/* Sidebar */}
-      <div
+      <aside
         className={`
-        h-screen cosmic-bg relative overflow-hidden text-white flex flex-col
+        h-screen cosmic-bg overflow-hidden text-white flex flex-col
         ${
           isMobile
-            ? `fixed top-0 left-0 bottom-0 z-40 w-64 mobile-sidebar transition-transform duration-300 ${
+            ? `fixed top-0 left-0 bottom-0 z-40 w-[260px] sm:w-64 transition-transform duration-300 ease-in-out ${
                 isMobileOpen ? "translate-x-0" : "-translate-x-full"
               }`
-            : "w-64"
+            : "relative w-56 lg:w-64 xl:w-72"
         }
       `}
       >
@@ -321,43 +322,48 @@ const Sidebar = ({
         </div>
 
         {/* Header */}
-        <div className="relative z-10 glass-dark border-b border-white/10 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center">
+        <div className="relative z-10 glass-dark border-b border-white/10 p-4 sm:p-4">
+          <div className="flex items-center gap-3 sm:gap-3">
+            <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-2xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
               <img
                 src="/icon.png"
                 alt="SyncSpace Logo"
-                className="w-10 h-10 rounded-2xl"
+                className="w-10 h-10 sm:w-10 sm:h-10 rounded-2xl sm:rounded-2xl"
               />
             </div>
-            <h1 className="text-xl font-bold tracking-tight gradient-text-purple">
+            <h1 className="text-xl sm:text-xl font-bold tracking-tight gradient-text-purple truncate">
               SyncSpace
             </h1>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto relative z-10 p-2">
-          <nav className="">
+        <div className="flex-1 overflow-y-auto relative z-10 p-2 sm:p-2 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+          <nav className="space-y-1 sm:space-y-1">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex rounded-lg items-center border-1 border-transparent px-4 py-3 transition-all duration-300 font-medium group ${
+                className={`flex rounded-lg items-center border-1 border-transparent px-4 sm:px-4 py-3 sm:py-3 transition-all duration-300 font-medium group ${
                   isActive(item.path)
                     ? "glass-button-enhanced text-purple-400 shadow-lg"
                     : "text-white/70 hover:text-white hover:bg-white/5"
                 }`}
               >
                 <span
-                  className={`mr-3 transition-all duration-300 group-hover:scale-110 ${
+                  className={`mr-3 sm:mr-3 transition-all duration-300 group-hover:scale-110 flex-shrink-0 ${
                     isActive(item.path) ? "text-purple-400" : "text-white/70"
                   }`}
                 >
-                  {React.cloneElement(item.icon, { size: 20 })}
+                  {React.cloneElement(item.icon, {
+                    size: 20,
+                    className: "sm:w-5 sm:h-5",
+                  })}
                 </span>
-                <span className="text-sm font-medium flex-1">{item.name}</span>
+                <span className="text-sm sm:text-sm font-medium flex-1 truncate">
+                  {item.name}
+                </span>
                 {item.badge && (
-                  <span className="ml-2 px-2 py-1 text-xs font-bold text-white bg-gradient-to-br from-red-600 to-pink-600 rounded-full h-5 w-5 flex items-center shadow-red-600 justify-center shadow-[0_0_10px_0]">
+                  <span className="ml-2 sm:ml-2 px-2 sm:px-2 py-1 sm:py-1 text-xs sm:text-xs font-bold text-white bg-gradient-to-br from-red-600 to-pink-600 rounded-full min-w-[20px] sm:min-w-[20px] h-5 sm:h-5 flex items-center justify-center shadow-red-600 shadow-[0_0_8px_0] flex-shrink-0">
                     {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 )}
@@ -367,20 +373,23 @@ const Sidebar = ({
 
           {/* Organization Section */}
           {organization && (
-            <div className="mt-2 mb-4 glass rounded-xl">
-              <div className="rounded-2xl overflow-hidden">
+            <div className="mt-2 sm:mt-2 mb-4 sm:mb-4 glass rounded-xl sm:rounded-xl mx-1">
+              <div className="rounded-2xl sm:rounded-2xl overflow-hidden">
                 {/* Organization Header */}
-                <div className="border-b border-white/10 p-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div className="w-10 h-10 glass-button rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
-                        <Users size={18} className="text-purple-400" />
+                <div className="border-b border-white/10 p-2 sm:p-2">
+                  <div className="flex items-center justify-between gap-2 sm:gap-2">
+                    <div className="flex items-center space-x-3 sm:space-x-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 sm:w-10 sm:h-10 glass-button rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <Users
+                          size={18}
+                          className="text-purple-400 sm:w-[18px] sm:h-[18px]"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-white text-sm leading-tight truncate">
+                        <h3 className="font-semibold text-white text-sm sm:text-sm leading-tight truncate">
                           {organization.name}
                         </h3>
-                        <p className="text-xs text-white/60 font-medium mt-1">
+                        <p className="text-xs sm:text-xs text-white/60 font-medium mt-1 sm:mt-1">
                           Organization
                         </p>
                       </div>
@@ -388,12 +397,12 @@ const Sidebar = ({
                     {canManageOrg() && (
                       <button
                         onClick={handleOrgSettings}
-                        className="flex-shrink-0 p-2 glass hover:glass-button rounded-lg transition-all duration-300 text-white/70 hover:text-blue-400 cursor-pointer group"
+                        className="flex-shrink-0 p-2 sm:p-2 glass hover:glass-button rounded-lg sm:rounded-lg transition-all duration-300 text-white/70 hover:text-blue-400 cursor-pointer group"
                         title="Organization settings"
                       >
                         <Settings
                           size={16}
-                          className="group-hover:rotate-180 group-hover:scale-120 transition-transform duration-300"
+                          className="sm:w-4 sm:h-4 group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300"
                         />
                       </button>
                     )}
@@ -401,33 +410,33 @@ const Sidebar = ({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="p-2">
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 sm:p-2">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-2">
                     {canInvite() && (
                       <button
                         onClick={handleInvite}
-                        className="glass-button flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 text-white/80 hover:text-white text-xs font-medium cursor-pointer group"
+                        className="glass-button flex items-center justify-center px-3 sm:px-3 py-2.5 sm:py-2.5 rounded-lg sm:rounded-lg transition-all duration-300 text-white/80 hover:text-white text-xs sm:text-xs font-medium cursor-pointer group"
                         title="Invite users to organization"
                       >
                         <UserPlus
                           size={14}
-                          className="mr-1.5 group-hover:scale-110 transition-transform duration-300"
+                          className="mr-1.5 sm:mr-1.5 sm:w-[14px] sm:h-[14px] group-hover:scale-110 transition-transform duration-300"
                         />
-                        Invite
+                        <span className="truncate">Invite</span>
                       </button>
                     )}
                     <button
                       onClick={handleLeaveOrg}
                       className={`${
                         !canInvite() ? "col-span-2" : ""
-                      } glass-button flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 text-red-400 hover:text-red-300 text-xs font-medium cursor-pointer group hover:border-red-500/30`}
+                      } glass-button flex items-center justify-center px-3 sm:px-3 py-2.5 sm:py-2.5 rounded-lg sm:rounded-lg transition-all duration-300 text-red-400 hover:text-red-300 text-xs sm:text-xs font-medium cursor-pointer group hover:border-red-500/30`}
                       title="Leave organization"
                     >
                       <LogOut
                         size={14}
-                        className="mr-1.5 rotate-180 group-hover:scale-110 transition-transform duration-300"
+                        className="mr-1.5 sm:mr-1.5 sm:w-[14px] sm:h-[14px] rotate-180 group-hover:scale-110 transition-transform duration-300"
                       />
-                      Leave
+                      <span className="truncate">Leave</span>
                     </button>
                   </div>
                 </div>
@@ -437,19 +446,22 @@ const Sidebar = ({
 
           {/* Channels Section */}
           {organization?.channels && organization.channels.length > 0 && (
-            <div className="mx-1 mb-4">
-              <div className="mb-3">
-                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center">
-                  <Hash size={14} className="mr-1.5" />
-                  Channels
+            <div className="mx-1 mb-4 sm:mb-4">
+              <div className="mb-3 sm:mb-3 px-1">
+                <h3 className="text-xs sm:text-xs font-bold text-white/60 uppercase tracking-wider flex items-center">
+                  <Hash
+                    size={14}
+                    className="mr-1.5 sm:mr-1.5 sm:w-[14px] sm:h-[14px]"
+                  />
+                  <span className="truncate">Channels</span>
                 </h3>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 sm:space-y-1">
                 {organization.channels.map((channel) => (
                   <Link
                     key={channel.id}
                     to={`/home/channels/${channel.id}`}
-                    className={`flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 font-medium group ${
+                    className={`flex items-center px-4 sm:px-4 py-2.5 sm:py-2.5 rounded-lg duration-300 font-medium group ${
                       isActive(`/home/channels/${channel.id}`)
                         ? "glass-button-enhanced text-purple-400 shadow-lg"
                         : "text-white/70 hover:text-white hover:bg-white/5"
@@ -457,7 +469,7 @@ const Sidebar = ({
                     title={channel.description || channel.name}
                   >
                     <span
-                      className={`mr-3 transition-colors duration-200 ${
+                      className={`mr-3 sm:mr-3 transition-colors duration-200 flex-shrink-0 ${
                         isActive(`/home/channels/${channel.id}`)
                           ? "text-purple-400"
                           : "text-white/60"
@@ -465,10 +477,10 @@ const Sidebar = ({
                     >
                       <Hash
                         size={14}
-                        className="group-hover:scale-110 duration-300"
+                        className="sm:w-[14px] sm:h-[14px] group-hover:scale-110 duration-300"
                       />
                     </span>
-                    <span className="text-sm font-medium truncate">
+                    <span className="text-sm sm:text-sm font-medium truncate">
                       {channel.name}
                     </span>
                   </Link>
@@ -479,34 +491,34 @@ const Sidebar = ({
         </div>
 
         {/* User Profile Section */}
-        <div className="relative z-10 glass-dark border-t border-white/10 p-2">
-          <div className="flex items-center justify-between mb-4 p-2 pb-0">
+        <div className="relative z-10 glass-dark border-t border-white/10 p-2 sm:p-2">
+          <div className="flex items-center justify-between mb-4 sm:mb-4 p-2 sm:p-2 pb-0">
             {user?.photo ? (
               <img
                 src={user.photo}
                 alt="Profile"
-                className="h-12 w-12 rounded-full object-cover shadow-lg border-2 border-purple-500/50"
+                className="h-12 w-12 sm:h-12 sm:w-12 rounded-full object-cover shadow-lg border-2 border-purple-500/50 flex-shrink-0"
               />
             ) : (
-              <div className="h-12 w-12 rounded-2xl glass-button flex items-center justify-center shadow-lg border-2 border-purple-500/50">
-                <span className="text-sm font-bold text-white">
+              <div className="h-12 w-12 sm:h-12 sm:w-12 rounded-2xl sm:rounded-2xl glass-button flex items-center justify-center shadow-lg border-2 border-purple-500/50 flex-shrink-0">
+                <span className="text-sm sm:text-sm font-bold text-white">
                   {user?.name?.charAt(0) || "U"}
                 </span>
               </div>
             )}
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="font-semibold text-white text-sm leading-tight truncate">
+            <div className="ml-3 sm:ml-3 flex-1 min-w-0">
+              <p className="font-semibold text-white text-sm sm:text-sm leading-tight truncate">
                 {user?.name || "User Name"}
               </p>
-              <div className="flex items-center mt-1 gap-2">
+              <div className="flex items-center mt-1 sm:mt-1 gap-2 sm:gap-2 flex-wrap">
                 <div className="flex items-center">
                   <div
-                    className={`h-2 w-2 rounded-full ${
+                    className={`h-2 w-2 sm:h-2 sm:w-2 rounded-full ${
                       isConnected ? "bg-green-400" : "bg-gray-400"
                     }`}
                   ></div>
                   <p
-                    className={`text-xs ml-1.5 font-medium ${
+                    className={`text-xs sm:text-xs ml-1.5 sm:ml-1.5 font-medium ${
                       isConnected ? "text-green-400" : "text-gray-400"
                     }`}
                   >
@@ -515,24 +527,24 @@ const Sidebar = ({
                 </div>
                 {organization && userRole && (
                   <div
-                    className={`px-2 py-0.5 ${
+                    className={`px-2 sm:px-2 py-0.5 ${
                       getRoleStyle(userRole).background
                     } border ${
                       getRoleStyle(userRole).border
-                    } rounded flex items-center gap-1 flex-shrink-0`}
+                    } rounded flex items-center gap-1 sm:gap-1 flex-shrink-0`}
                   >
                     {userPermissions?.isOwner && (
                       <Crown
                         size={9}
-                        className={`${
+                        className={`sm:w-[9px] sm:h-[9px] ${
                           getRoleStyle(userRole).text
                         } flex-shrink-0`}
                       />
                     )}
                     <span
-                      className={`text-xs font-medium ${
+                      className={`text-xs sm:text-xs font-medium ${
                         getRoleStyle(userRole).text
-                      } capitalize`}
+                      } capitalize truncate`}
                     >
                       {userRole}
                     </span>
@@ -542,35 +554,39 @@ const Sidebar = ({
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 sm:gap-2">
             <button
               onClick={onSettingsClick}
-              className="flex-1 glass-button flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 cursor-pointer group text-white/80 hover:text-white"
+              className="flex-1 glass-button flex items-center justify-center px-3 sm:px-3 py-2.5 sm:py-2.5 rounded-lg sm:rounded-lg transition-all duration-300 cursor-pointer group text-white/80 hover:text-white"
             >
-              <span className="mr-2 group-hover:text-purple-400 transition-all duration-300">
+              <span className="mr-2 sm:mr-2 group-hover:text-purple-400 transition-all duration-300 flex-shrink-0">
                 <Settings
                   size={16}
-                  className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300"
+                  className="sm:w-4 sm:h-4 group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300"
                 />
               </span>
-              <span className="font-medium text-sm">Settings</span>
+              <span className="font-medium text-sm sm:text-sm truncate">
+                Settings
+              </span>
             </button>
 
             <button
               onClick={handleLogout}
-              className="flex-1 glass-button flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 cursor-pointer group text-white/80 hover:text-red-300 hover:border-red-500/30"
+              className="flex-1 glass-button flex items-center justify-center px-3 sm:px-3 py-2.5 sm:py-2.5 rounded-lg sm:rounded-lg transition-all duration-300 cursor-pointer group text-white/80 hover:text-red-300 hover:border-red-500/30"
             >
-              <span className="mr-2 group-hover:text-red-400 transition-all duration-300">
+              <span className="mr-2 sm:mr-2 group-hover:text-red-400 transition-all duration-300 flex-shrink-0">
                 <LogOut
                   size={16}
-                  className="rotate-180 group-hover:scale-110 transition-transform duration-300"
+                  className="sm:w-4 sm:h-4 rotate-180 group-hover:scale-110 transition-transform duration-300"
                 />
               </span>
-              <span className="font-medium text-sm">Logout</span>
+              <span className="font-medium text-sm sm:text-sm truncate">
+                Logout
+              </span>
             </button>
           </div>
         </div>
-      </div>
+      </aside>
       {/* Confirmation Modals */}
       <ConfirmationModal
         isOpen={showLeaveOrgConfirm}

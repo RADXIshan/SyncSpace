@@ -835,15 +835,14 @@ const TeamChat = ({ channelId, channelName }) => {
                       )}
 
                       {/* Reactions */}
-                      <div
-                        className={`mt-1 ${isOwnMessage ? "text-right" : ""}`}
-                      >
+                      <div className="mt-1">
                         <MessageReactions
                           reactions={message.reactions || []}
                           onReactionClick={(emoji) =>
                             handleReaction(message.message_id, emoji)
                           }
                           currentUserId={user.user_id}
+                          isOwnMessage={isOwnMessage}
                         />
                       </div>
                     </div>

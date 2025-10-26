@@ -168,7 +168,7 @@ const LandingFeatures = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={() => (window.location.href = "/signup")}
-                  className="glass-button px-8 py-4 text-white font-semibold rounded-2xl flex items-center justify-center gap-2 group"
+                  className="glass-button px-8 py-4 text-white font-semibold rounded-2xl flex items-center justify-center gap-2 group cursor-pointer"
                 >
                   Start Collaborating
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

@@ -111,7 +111,7 @@ const LandingPricing = () => {
           <div className="inline-flex items-center gap-4 p-2 glass rounded-2xl">
             <button
               onClick={() => setIsAnnual(false)}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 cursor-pointer ${
                 !isAnnual
                   ? "glass-button text-white"
                   : "text-white/70 hover:text-white"
@@ -121,7 +121,7 @@ const LandingPricing = () => {
             </button>
             <button
               onClick={() => setIsAnnual(true)}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 relative ${
+              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 relative cursor-pointer ${
                 isAnnual
                   ? "glass-button text-white"
                   : "text-white/70 hover:text-white"
@@ -211,7 +211,7 @@ const LandingPricing = () => {
                       window.location.href = "/signup";
                     }
                   }}
-                  className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 group ${
+                  className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer ${
                     plan.popular
                       ? "glass-button text-white"
                       : "glass text-white/90 hover:text-white"

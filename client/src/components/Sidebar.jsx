@@ -395,7 +395,7 @@ const Sidebar = ({
                       >
                         <Settings
                           size={16}
-                          className="group-hover:rotate-90 group-hover:scale-120 transition-transform duration-300"
+                          className="group-hover:rotate-180 group-hover:scale-120 transition-transform duration-300"
                         />
                       </button>
                     )}
@@ -453,7 +453,7 @@ const Sidebar = ({
                     to={`/home/channels/${channel.id}`}
                     className={`flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 font-medium group ${
                       isActive(`/home/channels/${channel.id}`)
-                        ? "glass-button-enhanced text-white shadow-lg"
+                        ? "glass-button-enhanced text-purple-400 shadow-lg"
                         : "text-white/70 hover:text-white hover:bg-white/5"
                     }`}
                     title={channel.description || channel.name}
@@ -461,8 +461,8 @@ const Sidebar = ({
                     <span
                       className={`mr-3 transition-colors duration-200 ${
                         isActive(`/home/channels/${channel.id}`)
-                          ? "text-white"
-                          : "text-white/60 group-hover:text-purple-400"
+                          ? "text-purple-400"
+                          : "text-white/60"
                       }`}
                     >
                       <Hash

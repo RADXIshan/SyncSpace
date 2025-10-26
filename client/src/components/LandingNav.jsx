@@ -78,7 +78,7 @@ const LandingNav = () => {
               <button
                 key={item.name}
                 onClick={() => scrollToSection(item.href)}
-                className="px-4 py-2 text-white/80 hover:text-white font-medium transition-all duration-300 hover:scale-105 rounded-lg hover:bg-white/10"
+                className="px-4 py-2 text-white/80 hover:text-white font-medium transition-all duration-300 hover:scale-105 rounded-lg hover:bg-white/10 cursor-pointer"
               >
                 {item.name}
               </button>
@@ -89,13 +89,13 @@ const LandingNav = () => {
           <div className="hidden sm:flex items-center gap-3">
             <button
               onClick={() => (window.location.href = "/login")}
-              className="glass px-6 py-2 text-white/90 font-semibold rounded-xl hover:text-white transition-colors duration-300"
+              className="glass px-6 py-2 text-white/90 font-semibold rounded-xl hover:text-white transition-colors duration-300 cursor-pointer"
             >
               Login
             </button>
             <button
               onClick={() => (window.location.href = "/signup")}
-              className="glass-button px-6 py-2 text-white font-semibold rounded-xl flex items-center gap-2 group"
+              className="glass-button px-6 py-2 text-white font-semibold rounded-xl flex items-center gap-2 group cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
               Sign Up

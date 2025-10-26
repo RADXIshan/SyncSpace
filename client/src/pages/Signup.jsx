@@ -377,7 +377,7 @@ const Signup = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               disabled={loading || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
             >
               {loading ? "Creating Account..." : (

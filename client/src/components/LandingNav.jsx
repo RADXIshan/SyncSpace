@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X, ArrowRight, Brain, Sparkles } from "lucide-react";
+import { Menu, X, ArrowRight, Sparkles } from "lucide-react";
 
 const LandingNav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,12 +51,16 @@ const LandingNav = () => {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
             <div
-              className={`bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center pulse-glow group-hover:scale-110 transition-transform duration-300 ${
+              className={`rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${
                 isScrolled ? "w-10 h-10" : "w-12 h-12"
               }`}
             >
-              <Brain
-                className={`text-white ${isScrolled ? "w-6 h-6" : "w-7 h-7"}`}
+              <img
+                src="/icon.png"
+                alt="SyncSpace Logo"
+                className={`${
+                  isScrolled ? "w-10 h-10" : "w-12 h-12"
+                } rounded-2xl`}
               />
             </div>
             <h1

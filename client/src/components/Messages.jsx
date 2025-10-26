@@ -154,40 +154,40 @@ const Messages = () => {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-b from-gray-50 via-white to-gray-100 text-gray-800 min-h-screen">
+    <div className="p-3 sm:p-6 bg-gradient-to-b from-gray-50 via-white to-gray-100 text-gray-800 min-h-screen pt-16 sm:pt-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between py-6 px-7">
-          <div>
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 sm:py-6 px-3 sm:px-7 gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">
               Messages
             </h1>
-            <p className="text-gray-600 mt-2">Stay connected with your team</p>
+            <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Stay connected with your team</p>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 sm:w-5 sm:h-5" />
               <input
                 type="text"
                 placeholder="Search conversations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-80 bg-white/70 border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 shadow-sm"
+                className="pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 w-full sm:w-64 lg:w-80 bg-white/70 border border-gray-300/50 rounded-lg sm:rounded-xl text-sm sm:text-base text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 shadow-sm"
               />
             </div>
           </div>
         </div>
 
         {/* Messages Container */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 overflow-hidden shadow-xl">
-          <div className="p-6">
+        <div className="bg-white/80 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-gray-200/50 overflow-hidden shadow-xl">
+          <div className="p-3 sm:p-6">
             {/* Messages List */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {filteredMessages.length === 0 ? (
-                <div className="text-center py-12">
-                  <MessageCircle size={48} className="mx-auto mb-4 text-gray-400 opacity-50" />
-                  <p className="text-gray-600">
+                <div className="text-center py-8 sm:py-12">
+                  <MessageCircle size={40} className="mx-auto mb-3 sm:mb-4 text-gray-400 opacity-50 sm:w-12 sm:h-12" />
+                  <p className="text-gray-600 text-sm sm:text-base">
                     {searchQuery ? 'No messages found matching your search.' : 'No messages yet.'}
                   </p>
                 </div>
@@ -197,14 +197,14 @@ const Messages = () => {
                   return (
                     <div
                       key={message.id}
-                      className={`flex items-center p-4 rounded-xl transition-all duration-200 cursor-pointer hover:bg-gray-100/60 border border-transparent hover:border-violet-500/30 ${
+                      className={`flex items-center p-3 sm:p-4 rounded-lg sm:rounded-xl transition-all duration-200 cursor-pointer hover:bg-gray-100/60 border border-transparent hover:border-violet-500/30 ${
                         message.unreadCount > 0 ? 'bg-violet-100/80 border-violet-300/30' : ''
                       }`}
                       onClick={() => setSelectedMessage(message)}
                     >
                       {/* Avatar */}
                       <div className="relative flex-shrink-0">
-                        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden text-sm sm:text-base">
                           {message.avatar ? (
                             <img
                               src={message.avatar}
@@ -217,40 +217,40 @@ const Messages = () => {
                         </div>
                         {/* Online status */}
                         {message.isOnline && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-white rounded-full"></div>
                         )}
                       </div>
 
                       {/* Message Content */}
-                      <div className="flex-1 ml-4 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-800 truncate">
+                      <div className="flex-1 ml-3 sm:ml-4 min-w-0">
+                        <div className="flex items-start sm:items-center justify-between mb-1 gap-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-800 truncate text-sm sm:text-base">
                               {message.name}
                             </h3>
-                            <span className={`px-2 py-0.5 rounded-md text-xs font-medium border ${roleStyle.background} ${roleStyle.border} ${roleStyle.text}`}>
+                            <span className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-medium border ${roleStyle.background} ${roleStyle.border} ${roleStyle.text} whitespace-nowrap`}>
                               {message.role}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-gray-500 text-sm">
+                          <div className="flex items-center gap-1 sm:gap-2 text-gray-500 text-xs sm:text-sm flex-shrink-0">
                             {getStatusIcon(message.status)}
-                            <span>{message.timestamp}</span>
+                            <span className="hidden sm:inline">{message.timestamp}</span>
                           </div>
                         </div>
                         
-                        <div className="flex items-center justify-between">
-                          <p className="text-gray-600 text-sm truncate max-w-[400px]">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-gray-600 text-xs sm:text-sm truncate flex-1">
                             {message.lastMessage}
                           </p>
                           
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                             {message.unreadCount > 0 && (
-                              <div className="flex items-center justify-center w-6 h-6 bg-violet-600 text-white text-xs font-bold rounded-full">
+                              <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 bg-violet-600 text-white text-[10px] sm:text-xs font-bold rounded-full">
                                 {message.unreadCount}
                               </div>
                             )}
-                            <button className="text-gray-500 hover:text-gray-700 transition-colors">
-                              <MoreVertical size={16} />
+                            <button className="text-gray-500 hover:text-gray-700 transition-colors p-1">
+                              <MoreVertical size={14} className="sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </div>
@@ -264,22 +264,22 @@ const Messages = () => {
         </div>
 
         {/* Stats */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white/60 backdrop-blur-xl rounded-xl border border-gray-200/40 p-4 shadow-lg">
-            <h3 className="font-semibold text-gray-800 mb-2">Total Conversations</h3>
-            <p className="text-2xl font-bold text-violet-600">{messages.length}</p>
+        <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+          <div className="bg-white/60 backdrop-blur-xl rounded-lg sm:rounded-xl border border-gray-200/40 p-3 sm:p-4 shadow-lg">
+            <h3 className="font-semibold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">Total Conversations</h3>
+            <p className="text-xl sm:text-2xl font-bold text-violet-600">{messages.length}</p>
           </div>
           
-          <div className="bg-white/60 backdrop-blur-xl rounded-xl border border-gray-200/40 p-4 shadow-lg">
-            <h3 className="font-semibold text-gray-800 mb-2">Unread Messages</h3>
-            <p className="text-2xl font-bold text-blue-600">
+          <div className="bg-white/60 backdrop-blur-xl rounded-lg sm:rounded-xl border border-gray-200/40 p-3 sm:p-4 shadow-lg">
+            <h3 className="font-semibold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">Unread Messages</h3>
+            <p className="text-xl sm:text-2xl font-bold text-blue-600">
               {messages.reduce((total, msg) => total + msg.unreadCount, 0)}
             </p>
           </div>
           
-          <div className="bg-white/60 backdrop-blur-xl rounded-xl border border-gray-200/40 p-4 shadow-lg">
-            <h3 className="font-semibold text-gray-800 mb-2">Online Members</h3>
-            <p className="text-2xl font-bold text-green-600">
+          <div className="bg-white/60 backdrop-blur-xl rounded-lg sm:rounded-xl border border-gray-200/40 p-3 sm:p-4 shadow-lg">
+            <h3 className="font-semibold text-gray-800 mb-1 sm:mb-2 text-sm sm:text-base">Online Members</h3>
+            <p className="text-xl sm:text-2xl font-bold text-green-600">
               {messages.filter(msg => msg.isOnline).length}
             </p>
           </div>

@@ -291,12 +291,7 @@ const TeamChat = ({ channelId, channelName }) => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Auto-scroll when someone starts typing
-  useEffect(() => {
-    if (typingUsers.length > 0) {
-      scrollToBottom();
-    }
-  }, [typingUsers, scrollToBottom]);
+
 
   // Cleanup typing timeout on unmount or channel change
   useEffect(() => {
@@ -1378,9 +1373,6 @@ const TeamChat = ({ channelId, channelName }) => {
           );
         })}
 
-        {/* Typing indicator */}
-        {typingUsers.length > 0 && <TypingIndicator users={typingUsers} />}
-
         <div ref={messagesEndRef} />
       </div>
 
@@ -1437,7 +1429,14 @@ const TeamChat = ({ channelId, channelName }) => {
       )}
 
       {/* Message Input */}
-      <div className="border-t border-gray-200 bg-white p-3 sm:p-6 shadow-lg">
+      <div className="border-t border-gray-200 bg-white p-3 sm:p-6 shadow-lg relative">
+        {/* Typing indicator - positioned above input */}
+        {typingUsers.length > 0 && (
+          <div className="absolute bottom-full left-0 right-0 mb-2 px-3 sm:px-6">
+            <TypingIndicator users={typingUsers} />
+          </div>
+        )}
+        
         <form onSubmit={sendMessage} className="relative">
           {/* Mentions dropdown - positioned above input */}
           {showMentions && (

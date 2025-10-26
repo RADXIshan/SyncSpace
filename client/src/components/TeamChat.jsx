@@ -89,13 +89,20 @@ const TeamChat = ({ channelId, channelName }) => {
 
   // Socket event handlers
   useEffect(() => {
-    if (!socket || !isConnected || !channelId) return;
+    console.log("🔌 Socket effect running:", { socket: !!socket, isConnected, channelId });
+    
+    if (!socket || !isConnected || !channelId) {
+      console.log("❌ Socket not ready:", { socket: !!socket, isConnected, channelId });
+      return;
+    }
 
+    console.log("✅ Joining channel:", channelId);
     // Join channel room
     socket.emit("join_channel", channelId);
 
     // Listen for new messages
     const handleNewMessage = (message) => {
+      console.log("📨 New message received:", message);
       setMessages((prev) => [...prev, { ...message, isNew: true }]);
       scrollToBottom();
 
@@ -127,6 +134,7 @@ const TeamChat = ({ channelId, channelName }) => {
 
     // Listen for typing indicators
     const handleUserTyping = (data) => {
+      console.log("⌨️ User typing:", data);
       if (data.userId !== user.user_id) {
         setTypingUsers((prev) => {
           const existing = prev.find((u) => u.userId === data.userId);
@@ -139,6 +147,7 @@ const TeamChat = ({ channelId, channelName }) => {
     };
 
     const handleUserStoppedTyping = (data) => {
+      console.log("⌨️ User stopped typing:", data);
       setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
     };
 
@@ -245,6 +254,7 @@ const TeamChat = ({ channelId, channelName }) => {
   // Handle typing indicators
   const handleTypingStart = useCallback(() => {
     if (socket && isConnected) {
+      console.log("⌨️ Emitting typing_start:", { channelId, userName: user.name });
       socket.emit("typing_start", {
         channelId,
         userName: user.name,
@@ -254,6 +264,7 @@ const TeamChat = ({ channelId, channelName }) => {
 
   const handleTypingStop = useCallback(() => {
     if (socket && isConnected) {
+      console.log("⌨️ Emitting typing_stop:", { channelId });
       socket.emit("typing_stop", { channelId });
     }
   }, [socket, isConnected, channelId]);
@@ -263,10 +274,10 @@ const TeamChat = ({ channelId, channelName }) => {
     const value = e.target.value;
     setNewMessage(value);
 
-    // Handle mentions - support multi-word names
+    // Handle mentions - stop at first space
     const cursorPosition = e.target.selectionStart;
     const textBeforeCursor = value.substring(0, cursorPosition);
-    const mentionMatch = textBeforeCursor.match(/@([a-zA-Z0-9_\s]*)$/);
+    const mentionMatch = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
 
     if (mentionMatch) {
       const query = mentionMatch[1];

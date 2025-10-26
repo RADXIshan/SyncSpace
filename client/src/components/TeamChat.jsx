@@ -687,8 +687,12 @@ const TeamChat = ({ channelId, channelName }) => {
 
     try {
       // Try using our backend proxy first for better compatibility
-      const proxyUrl = `${import.meta.env.VITE_BASE_URL}/api/files/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(safeFileName)}`;
-      
+      const proxyUrl = `${
+        import.meta.env.VITE_BASE_URL
+      }/api/files/download?url=${encodeURIComponent(
+        fileUrl
+      )}&filename=${encodeURIComponent(safeFileName)}`;
+
       const response = await fetch(proxyUrl, {
         method: "GET",
         credentials: "include",
@@ -723,7 +727,10 @@ const TeamChat = ({ channelId, channelName }) => {
 
       safeToast.success(`${safeFileName} downloaded successfully!`);
     } catch (error) {
-      console.error("Error downloading via proxy, trying direct download:", error);
+      console.error(
+        "Error downloading via proxy, trying direct download:",
+        error
+      );
 
       try {
         // Fallback: try direct download
@@ -736,7 +743,9 @@ const TeamChat = ({ channelId, channelName }) => {
         });
 
         if (!response.ok) {
-          throw new Error(`Direct download failed with status: ${response.status}`);
+          throw new Error(
+            `Direct download failed with status: ${response.status}`
+          );
         }
 
         const blob = await response.blob();

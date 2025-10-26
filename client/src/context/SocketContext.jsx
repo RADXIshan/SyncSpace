@@ -2,8 +2,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
-import axios from 'axios';
-
 const SocketContext = createContext();
 
 export const useSocket = () => {
@@ -18,77 +16,14 @@ export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [useHttpFallback, setUseHttpFallback] = useState(false);
   const { user } = useAuth();
 
   // Get server URL helper function
   const getServerUrl = () => {
-    let serverUrl = import.meta.env.VITE_BASE_URL;
-    
-    if (!serverUrl) {
-      // Fallback logic for production
-      if (import.meta.env.PROD) {
-        // In production, try to use the same domain as the frontend
-        serverUrl = window.location.origin.replace(/:\d+$/, '') + ':3000';
-      } else {
-        serverUrl = 'http://localhost:3000';
-      }
-    }
-    
-    return serverUrl;
+    return import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
   };
 
-  // HTTP fallback functions for when Socket.IO doesn't work
-  const httpSetUserOnline = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token || !user) return;
 
-      const serverUrl = getServerUrl();
-      await axios.post(`${serverUrl}/api/users/online`, {
-        org_id: user.org_id,
-        photo: user.photo || user.user_photo
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
-      });
-    } catch (error) {
-      console.error('HTTP fallback: Failed to set user online:', error);
-    }
-  };
-
-  const httpGetOnlineUsers = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return [];
-
-      const serverUrl = getServerUrl();
-      const response = await axios.get(`${serverUrl}/api/users/online`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
-      });
-      
-      return response.data.onlineUsers || [];
-    } catch (error) {
-      console.error('HTTP fallback: Failed to get online users:', error);
-      return [];
-    }
-  };
-
-  const httpSetUserOffline = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const serverUrl = getServerUrl();
-      await axios.delete(`${serverUrl}/api/users/online`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
-      });
-    } catch (error) {
-      console.error('HTTP fallback: Failed to set user offline:', error);
-    }
-  };
 
   useEffect(() => {
     // Cleanup existing socket first
@@ -111,27 +46,18 @@ export const SocketProvider = ({ children }) => {
         
         // Get server URL
         const serverUrl = getServerUrl();
-        // Check if we're connecting to Vercel (which doesn't support WebSockets)
-        const isVercelDeployment = serverUrl.includes('vercel.app');
         
-        // Reduced logging for cleaner console
-        
-        // Initialize socket connection with appropriate configuration
+        // Initialize socket connection
         const newSocket = io(serverUrl, {
           auth: {
             token: token
           },
           autoConnect: true,
-          // Use polling only for Vercel, websocket + polling for other platforms
-          transports: isVercelDeployment ? ['polling'] : ['websocket', 'polling'],
-          upgrade: !isVercelDeployment, // Don't try to upgrade on Vercel
-          rememberUpgrade: !isVercelDeployment,
+          transports: ['websocket', 'polling'],
           timeout: 20000,
-          forceNew: false,
           reconnection: true,
           reconnectionDelay: 1000,
-          reconnectionAttempts: 5,
-          maxReconnectionAttempts: 5
+          reconnectionAttempts: 5
         });
 
         // Connection event handlers
@@ -163,14 +89,7 @@ export const SocketProvider = ({ children }) => {
 
         newSocket.on('connect_error', (error) => {
           setIsConnected(false);
-          
-          // Switch to HTTP fallback after connection failures
-          if (error.message.includes('websocket error') || 
-              error.message.includes('polling error') ||
-              error.message.includes('xhr poll error') ||
-              error.message.includes('Transport unknown')) {
-            setUseHttpFallback(true);
-          }
+          console.error('Socket connection error:', error);
         });
 
         // Listen for online users list
@@ -215,22 +134,8 @@ export const SocketProvider = ({ children }) => {
 
         setSocket(newSocket);
 
-        // Set a timeout to switch to HTTP fallback if connection fails
-        const connectionTimeout = setTimeout(() => {
-          if (!newSocket.connected) {
-            console.warn('🔄 Socket.IO connection timeout, switching to HTTP fallback');
-            setUseHttpFallback(true);
-          }
-        }, 10000); // 10 second timeout
-
-        // Clear timeout on successful connection
-        newSocket.on('connect', () => {
-          clearTimeout(connectionTimeout);
-        });
-
         // Cleanup on unmount
         return () => {
-          clearTimeout(connectionTimeout);
           newSocket.close();
         };
       }
@@ -252,41 +157,7 @@ export const SocketProvider = ({ children }) => {
     }
   }, [socket, user?.org_id]);
 
-  // HTTP fallback polling when Socket.IO fails
-  useEffect(() => {
-    if (!useHttpFallback || !user) return;
 
-    // Set user as online initially and get current online users
-    const initializeFallback = async () => {
-      await httpSetUserOnline();
-      const users = await httpGetOnlineUsers();
-      setOnlineUsers(users);
-    };
-    
-    initializeFallback();
-    
-    // Poll for online users every 30 seconds
-    const pollInterval = setInterval(async () => {
-      const users = await httpGetOnlineUsers();
-      setOnlineUsers(users);
-      
-      // Send heartbeat to stay online
-      await httpSetUserOnline();
-    }, 30000);
-
-    // Set user offline when component unmounts
-    const handleBeforeUnload = () => {
-      httpSetUserOffline();
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      clearInterval(pollInterval);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      httpSetUserOffline();
-    };
-  }, [useHttpFallback, user]);
 
   const updateUserStatus = (status, customStatus = null) => {
     if (socket) {
@@ -342,26 +213,19 @@ export const SocketProvider = ({ children }) => {
     return user ? user.status || 'online' : 'offline';
   };
 
-  const refreshOnlineUsers = async () => {
-    if (useHttpFallback) {
-      const users = await httpGetOnlineUsers();
-      setOnlineUsers(users);
-    }
-  };
+
 
   const value = {
     socket,
     onlineUsers,
-    isConnected: isConnected || useHttpFallback,
+    isConnected,
     updateUserStatus,
     joinChannel,
     leaveChannel,
     startTyping,
     stopTyping,
     isUserOnline,
-    getUserStatus,
-    useHttpFallback,
-    refreshOnlineUsers
+    getUserStatus
   };
 
   return (

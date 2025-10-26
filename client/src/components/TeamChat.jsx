@@ -198,15 +198,6 @@ const TeamChat = ({ channelId, channelName }) => {
     }
   }, [channelId, user?.org_id]);
 
-  // Debug state changes
-  useEffect(() => {
-    console.log("🔄 Mentions state:", {
-      showMentions,
-      query: mentionQuery,
-      membersCount: channelMembers.length,
-    });
-  }, [showMentions, mentionQuery, channelMembers.length]);
-
   // Handle click outside for emoji picker
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -279,10 +270,6 @@ const TeamChat = ({ channelId, channelName }) => {
 
     if (mentionMatch) {
       const query = mentionMatch[1];
-      console.log("🎯 Mention triggered:", {
-        query,
-        membersCount: channelMembers.length,
-      });
       setShowMentions(true);
       setMentionQuery(query);
       setMentionPosition(cursorPosition);
@@ -984,23 +971,6 @@ const TeamChat = ({ channelId, channelName }) => {
                 >
                   <Paperclip size={20} />
                 </button>
-
-                {/* Debug button for mentions */}
-                {process.env.NODE_ENV === "development" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      console.log("🔍 Debug: Force showing mentions");
-                      console.log("Members:", channelMembers);
-                      setShowMentions(true);
-                      setMentionQuery("");
-                    }}
-                    className="p-2 hover:bg-blue-100 rounded-xl text-gray-600 hover:text-blue-600 transition-all duration-200 text-xs"
-                    title="Test mentions"
-                  >
-                    @
-                  </button>
-                )}
 
                 <input
                   ref={fileInputRef}

@@ -237,9 +237,17 @@ export const getMeeting = async (req, res) => {
       });
     }
 
+    // Check if user has meeting access permission
+    const hasAccess = await checkMeetingAccess(userId, meeting.org_id);
+    const isCreator = meeting.created_by === userId;
+
     res.status(200).json({
       message: "Meeting retrieved successfully",
       meeting,
+      userPermissions: {
+        canStart: hasAccess || isCreator,
+        isCreator: isCreator
+      }
     });
   } catch (error) {
     console.error("Error retrieving meeting:", error);

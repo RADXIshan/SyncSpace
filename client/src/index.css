@@ -235,6 +235,16 @@
   border: none !important;
 }
 
+/* Prevent events from stretching across full day width */
+.fc-daygrid-event {
+  max-width: fit-content !important;
+  width: auto !important;
+}
+
+.fc-daygrid-event-harness {
+  max-width: 100% !important;
+}
+
 @media (max-width: 768px) {
   .fc-button-primary {
     padding: 0.5rem !important;
@@ -396,6 +406,12 @@
   background: #7c3aed !important;
   color: #fff !important;
   border: 1px solid #6d28d9;
+}
+
+.react-datepicker__portal .react-datepicker__day-name,
+.react-datepicker__portal .react-datepicker__day,
+.react-datepicker__portal .react-datepicker__time-name {
+  width: 2rem !important;
 }
 
 /* Popper & arrow */

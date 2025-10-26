@@ -1,6 +1,5 @@
-import formpage from "../assets/formpage.jpg";
 import { useState } from "react";
-import { Eye, EyeOff, Check, X, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Check, X, AlertCircle, ArrowRight, Sparkles, UserPlus } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -134,47 +133,78 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-indigo-200 via-violet-200 to-blue-100 relative overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-bl from-indigo-200/30 via-violet-200/20 to-blue-200/40 animate-pulse"></div>
-      <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-transparent via-white/20 to-indigo-100/30"></div>
-      <div className="hidden md:flex w-[55%] h-full items-center justify-center overflow-hidden p-6 relative z-10">
-        <div className="relative w-full h-full">
-          <img
-            src={formpage}
-            alt="Signup Illustration"
-            className="w-full h-full object-cover rounded-3xl shadow-2xl"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent rounded-3xl"></div>
-          <div className="absolute bottom-8 left-8 right-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Join the Future</h2>
-            <p className="text-gray-600">Create your account and start collaborating with your team today</p>
+    <div className="min-h-screen cosmic-bg relative overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/3 to-blue-500/3 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Navigation */}
+      <div className="absolute top-0 left-0 w-full z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
+            {/* Brand */}
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => window.location.href = "/"}
+            >
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <img
+                  src="/icon.png"
+                  alt="SyncSpace Logo"
+                  className="w-10 h-10 rounded-2xl"
+                />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight gradient-text-purple">
+                SyncSpace
+              </h1>
+            </div>
+
+            {/* Sign in link */}
+            <Link
+              to="/login"
+              className="glass px-4 py-2 text-white/90 font-medium rounded-xl hover:text-white transition-colors duration-300"
+            >
+              Sign In
+            </Link>
           </div>
         </div>
       </div>
-      <div className="w-full md:w-[45%] flex items-center justify-center p-8 relative z-10">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 mb-2">Join SyncSpace</h1>
-            <p className="text-gray-600">Create your account to get started</p>
-          </div>
-          <form className="bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 p-8 shadow-xl animate-fadeIn" onSubmit={handleSubmit}>
-            <h2 className="text-2xl font-bold mb-8 text-center text-gray-800">Create Account</h2>
 
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 glass rounded-full px-6 py-3 text-sm font-medium text-white/90 mb-6">
+            <UserPlus className="w-4 h-4 text-purple-400" />
+            Join the Revolution
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+            Create Your
+            <span className="block gradient-text-purple">SyncSpace</span>
+          </h1>
+          <p className="text-lg text-white/80 leading-relaxed">
+            Start collaborating with your team in minutes. Join thousands of teams already using SyncSpace.
+          </p>
+        </div>
+
+        <form className="glass rounded-3xl p-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-6">
             {/* Name Field */}
-            <div className="mb-6">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">Full Name</label>
               <div className="relative">
                 <input
                   type="text"
                   id="name"
                   name="name"
                   placeholder="Enter your full name"
-                  className={`w-full px-4 py-3 bg-gray-50/50 border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 transition-all duration-200 pr-10 ${
+                  className={`w-full px-4 py-3 glass-dark rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200 pr-10 ${
                     validation.name.touched
                       ? validation.name.isValid
-                        ? "border-green-500 focus:border-green-500 focus:ring-green-500"
-                        : "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        ? "border-green-500/50 focus:border-green-500 focus:ring-green-500"
+                        : "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                       : ""
                   }`}
                   value={formData.name}
@@ -183,16 +213,16 @@ const Signup = () => {
                 {validation.name.touched && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     {validation.name.isValid ? (
-                      <Check size={20} className="text-green-500" />
+                      <Check size={20} className="text-green-400" />
                     ) : (
-                      <X size={20} className="text-red-500" />
+                      <X size={20} className="text-red-400" />
                     )}
                   </div>
                 )}
               </div>
               {validation.name.touched && (
                 <div className={`flex items-center mt-2 text-sm ${
-                  validation.name.isValid ? "text-green-600" : "text-red-600"
+                  validation.name.isValid ? "text-green-400" : "text-red-400"
                 }`}>
                   <AlertCircle size={16} className="mr-1" />
                   {validation.name.message}
@@ -201,19 +231,19 @@ const Signup = () => {
             </div>
 
             {/* Email Field */}
-            <div className="mb-6">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">Email Address</label>
               <div className="relative">
                 <input
                   type="email"
                   id="email"
                   name="email"
                   placeholder="Enter your email"
-                  className={`w-full px-4 py-3 bg-gray-50/50 border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 transition-all duration-200 pr-10 ${
+                  className={`w-full px-4 py-3 glass-dark rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200 pr-10 ${
                     validation.email.touched
                       ? validation.email.isValid
-                        ? "border-green-500 focus:border-green-500 focus:ring-green-500"
-                        : "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        ? "border-green-500/50 focus:border-green-500 focus:ring-green-500"
+                        : "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                       : ""
                   }`}
                   value={formData.email}
@@ -222,16 +252,16 @@ const Signup = () => {
                 {validation.email.touched && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     {validation.email.isValid ? (
-                      <Check size={20} className="text-green-500" />
+                      <Check size={20} className="text-green-400" />
                     ) : (
-                      <X size={20} className="text-red-500" />
+                      <X size={20} className="text-red-400" />
                     )}
                   </div>
                 )}
               </div>
               {validation.email.touched && (
-                <div className={`flex items-center mt-1 text-sm ${
-                  validation.email.isValid ? "text-green-600" : "text-red-600"
+                <div className={`flex items-center mt-2 text-sm ${
+                  validation.email.isValid ? "text-green-400" : "text-red-400"
                 }`}>
                   <AlertCircle size={16} className="mr-1" />
                   {validation.email.message}
@@ -240,19 +270,19 @@ const Signup = () => {
             </div>
 
             {/* Password Field */}
-            <div className="mb-6">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "password" : "text"}
                   id="password"
                   name="password"
                   placeholder="Enter your password"
-                  className={`w-full px-4 py-3 bg-gray-50/50 border border-gray-300/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 transition-all duration-200 pr-20 ${
+                  className={`w-full px-4 py-3 glass-dark rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200 pr-20 ${
                     validation.password.touched
                       ? validation.password.isValid
-                        ? "border-green-500 focus:border-green-500 focus:ring-green-500"
-                        : "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        ? "border-green-500/50 focus:border-green-500 focus:ring-green-500"
+                        : "border-red-500/50 focus:border-red-500 focus:ring-red-500"
                       : ""
                   }`}
                   value={formData.password}
@@ -261,14 +291,14 @@ const Signup = () => {
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
                   {validation.password.touched && (
                     validation.password.isValid ? (
-                      <Check size={20} className="text-green-500" />
+                      <Check size={20} className="text-green-400" />
                     ) : (
-                      <X size={20} className="text-red-500" />
+                      <X size={20} className="text-red-400" />
                     )
                   )}
                   <button
                     type="button"
-                    className="text-gray-500 hover:text-gray-700 transition-colors"
+                    className="text-white/60 hover:text-white transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -276,8 +306,8 @@ const Signup = () => {
                 </div>
               </div>
               {validation.password.touched && (
-                <div className={`flex items-center mt-1 text-sm ${
-                  validation.password.isValid ? "text-green-600" : "text-red-600"
+                <div className={`flex items-center mt-2 text-sm ${
+                  validation.password.isValid ? "text-green-400" : "text-red-400"
                 }`}>
                   <AlertCircle size={16} className="mr-1" />
                   {validation.password.message}
@@ -286,11 +316,11 @@ const Signup = () => {
               
               {/* Password Requirements */}
               {validation.password.touched && validation.password.requirements && (
-                <div className="mt-3 p-3 bg-gray-100/80 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Password Requirements:</p>
+                <div className="mt-3 glass-dark rounded-lg p-3">
+                  <p className="text-sm font-medium text-white/90 mb-2">Password Requirements:</p>
                   <div className="grid grid-cols-1 gap-1 text-xs">
                     <div className={`flex items-center ${
-                      validation.password.requirements.length ? "text-green-600" : "text-gray-500"
+                      validation.password.requirements.length ? "text-green-400" : "text-white/60"
                     }`}>
                       {validation.password.requirements.length ? (
                         <Check size={14} className="mr-1" />
@@ -300,7 +330,7 @@ const Signup = () => {
                       At least 8 characters
                     </div>
                     <div className={`flex items-center ${
-                      validation.password.requirements.uppercase ? "text-green-600" : "text-gray-500"
+                      validation.password.requirements.uppercase ? "text-green-400" : "text-white/60"
                     }`}>
                       {validation.password.requirements.uppercase ? (
                         <Check size={14} className="mr-1" />
@@ -310,7 +340,7 @@ const Signup = () => {
                       One uppercase letter (A-Z)
                     </div>
                     <div className={`flex items-center ${
-                      validation.password.requirements.lowercase ? "text-green-600" : "text-gray-500"
+                      validation.password.requirements.lowercase ? "text-green-400" : "text-white/60"
                     }`}>
                       {validation.password.requirements.lowercase ? (
                         <Check size={14} className="mr-1" />
@@ -320,7 +350,7 @@ const Signup = () => {
                       One lowercase letter (a-z)
                     </div>
                     <div className={`flex items-center ${
-                      validation.password.requirements.number ? "text-green-600" : "text-gray-500"
+                      validation.password.requirements.number ? "text-green-400" : "text-white/60"
                     }`}>
                       {validation.password.requirements.number ? (
                         <Check size={14} className="mr-1" />
@@ -330,7 +360,7 @@ const Signup = () => {
                       One number (0-9)
                     </div>
                     <div className={`flex items-center ${
-                      validation.password.requirements.special ? "text-green-600" : "text-gray-500"
+                      validation.password.requirements.special ? "text-green-400" : "text-white/60"
                     }`}>
                       {validation.password.requirements.special ? (
                         <Check size={14} className="mr-1" />
@@ -345,27 +375,33 @@ const Signup = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="mb-6">
-              <button
-                type="submit"
-                className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer"
-                disabled={loading || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
-              >
-                {loading ? "Creating Account..." : "Create Account"}
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={loading || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
+            >
+              {loading ? "Creating Account..." : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  Create Account
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </div>
 
-            <p className="text-center text-gray-600">
+          <div className="mt-8 text-center">
+            <p className="text-white/70">
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-violet-600 hover:text-violet-700 font-semibold transition-colors duration-200 hover:underline"
+                className="text-purple-400 hover:text-purple-300 font-semibold transition-colors duration-200 hover:underline"
               >
                 Sign in
               </Link>
             </p>
+          </div>
           </form>
-        </div>
       </div>
     </div>
   );

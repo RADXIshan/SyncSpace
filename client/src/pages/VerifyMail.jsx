@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
+import { Mail, ArrowRight, RefreshCw } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -101,20 +102,67 @@ const VerifyMail = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-200 to-purple-200">
-      <div className="w-full md:w-[45%] flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <form
-          className="bg-white rounded-3xl shadow-lg p-6 sm:p-8 w-full max-w-xs sm:max-w-sm md:max-w-md"
-          onSubmit={handleSubmit}
-        >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-center text-secondary">
-            Verify Email
-          </h2>
-          <p className="mb-6 text-center text-gray-600">
-            Enter the 6‑digit code we've sent to your email
-          </p>
+    <div className="min-h-screen cosmic-bg relative overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/3 to-blue-500/3 rounded-full blur-3xl"></div>
+      </div>
 
-          <div className="flex justify-center gap-2 sm:gap-3 md:gap-2 mb-8">
+      {/* Navigation */}
+      <div className="absolute top-0 left-0 w-full z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
+            {/* Brand */}
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => window.location.href = "/"}
+            >
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <img
+                  src="/icon.png"
+                  alt="SyncSpace Logo"
+                  className="w-10 h-10 rounded-2xl"
+                />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight gradient-text-purple">
+                SyncSpace
+              </h1>
+            </div>
+
+            {/* Back to signup */}
+            <Link
+              to="/signup"
+              className="glass px-4 py-2 text-white/90 font-medium rounded-xl hover:text-white transition-colors duration-300"
+            >
+              Back to Signup
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 glass rounded-full px-6 py-3 text-sm font-medium text-white/90 mb-6">
+            <Mail className="w-4 h-4 text-purple-400" />
+            Email Verification
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+            Verify Your
+            <span className="block gradient-text-purple">Email</span>
+          </h1>
+          <p className="text-lg text-white/80 leading-relaxed">
+            Enter the 6-digit code we've sent to your email address
+          </p>
+          {email && (
+            <p className="text-sm text-purple-300 mt-2 font-medium">{email}</p>
+          )}
+        </div>
+
+        <form className="glass rounded-3xl p-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="flex justify-center gap-3 mb-8">
             {otp.map((digit, idx) => (
               <input
                 key={idx}
@@ -125,7 +173,7 @@ const VerifyMail = () => {
                 onChange={(e) => handleChange(e, idx)}
                 onKeyDown={(e) => handleKeyDown(e, idx)}
                 onPaste={handlePaste}
-                className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 text-lg sm:text-xl md:text-2xl"
+                className="w-12 h-12 sm:w-14 sm:h-14 text-center glass-dark rounded-xl text-white text-xl sm:text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200"
               />
             ))}
           </div>
@@ -133,27 +181,29 @@ const VerifyMail = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 disabled:opacity-60 cursor-pointer"
+            className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Verifying..." : "Verify"}
+            {loading ? "Verifying..." : (
+              <>
+                Verify Email
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
 
-          <p className="mt-6 text-center text-gray-600">
-            Didn't get the code?{" "}
-            <button
-              type="button"
-              onClick={handleResend}
-              className="text-purple-600 hover:underline transition ease-in-out duration-300 cursor-pointer"
-            >
-              Resend
-            </button>
-          </p>
-
-          <p className="mt-4 text-center text-gray-600">
-            <Link to="/signup" className="text-purple-600 hover:underline">
-              Back to Signup
-            </Link>
-          </p>
+          <div className="text-center space-y-4">
+            <p className="text-white/70">
+              Didn't get the code?{" "}
+              <button
+                type="button"
+                onClick={handleResend}
+                className="text-purple-400 hover:text-purple-300 font-semibold transition-colors duration-200 hover:underline inline-flex items-center gap-1"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Resend
+              </button>
+            </p>
+          </div>
         </form>
       </div>
     </div>

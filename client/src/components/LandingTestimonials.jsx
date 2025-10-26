@@ -157,7 +157,7 @@ const LandingTestimonials = () => {
           <div className="flex items-center justify-center gap-6">
             <button
               onClick={prevTestimonial}
-              className="glass-button p-4 rounded-full group"
+              className="glass-button p-4 rounded-full group cursor-pointer"
             >
               <ArrowLeft className="w-6 h-6 text-white" />
             </button>
@@ -179,7 +179,7 @@ const LandingTestimonials = () => {
 
             <button
               onClick={nextTestimonial}
-              className="glass-button p-4 rounded-full group"
+              className="glass-button p-4 rounded-full group cursor-pointer"
             >
               <ArrowRight className="w-6 h-6 text-white" />
             </button>

@@ -75,10 +75,10 @@ const FAQList = () => {
               }`}
             >
               <button
-                className="w-full flex items-center justify-between p-8 text-left focus:outline-none rounded-3xl"
+                className="w-full flex items-center justify-between p-8 text-left focus:outline-none rounded-3xl cursor-pointer"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
-                <span className="text-lg font-semibold text-white pr-4">
+                <span className="text-lg font-semibold text-white pr-4 cursor-pointer">
                   {faq.q}
                 </span>
                 <ChevronDown

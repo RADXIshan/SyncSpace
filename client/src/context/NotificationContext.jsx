@@ -298,10 +298,17 @@ export const NotificationProvider = ({ children }) => {
 
     // Listen for mentions
     const handleMention = (data) => {
+      console.log("NotificationContext received user_mentioned:", data);
+      const mentionedBy = data.userName || data.mentionedBy || 'Someone';
+      const channelName = data.channelName || 'a channel';
+      const message = data.content || data.message || 'mentioned you';
+      
+      console.log(`Adding notification for mention from ${mentionedBy} in ${channelName}`);
+      
       addNotification({
         type: 'mention',
-        title: `${data.userName} mentioned you`,
-        message: `In ${data.channelName}: "${data.message}"`,
+        title: `${mentionedBy} mentioned you`,
+        message: `In ${channelName}: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`,
         priority: 'high',
         actionUrl: `/channels/${data.channelId}`,
       });

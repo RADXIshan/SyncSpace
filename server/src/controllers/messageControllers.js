@@ -77,6 +77,12 @@ export const sendMessage = async (req, res) => {
       SELECT name, user_photo FROM users WHERE user_id = ${userId}
     `;
 
+    // Ensure user data exists with fallbacks
+    const safeUser = {
+      name: user?.name || 'Unknown User',
+      user_photo: user?.user_photo || null
+    };
+
     // Get reply info if this is a reply
     let replyInfo = null;
     if (reply_to) {
@@ -91,8 +97,8 @@ export const sendMessage = async (req, res) => {
 
     const messageWithUser = {
       ...message,
-      user_name: user.name,
-      user_photo: user.user_photo,
+      user_name: safeUser.name,
+      user_photo: safeUser.user_photo,
       ...replyInfo,
       reactions: []
     };
@@ -119,7 +125,7 @@ export const sendMessage = async (req, res) => {
               channelInfo.org_id,
               "mention",
               "You were mentioned",
-              `${user.name} mentioned you in #${channelInfo.channel_name}`,
+              `${safeUser.name} mentioned you in #${channelInfo.channel_name}`,
               {
                 relatedId: message.message_id,
                 relatedType: "message",
@@ -134,14 +140,20 @@ export const sendMessage = async (req, res) => {
               const mentionedUserSocketId = getUserSocketId(mentionedUserId);
               
               if (mentionedUserSocketId) {
-                io.to(mentionedUserSocketId).emit("user_mentioned", {
+                const mentionData = {
                   mentionedUserId,
-                  mentionedBy: user.name,
-                  channelName: channelInfo.channel_name,
+                  mentionedBy: safeUser.name,
+                  channelName: channelInfo.channel_name || 'Unknown Channel',
                   messageId: message.message_id,
                   channelId: channel_id,
-                  content: content
-                });
+                  content: content || '',
+                  userName: safeUser.name // Add this for consistency with NotificationContext
+                };
+                
+                console.log(`Sending mention notification to user ${mentionedUserId}:`, mentionData);
+                io.to(mentionedUserSocketId).emit("user_mentioned", mentionData);
+              } else {
+                console.log(`No socket found for mentioned user ${mentionedUserId}`);
               }
             }
           } catch (error) {
@@ -188,10 +200,16 @@ export const updateMessage = async (req, res) => {
       SELECT name, user_photo FROM users WHERE user_id = ${userId}
     `;
 
+    // Ensure user data exists with fallbacks
+    const safeUser = {
+      name: user?.name || 'Unknown User',
+      user_photo: user?.user_photo || null
+    };
+
     const messageWithUser = {
       ...updatedMessage,
-      user_name: user.name,
-      user_photo: user.user_photo,
+      user_name: safeUser.name,
+      user_photo: safeUser.user_photo,
       reactions: []
     };
 
@@ -347,10 +365,16 @@ export const uploadFile = async (req, res) => {
       SELECT name, user_photo FROM users WHERE user_id = ${userId}
     `;
 
+    // Ensure user data exists with fallbacks
+    const safeUser = {
+      name: user?.name || 'Unknown User',
+      user_photo: user?.user_photo || null
+    };
+
     const messageWithUser = {
       ...message,
-      user_name: user?.name || 'Unknown User',
-      user_photo: user?.user_photo || null,
+      user_name: safeUser.name,
+      user_photo: safeUser.user_photo,
       reactions: []
     };
 

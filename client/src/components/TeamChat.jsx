@@ -211,14 +211,20 @@ const TeamChat = ({ channelId, channelName }) => {
 
     // Listen for mention notifications
     socket.on("user_mentioned", (data) => {
+      console.log("TeamChat received user_mentioned:", data);
       if (data.mentionedUserId === user.user_id) {
-        const mentionedBy = data.mentionedBy || "Someone";
+        const mentionedBy = data.mentionedBy || data.userName || "Someone";
         const channelName = data.channelName || "a channel";
 
-        toast.success(`${mentionedBy} mentioned you in #${channelName}`, {
-          duration: 5000,
-          icon: "👋",
-        });
+        console.log(`Processing mention from ${mentionedBy} in channel ${channelName}, current channel: ${channelId}`);
+
+        // Only show toast if we're not currently in this channel to avoid duplicate notifications
+        if (data.channelId !== channelId) {
+          toast.success(`${mentionedBy} mentioned you in #${channelName}`, {
+            duration: 5000,
+            icon: "👋",
+          });
+        }
       }
     });
 

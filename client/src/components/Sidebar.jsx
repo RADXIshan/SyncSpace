@@ -273,7 +273,7 @@ const Sidebar = ({
       {/* Mobile Overlay */}
       {isMobile && isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden mobile-sidebar-overlay"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden mobile-sidebar-overlay cursor-pointer"
           onClick={onMobileToggle}
         />
       )}
@@ -282,7 +282,7 @@ const Sidebar = ({
       {isMobile && (
         <button
           onClick={onMobileToggle}
-          className={`fixed top-4 z-50 p-3 glass-button rounded-xl text-white hover:text-purple-300 transition-all duration-300 shadow-lg hover:shadow-xl group ${
+          className={`fixed top-4 z-50 p-3 glass-button rounded-xl text-white hover:text-purple-300 transition-all duration-300 shadow-lg hover:shadow-xl group cursor-pointer ${
             isMobileOpen ? "left-68" : "left-4"
           }`}
         >

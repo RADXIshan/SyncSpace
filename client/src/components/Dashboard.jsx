@@ -4,61 +4,18 @@ import { Bell, Users, Plus, MessageCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import JoinedOrgDash from "./JoinedOrgDash";
 
-const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessagesClick, onNotificationsClick }) => {
+const Dashboard = ({
+  onSettingsClick,
+  onJoinOrgClick,
+  onCreateOrgClick,
+  onMessagesClick,
+  onNotificationsClick,
+}) => {
   const { user, checkAuth } = useAuth();
 
   const [organization, setOrganization] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const activities = [
-    "Alex pushed updates to repo 🚀",
-    "Meeting scheduled for 4:30 PM 📅",
-    "Mira joined #frontend channel 💬",
-  ];
-
-  const notices = [
-    { 
-      id: 100,
-      title: "All - Updated Paid Leave Policy",
-      body: "The HR department has updated the paid leave policy effective from next month. Please review the changes in the HR portal.",
-      date: "2024-06-15",
-      author: "Varun Satapathy",
-      author_role: "Admin"
-    },
-    {
-      id: 101,
-      title: "Frontend - New Design System Implementation",
-      body: "We're rolling out our new design system components. Please update your components to match the new guidelines.",
-      date: "2024-06-18",
-      author: "Sarah Chen",
-      author_role: "Lead Designer"
-    },
-    {
-      id: 102,
-      title: "Backend - Database Migration Schedule",
-      body: "Scheduled database migration to PostgreSQL 15. Downtime expected on Saturday night. Please prepare your services accordingly.",
-      date: "2024-06-20",
-      author: "Mike Rodriguez",
-      author_role: "DevOps Lead"
-    },
-    {
-      id: 103,
-      title: "Marketing - Q3 Campaign Planning",
-      body: "Team meeting to discuss and finalize Q3 marketing campaign strategies. Please prepare your proposals.",
-      date: "2024-06-22",
-      author: "Emily Thompson",
-      author_role: "Marketing Director"
-    },
-    {
-      id: 104,
-      title: "All - Company Town Hall",
-      body: "Monthly town hall meeting to discuss company updates, project progress, and team achievements. Attendance is mandatory.",
-      date: "2024-06-25",
-      author: "David Kumar",
-      author_role: "CEO"
-    }
-  ];
 
   const fetchOrg = async () => {
     if (!user?.org_id) {
@@ -72,10 +29,9 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
 
       // Fetch organization data and role
       const [orgRes] = await Promise.all([
-        axios.get(
-          `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}`,
-          { withCredentials: true }
-        ),
+        axios.get(`${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}`, {
+          withCredentials: true,
+        }),
         axios.get(
           `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/role`,
           { withCredentials: true }
@@ -120,7 +76,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
         <p className="text-gray-400">{error}</p>
         <button
           onClick={onJoinOrgClick}
-          className="btn-primary px-6 py-2 text-lg font-semibold rounded-md"
+          className="btn-primary px-6 py-2 text-lg font-semibold rounded-md cursor-pointer"
         >
           Try Joining an Organisation
         </button>
@@ -129,10 +85,10 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
   }
 
   return (
-    <div className="h-screen p-3 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8">
+    <div className="h-screen max-h-screen overflow-hidden flex flex-col p-3 sm:p-6">
+      <div className="max-w-7xl flex flex-col h-full gap-4 sm:gap-6">
         {/* ---------------- HEADER ---------------- */}
-        <header className="flex pt-15 sm:pt-2 flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 sm:pb-2 lg:mt-5">
+        <header className="flex-shrink-0 flex flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 sm:pb-2 ml-2">
           {/* Welcome Message - Full width on mobile, flexible on desktop */}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 cursor-default leading-tight">
@@ -151,7 +107,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
               />
               <div className="absolute scale-0 group-hover/chat:scale-100 top-0 -right-0.5 w-2 h-2 sm:w-[11px] sm:h-[11px] bg-blue-500 rounded-full transform transition-all duration-300"></div>
             </div>
-            
+
             <div className="relative group/notifications hover:scale-110 hover:bg-red-500/20 transition-all duration-300 p-2.5 rounded-full cursor-pointer">
               <Bell
                 size={20}
@@ -186,37 +142,41 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
         </header>
 
         {/* ---------------- BODY ---------------- */}
-        {organization ? (
-          <JoinedOrgDash
-            org={organization}
-            activities={activities}
-            notices={notices}
-          />
-        ) : (
-          <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 min-h-[400px] sm:h-[500px] flex items-center justify-center flex-col gap-4">
-            <h1 className="text-2xl sm:text-5xl font-bold text-accent text-center px-4">
-              Join and collaborate with your team
-            </h1>
+        <div className="flex-1 min-h-0">
+          {organization ? (
+            <JoinedOrgDash />
+          ) : (
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 h-full flex items-center justify-center flex-col gap-4">
+              <h1 className="text-2xl sm:text-5xl font-bold text-accent text-center px-4">
+                Join and collaborate with your team
+              </h1>
 
-            <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8 w-full max-w-sm sm:max-w-none sm:flex-row sm:justify-center">
-              <button
-                onClick={onJoinOrgClick}
-                className="btn-primary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
-              >
-                <Users size={20} className="inline-block mr-2 text-primary sm:w-6 sm:h-6" />
-                Join Organisation
-              </button>
+              <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8 w-full max-w-sm sm:max-w-none sm:flex-row sm:justify-center">
+                <button
+                  onClick={onJoinOrgClick}
+                  className="btn-primary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
+                >
+                  <Users
+                    size={20}
+                    className="inline-block mr-2 text-primary sm:w-6 sm:h-6"
+                  />
+                  Join Organisation
+                </button>
 
-              <button
-                onClick={onCreateOrgClick}
-                className="btn-secondary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
-              >
-                <Plus size={20} className="inline-block mr-2 text-violet-600 sm:w-6 sm:h-6" />
-                Create Organisation
-              </button>
+                <button
+                  onClick={onCreateOrgClick}
+                  className="btn-secondary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
+                >
+                  <Plus
+                    size={20}
+                    className="inline-block mr-2 text-violet-600 sm:w-6 sm:h-6"
+                  />
+                  Create Organisation
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -84,7 +84,6 @@ export const refreshTokenOnServer = async () => {
     // Update localStorage with new token
     localStorage.setItem('token', data.token);
     
-    console.log('✅ Token refreshed successfully');
     return data;
   } catch (error) {
     console.error('❌ Token refresh failed:', error);

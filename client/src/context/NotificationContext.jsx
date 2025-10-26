@@ -139,8 +139,6 @@ export const NotificationProvider = ({ children }) => {
     const startTime = Date.now();
     
     try {
-      console.log('Starting delete all notifications...');
-      
       const response = await axios.delete(
         `${import.meta.env.VITE_BASE_URL}/api/notifications`,
         { 
@@ -151,8 +149,6 @@ export const NotificationProvider = ({ children }) => {
 
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
-      console.log(`Delete all completed in ${duration}ms`);
       
       setNotifications([]);
       setUnreadCount(0);

@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children }) => {
       }
     };
     verifyAuth();
-  }, [user, checkAuth, hasChecked]);
+  }, [user, hasChecked]); // Removed checkAuth from dependencies since it's now stable
 
   if (loading) {
     return (

@@ -86,18 +86,14 @@ const Login = () => {
       // Store the token if it's returned
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
-        console.log("Token stored:", res.data.token.substring(0, 20) + "...");
       }
 
       // Force auth check and wait for it to complete
-      console.log("Calling checkAuth...");
       await checkAuth(true);
-      console.log("checkAuth completed");
       
       showSuccess("Login Successful", { id: toastId });
       
       // Navigate immediately - the PublicRoute will handle the redirect
-      console.log("Navigating to /home/dashboard");
       navigate("/home/dashboard", { replace: true });
     } catch (err) {
       showError(

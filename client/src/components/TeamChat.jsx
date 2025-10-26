@@ -89,20 +89,14 @@ const TeamChat = ({ channelId, channelName }) => {
 
   // Socket event handlers
   useEffect(() => {
-    console.log("🔌 Socket effect running:", { socket: !!socket, isConnected, channelId });
-    
     if (!socket || !isConnected || !channelId) {
-      console.log("❌ Socket not ready:", { socket: !!socket, isConnected, channelId });
       return;
     }
-
-    console.log("✅ Joining channel:", channelId);
     // Join channel room
     socket.emit("join_channel", channelId);
 
     // Listen for new messages
     const handleNewMessage = (message) => {
-      console.log("📨 New message received:", message);
       setMessages((prev) => [...prev, { ...message, isNew: true }]);
       scrollToBottom();
 
@@ -134,21 +128,35 @@ const TeamChat = ({ channelId, channelName }) => {
 
     // Listen for typing indicators
     const handleUserTyping = (data) => {
-      console.log("⌨️ User typing:", data);
       if (data.userId !== user.user_id) {
         setTypingUsers((prev) => {
           const existing = prev.find((u) => u.userId === data.userId);
           if (!existing) {
-            return [...prev, { userId: data.userId, userName: data.userName }];
+            const newUsers = [
+              ...prev,
+              {
+                userId: data.userId,
+                userName: data.userName,
+                timestamp: Date.now(),
+              },
+            ];
+            return newUsers;
+          } else {
+            // Update timestamp for existing user
+            const updated = prev.map((u) =>
+              u.userId === data.userId ? { ...u, timestamp: Date.now() } : u
+            );
+            return updated;
           }
-          return prev;
         });
       }
     };
 
     const handleUserStoppedTyping = (data) => {
-      console.log("⌨️ User stopped typing:", data);
-      setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
+      setTypingUsers((prev) => {
+        const filtered = prev.filter((u) => u.userId !== data.userId);
+        return filtered;
+      });
     };
 
     // Listen for reactions
@@ -251,10 +259,45 @@ const TeamChat = ({ channelId, channelName }) => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // Auto-scroll when someone starts typing
+  useEffect(() => {
+    if (typingUsers.length > 0) {
+      scrollToBottom();
+    }
+  }, [typingUsers, scrollToBottom]);
+
+  // Cleanup typing timeout on unmount or channel change
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      // Stop typing when component unmounts or channel changes
+      if (socket && isConnected && channelId) {
+        socket.emit("typing_stop", { channelId });
+      }
+    };
+  }, [channelId, socket, isConnected]);
+
+  // Cleanup stale typing users (remove users who have been typing for more than 5 seconds)
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      const now = Date.now();
+      setTypingUsers((prev) => {
+        const filtered = prev.filter((user) => {
+          const timeDiff = now - (user.timestamp || 0);
+          return timeDiff < 5000; // Remove if older than 5 seconds
+        });
+        return filtered;
+      });
+    }, 1000);
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
+
   // Handle typing indicators
   const handleTypingStart = useCallback(() => {
-    if (socket && isConnected) {
-      console.log("⌨️ Emitting typing_start:", { channelId, userName: user.name });
+    if (socket && isConnected && channelId) {
       socket.emit("typing_start", {
         channelId,
         userName: user.name,
@@ -263,8 +306,7 @@ const TeamChat = ({ channelId, channelName }) => {
   }, [socket, isConnected, channelId, user?.name]);
 
   const handleTypingStop = useCallback(() => {
-    if (socket && isConnected) {
-      console.log("⌨️ Emitting typing_stop:", { channelId });
+    if (socket && isConnected && channelId) {
       socket.emit("typing_stop", { channelId });
     }
   }, [socket, isConnected, channelId]);
@@ -291,16 +333,26 @@ const TeamChat = ({ channelId, channelName }) => {
       setSelectedMentionIndex(0);
     }
 
-    // Handle typing indicators
-    handleTypingStart();
+    // Handle typing indicators - only if user is actually typing
+    if (value.trim() !== "") {
+      handleTypingStart();
 
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
 
-    typingTimeoutRef.current = setTimeout(() => {
+      // Set new timeout for stopping typing indicator
+      typingTimeoutRef.current = setTimeout(() => {
+        handleTypingStop();
+      }, 2000); // Increased to 2 seconds for better UX
+    } else {
+      // If input is empty, stop typing immediately
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
       handleTypingStop();
-    }, 1000);
+    }
 
     // Auto-resize textarea
     if (textareaRef.current) {
@@ -653,9 +705,7 @@ const TeamChat = ({ channelId, channelName }) => {
                   {showAvatar && (
                     <div
                       className={`flex items-center gap-2 mb-1 justify-start ${
-                        isOwnMessage
-                          ? "flex-row-reverse"
-                          : ""
+                        isOwnMessage ? "flex-row-reverse" : ""
                       }`}
                     >
                       <div
@@ -678,7 +728,7 @@ const TeamChat = ({ channelId, channelName }) => {
                             onClick={() =>
                               handleReaction(message.message_id, "👍")
                             }
-                            className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                            className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                             title="Like"
                           >
                             <ThumbsUp size={12} />
@@ -687,14 +737,14 @@ const TeamChat = ({ channelId, channelName }) => {
                             onClick={() =>
                               handleReaction(message.message_id, "❤️")
                             }
-                            className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors"
+                            className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
                             title="Love"
                           >
                             <Heart size={12} />
                           </button>
                           <button
                             onClick={() => handleReply(message)}
-                            className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                            className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                             title="Reply"
                           >
                             <Reply size={12} />
@@ -703,7 +753,7 @@ const TeamChat = ({ channelId, channelName }) => {
                             <>
                               <button
                                 onClick={() => handleEditMessage(message)}
-                                className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                                className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                                 title="Edit"
                               >
                                 <Edit2 size={12} />
@@ -712,7 +762,7 @@ const TeamChat = ({ channelId, channelName }) => {
                                 onClick={() =>
                                   handleDeleteMessage(message.message_id)
                                 }
-                                className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors"
+                                className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
                                 title="Delete"
                               >
                                 <Trash2 size={12} />
@@ -801,7 +851,7 @@ const TeamChat = ({ channelId, channelName }) => {
                                 onClick={() =>
                                   window.open(message.file_url, "_blank")
                                 }
-                                className={`p-1 rounded ${
+                                className={`p-1 rounded cursor-pointer ${
                                   isOwnMessage
                                     ? "hover:bg-blue-600"
                                     : "hover:bg-gray-200"
@@ -876,7 +926,7 @@ const TeamChat = ({ channelId, channelName }) => {
             </div>
             <button
               onClick={() => setReplyingTo(null)}
-              className="p-2 hover:bg-blue-100 rounded-full transition-colors"
+              className="p-2 hover:bg-blue-100 rounded-full transition-colors cursor-pointer"
             >
               <X size={16} className="text-blue-600" />
             </button>
@@ -901,7 +951,7 @@ const TeamChat = ({ channelId, channelName }) => {
                 setEditingMessage(null);
                 setNewMessage("");
               }}
-              className="p-2 hover:bg-amber-100 rounded-full transition-colors"
+              className="p-2 hover:bg-amber-100 rounded-full transition-colors cursor-pointer"
             >
               <X size={16} className="text-amber-600" />
             </button>
@@ -980,7 +1030,7 @@ const TeamChat = ({ channelId, channelName }) => {
                   <button
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200"
+                    className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200 cursor-pointer"
                     title="Add emoji"
                   >
                     <Smile size={18} className="sm:w-5 sm:h-5" />
@@ -995,7 +1045,7 @@ const TeamChat = ({ channelId, channelName }) => {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200"
+                  className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200 cursor-pointer"
                   title="Attach file"
                 >
                   <Paperclip size={18} className="sm:w-5 sm:h-5" />
@@ -1019,7 +1069,7 @@ const TeamChat = ({ channelId, channelName }) => {
                 disabled={!newMessage.trim() || sending}
                 className={`flex items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 shadow-sm ${
                   newMessage.trim() && !sending
-                    ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105"
+                    ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >

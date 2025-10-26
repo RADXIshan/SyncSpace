@@ -1,8 +1,6 @@
 import { AtSign } from "lucide-react";
 
 const MentionsList = ({ members, query, selectedIndex = 0, onSelect }) => {
-  console.log("🎯 MentionsList rendering:", { membersCount: members.length, query, selectedIndex });
-  
   // Filter and sort members based on query
   let filteredMembers;
   

@@ -47,8 +47,6 @@ export const SocketProvider = ({ children }) => {
         // Get server URL
         const serverUrl = getServerUrl();
         
-        console.log('🔌 Initializing socket connection to:', serverUrl);
-        
         // Initialize socket connection
         const newSocket = io(serverUrl, {
           auth: {
@@ -64,7 +62,6 @@ export const SocketProvider = ({ children }) => {
 
         // Connection event handlers
         newSocket.on('connect', () => {
-          console.log('🔌 Socket connected successfully');
           setIsConnected(true);
           
           // Send user online status
@@ -82,7 +79,6 @@ export const SocketProvider = ({ children }) => {
         });
 
         newSocket.on('disconnect', () => {
-          console.log('🔌 Socket disconnected');
           setIsConnected(false);
         });
 

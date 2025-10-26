@@ -45,20 +45,19 @@ const Calendar = () => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       
-      // Debug: Log raw response data
-      console.log('Raw event data from backend:', response.data);
+
       
       const formatted = response.data.map((ev) => {
         const startStr = ev.start; // Backend returns 'start' field
         
-        console.log('Processing event:', ev.title, 'startStr:', startStr);
+
         
         // Parse the date and create end time (1 hour later)
         if (startStr) {
           // Parse as UTC and convert to local time to avoid timezone shifts
           const startDate = new Date(startStr);
           
-          console.log('Parsed startDate:', startDate, 'ISO:', startDate.toISOString(), 'Local:', startDate.toLocaleString());
+
           
           // Check if date is valid
           if (isNaN(startDate.getTime())) {
@@ -69,7 +68,7 @@ const Calendar = () => {
           const endDate = new Date(startDate);
           endDate.setHours(endDate.getHours() + 1);
           
-          console.log('End date:', endDate, 'ISO:', endDate.toISOString());
+
           
           // Use the date object directly - FullCalendar handles it properly
           return { 
@@ -83,7 +82,7 @@ const Calendar = () => {
         return { ...ev, allDay: false };
       });
       
-      console.log('Formatted events for FullCalendar:', formatted);
+
       
       setEvents(formatted);
       

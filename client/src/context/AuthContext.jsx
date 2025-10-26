@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -6,12 +6,12 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [lastAuthCheck, setLastAuthCheck] = useState(null);
+  const lastAuthCheckRef = useRef(null);
 
   const checkAuth = useCallback(async (force = false) => {
     // Debounce auth checks - only check if it's been more than 30 seconds, unless forced
     const now = Date.now();
-    if (!force && lastAuthCheck && (now - lastAuthCheck) < 30000) {
+    if (!force && lastAuthCheckRef.current && (now - lastAuthCheckRef.current) < 30000) {
       return;
     }
 
@@ -29,9 +29,8 @@ export const AuthProvider = ({ children }) => {
         { withCredentials: true }
       );
       const userData = { ...response.data.user, photo: response.data.user.user_photo };
-      console.log("Setting user data:", userData);
       setUser(userData);
-      setLastAuthCheck(now);
+      lastAuthCheckRef.current = now;
     } catch (error) {
       // Only log error if it's not a 401 (which is expected when not authenticated)
       if (error.response?.status !== 401) {
@@ -45,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [lastAuthCheck]);
+  }, []); // Empty dependency array to prevent recreation
 
   useEffect(() => {
     checkAuth(true); // Force initial check

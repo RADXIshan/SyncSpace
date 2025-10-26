@@ -63,7 +63,7 @@ const MessageReactions = ({
           <button
             key={group.emoji}
             onClick={() => onReactionClick(group.emoji)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border-2 transition-all duration-200 transform hover:scale-105 ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm border-2 transition-all duration-200 transform hover:scale-105 cursor-pointer ${
               group.hasCurrentUser
                 ? "bg-gradient-to-r from-blue-100 to-purple-100 border-blue-300 text-blue-800 shadow-md"
                 : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm"
@@ -79,7 +79,7 @@ const MessageReactions = ({
       <div className="relative" ref={emojiPickerRef}>
         <button
           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          className="flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-200 text-gray-500 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-600 opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 shadow-sm"
+          className="flex items-center justify-center w-8 h-8 rounded-full bg-white border-2 border-gray-200 text-gray-500 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-600 opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 shadow-sm cursor-pointer"
           title="Add reaction"
         >
           <Plus size={14} />

@@ -333,11 +333,9 @@ const OrgSettingsModal = ({
 
   const confirmRemoveMember = async () => {
     if (!memberToRemove) {
-      console.log("No member to remove");
       return;
     }
 
-    console.log("Removing member:", memberToRemove);
     setMemberActionLoading(true);
 
     try {

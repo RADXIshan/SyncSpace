@@ -13,7 +13,6 @@ const MeetingRoom = () => {
   useEffect(() => {
     // Here you would initialize your video calling solution
     // This could be WebRTC, Agora, Twilio, etc.
-    console.log("Initializing meeting room:", roomId, "for user:", email);
   }, [roomId, email]);
 
   const toggleVideo = () => setIsVideoEnabled(!isVideoEnabled);

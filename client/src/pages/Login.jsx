@@ -82,10 +82,7 @@ const Login = () => {
         payload,
         { withCredentials: true }
       );
-      // Persist token for fallback authentication
-      if (res.data?.token) {
-        localStorage.setItem("token", res.data.token);
-      }
+
       await checkAuth();
       navigate("/home", {
         state: {

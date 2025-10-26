@@ -33,8 +33,7 @@ const OrgSettingsModal = ({
   onSuccess,
 }) => {
   const isOwner = userPermissions?.isOwner || false;
-  const { isUserOnline, onlineUsers, refreshOnlineUsers, useHttpFallback } =
-    useSocket();
+  const { isUserOnline, onlineUsers } = useSocket();
   const [orgName, setOrgName] = useState(organization?.name || "");
   const [accessLevel, setAccessLevel] = useState(
     organization?.accessLevel || "invite-only"
@@ -552,11 +551,6 @@ const OrgSettingsModal = ({
       (activeTab === "members" || activeTab === "danger")
     ) {
       fetchMembers();
-
-      // Also refresh online users if using HTTP fallback
-      if (activeTab === "members" && useHttpFallback && refreshOnlineUsers) {
-        refreshOnlineUsers();
-      }
     }
   }, [organization, activeTab]);
 
@@ -960,13 +954,6 @@ const OrgSettingsModal = ({
       fetchMembers();
     }
   }, [organization?.id]);
-
-  // Force re-render when online users change (for HTTP fallback)
-  useEffect(() => {
-    // This effect ensures the component re-renders when onlineUsers state changes
-    // which is important for HTTP fallback mode where online status updates come
-    // from periodic polling rather than real-time socket events
-  }, [onlineUsers]);
 
   // Initialize role colors when organization roles are available
   useEffect(() => {
@@ -1413,15 +1400,6 @@ const OrgSettingsModal = ({
                           member
                           {members.length !== 1 ? "s" : ""} shown
                         </div>
-                        {useHttpFallback && (
-                          <button
-                            onClick={refreshOnlineUsers}
-                            className="text-xs text-purple-400 hover:text-purple-300 transition-colors cursor-pointer"
-                            title="Refresh online status"
-                          >
-                            Refresh Status
-                          </button>
-                        )}
                       </div>
                     </div>
 

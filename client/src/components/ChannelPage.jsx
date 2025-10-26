@@ -36,7 +36,7 @@ import TeamChat from "./TeamChat";
 const ChannelPage = () => {
   const { channelId } = useParams();
   const { user } = useAuth();
-  const { joinChannel, leaveChannel, isUserOnline, onlineUsers, refreshOnlineUsers, useHttpFallback } = useSocket();
+  const { joinChannel, leaveChannel, isUserOnline, onlineUsers } = useSocket();
   const { showError, showSuccess } = useToast();
   const navigate = useNavigate();
   const [channel, setChannel] = useState(null);
@@ -221,19 +221,7 @@ const ChannelPage = () => {
     }
   }, [channelId, joinChannel, leaveChannel]);
 
-  // Refresh online users when members tab is accessed
-  useEffect(() => {
-    if (activeTab === "members" && useHttpFallback && refreshOnlineUsers) {
-      refreshOnlineUsers();
-    }
-  }, [activeTab, useHttpFallback, refreshOnlineUsers]);
 
-  // Force re-render when online users change (for HTTP fallback)
-  useEffect(() => {
-    // This effect ensures the component re-renders when onlineUsers state changes
-    // which is important for HTTP fallback mode where online status updates come
-    // from periodic polling rather than real-time socket events
-  }, [onlineUsers]);
 
   // Fetch user permissions (with caching to prevent repeated calls)
   useEffect(() => {
@@ -1216,15 +1204,6 @@ const ChannelPage = () => {
                 </h2>
                 <div className="flex items-center gap-4">
                   <OnlineCounter members={members} />
-                  {useHttpFallback && (
-                    <button
-                      onClick={refreshOnlineUsers}
-                      className="text-xs text-purple-600 hover:text-purple-700 transition-colors cursor-pointer"
-                      title="Refresh online status"
-                    >
-                      Refresh Status
-                    </button>
-                  )}
                 </div>
               </div>
 

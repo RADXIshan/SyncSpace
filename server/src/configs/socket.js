@@ -25,7 +25,6 @@ export const setupSocketHandlers = (io) => {
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
       
       if (!token) {
-        console.log('Socket connection rejected: No token provided');
         return next(new Error('Authentication error: No token provided'));
       }
 
@@ -46,15 +45,9 @@ export const setupSocketHandlers = (io) => {
       socket.userEmail = decoded.email || 'Unknown';
       socket.userName = decoded.name || 'Unknown User';
       
-      // Only log warnings for incomplete token data
-      if (!decoded.email || !decoded.name) {
-        console.warn(`⚠️  User ${decoded.userId} has incomplete token data`);
-      }
+
       next();
     } catch (err) {
-      console.error('Socket authentication error:', err.message);
-      console.error('Socket authentication error details:', err);
-      
       // Provide more specific error messages
       if (err.name === 'TokenExpiredError') {
         return next(new Error('Authentication error: Token expired'));
@@ -67,13 +60,11 @@ export const setupSocketHandlers = (io) => {
   });
 
   io.on('connection', (socket) => {
-    // Reduced logging - only log connection without details
 
     // Handle user going online
     socket.on('user_online', (userData) => {
       try {
         const userId = socket.userId;
-        console.log(`📱 User ${getUserIdentifier(socket)} going online with data:`, userData);
         
         // Store user info
         onlineUsers.set(userId, {
@@ -110,7 +101,7 @@ export const setupSocketHandlers = (io) => {
         const orgOnlineUsers = getOnlineUsersByOrg(userData.org_id);
         socket.emit('online_users_list', orgOnlineUsers);
       } catch (error) {
-        console.error('❌ Error handling user_online event:', error);
+        console.error('Error handling user_online event:', error);
       }
     });
 
@@ -152,8 +143,6 @@ export const setupSocketHandlers = (io) => {
         user.org_id = orgId;
         onlineUsers.set(userId, user);
       }
-
-      // Silently join organization
     });
 
     socket.on('leave_organization', (orgId) => {
@@ -166,8 +155,6 @@ export const setupSocketHandlers = (io) => {
         user.org_id = null;
         onlineUsers.set(userId, user);
       }
-
-      // Silently leave organization
     });
 
     // Handle disconnection
@@ -195,8 +182,6 @@ export const setupSocketHandlers = (io) => {
         onlineUsers.delete(userId);
         userSockets.delete(userId);
       }
-
-      // Silently handle disconnection
     });
 
     // Handle typing indicators for channels
@@ -259,12 +244,10 @@ export const setupSocketHandlers = (io) => {
     // Handle joining/leaving channel rooms
     socket.on('join_channel', (channelId) => {
       socket.join(`channel_${channelId}`);
-      // Silently join channel
     });
 
     socket.on('leave_channel', (channelId) => {
       socket.leave(`channel_${channelId}`);
-      // Silently leave channel
     });
 
 

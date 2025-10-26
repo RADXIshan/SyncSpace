@@ -1,29 +1,44 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 export const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-  
-  // Also check for token in cookies as fallback
-  const cookieToken = req.cookies?.token;
-  const finalToken = token || cookieToken;
+  try {
+    // Get token from Authorization header or cookies
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') 
+      ? authHeader.substring(7) 
+      : req.cookies?.jwt;
 
-  if (!finalToken) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Access token required' 
-    });
-  }
+    if (!token) {
+      return res.status(401).json({ message: "Access token required" });
+    }
 
-  jwt.verify(finalToken, process.env.JWT_SECRET_KEY, (err, user) => {
-    if (err) {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Invalid or expired token' 
-      });
+    if (!process.env.JWT_SECRET_KEY) {
+      console.error("JWT_SECRET_KEY is not defined in environment variables");
+      return res.status(500).json({ message: "Server configuration error" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    
+    if (!decoded.userId) {
+      return res.status(401).json({ message: "Invalid token structure" });
+    }
+
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      name: decoded.name
+    };
+
+    next();
+  } catch (error) {
+    console.error("Authentication error:", error);
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: "Token expired" });
+    } else if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: "Invalid token" });
     }
     
-    req.user = user;
-    next();
-  });
+    return res.status(401).json({ message: "Authentication failed" });
+  }
 };

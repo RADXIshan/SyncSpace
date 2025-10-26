@@ -204,7 +204,7 @@ export const setupSocketHandlers = (io) => {
       socket.to(`channel_${data.channelId}`).emit('user_typing', {
         userId: socket.userId,
         channelId: data.channelId,
-        userName: data.userName
+        userName: data.userName || socket.userName
       });
     });
 
@@ -212,6 +212,47 @@ export const setupSocketHandlers = (io) => {
       socket.to(`channel_${data.channelId}`).emit('user_stopped_typing', {
         userId: socket.userId,
         channelId: data.channelId
+      });
+    });
+
+    // Handle message events
+    socket.on('send_message', async (data) => {
+      try {
+        // Verify user has access to the channel
+        const hasAccess = await checkChannelAccess(socket.userId, data.channelId);
+        if (!hasAccess) {
+          socket.emit('error', { message: 'Access denied to this channel' });
+          return;
+        }
+
+        // Broadcast message to channel room
+        socket.to(`channel_${data.channelId}`).emit('new_message', {
+          ...data,
+          userId: socket.userId,
+          userName: socket.userName,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error handling send_message:', error);
+        socket.emit('error', { message: 'Failed to send message' });
+      }
+    });
+
+    // Handle message reactions
+    socket.on('add_reaction', (data) => {
+      socket.to(`channel_${data.channelId}`).emit('reaction_added', {
+        messageId: data.messageId,
+        emoji: data.emoji,
+        userId: socket.userId,
+        userName: socket.userName
+      });
+    });
+
+    socket.on('remove_reaction', (data) => {
+      socket.to(`channel_${data.channelId}`).emit('reaction_removed', {
+        messageId: data.messageId,
+        emoji: data.emoji,
+        userId: socket.userId
       });
     });
 

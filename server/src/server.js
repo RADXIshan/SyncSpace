@@ -13,6 +13,7 @@ import noticeRoutes from "./routes/noticeRoutes.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 import { setupSocketHandlers } from "./configs/socket.js";
 import sql from "./database/db.js";
 
@@ -62,6 +63,7 @@ app.use("/api/notices", noticeRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api", messageRoutes);
 
 // Debug endpoint for organization issues
 app.get("/debug/org/:org_id", async (req, res) => {
@@ -112,6 +114,41 @@ app.put("/debug/test", (req, res) => {
     hasAuth: !!req.headers.authorization,
     hasCookie: !!req.cookies.jwt,
   });
+});
+
+// Migration endpoint
+app.post("/debug/migrate", async (req, res) => {
+  try {
+    console.log('Running chat tables migration...');
+    
+    // Read migration file
+    const fs = await import('fs');
+    const path = await import('path');
+    const { fileURLToPath } = await import('url');
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    
+    const migrationPath = path.join(__dirname, 'database', 'create_chat_tables.sql');
+    const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+    
+    // Split by semicolon and execute each statement
+    const statements = migrationSQL
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0);
+    
+    for (const statement of statements) {
+      await sql.unsafe(statement);
+      console.log('✓ Executed statement');
+    }
+    
+    console.log('✅ Migration completed successfully!');
+    res.json({ message: 'Migration completed successfully!' });
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 connectCloudinary();

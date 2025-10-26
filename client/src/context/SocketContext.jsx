@@ -47,6 +47,8 @@ export const SocketProvider = ({ children }) => {
         // Get server URL
         const serverUrl = getServerUrl();
         
+        console.log('🔌 Initializing socket connection to:', serverUrl);
+        
         // Initialize socket connection
         const newSocket = io(serverUrl, {
           auth: {
@@ -62,6 +64,7 @@ export const SocketProvider = ({ children }) => {
 
         // Connection event handlers
         newSocket.on('connect', () => {
+          console.log('🔌 Socket connected successfully');
           setIsConnected(true);
           
           // Send user online status
@@ -79,6 +82,7 @@ export const SocketProvider = ({ children }) => {
         });
 
         newSocket.on('disconnect', () => {
+          console.log('🔌 Socket disconnected');
           setIsConnected(false);
         });
 
@@ -89,7 +93,7 @@ export const SocketProvider = ({ children }) => {
 
         newSocket.on('connect_error', (error) => {
           setIsConnected(false);
-          console.error('Socket connection error:', error);
+          console.error('🔌 Socket connection error:', error);
         });
 
         // Listen for online users list
@@ -148,7 +152,7 @@ export const SocketProvider = ({ children }) => {
         setIsConnected(false);
       }
     }
-  }, [user?.user_id]); // Only reconnect when user ID changes, not on every user object change
+  }, [user?.user_id, user?.org_id]); // Only reconnect when user ID or org changes
 
   // Update organization when user's org_id changes
   useEffect(() => {
@@ -213,7 +217,14 @@ export const SocketProvider = ({ children }) => {
     return user ? user.status || 'online' : 'offline';
   };
 
+  const refreshOnlineUsers = () => {
+    if (socket && user?.org_id) {
+      socket.emit('get_online_users', user.org_id);
+    }
+  };
 
+  // HTTP fallback for when socket is not available
+  const useHttpFallback = !isConnected;
 
   const value = {
     socket,
@@ -225,7 +236,9 @@ export const SocketProvider = ({ children }) => {
     startTyping,
     stopTyping,
     isUserOnline,
-    getUserStatus
+    getUserStatus,
+    refreshOnlineUsers,
+    useHttpFallback
   };
 
   return (

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Shield, ArrowRight } from "lucide-react";
 import { useNavigate, useParams } from "react-router";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -53,48 +53,126 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-200 to-purple-200">
-      <div className="w-full sm:w-[80%] md:w-[45%] flex items-center justify-center p-6 sm:p-8 md:p-10">
-        <form className="bg-white rounded-3xl shadow-lg p-8 sm:p-10 w-full max-w-md" onSubmit={handleSubmit}>
-          <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-center text-secondary">Reset Password</h2>
-          <p className="mb-6 text-center text-gray-600">Enter your new password below.</p>
+    <div className="min-h-screen cosmic-bg relative overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/3 to-blue-500/3 rounded-full blur-3xl"></div>
+      </div>
 
+      {/* Navigation */}
+      <div className="absolute top-0 left-0 w-full z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center py-4">
+            {/* Brand */}
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => window.location.href = "/"}
+            >
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <img
+                  src="/icon.png"
+                  alt="SyncSpace Logo"
+                  className="w-10 h-10 rounded-2xl"
+                />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight gradient-text-purple">
+                SyncSpace
+              </h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 glass rounded-full px-6 py-3 text-sm font-medium text-white/90 mb-6">
+            <Shield className="w-4 h-4 text-purple-400" />
+            Secure Reset
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+            Reset Your
+            <span className="block gradient-text-purple">Password</span>
+          </h1>
+          <p className="text-lg text-white/80 leading-relaxed">
+            Enter your new password below to secure your account.
+          </p>
+        </div>
+
+        <form className="glass rounded-3xl p-8 space-y-6" onSubmit={handleSubmit}>
           {/* Password Field */}
-          <div className="mb-6 relative">
-            <label htmlFor="password" className="block mb-2 text-m font-medium text-gray-700">New Password</label>
-            <input
-              type={showPassword ? "password" : "text"}
-              id="password"
-              name="password"
-              placeholder="Enter new password"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none pr-10 ${errors.password ? "border-secondary focus:border-red-400" : "focus:border-secondary"}`}
-              value={formData.password}
-              onChange={handleChange}
-            />
-            <button type="button" className="absolute right-3 top-10.5 text-gray-500 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
+              New Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "password" : "text"}
+                id="password"
+                name="password"
+                placeholder="Enter new password"
+                className={`w-full px-4 py-3 glass-dark rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200 pr-12 ${
+                  errors.password && formData.password ? "border-red-500/50 focus:border-red-500 focus:ring-red-500" : ""
+                }`}
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            {errors.password && formData.password && (
+              <p className="mt-2 text-sm text-red-400">Password must be at least 6 characters</p>
+            )}
           </div>
 
           {/* Confirm Password Field */}
-          <div className="mb-6 relative">
-            <label htmlFor="confirmPassword" className="block mb-2 text-m font-medium text-gray-700">Confirm Password</label>
-            <input
-              type={showPassword ? "password" : "text"}
-              id="confirmPassword"
-              name="confirmPassword"
-              placeholder="Confirm new password"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none pr-10 ${errors.confirmPassword ? "border-secondary focus:border-red-400" : "focus:border-secondary"}`}
-              value={formData.confirmPassword}
-              onChange={handleChange}
-            />
-            <button type="button" className="absolute right-3 top-10.5 text-gray-500 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/90 mb-2">
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "password" : "text"}
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Confirm new password"
+                className={`w-full px-4 py-3 glass-dark rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200 pr-12 ${
+                  errors.confirmPassword && formData.confirmPassword ? "border-red-500/50 focus:border-red-500 focus:ring-red-500" : ""
+                }`}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            {errors.confirmPassword && formData.confirmPassword && (
+              <p className="mt-2 text-sm text-red-400">Passwords do not match</p>
+            )}
           </div>
 
-          <button type="submit" className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" disabled={loading || Object.values(errors).some(Boolean)}>
-            {loading ? "Resetting..." : "Reset Password"}
+          <button
+            type="submit"
+            className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={loading || Object.values(errors).some(Boolean)}
+          >
+            {loading ? "Resetting..." : (
+              <>
+                Reset Password
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
         </form>
       </div>

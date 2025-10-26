@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { Mail, ArrowRight, ArrowLeft } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
@@ -35,21 +36,67 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-blue-200 to-purple-200">
-      <div className="w-full sm:w-[80%] md:w-[45%] flex items-center justify-center p-6 sm:p-8 md:p-10">
-        <form
-          className="bg-white rounded-3xl shadow-lg p-8 sm:p-10 w-full max-w-md"
-          onSubmit={handleSubmit}
-        >
-          <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-center text-secondary">
-            Forgot Password
-          </h2>
-          <p className="mb-6 text-center text-gray-600">
-            Enter your registered email address to receive a password reset link.
+    <div className="min-h-screen cosmic-bg relative overflow-hidden flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/3 to-blue-500/3 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Navigation */}
+      <div className="absolute top-0 left-0 w-full z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-4">
+            {/* Brand */}
+            <div
+              className="flex items-center gap-3 cursor-pointer group"
+              onClick={() => window.location.href = "/"}
+            >
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <img
+                  src="/icon.png"
+                  alt="SyncSpace Logo"
+                  className="w-10 h-10 rounded-2xl"
+                />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight gradient-text-purple">
+                SyncSpace
+              </h1>
+            </div>
+
+            {/* Back to login */}
+            <Link
+              to="/login"
+              className="glass px-4 py-2 text-white/90 font-medium rounded-xl hover:text-white transition-colors duration-300 flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Login
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 w-full max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 glass rounded-full px-6 py-3 text-sm font-medium text-white/90 mb-6">
+            <Mail className="w-4 h-4 text-purple-400" />
+            Password Recovery
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+            Forgot Your
+            <span className="block gradient-text-purple">Password?</span>
+          </h1>
+          <p className="text-lg text-white/80 leading-relaxed">
+            Enter your registered email address and we'll send you a password reset link.
           </p>
-          <div className="mb-6">
-            <label htmlFor="email" className="block mb-2 text-m font-medium text-gray-700">
-              Email
+        </div>
+
+        <form className="glass rounded-3xl p-8 space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
+              Email Address
             </label>
             <input
               type="email"
@@ -57,22 +104,41 @@ const ForgotPassword = () => {
               name="email"
               value={email}
               onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none ${error ? "border-secondary focus:border-red-400" : "focus:border-secondary"}`}
+              placeholder="Enter your email"
+              className={`w-full px-4 py-3 glass-dark rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200 ${
+                error && email ? "border-red-500/50 focus:border-red-500 focus:ring-red-500" : ""
+              }`}
               required
             />
+            {error && email && (
+              <p className="mt-2 text-sm text-red-400">Please enter a valid email address</p>
+            )}
           </div>
+
           <button
             type="submit"
-            className="w-full bg-secondary text-white py-2 rounded-lg font-semibold text-m hover:bg-purple-700 transition ease-in-out duration-300 hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" disabled={loading || error}
+            className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={loading || error}
           >
-            Send Reset Link
+            {loading ? "Sending..." : (
+              <>
+                Send Reset Link
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
-          <p className="mt-6 text-center text-gray-600">
-            Remembered your password? {" "}
-            <Link to="/login" className="text-purple-600 hover:underline transition ease-in-out duration-300">
-              Back to Login
-            </Link>
-          </p>
+
+          <div className="text-center">
+            <p className="text-white/70">
+              Remembered your password?{" "}
+              <Link
+                to="/login"
+                className="text-purple-400 hover:text-purple-300 font-semibold transition-colors duration-200 hover:underline"
+              >
+                Back to Login
+              </Link>
+            </p>
+          </div>
         </form>
       </div>
     </div>

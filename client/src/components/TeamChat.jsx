@@ -122,10 +122,18 @@ const TeamChat = ({ channelId, channelName }) => {
   // Socket event handlers
   useEffect(() => {
     if (!socket || !isConnected || !channelId) {
+      console.log("Socket not ready:", { socket: !!socket, isConnected, channelId });
       return;
     }
+    
+    console.log("Setting up socket handlers for channel:", channelId);
+    console.log("User ID:", user.user_id);
+    
     // Join channel room
     socket.emit("join_channel", channelId);
+
+    // Test socket connection
+    socket.emit("test_connection", { userId: user.user_id, channelId });
 
     // Listen for new messages
     const handleNewMessage = (message) => {
@@ -209,6 +217,11 @@ const TeamChat = ({ channelId, channelName }) => {
     socket.on("user_stopped_typing", handleUserStoppedTyping);
     socket.on("reaction_updated", handleReactionUpdate);
 
+    // Test handler to verify socket is working
+    socket.on("test_event", (data) => {
+      console.log("Test event received:", data);
+    });
+
     // Listen for mention notifications
     socket.on("user_mentioned", (data) => {
       console.log("TeamChat received user_mentioned:", data);
@@ -218,24 +231,41 @@ const TeamChat = ({ channelId, channelName }) => {
 
         console.log(`Processing mention from ${mentionedBy} in channel ${channelName}, current channel: ${channelId}`);
 
-        // Only show toast if we're not currently in this channel to avoid duplicate notifications
-        if (data.channelId !== channelId) {
+        // Always show toast notification for mentions, but with different styling for current channel
+        if (data.channelId === channelId) {
+          // If in the same channel, show a subtle notification
+          toast.success(`${mentionedBy} mentioned you`, {
+            duration: 3000,
+            icon: "👋",
+            style: {
+              background: '#f3f4f6',
+              color: '#374151',
+            }
+          });
+        } else {
+          // If in a different channel, show a more prominent notification
           toast.success(`${mentionedBy} mentioned you in #${channelName}`, {
             duration: 5000,
             icon: "👋",
+            style: {
+              background: '#3b82f6',
+              color: 'white',
+            }
           });
         }
       }
     });
 
     return () => {
+      console.log("Cleaning up socket handlers for channel:", channelId);
       socket.off("new_message", handleNewMessage);
       socket.off("message_updated", handleMessageUpdate);
       socket.off("message_deleted", handleMessageDelete);
       socket.off("user_typing", handleUserTyping);
       socket.off("user_stopped_typing", handleUserStoppedTyping);
       socket.off("reaction_updated", handleReactionUpdate);
-      socket.off("user_mentioned");
+      socket.off("test_event");
+      socket.off("user_mentioned"); // Remove the specific handler
       socket.emit("leave_channel", channelId);
     };
   }, [socket, isConnected, channelId, user?.user_id, scrollToBottom]);
@@ -685,17 +715,17 @@ const TeamChat = ({ channelId, channelName }) => {
 
     setActiveToasts((prev) => new Set([...prev, downloadKey]));
 
-    const downloadToast = safeToast.loading(`Preparing download for ${safeFileName}...`);
+    const downloadToast = safeToast.loading(`Downloading ${safeFileName}...`);
 
     try {
-      // Try using our backend proxy first for better compatibility
+      // For local files, use the download proxy which handles them directly
       const proxyUrl = `${
         import.meta.env.VITE_BASE_URL
       }/api/files/download?url=${encodeURIComponent(
         fileUrl
       )}&filename=${encodeURIComponent(safeFileName)}`;
 
-      console.log(`Attempting download via proxy: ${proxyUrl}`);
+      console.log(`Downloading file: ${fileUrl}`);
 
       const response = await fetch(proxyUrl, {
         method: "GET",
@@ -706,9 +736,7 @@ const TeamChat = ({ channelId, channelName }) => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Proxy failed with status: ${response.status}, error: ${errorText}`);
-        throw new Error(`Proxy failed with status: ${response.status} - ${errorText}`);
+        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
       }
 
       const blob = await response.blob();
@@ -718,10 +746,8 @@ const TeamChat = ({ channelId, channelName }) => {
         throw new Error("Downloaded file is empty");
       }
 
-      // Create a temporary URL for the blob
+      // Create download link
       const url = window.URL.createObjectURL(blob);
-
-      // Create a temporary anchor element and trigger download
       const link = document.createElement("a");
       link.href = url;
       link.download = safeFileName;
@@ -736,17 +762,28 @@ const TeamChat = ({ channelId, channelName }) => {
       }, 100);
 
       safeToast.success(`${safeFileName} downloaded successfully!`, { id: downloadToast });
+      
     } catch (error) {
-      console.error("Error downloading via proxy:", error);
-      safeToast.error(`Download failed: ${error.message}`, { id: downloadToast });
+      console.error("Download failed:", error);
+      
+      // Try direct download as fallback
+      try {
+        console.log("Trying direct download...");
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.download = safeFileName;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
 
-      // Show alternative options to user
-      setTimeout(() => {
-        safeToast.error(
-          `Unable to download ${safeFileName}. Try right-clicking the file and selecting "Save as..." or contact support if the issue persists.`,
-          { duration: 8000 }
-        );
-      }, 1000);
+        safeToast.success(`Opening ${safeFileName} for download...`, { id: downloadToast });
+      } catch (fallbackError) {
+        console.error("Direct download also failed:", fallbackError);
+        safeToast.error(`Download failed: ${error.message}`, { id: downloadToast });
+      }
     } finally {
       // Remove from active toasts after a delay
       setTimeout(() => {
@@ -1289,12 +1326,12 @@ const TeamChat = ({ channelId, channelName }) => {
                               <div className="flex gap-1">
                                 <button
                                   onClick={() => {
-                                    // For viewable files, use the view proxy
-                                    if (canViewInline(message.file_type, message.file_name)) {
+                                    // For local files or viewable files, use the view proxy
+                                    if (message.file_url.includes('/api/files/local/') || canViewInline(message.file_type, message.file_name)) {
                                       const viewUrl = `${import.meta.env.VITE_BASE_URL}/api/files/view?url=${encodeURIComponent(message.file_url)}&filename=${encodeURIComponent(message.file_name)}`;
                                       window.open(viewUrl, "_blank");
                                     } else {
-                                      // For other files, try direct URL first
+                                      // For other files, try direct URL
                                       window.open(message.file_url, "_blank");
                                     }
                                   }}

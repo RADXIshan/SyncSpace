@@ -16,8 +16,17 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import { setupSocketHandlers } from "./configs/socket.js";
 import sql from "./database/db.js";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(process.cwd(), 'uploads', 'chat-files');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory:', uploadsDir);
+}
 
 const app = express();
 const server = createServer(app);

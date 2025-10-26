@@ -612,7 +612,7 @@ const TeamChat = ({ channelId, channelName }) => {
               }`}
             >
               <div
-                className={`flex gap-3 ${
+                className={`flex gap-2 ${
                   isOwnMessage ? "flex-row-reverse" : ""
                 }`}
               >
@@ -638,19 +638,78 @@ const TeamChat = ({ channelId, channelName }) => {
                     isOwnMessage ? "text-right" : ""
                   }`}
                 >
-                  {/* Header */}
+                  {/* Header with action buttons */}
                   {showAvatar && (
                     <div
-                      className={`flex items-center gap-2 mb-1 ${
-                        isOwnMessage ? "justify-end" : ""
+                      className={`flex items-center gap-2 mb-1 justify-start ${
+                        isOwnMessage
+                          ? "flex-row-reverse"
+                          : ""
                       }`}
                     >
-                      <span className="font-semibold text-gray-900 text-sm">
-                        {isOwnMessage ? "You" : message.user_name}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {formatTime(message.created_at)}
-                      </span>
+                      <div
+                        className={`flex items-center gap-2 ${
+                          isOwnMessage ? "flex-row-reverse" : ""
+                        }`}
+                      >
+                        <span className="font-semibold text-gray-900 text-sm">
+                          {isOwnMessage ? "You" : message.user_name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {formatTime(message.created_at)}
+                        </span>
+                      </div>
+
+                      {/* Message actions in header */}
+                      <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
+                        <div className="bg-white border border-gray-200 rounded-full shadow-lg flex">
+                          <button
+                            onClick={() =>
+                              handleReaction(message.message_id, "👍")
+                            }
+                            className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                            title="Like"
+                          >
+                            <ThumbsUp size={12} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleReaction(message.message_id, "❤️")
+                            }
+                            className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors"
+                            title="Love"
+                          >
+                            <Heart size={12} />
+                          </button>
+                          <button
+                            onClick={() => handleReply(message)}
+                            className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                            title="Reply"
+                          >
+                            <Reply size={12} />
+                          </button>
+                          {isOwnMessage && (
+                            <>
+                              <button
+                                onClick={() => handleEditMessage(message)}
+                                className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                                title="Edit"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDeleteMessage(message.message_id)
+                                }
+                                className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -670,13 +729,13 @@ const TeamChat = ({ channelId, channelName }) => {
                     </div>
                   )}
 
-                  {/* Message content */}
+                  {/* Message content wrapper */}
                   <div
-                    className={`flex items-start gap-2 ${
-                      isOwnMessage ? "flex-row-reverse" : ""
+                    className={`flex flex-col ${
+                      isOwnMessage ? "items-end" : "items-start"
                     }`}
                   >
-                    <div className="flex-1">
+                    <div className="min-w-0">
                       {message.file_url ? (
                         <div
                           className={`rounded-2xl p-4 inline-block max-w-xs sm:max-w-md shadow-sm ${
@@ -763,71 +822,15 @@ const TeamChat = ({ channelId, channelName }) => {
                       )}
 
                       {/* Reactions */}
-                      <div
-                        className={`mt-1 ${isOwnMessage ? "text-right" : ""}`}
-                      >
+                      <div className="mt-1">
                         <MessageReactions
                           reactions={message.reactions || []}
                           onReactionClick={(emoji) =>
                             handleReaction(message.message_id, emoji)
                           }
                           currentUserId={user.user_id}
+                          isOwnMessage={isOwnMessage}
                         />
-                      </div>
-                    </div>
-
-                    {/* Message actions */}
-                    <div
-                      className={`opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-1 ${
-                        isOwnMessage ? "flex-row-reverse" : ""
-                      }`}
-                    >
-                      <div className="bg-white border border-gray-200 rounded-full shadow-lg flex">
-                        <button
-                          onClick={() =>
-                            handleReaction(message.message_id, "👍")
-                          }
-                          className="p-2 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
-                          title="Like"
-                        >
-                          <ThumbsUp size={14} />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleReaction(message.message_id, "❤️")
-                          }
-                          className="p-2 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors"
-                          title="Love"
-                        >
-                          <Heart size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleReply(message)}
-                          className="p-2 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
-                          title="Reply"
-                        >
-                          <Reply size={14} />
-                        </button>
-                        {isOwnMessage && (
-                          <>
-                            <button
-                              onClick={() => handleEditMessage(message)}
-                              className="p-2 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
-                              title="Edit"
-                            >
-                              <Edit2 size={14} />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleDeleteMessage(message.message_id)
-                              }
-                              className="p-2 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -896,8 +899,23 @@ const TeamChat = ({ channelId, channelName }) => {
       )}
 
       {/* Message Input */}
-      <div className="border-t border-gray-200 bg-white p-6 shadow-lg">
+      <div className="border-t border-gray-200 bg-white p-3 sm:p-6 shadow-lg">
         <form onSubmit={sendMessage} className="relative">
+          {/* Mentions dropdown - positioned above input */}
+          {showMentions && (
+            <div
+              ref={mentionsRef}
+              className="absolute bottom-full left-0 right-0 mb-2 z-[9999] max-w-full sm:max-w-md"
+            >
+              <MentionsList
+                members={channelMembers}
+                query={mentionQuery}
+                selectedIndex={selectedMentionIndex}
+                onSelect={handleMentionSelect}
+              />
+            </div>
+          )}
+
           <div className="bg-white border-2 border-gray-200 rounded-2xl focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-100 transition-all duration-200 shadow-sm hover:shadow-md">
             <textarea
               ref={textareaRef}
@@ -940,21 +958,21 @@ const TeamChat = ({ channelId, channelName }) => {
                 }
               }}
               placeholder={`Message #${channelName}...`}
-              className="w-full bg-transparent text-gray-900 placeholder-gray-400 px-6 py-4 pr-24 resize-none outline-none text-base max-h-[120px] leading-relaxed"
+              className="w-full bg-transparent text-gray-900 placeholder-gray-400 px-3 sm:px-6 py-3 sm:py-4 pr-20 sm:pr-24 resize-none outline-none text-sm sm:text-base max-h-[120px] leading-relaxed"
               rows="1"
               disabled={sending}
             />
 
-            <div className="flex items-center justify-between px-4 pb-4">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between px-2 sm:px-4 pb-3 sm:pb-4">
+              <div className="flex items-center gap-1 sm:gap-3">
                 <div className="relative" ref={emojiPickerRef}>
                   <button
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200"
+                    className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200"
                     title="Add emoji"
                   >
-                    <Smile size={20} />
+                    <Smile size={18} className="sm:w-5 sm:h-5" />
                   </button>
                   {showEmojiPicker && (
                     <div className="absolute bottom-full left-0 mb-2 z-50">
@@ -966,10 +984,10 @@ const TeamChat = ({ channelId, channelName }) => {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200"
+                  className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200"
                   title="Attach file"
                 >
-                  <Paperclip size={20} />
+                  <Paperclip size={18} className="sm:w-5 sm:h-5" />
                 </button>
 
                 <input
@@ -988,45 +1006,24 @@ const TeamChat = ({ channelId, channelName }) => {
               <button
                 type="submit"
                 disabled={!newMessage.trim() || sending}
-                className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 shadow-sm ${
+                className={`flex items-center gap-1.5 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 shadow-sm ${
                   newMessage.trim() && !sending
                     ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >
                 {sending ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-t-2 border-white"></div>
                 ) : (
-                  <Send size={16} />
+                  <Send size={14} className="sm:w-4 sm:h-4" />
                 )}
-                {editingMessage ? "Update" : "Send"}
+                <span className="hidden sm:inline">
+                  {editingMessage ? "Update" : "Send"}
+                </span>
               </button>
             </div>
           </div>
         </form>
-
-        {/* Mentions dropdown */}
-        {showMentions && (
-          <div
-            ref={mentionsRef}
-            className="fixed bottom-20 left-4 right-4 z-[9999] max-w-md"
-            style={{
-              position: "fixed",
-              zIndex: 9999,
-              bottom: "80px",
-              left: "16px",
-              right: "16px",
-              maxWidth: "400px",
-            }}
-          >
-            <MentionsList
-              members={channelMembers}
-              query={mentionQuery}
-              selectedIndex={selectedMentionIndex}
-              onSelect={handleMentionSelect}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

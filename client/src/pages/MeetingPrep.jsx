@@ -78,6 +78,7 @@ const MeetingPrep = () => {
   // Meeting info
   const [meetingInfo, setMeetingInfo] = useState(null);
   const [meetingLoading, setMeetingLoading] = useState(true);
+  const [userPermissions, setUserPermissions] = useState(null);
 
   // Function to reinitialize media stream
   const reinitializeStream = async () => {
@@ -264,6 +265,7 @@ const MeetingPrep = () => {
           { withCredentials: true }
         );
         setMeetingInfo(response.data.meeting);
+        setUserPermissions(response.data.userPermissions);
       } catch (error) {
         console.error("Error fetching meeting info:", error);
         toast.error("Failed to load meeting information");
@@ -547,25 +549,34 @@ const MeetingPrep = () => {
     setIsLoading(true);
 
     try {
-      // Check if this is a "start meeting" action (meeting hasn't started yet)
-      const now = new Date();
-      const meetingTime = new Date(meetingInfo.start_time);
-      const isStartingMeeting = !meetingInfo.started && meetingTime > now;
-
-      if (isStartingMeeting) {
-        // Mark the meeting as started on the server
-        const token = localStorage.getItem("token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        
-        await axios.patch(
-          `${import.meta.env.VITE_BASE_URL}/api/meetings/${meetingId}/start`,
-          {},
-          { 
-            withCredentials: true,
-            headers
-          }
-        );
-        toast.success("Meeting started successfully");
+      // Only attempt to start the meeting if:
+      // 1. It hasn't been started yet
+      // 2. User has permission to start it
+      if (!meetingInfo.started && userPermissions?.canStart) {
+        try {
+          const token = localStorage.getItem("token");
+          const headers = token ? { Authorization: `Bearer ${token}` } : {};
+          
+          await axios.patch(
+            `${import.meta.env.VITE_BASE_URL}/api/meetings/${meetingId}/start`,
+            {},
+            { 
+              withCredentials: true,
+              headers
+            }
+          );
+          toast.success("Meeting started successfully");
+        } catch (startError) {
+          console.error("Error starting meeting:", startError);
+          toast.error("Failed to start meeting");
+          setIsLoading(false);
+          return;
+        }
+      } else if (!meetingInfo.started && !userPermissions?.canStart) {
+        // User doesn't have permission to start the meeting
+        toast.error("Only users with meeting access can start this meeting");
+        setIsLoading(false);
+        return;
       }
 
       // Stop the current stream since we're leaving this page
@@ -837,26 +848,23 @@ const MeetingPrep = () => {
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-white">
-                  {meetingInfo &&
-                  !meetingInfo.started &&
-                  new Date(meetingInfo.start_time) > new Date()
+                  {meetingInfo && !meetingInfo.started && userPermissions?.canStart
                     ? "Start Meeting"
                     : "Join Meeting"}
                 </h3>
                 {meetingInfo && (
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      meetingInfo.started ||
-                      new Date(meetingInfo.start_time) <= new Date()
+                      meetingInfo.started
                         ? "bg-green-500/20 text-green-300 border border-green-500/30"
                         : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                     }`}
                   >
                     {meetingInfo.started
                       ? "Ongoing"
-                      : new Date(meetingInfo.start_time) <= new Date()
-                      ? "Ready to Join"
-                      : "Ready to Start"}
+                      : userPermissions?.canStart
+                      ? "Ready to Start"
+                      : "Waiting to Start"}
                   </span>
                 )}
               </div>
@@ -876,18 +884,22 @@ const MeetingPrep = () => {
                   />
                 </div>
 
+                {!meetingInfo.started && !userPermissions?.canStart && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-sm text-yellow-200">
+                    This meeting hasn't started yet. Only users with meeting access can start it.
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  disabled={isLoading || !email.trim()}
+                  disabled={isLoading || !email.trim() || (!meetingInfo.started && !userPermissions?.canStart)}
                   className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isLoading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       <span>
-                        {meetingInfo &&
-                        !meetingInfo.started &&
-                        new Date(meetingInfo.start_time) > new Date()
+                        {meetingInfo && !meetingInfo.started && userPermissions?.canStart
                           ? "Starting..."
                           : "Joining..."}
                       </span>
@@ -896,9 +908,7 @@ const MeetingPrep = () => {
                     <>
                       <Video size={20} />
                       <span>
-                        {meetingInfo &&
-                        !meetingInfo.started &&
-                        new Date(meetingInfo.start_time) > new Date()
+                        {meetingInfo && !meetingInfo.started && userPermissions?.canStart
                           ? "Start Meeting"
                           : "Join Meeting"}
                       </span>

@@ -58,10 +58,10 @@ const Dashboard = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+      <div className="pt-10 sm:pt-0 min-h-screen bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 flex items-center justify-center">
+        <div className="text-center p-6">
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm sm:text-base">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -69,14 +69,14 @@ const Dashboard = ({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <h1 className="text-3xl font-semibold text-red-500">
+      <div className="pt-10 sm:pt-0 min-h-screen bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 flex flex-col items-center justify-center gap-4 p-4">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-red-500 text-center">
           Something went wrong
         </h1>
-        <p className="text-gray-400">{error}</p>
+        <p className="text-gray-600 text-sm sm:text-base text-center">{error}</p>
         <button
           onClick={onJoinOrgClick}
-          className="btn-primary px-6 py-2 text-lg font-semibold rounded-md cursor-pointer"
+          className="btn-primary px-6 py-3 text-base sm:text-lg font-semibold rounded-md cursor-pointer shadow-lg"
         >
           Try Joining an Organisation
         </button>
@@ -85,10 +85,15 @@ const Dashboard = ({
   }
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden flex flex-col p-3 sm:p-6">
-      <div className="max-w-7xl flex flex-col h-full gap-4 sm:gap-6">
-        {/* ---------------- HEADER ---------------- */}
-        <header className="flex-shrink-0 flex flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 sm:pb-2 ml-2">
+    <div className="pt-10 sm:pt-0 min-h-screen bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-200/20 via-indigo-200/15 to-purple-200/25 animate-pulse"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/10 to-violet-100/20"></div>
+      
+      <div className="relative z-10 h-full flex flex-col p-3 sm:p-6">
+        <div className="max-w-7xl mx-auto flex flex-col h-full gap-4 sm:gap-6 w-full">
+          {/* ---------------- HEADER ---------------- */}
+          <header className="flex-shrink-0 flex flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 pt-6">
           {/* Welcome Message - Full width on mobile, flexible on desktop */}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 cursor-default leading-tight">
@@ -146,8 +151,8 @@ const Dashboard = ({
           {organization ? (
             <JoinedOrgDash />
           ) : (
-            <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 h-full flex items-center justify-center flex-col gap-4">
-              <h1 className="text-2xl sm:text-5xl font-bold text-accent text-center px-4">
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-gray-200/50 shadow-2xl p-4 sm:p-6 h-full flex items-center justify-center flex-col gap-4">
+              <h1 className="text-2xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 text-center px-4">
                 Join and collaborate with your team
               </h1>
 
@@ -176,6 +181,7 @@ const Dashboard = ({
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

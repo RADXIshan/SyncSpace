@@ -45,11 +45,45 @@ const Calendar = () => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       
+      // Debug: Log raw response data
+      console.log('Raw event data from backend:', response.data);
+      
       const formatted = response.data.map((ev) => {
-        const startStr = ev.time || ev.start;
-        const startDate = startStr ? new Date(startStr) : null;
-        return { ...ev, start: startDate };
+        const startStr = ev.start; // Backend returns 'start' field
+        
+        console.log('Processing event:', ev.title, 'startStr:', startStr);
+        
+        // Parse the date and create end time (1 hour later)
+        if (startStr) {
+          // Parse as UTC and convert to local time to avoid timezone shifts
+          const startDate = new Date(startStr);
+          
+          console.log('Parsed startDate:', startDate, 'ISO:', startDate.toISOString(), 'Local:', startDate.toLocaleString());
+          
+          // Check if date is valid
+          if (isNaN(startDate.getTime())) {
+            console.error('Invalid date:', startStr);
+            return { ...ev, allDay: false };
+          }
+          
+          const endDate = new Date(startDate);
+          endDate.setHours(endDate.getHours() + 1);
+          
+          console.log('End date:', endDate, 'ISO:', endDate.toISOString());
+          
+          // Use the date object directly - FullCalendar handles it properly
+          return { 
+            ...ev, 
+            start: startDate, 
+            end: endDate,
+            allDay: false
+          };
+        }
+        
+        return { ...ev, allDay: false };
       });
+      
+      console.log('Formatted events for FullCalendar:', formatted);
       
       setEvents(formatted);
       
@@ -207,6 +241,7 @@ const Calendar = () => {
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="dayGridMonth"
+              timeZone="local"
               headerToolbar={{
                 left: "prev,next today",
                 center: "title",
@@ -254,7 +289,7 @@ const Calendar = () => {
               }}
               eventContent={(arg) => {
                 const isMeetingEvent = arg.event.extendedProps.is_meeting_event;
-                const baseClasses = "group flex items-center w-full gap-1 sm:gap-2 pl-2 sm:pl-3 pr-1 py-0.5 sm:py-1 rounded-md sm:rounded-[0.6rem] text-white hover:scale-[1.02] sm:hover:scale-[1.05] active:scale-95 transition-all duration-300 max-w-full text-xs sm:text-sm font-semibold cursor-pointer border border-white/20";
+                const baseClasses = "group flex items-center gap-1 sm:gap-2 pl-2 sm:pl-3 pr-1 py-0.5 sm:py-1 rounded-md sm:rounded-[0.6rem] text-white hover:scale-[1.02] sm:hover:scale-[1.05] active:scale-95 transition-all duration-300 text-xs sm:text-sm font-semibold cursor-pointer border border-white/20";
                 const meetingClasses = "bg-gradient-to-r from-orange-500 to-red-500";
                 const regularClasses = "bg-gradient-to-r from-violet-600 to-indigo-600";
                 
@@ -264,7 +299,7 @@ const Calendar = () => {
                     title={isMeetingEvent ? "Meeting event - Click to view details (read-only)" : "Click to view event details"}
                   >
                     <div className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-white/90 shrink-0 group-hover:scale-110 transition-transform" />
-                    <span className="truncate flex-1 group-hover:text-white text-xs sm:text-sm">
+                    <span className="truncate group-hover:text-white text-xs sm:text-sm whitespace-nowrap">
                       {isMeetingEvent && "📅 "}{arg.event.title}
                     </span>
                     {arg.timeText && (

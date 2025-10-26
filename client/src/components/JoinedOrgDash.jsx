@@ -131,7 +131,7 @@ const JoinedOrgDash = () => {
           {/* Background gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
 
-          <div className="relative z-10 p-4 sm:p-6 lg:p-8 flex flex-col h-full">
+          <div className="relative z-10 p-4 pb-4.5 sm:p-6 lg:p-8 flex flex-col sm:max-h-[40rem] max-h-[25rem]">
             <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
               <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
                 <div className="p-2 sm:p-3 lg:p-4 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover/meetings:bg-purple-500/30 transition-all duration-300 flex-shrink-0">

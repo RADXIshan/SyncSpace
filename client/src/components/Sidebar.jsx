@@ -1,15 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
-import { Calendar, Settings, Hash, Users, UserPlus, Home, LogOut, Crown, MessageCircle, Bell, Menu, X } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useSocket } from '../context/SocketContext';
-import { useNotifications } from '../context/NotificationContext';
-import { useToast } from '../context/ToastContext';
-import axios from 'axios';
-import ConfirmationModal from './ConfirmationModal';
-import { getRoleStyle, initializeRoleColors } from '../utils/roleColors';
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
+import {
+  Calendar,
+  Settings,
+  Hash,
+  Users,
+  UserPlus,
+  Home,
+  LogOut,
+  Crown,
+  MessageCircle,
+  Bell,
+  Menu,
+  X,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useSocket } from "../context/SocketContext";
+import { useNotifications } from "../context/NotificationContext";
+import { useToast } from "../context/ToastContext";
+import axios from "axios";
+import ConfirmationModal from "./ConfirmationModal";
+import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 
-const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileOpen, onMobileToggle }) => {
+const Sidebar = ({
+  onSettingsClick,
+  onOrgSettingsClick,
+  onInviteClick,
+  isMobileOpen,
+  onMobileToggle,
+}) => {
   const location = useLocation();
   const path = location.pathname;
   const { user, checkAuth, logout } = useAuth();
@@ -27,21 +46,24 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
   const [isMobile, setIsMobile] = useState(false);
 
   const navItems = [
-    { name: 'Dashboard', icon: <Home size={23} />, path: '/home/dashboard' },
-    { name: 'Calendar', icon: <Calendar size={23} />, path: '/home/calendar' },
-    { name: 'Messages', icon: <MessageCircle size={23} />, path: '/home/messages' },
-    { 
-      name: 'Notifications', 
-      icon: <Bell size={23} />, 
-      path: '/home/notifications',
-      badge: unreadCount > 0 ? unreadCount : null
+    { name: "Dashboard", icon: <Home size={23} />, path: "/home/dashboard" },
+    { name: "Calendar", icon: <Calendar size={23} />, path: "/home/calendar" },
+    {
+      name: "Messages",
+      icon: <MessageCircle size={23} />,
+      path: "/home/messages",
+    },
+    {
+      name: "Notifications",
+      icon: <Bell size={23} />,
+      path: "/home/notifications",
+      badge: unreadCount > 0 ? unreadCount : null,
     },
   ];
 
   const isActive = (itemPath) => {
-    return path === itemPath || path.startsWith(itemPath + '/');
+    return path === itemPath || path.startsWith(itemPath + "/");
   };
-
 
   // Fetch organization data
   const fetchOrganization = async () => {
@@ -55,23 +77,24 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
     try {
       setLoadingOrg(true);
       const [orgRes, roleRes] = await Promise.all([
-        axios.get(
-          `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}`,
-          { withCredentials: true }
-        ),
+        axios.get(`${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}`, {
+          withCredentials: true,
+        }),
         axios.get(
           `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/role`,
           { withCredentials: true }
-        )
+        ),
       ]);
-      
+
       setOrganization(orgRes.data.organization);
       setUserRole(roleRes.data.role);
       setUserPermissions(roleRes.data.permissions);
-      
+
       // Initialize role colors with organization roles
       if (orgRes.data.organization?.roles) {
-        const roleNames = orgRes.data.organization.roles.map(role => role.name);
+        const roleNames = orgRes.data.organization.roles.map(
+          (role) => role.name
+        );
         initializeRoleColors(roleNames);
       }
     } catch (err) {
@@ -101,12 +124,12 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
         {},
         { withCredentials: true }
       );
-      
+
       showSuccess("Left organization successfully", { id: toastId });
       setOrganization(null);
       setShowLeaveOrgConfirm(false);
       await checkAuth(); // Refresh user data
-      navigate('/home/dashboard');
+      navigate("/home/dashboard");
     } catch (err) {
       console.error("Error leaving organization:", err);
       showError(
@@ -130,25 +153,24 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
     }
   };
 
-
   // Check if user can invite others
   const canInvite = () => {
     if (!userPermissions || !organization) return false;
     const isOwner = userPermissions.isOwner || false;
     const hasInviteAccess = userPermissions.invite_access === true; // Handle null/undefined values
-    
+
     // Check based on organization access level
-    if (organization.accessLevel === 'public') {
+    if (organization.accessLevel === "public") {
       // Public: Anyone can join directly, but members need invite_access to send invitations
-      return isOwner || userRole === 'admin' || hasInviteAccess;
-    } else if (organization.accessLevel === 'invite-only') {
+      return isOwner || userRole === "admin" || hasInviteAccess;
+    } else if (organization.accessLevel === "invite-only") {
       // Invite-only: Only permitted members can invite
-      return isOwner || userRole === 'admin' || hasInviteAccess;
-    } else if (organization.accessLevel === 'admin-only') {
+      return isOwner || userRole === "admin" || hasInviteAccess;
+    } else if (organization.accessLevel === "admin-only") {
       // Admin-only: Only owner or admins can invite
-      return isOwner || userRole === 'admin';
+      return isOwner || userRole === "admin";
     }
-    
+
     return false;
   };
 
@@ -158,7 +180,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
       showError("You don't have permission to manage organization settings");
       return;
     }
-    
+
     if (onOrgSettingsClick) {
       onOrgSettingsClick(organization, userRole, userPermissions);
     }
@@ -168,7 +190,11 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
   const canManageOrg = () => {
     if (!userPermissions) return false;
     // Users with settings_access, manage_channels, or roles_access can manage org settings
-    return userPermissions.settings_access || userPermissions.manage_channels || userPermissions.roles_access;
+    return (
+      userPermissions.settings_access ||
+      userPermissions.manage_channels ||
+      userPermissions.roles_access
+    );
   };
 
   const handleLogout = () => {
@@ -179,13 +205,17 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
     setActionLoading(true);
     const toastId = showSuccess("Logging out...");
     try {
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/logout`, {}, { 
-        withCredentials: true,
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/auth/logout`,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
         }
-      });
+      );
       await logout();
       localStorage.removeItem("token");
       showSuccess("Logged out successfully", { id: toastId });
@@ -193,7 +223,9 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
       // Force redirect to login page with cache busting
       window.location.href = "/login?t=" + new Date().getTime();
     } catch (err) {
-      showError(err?.response?.data?.message || "Failed to log out", { id: toastId });
+      showError(err?.response?.data?.message || "Failed to log out", {
+        id: toastId,
+      });
       // Even if server request fails, clear local state and redirect
       localStorage.removeItem("token");
       window.location.href = "/login";
@@ -207,10 +239,10 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // Fetch organization when user or org_id changes
@@ -224,8 +256,9 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
       // we could optimistically update but simplest is refetch
       fetchOrganization();
     };
-    window.addEventListener('organizationUpdated', handleOrgUpdate);
-    return () => window.removeEventListener('organizationUpdated', handleOrgUpdate);
+    window.addEventListener("organizationUpdated", handleOrgUpdate);
+    return () =>
+      window.removeEventListener("organizationUpdated", handleOrgUpdate);
   }, []);
 
   // Close mobile sidebar when route changes
@@ -239,8 +272,8 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
     <>
       {/* Mobile Overlay */}
       {isMobile && isMobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden mobile-sidebar-overlay"
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden mobile-sidebar-overlay"
           onClick={onMobileToggle}
         />
       )}
@@ -249,206 +282,296 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
       {isMobile && (
         <button
           onClick={onMobileToggle}
-          className={`fixed top-4 z-50 p-2 bg-slate-800/90 mobile-hamburger border border-slate-600/50 rounded-lg text-white hover:bg-slate-700/90 transition-all duration-300 shadow-lg ${
-            isMobileOpen ? 'left-68' : 'left-4'
+          className={`fixed top-4 z-50 p-3 glass-button rounded-xl text-white hover:text-purple-300 transition-all duration-300 shadow-lg hover:shadow-xl group ${
+            isMobileOpen ? "left-68" : "left-4"
           }`}
         >
-          {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
+          {isMobileOpen ? (
+            <X
+              size={20}
+              className="group-hover:rotate-90 transition-transform duration-300"
+            />
+          ) : (
+            <Menu
+              size={20}
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          )}
         </button>
       )}
 
       {/* Sidebar */}
-      <div className={`
-        h-min-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white flex flex-col
-        ${isMobile 
-          ? `fixed top-0 left-0 bottom-0 z-40 w-64 mobile-sidebar transition-transform duration-300 ${
-              isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-            }` 
-          : 'w-64'
+      <div
+        className={`
+        h-screen cosmic-bg relative overflow-hidden text-white flex flex-col
+        ${
+          isMobile
+            ? `fixed top-0 left-0 bottom-0 z-40 w-64 mobile-sidebar transition-transform duration-300 ${
+                isMobileOpen ? "translate-x-0" : "-translate-x-full"
+              }`
+            : "w-64"
         }
-      `}>
-        <div className="p-4 border-b border-slate-700/50">
-          <h1><span className="text-2xl font-bold gradient-text">SyncSpace</span></h1>
+      `}
+      >
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-gradient-to-r from-purple-500/3 to-blue-500/3 rounded-full blur-2xl"></div>
         </div>
-      
-      <div className="flex-1 overflow-y-auto">
-        <nav className="">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={`flex items-center px-3 py-3 transition-all duration-300 bg-gradient-to-r font-medium group ${
-                isActive(item.path)
-                  ? 'from-purple-600 to-indigo-600 text-white shadow-purple-500/20'
-                  : 'hover:bg-slate-800 text-slate-300 hover:text-violet-300'
-              }`}
-            >
-              <span className={`mr-3 transition-all duration-300 group-hover:scale-110 ${
-                isActive(item.path) ? 'text-white' : 'text-slate-400 group-hover:text-violet-400 duration-300'
-              }`}>{React.cloneElement(item.icon, { size: 20 })}</span>
-              <span className="text-sm font-medium flex-1">{item.name}</span>
-              {item.badge && (
-                <span className="ml-2 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full h-5 w-5 flex items-center justify-center">
-                  {item.badge > 99 ? '99+' : item.badge}
-                </span>
-              )}
-            </Link>
-          ))}
-        </nav>
 
-        {/* Organization Section */}
-        {organization && (
-          <div className="">
-            <div className="bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 border border-slate-600/40 overflow-hidden">
-              {/* Organization Header */}
-              <div className="bg-gradient-to-r from-violet-600/20 to-indigo-600/20 border-b border-violet-500/20 py-2.5 px-3.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center space-x-2 flex-1 min-w-0">
-                    <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
-                      <Users size={16} className="text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white text-sm leading-tight truncate">
-                        {organization.name}
-                      </h3>
-                      <p className="text-xs text-slate-400 font-medium mt-1">Organization</p>
-                    </div>
-                  </div>
-                  {canManageOrg() && (
-                    <button
-                      onClick={handleOrgSettings}
-                      className="flex-shrink-0 p-1.5 bg-blue-600/30 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-400/30 rounded-md transition-all duration-300 text-blue-300 hover:text-blue-200 cursor-pointer group shadow-lg backdrop-blur-sm hover:shadow-xl"
-                      title="Organization settings"
-                    >
-                      <Settings size={18} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="p-2">
-                <div className="grid grid-cols-2 gap-3">
-                  {canInvite() && (
-                    <button
-                      onClick={handleInvite}
-                      className="flex items-center justify-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 hover:border-violet-400/50 rounded-md transition-all duration-300 text-violet-400 hover:text-violet-200 text-xs font-medium cursor-pointer shadow-lg hover:shadow-xl group"
-                      title="Invite users to organization"
-                    >
-                      <UserPlus size={14} className="mr-1.5 group-hover:scale-110 transition-transform duration-300" />
-                      Invite
-                    </button>
-                  )}
-                  <button
-                    onClick={handleLeaveOrg}
-                    className={`${!canInvite() ? 'col-span-2' : ''} flex items-center justify-center px-3 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 hover:border-red-400/50 rounded-md transition-all duration-300 text-red-400 hover:text-red-200 text-xs font-medium cursor-pointer shadow-lg hover:shadow-xl group`}
-                    title="Leave organization"
-                  >
-                    <LogOut size={14} className="mr-1.5 rotate-180 group-hover:scale-110 transition-transform duration-300" />
-                    Leave
-                  </button>
-                </div>
-              </div>
+        {/* Header */}
+        <div className="relative z-10 glass-dark border-b border-white/10 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center">
+              <img
+                src="/icon.png"
+                alt="SyncSpace Logo"
+                className="w-10 h-10 rounded-2xl"
+              />
             </div>
+            <h1 className="text-xl font-bold tracking-tight gradient-text-purple">
+              SyncSpace
+            </h1>
           </div>
-        )}
+        </div>
 
-        {/* Channels Section */}
-        {organization?.channels && organization.channels.length > 0 && (
-          <div className="mt-4.5">
-            <div className="mb-2">
-              <h3 className="text-xs px-3 font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center">
-                <Hash size={14} className="mr-1.5" />
-                Channels
-              </h3>
-            </div>
-            <div className="">
-              {organization.channels.map((channel) => (
-                <Link
-                  key={channel.id}
-                  to={`/home/channels/${channel.id}`}
-                  className={`flex items-center px-5 py-2 transition-all duration-300 font-medium group shadow-sm hover:shadow-lg ${
-                    isActive(`/home/channels/${channel.id}`)
-                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/20'
-                      : 'hover:bg-slate-700/60 text-slate-300 hover:text-violet-300'
+        <div className="flex-1 overflow-y-auto relative z-10 p-2">
+          <nav className="space-y-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`flex rounded-lg items-center px-4 py-3 transition-all duration-300 font-medium group nav-item-hover ${
+                  isActive(item.path)
+                    ? "glass-button-enhanced text-white shadow-lg"
+                    : "glass text-white/80 hover:text-white"
+                }`}
+              >
+                <span
+                  className={`mr-3 transition-all duration-300 group-hover:scale-110 ${
+                    isActive(item.path)
+                      ? "text-white"
+                      : "text-white/70 group-hover:text-purple-400"
                   }`}
-                  title={channel.description || channel.name}
                 >
-                  <span className={`mr-2.5 transition-colors duration-200 ${
-                    isActive(`/home/channels/${channel.id}`) ? 'text-white' : 'text-slate-500 group-hover:text-violet-400'
-                  }`}>
-                    <Hash size={12} className="group-hover:scale-110 duration-300"/>
+                  {React.cloneElement(item.icon, { size: 20 })}
+                </span>
+                <span className="text-sm font-medium flex-1">{item.name}</span>
+                {item.badge && (
+                  <span className="ml-2 px-2 py-1 text-xs font-bold text-white bg-gradient-to-br from-red-600 to-pink-600 rounded-full h-5 w-5 flex items-center shadow-red-600 justify-center shadow-[0_0_10px_0]">
+                    {item.badge > 99 ? "99+" : item.badge}
                   </span>
-                  <span className="text-sm font-medium truncate">{channel.name}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+                )}
+              </Link>
+            ))}
+          </nav>
 
+          {/* Organization Section */}
+          {organization && (
+            <div className="mt-2 mb-4 glass rounded-xl">
+              <div className="rounded-2xl overflow-hidden">
+                {/* Organization Header */}
+                <div className="border-b border-white/10 p-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 glass-button rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
+                        <Users size={18} className="text-purple-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-white text-sm leading-tight truncate">
+                          {organization.name}
+                        </h3>
+                        <p className="text-xs text-white/60 font-medium mt-1">
+                          Organization
+                        </p>
+                      </div>
+                    </div>
+                    {canManageOrg() && (
+                      <button
+                        onClick={handleOrgSettings}
+                        className="flex-shrink-0 p-2 glass hover:glass-button rounded-lg transition-all duration-300 text-white/70 hover:text-blue-400 cursor-pointer group"
+                        title="Organization settings"
+                      >
+                        <Settings
+                          size={16}
+                          className="group-hover:rotate-90 group-hover:scale-120 transition-transform duration-300"
+                        />
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-      </div>
-      
-      <div className="border-t border-slate-600/50 bg-slate-900/50">
-        <div className="p-4 flex items-center">
-          {user?.photo ? (
-            <img
-              src={user.photo}
-              alt="Profile"
-              className="h-11 w-11 rounded-full object-cover shadow-lg border-2 border-violet-600"
-            />
-          ) : (
-            <div className="h-11 w-11 rounded-full gradient-bg flex items-center justify-center shadow-lg border-2 border-violet-600">
-              <span className="text-sm font-bold text-white">{user?.name?.charAt(0) || 'U'}</span>
+                {/* Action Buttons */}
+                <div className="p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {canInvite() && (
+                      <button
+                        onClick={handleInvite}
+                        className="glass-button flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 text-white/80 hover:text-white text-xs font-medium cursor-pointer group"
+                        title="Invite users to organization"
+                      >
+                        <UserPlus
+                          size={14}
+                          className="mr-1.5 group-hover:scale-110 transition-transform duration-300"
+                        />
+                        Invite
+                      </button>
+                    )}
+                    <button
+                      onClick={handleLeaveOrg}
+                      className={`${
+                        !canInvite() ? "col-span-2" : ""
+                      } glass-button flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 text-red-400 hover:text-red-300 text-xs font-medium cursor-pointer group hover:border-red-500/30`}
+                      title="Leave organization"
+                    >
+                      <LogOut
+                        size={14}
+                        className="mr-1.5 rotate-180 group-hover:scale-110 transition-transform duration-300"
+                      />
+                      Leave
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-          <div className="ml-3 flex-1 min-w-0">
-            <p className="font-medium text-white text-base leading-tight truncate">{user?.name || 'User Name'}</p>
-            <div className='flex items-center mt-1 gap-2'>
-              <div className='flex items-center'>
-                <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                <p className={`text-xs ml-1.5 font-medium ${isConnected ? 'text-green-400' : 'text-gray-400'}`}>
-                  {isConnected ? 'Online' : 'Offline'}
-                </p>
+
+          {/* Channels Section */}
+          {organization?.channels && organization.channels.length > 0 && (
+            <div className="mx-1 mb-4">
+              <div className="mb-3">
+                <h3 className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center">
+                  <Hash size={14} className="mr-1.5" />
+                  Channels
+                </h3>
               </div>
-              {organization && userRole && (
-                <div className={`px-2 py-0.5 ${getRoleStyle(userRole).background} border ${getRoleStyle(userRole).border} rounded flex items-center gap-1 flex-shrink-0`}>
-                  {userPermissions?.isOwner && (
-                    <Crown size={9} className={`${getRoleStyle(userRole).text} flex-shrink-0`} />
-                  )}
-                  <span className={`text-xs font-medium ${getRoleStyle(userRole).text} capitalize`}>
-                    {userRole}
-                  </span>
+              <div className="space-y-2">
+                {organization.channels.map((channel) => (
+                  <Link
+                    key={channel.id}
+                    to={`/home/channels/${channel.id}`}
+                    className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 font-medium group nav-item-hover ${
+                      isActive(`/home/channels/${channel.id}`)
+                        ? "glass-button-enhanced text-white shadow-lg"
+                        : "glass text-white/80 hover:text-white"
+                    }`}
+                    title={channel.description || channel.name}
+                  >
+                    <span
+                      className={`mr-3 transition-colors duration-200 ${
+                        isActive(`/home/channels/${channel.id}`)
+                          ? "text-white"
+                          : "text-white/60 group-hover:text-purple-400"
+                      }`}
+                    >
+                      <Hash
+                        size={14}
+                        className="group-hover:scale-110 duration-300"
+                      />
+                    </span>
+                    <span className="text-sm font-medium truncate">
+                      {channel.name}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User Profile Section */}
+        <div className="relative z-10 glass-dark border-t border-white/10 p-2">
+          <div className="flex items-center justify-between mb-4 p-2 pb-0">
+            {user?.photo ? (
+              <img
+                src={user.photo}
+                alt="Profile"
+                className="h-12 w-12 rounded-full object-cover shadow-lg border-2 border-purple-500/50"
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-2xl glass-button flex items-center justify-center shadow-lg border-2 border-purple-500/50">
+                <span className="text-sm font-bold text-white">
+                  {user?.name?.charAt(0) || "U"}
+                </span>
+              </div>
+            )}
+            <div className="ml-3 flex-1 min-w-0">
+              <p className="font-semibold text-white text-sm leading-tight truncate">
+                {user?.name || "User Name"}
+              </p>
+              <div className="flex items-center mt-1 gap-2">
+                <div className="flex items-center">
+                  <div
+                    className={`h-2 w-2 rounded-full ${
+                      isConnected ? "bg-green-400" : "bg-gray-400"
+                    }`}
+                  ></div>
+                  <p
+                    className={`text-xs ml-1.5 font-medium ${
+                      isConnected ? "text-green-400" : "text-gray-400"
+                    }`}
+                  >
+                    {isConnected ? "Online" : "Offline"}
+                  </p>
                 </div>
-              )}
+                {organization && userRole && (
+                  <div
+                    className={`px-2 py-0.5 ${
+                      getRoleStyle(userRole).background
+                    } border ${
+                      getRoleStyle(userRole).border
+                    } rounded-lg flex items-center gap-1 flex-shrink-0`}
+                  >
+                    {userPermissions?.isOwner && (
+                      <Crown
+                        size={9}
+                        className={`${
+                          getRoleStyle(userRole).text
+                        } flex-shrink-0`}
+                      />
+                    )}
+                    <span
+                      className={`text-xs font-medium ${
+                        getRoleStyle(userRole).text
+                      } capitalize`}
+                    >
+                      {userRole}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="px-3 pb-3 pt-0">
+
           <div className="flex gap-2">
             <button
               onClick={onSettingsClick}
-              className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md transition-all duration-300 hover:bg-slate-700/60 hover:border-violet-500/80 border border-slate-600/30 cursor-pointer group text-slate-300 hover:text-violet-300 shadow-lg hover:shadow-xl"
+              className="flex-1 glass-button flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 cursor-pointer group text-white/80 hover:text-white"
             >
-              <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-violet-400 transition-alls duration-300">
-                <Settings size={16} className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300" />
+              <span className="mr-2 group-hover:text-purple-400 transition-all duration-300">
+                <Settings
+                  size={16}
+                  className="group-hover:rotate-180 group-hover:scale-110 transition-transform duration-300"
+                />
               </span>
-              <span className='font-medium text-sm'>Settings</span>
+              <span className="font-medium text-sm">Settings</span>
             </button>
-            
-            <button 
-              onClick={handleLogout} 
-              className="w-1/2 flex items-center bg-slate-800/70 justify-center px-1 py-2 text-left rounded-md hover:bg-red-600/20 hover:border-red-500/40 border border-slate-600/30 transition-all duration-300 cursor-pointer group text-slate-300 hover:text-red-300 shadow-lg hover:shadow-xl"
+
+            <button
+              onClick={handleLogout}
+              className="flex-1 glass-button flex items-center justify-center px-3 py-2.5 rounded-lg transition-all duration-300 cursor-pointer group text-white/80 hover:text-red-300 hover:border-red-500/30"
             >
-              <span className="mr-1 group-hover:mr-1 text-slate-400 group-hover:text-red-400 transition-all duration-300">
-                <LogOut size={16} className="rotate-180 group-hover:scale-110 transition-transform duration-300" />
+              <span className="mr-2 group-hover:text-red-400 transition-all duration-300">
+                <LogOut
+                  size={16}
+                  className="rotate-180 group-hover:scale-110 transition-transform duration-300"
+                />
               </span>
-              <span className='font-medium text-sm'>Logout</span>
+              <span className="font-medium text-sm">Logout</span>
             </button>
           </div>
         </div>
-      </div>
       </div>
       {/* Confirmation Modals */}
       <ConfirmationModal
@@ -462,7 +585,7 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
         type="danger"
         loading={actionLoading}
       />
-      
+
       <ConfirmationModal
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
@@ -479,4 +602,3 @@ const Sidebar = ({ onSettingsClick, onOrgSettingsClick, onInviteClick, isMobileO
 };
 
 export default Sidebar;
-

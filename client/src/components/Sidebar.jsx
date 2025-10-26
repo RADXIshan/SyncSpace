@@ -521,7 +521,7 @@ const Sidebar = ({
                       getRoleStyle(userRole).background
                     } border ${
                       getRoleStyle(userRole).border
-                    } rounded-lg flex items-center gap-1 flex-shrink-0`}
+                    } rounded flex items-center gap-1 flex-shrink-0`}
                   >
                     {userPermissions?.isOwner && (
                       <Crown

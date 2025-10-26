@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [lastAuthCheck, setLastAuthCheck] = useState(null);
 
   const checkAuth = useCallback(async (force = false) => {
-    // Debounce auth checks - only check if it's been more than 30 seconds
+    // Debounce auth checks - only check if it's been more than 30 seconds, unless forced
     const now = Date.now();
     if (!force && lastAuthCheck && (now - lastAuthCheck) < 30000) {
       return;
@@ -28,7 +28,9 @@ export const AuthProvider = ({ children }) => {
         {},
         { withCredentials: true }
       );
-      setUser({ ...response.data.user, photo: response.data.user.user_photo });
+      const userData = { ...response.data.user, photo: response.data.user.user_photo };
+      console.log("Setting user data:", userData);
+      setUser(userData);
       setLastAuthCheck(now);
     } catch (error) {
       // Only log error if it's not a 401 (which is expected when not authenticated)

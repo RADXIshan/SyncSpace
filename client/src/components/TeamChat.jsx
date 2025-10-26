@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
-// Debug wrapper for toast to catch undefined values
 const safeToast = {
   success: (message, options) => {
     if (message && message !== "undefined") {

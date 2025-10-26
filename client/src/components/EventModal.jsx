@@ -168,14 +168,29 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               </p>
             </div>
 
+            {/* Meeting Event Notice */}
+            {event?.is_meeting_event && (
+              <div className="bg-orange-900/40 border border-orange-700/50 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-orange-600/20 rounded-lg flex items-center justify-center">
+                    <span className="text-orange-400 text-lg">📅</span>
+                  </div>
+                  <div>
+                    <h3 className="text-orange-400 font-semibold text-sm">Meeting Event</h3>
+                    <p className="text-orange-300/80 text-xs">This event was automatically created from a meeting and cannot be edited directly.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Event Information */}
             <div className="space-y-6 sm:space-y-8">
               {/* Title */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
-                  Event Title {isEditing && "*"}
+                  Event Title {isEditing && !event?.is_meeting_event && "*"}
                 </label>
-                {isEditing ? (
+                {isEditing && !event?.is_meeting_event ? (
                   <input
                     type="text"
                     value={title}
@@ -193,9 +208,9 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
               {/* Date */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
-                  Date & Time {isEditing && "*"}
+                  Date & Time {isEditing && !event?.is_meeting_event && "*"}
                 </label>
-                {isEditing ? (
+                {isEditing && !event?.is_meeting_event ? (
                   <div className="relative w-full pl-5 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90 flex items-center gap-1.5">
                     <Calendar className="text-violet-400 pointer-events-none z-10" size={20} />
                     <DatePicker
@@ -231,7 +246,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
                   Description
                 </label>
-                {isEditing ? (
+                {isEditing && !event?.is_meeting_event ? (
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -249,16 +264,18 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-gray-700/50">
-              <button
-                type="button"
-                onClick={handleDeleteClick}
-                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-red-900/40 hover:bg-red-900/60 border border-red-700/50 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base order-2 sm:order-1"
-              >
-                Delete Event
-              </button>
+              {!event?.is_meeting_event && (
+                <button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl bg-red-900/40 hover:bg-red-900/60 border border-red-700/50 text-red-400 hover:text-red-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base order-2 sm:order-1"
+                >
+                  Delete Event
+                </button>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 order-1 sm:order-2">
-                {!isEditing && (
+                {!isEditing && !event?.is_meeting_event && (
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
@@ -276,7 +293,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
                     Cancel
                   </button>
                 )}
-                {isEditing ? (
+                {isEditing && !event?.is_meeting_event ? (
                   <button
                     type="submit"
                     disabled={isSaving}

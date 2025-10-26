@@ -1,6 +1,7 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
 import { createNotificationForOrg, createNotificationForChannel } from "./notificationControllers.js";
+import { createMeetingEvents, updateMeetingEvents, deleteMeetingEvents } from "./eventControllers.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -74,6 +75,23 @@ export const createMeeting = async (req, res) => {
       VALUES (${org_id}, ${channel_id || null}, ${userId}, ${title.trim()}, ${description?.trim() || null}, ${start_time}, ${meeting_link.trim()})
       RETURNING meeting_id, title, description, start_time, meeting_link, started, created_at
     `;
+
+    // Create calendar events for all users with access to this meeting
+    try {
+      console.log(`Creating events for meeting ${newMeeting.meeting_id} in org ${org_id}`);
+      const eventResult = await createMeetingEvents(
+        newMeeting.meeting_id,
+        org_id,
+        channel_id || null,
+        newMeeting.title,
+        newMeeting.description,
+        newMeeting.start_time
+      );
+      console.log(`Event creation result:`, eventResult);
+    } catch (eventError) {
+      console.error('Failed to create meeting events:', eventError);
+      // Don't fail the meeting creation if event creation fails
+    }
 
     // Create notifications for org members or channel members except the creator
     try {
@@ -347,6 +365,19 @@ export const updateMeeting = async (req, res) => {
       RETURNING meeting_id, title, description, start_time, meeting_link, started, updated_at
     `;
 
+    // Update corresponding calendar events
+    try {
+      await updateMeetingEvents(
+        meeting_id,
+        updatedMeeting.title,
+        updatedMeeting.description,
+        updatedMeeting.start_time
+      );
+    } catch (eventError) {
+      console.error('Failed to update meeting events:', eventError);
+      // Don't fail the meeting update if event update fails
+    }
+
     res.status(200).json({
       message: "Meeting updated successfully",
       meeting: updatedMeeting,
@@ -385,6 +416,14 @@ export const deleteMeeting = async (req, res) => {
       return res.status(403).json({
         message: "You don't have permission to delete this meeting",
       });
+    }
+
+    // Delete corresponding calendar events first
+    try {
+      await deleteMeetingEvents(meeting_id);
+    } catch (eventError) {
+      console.error('Failed to delete meeting events:', eventError);
+      // Continue with meeting deletion even if event deletion fails
     }
 
     await sql`

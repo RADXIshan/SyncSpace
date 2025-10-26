@@ -3,6 +3,11 @@ import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import { generateInviteEmail } from "../templates/inviteTemplate.js";
 import { createNotificationForOrg } from "./notificationControllers.js";
+import { 
+  syncMeetingEventsForUser, 
+  syncMeetingEventsForOrg, 
+  createMeetingEventsForNewUser 
+} from "./eventControllers.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -402,6 +407,15 @@ export const joinOrganization = async (req, res) => {
       // Don't fail the join if notifications fail
     }
 
+    // Create meeting events for the new member
+    try {
+      await createMeetingEventsForNewUser(userId, organization.org_id);
+      console.log(`Created meeting events for new member ${userId} in org ${organization.org_id}`);
+    } catch (eventError) {
+      console.error('Failed to create meeting events for new member:', eventError);
+      // Don't fail the join if event creation fails
+    }
+
     res.status(200).json({
       message: "Successfully joined organization",
       organization: {
@@ -754,6 +768,15 @@ export const updateOrganization = async (req, res) => {
           `;
         }
       }
+
+      // Sync meeting events for all users after role permissions change
+      try {
+        await syncMeetingEventsForOrg(org_id);
+        console.log(`Synced meeting events for org ${org_id} after role permissions update`);
+      } catch (eventError) {
+        console.error('Failed to sync meeting events after role update:', eventError);
+        // Don't fail the role update if event sync fails
+      }
     }
 
     res.status(200).json({
@@ -924,6 +947,15 @@ export const updateMemberRole = async (req, res) => {
       WHERE user_id = ${member_id} AND org_id = ${org_id}
     `;
 
+    // Sync meeting events for the user whose role was changed
+    try {
+      await syncMeetingEventsForUser(member_id, org_id);
+      console.log(`Synced meeting events for user ${member_id} after role change to ${role.trim()}`);
+    } catch (eventError) {
+      console.error('Failed to sync meeting events after role change:', eventError);
+      // Don't fail the role update if event sync fails
+    }
+
     res.status(200).json({
       message: "Member role updated successfully"
     });
@@ -985,6 +1017,18 @@ export const removeMember = async (req, res) => {
     // Prevent removing organization owner
     if (targetMember.user_id === org?.created_by) {
       return res.status(400).json({ message: "Cannot remove organization owner" });
+    }
+
+    // Clean up meeting events before removing member
+    try {
+      await sql`
+        DELETE FROM events 
+        WHERE user_id = ${member_id} AND org_id = ${org_id} AND is_meeting_event = true
+      `;
+      console.log(`Cleaned up meeting events for user ${member_id} leaving org ${org_id}`);
+    } catch (eventError) {
+      console.error('Failed to clean up meeting events:', eventError);
+      // Continue with member removal even if cleanup fails
     }
 
     // Remove member from organization
@@ -1409,6 +1453,15 @@ export const updateChannel = async (req, res) => {
       WHERE channel_id = ${channel_id} AND org_id = ${org_id}
       RETURNING channel_id, channel_name, channel_description
     `;
+
+    // Sync meeting events in case channel name changed (affects accessible_teams matching)
+    try {
+      await syncMeetingEventsForOrg(org_id);
+      console.log(`Synced meeting events for org ${org_id} after channel update`);
+    } catch (eventError) {
+      console.error('Failed to sync meeting events after channel update:', eventError);
+      // Don't fail the channel update if event sync fails
+    }
 
     res.status(200).json({
       message: "Channel updated successfully",

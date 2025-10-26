@@ -254,27 +254,80 @@ export const uploadFile = async (req, res) => {
       return res.status(400).json({ message: "No file provided" });
     }
 
+    if (!channel_id) {
+      return res.status(400).json({ message: "Channel ID is required" });
+    }
+
     // Verify user has access to the channel
     const hasAccess = await checkChannelAccess(userId, channel_id);
     if (!hasAccess) {
       return res.status(403).json({ message: "Access denied to this channel" });
     }
 
-    // Upload to Cloudinary
+    // Validate file type and size
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      return res.status(400).json({ 
+        message: `File too large. Maximum size is ${maxSize / 1024 / 1024}MB` 
+      });
+    }
+
+    // Check for dangerous file types
+    const dangerousExtensions = ['exe', 'bat', 'cmd', 'scr', 'pif', 'com', 'vbs', 'js'];
+    const extension = file.originalname.split('.').pop()?.toLowerCase();
+    if (dangerousExtensions.includes(extension)) {
+      return res.status(400).json({ 
+        message: "File type not allowed for security reasons" 
+      });
+    }
+
+    // Determine resource type for Cloudinary
+    let resourceType = "auto";
+    if (file.mimetype.startsWith('video/')) {
+      resourceType = "video";
+    } else if (file.mimetype.startsWith('image/')) {
+      resourceType = "image";
+    } else if (file.mimetype.startsWith('audio/')) {
+      resourceType = "video"; // Cloudinary uses 'video' for audio files
+    } else {
+      resourceType = "raw"; // For documents, PDFs, etc.
+    }
+
+    // Upload to Cloudinary with appropriate settings
     const uploadResult = await new Promise((resolve, reject) => {
+      const uploadOptions = {
+        resource_type: resourceType,
+        folder: "chat-files",
+        public_id: `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+        use_filename: true,
+        unique_filename: true,
+        access_mode: "public",
+        type: "upload"
+      };
+
+      // Add format preservation for certain file types
+      if (resourceType === "raw") {
+        uploadOptions.format = extension;
+      }
+
       const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: "auto",
-          folder: "chat-files",
-          public_id: `${Date.now()}-${file.originalname}`,
-        },
+        uploadOptions,
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(new Error(`Upload failed: ${error.message}`));
+          } else {
+            resolve(result);
+          }
         }
       );
       uploadStream.end(file.buffer);
     });
+
+    // Ensure all file properties are defined
+    const safeFileName = file.originalname || 'Unknown file';
+    const safeFileType = file.mimetype || 'application/octet-stream';
+    const safeFileSize = file.size || 0;
 
     // Insert message with file info
     const [message] = await sql`
@@ -282,9 +335,9 @@ export const uploadFile = async (req, res) => {
         channel_id, user_id, content, file_url, file_name, file_type, file_size
       )
       VALUES (
-        ${channel_id}, ${userId}, ${file.originalname}, 
-        ${uploadResult.secure_url}, ${file.originalname}, 
-        ${file.mimetype}, ${file.size}
+        ${channel_id}, ${userId}, ${safeFileName}, 
+        ${uploadResult.secure_url}, ${safeFileName}, 
+        ${safeFileType}, ${safeFileSize}
       )
       RETURNING *
     `;
@@ -296,8 +349,8 @@ export const uploadFile = async (req, res) => {
 
     const messageWithUser = {
       ...message,
-      user_name: user.name,
-      user_photo: user.user_photo,
+      user_name: user?.name || 'Unknown User',
+      user_photo: user?.user_photo || null,
       reactions: []
     };
 
@@ -310,7 +363,18 @@ export const uploadFile = async (req, res) => {
     res.status(201).json({ message: messageWithUser });
   } catch (error) {
     console.error("Error uploading file:", error);
-    res.status(500).json({ message: "Failed to upload file" });
+    
+    // Provide more specific error messages
+    let errorMessage = "Failed to upload file";
+    if (error.message.includes("Upload failed")) {
+      errorMessage = error.message;
+    } else if (error.message.includes("File too large")) {
+      errorMessage = "File size exceeds the maximum limit";
+    } else if (error.message.includes("Invalid file type")) {
+      errorMessage = "File type is not supported";
+    }
+    
+    res.status(500).json({ message: errorMessage });
   }
 };
 

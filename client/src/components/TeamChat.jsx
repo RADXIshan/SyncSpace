@@ -17,10 +17,40 @@ import {
   ThumbsUp,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+
+// Debug wrapper for toast to catch undefined values
+const safeToast = {
+  success: (message, options) => {
+    if (message && message !== "undefined") {
+      return toast.success(message, options);
+    } else {
+      console.warn("Attempted to show undefined success toast:", message);
+      return toast.success("Action completed successfully", options);
+    }
+  },
+  error: (message, options) => {
+    if (message && message !== "undefined") {
+      return toast.error(message, options);
+    } else {
+      console.warn("Attempted to show undefined error toast:", message);
+      return toast.error("An error occurred", options);
+    }
+  },
+  loading: (message, options) => {
+    if (message && message !== "undefined") {
+      return toast.loading(message, options);
+    } else {
+      console.warn("Attempted to show undefined loading toast:", message);
+      return toast.loading("Loading...", options);
+    }
+  },
+  dismiss: toast.dismiss,
+};
 import EmojiPicker from "./EmojiPicker";
 import MessageReactions from "./MessageReactions";
 import TypingIndicator from "./TypingIndicator";
 import MentionsList from "./MentionsList";
+import FileUpload from "./FileUpload";
 
 const TeamChat = ({ channelId, channelName }) => {
   const { user } = useAuth();
@@ -38,6 +68,9 @@ const TeamChat = ({ channelId, channelName }) => {
   const [mentionPosition, setMentionPosition] = useState(0);
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const [channelMembers, setChannelMembers] = useState([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [activeToasts, setActiveToasts] = useState(new Set());
+  const [dragOver, setDragOver] = useState(false);
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -180,13 +213,13 @@ const TeamChat = ({ channelId, channelName }) => {
     // Listen for mention notifications
     socket.on("user_mentioned", (data) => {
       if (data.mentionedUserId === user.user_id) {
-        toast.success(
-          `${data.mentionedBy} mentioned you in #${data.channelName}`,
-          {
-            duration: 5000,
-            icon: "👋",
-          }
-        );
+        const mentionedBy = data.mentionedBy || "Someone";
+        const channelName = data.channelName || "a channel";
+
+        toast.success(`${mentionedBy} mentioned you in #${channelName}`, {
+          duration: 5000,
+          icon: "👋",
+        });
       }
     });
 
@@ -464,26 +497,74 @@ const TeamChat = ({ channelId, channelName }) => {
 
   // Handle file upload
   const handleFileUpload = async (files) => {
-    for (const file of files) {
+    const uploadPromises = files.map(async (file) => {
       try {
+        // Ensure file has a name
+        const fileName = file.name || "Unknown file";
+
+        // Show upload progress toast
+        const uploadToast = safeToast.loading(`Uploading ${fileName}...`);
+
         const formData = new FormData();
         formData.append("file", file);
         formData.append("channel_id", channelId);
 
-        await axios.post(
+        const response = await axios.post(
           `${import.meta.env.VITE_BASE_URL}/api/messages/file`,
           formData,
           {
             withCredentials: true,
             headers: { "Content-Type": "multipart/form-data" },
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total && progressEvent.loaded) {
+                const percentCompleted = Math.round(
+                  (progressEvent.loaded * 100) / progressEvent.total
+                );
+                safeToast.loading(
+                  `Uploading ${fileName}... ${percentCompleted}%`,
+                  {
+                    id: uploadToast,
+                  }
+                );
+              }
+            },
           }
         );
+
+        safeToast.success(`${fileName} uploaded successfully!`, {
+          id: uploadToast,
+        });
+
+        return response.data;
       } catch (error) {
         console.error("Error uploading file:", error);
-        toast.error(`Failed to upload ${file.name}`);
+
+        // Dismiss the loading toast
+        toast.dismiss(uploadToast);
+
+        // Show error message with proper fallback
+        let errorMessage = "Unknown error occurred";
+        if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        } else if (typeof error === "string") {
+          errorMessage = error;
+        }
+
+        safeToast.error(`Failed to upload ${fileName}: ${errorMessage}`);
+        throw error;
       }
+    });
+
+    try {
+      await Promise.all(uploadPromises);
+      // Close the file upload modal after successful upload
+      setShowFileUpload(false);
+    } catch (error) {
+      console.error("Some files failed to upload:", error);
+      // Keep modal open if there were errors so user can retry
     }
-    setShowFileUpload(false);
   };
 
   // Handle message reactions
@@ -586,6 +667,190 @@ const TeamChat = ({ channelId, channelName }) => {
     textareaRef.current?.focus();
   };
 
+  // Handle file download
+  const handleFileDownload = async (fileUrl, fileName) => {
+    if (!fileUrl) {
+      toast.error("File URL is not available");
+      return;
+    }
+
+    // Ensure fileName is not undefined or null
+    const safeFileName = fileName || "download";
+
+    // Prevent duplicate download notifications
+    const downloadKey = `download-${fileUrl}-${safeFileName}`;
+    if (activeToasts.has(downloadKey)) {
+      return;
+    }
+
+    setActiveToasts((prev) => new Set([...prev, downloadKey]));
+
+    try {
+      // Try using our backend proxy first for better compatibility
+      const proxyUrl = `${import.meta.env.VITE_BASE_URL}/api/files/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(safeFileName)}`;
+      
+      const response = await fetch(proxyUrl, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Accept: "*/*",
+        },
+      });
+
+      if (!response.ok) {
+        // If proxy fails, try direct download
+        throw new Error(`Proxy failed with status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+
+      // Create a temporary URL for the blob
+      const url = window.URL.createObjectURL(blob);
+
+      // Create a temporary anchor element and trigger download
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = safeFileName;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+
+      safeToast.success(`${safeFileName} downloaded successfully!`);
+    } catch (error) {
+      console.error("Error downloading via proxy, trying direct download:", error);
+
+      try {
+        // Fallback: try direct download
+        const response = await fetch(fileUrl, {
+          method: "GET",
+          headers: {
+            Accept: "*/*",
+          },
+          mode: "cors",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Direct download failed with status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = safeFileName;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+        }, 100);
+
+        safeToast.success(`${safeFileName} downloaded successfully!`);
+      } catch (directError) {
+        console.error("Direct download also failed:", directError);
+
+        // Final fallback: open in new tab
+        try {
+          const link = document.createElement("a");
+          link.href = fileUrl;
+          link.download = safeFileName;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          safeToast.success(`Opening ${safeFileName} in new tab...`);
+        } catch (fallbackError) {
+          console.error("All download methods failed:", fallbackError);
+          safeToast.error(
+            `Unable to download ${safeFileName}. You can try right-clicking the file and selecting "Save as..."`
+          );
+        }
+      }
+    } finally {
+      // Remove from active toasts after a delay
+      setTimeout(() => {
+        setActiveToasts((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(downloadKey);
+          return newSet;
+        });
+      }, 1000);
+    }
+  };
+
+  // Get file icon based on file type
+  const getFileIcon = (fileType, fileName) => {
+    if (!fileType && fileName) {
+      const extension = fileName.split(".").pop()?.toLowerCase();
+      switch (extension) {
+        case "pdf":
+          return "📄";
+        case "mp3":
+        case "wav":
+        case "ogg":
+        case "m4a":
+          return "🎵";
+        case "mp4":
+        case "avi":
+        case "mov":
+        case "wmv":
+          return "🎬";
+        case "doc":
+        case "docx":
+          return "📝";
+        case "xls":
+        case "xlsx":
+          return "📊";
+        case "ppt":
+        case "pptx":
+          return "📽️";
+        case "zip":
+        case "rar":
+        case "7z":
+          return "🗜️";
+        default:
+          return "📎";
+      }
+    }
+
+    if (fileType?.startsWith("image/")) return "🖼️";
+    if (fileType?.startsWith("video/")) return "🎬";
+    if (fileType?.startsWith("audio/")) return "🎵";
+    if (fileType?.includes("pdf")) return "📄";
+    if (fileType?.includes("document") || fileType?.includes("word"))
+      return "📝";
+    if (fileType?.includes("spreadsheet") || fileType?.includes("excel"))
+      return "📊";
+    if (fileType?.includes("presentation") || fileType?.includes("powerpoint"))
+      return "📽️";
+    if (fileType?.includes("zip") || fileType?.includes("compressed"))
+      return "🗜️";
+
+    return "📎";
+  };
+
+  // Format file size
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "";
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
   // Format timestamp
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -628,6 +893,32 @@ const TeamChat = ({ channelId, channelName }) => {
     return processedContent;
   };
 
+  // Handle drag and drop for the entire chat area
+  const handleChatDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  };
+
+  const handleChatDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only hide drag overlay if we're leaving the main container
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOver(false);
+    }
+  };
+
+  const handleChatDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileUpload(Array.from(e.dataTransfer.files));
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -637,7 +928,12 @@ const TeamChat = ({ channelId, channelName }) => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-b from-gray-50 to-white">
+    <div
+      className="h-full flex flex-col bg-gradient-to-b from-gray-50 to-white relative"
+      onDragOver={handleChatDragOver}
+      onDragLeave={handleChatDragLeave}
+      onDrop={handleChatDrop}
+    >
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {/* Welcome Message */}
@@ -806,22 +1102,166 @@ const TeamChat = ({ channelId, channelName }) => {
                           }`}
                         >
                           {message.file_type?.startsWith("image/") ? (
-                            <img
-                              src={message.file_url}
-                              alt={message.file_name}
-                              className="max-w-full h-auto rounded cursor-pointer"
-                              onClick={() =>
-                                window.open(message.file_url, "_blank")
-                              }
-                            />
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <File
-                                size={20}
-                                className={
-                                  isOwnMessage ? "text-white" : "text-gray-600"
+                            <div className="relative group">
+                              <img
+                                src={message.file_url}
+                                alt={message.file_name}
+                                className="max-w-full h-auto rounded cursor-pointer transition-transform hover:scale-105"
+                                onClick={() =>
+                                  window.open(message.file_url, "_blank")
                                 }
                               />
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleFileDownload(
+                                      message.file_url,
+                                      message.file_name
+                                    );
+                                  }}
+                                  className="p-2 bg-black bg-opacity-50 hover:bg-opacity-70 rounded-full text-white transition-all cursor-pointer"
+                                  title="Download image"
+                                >
+                                  <Download size={16} />
+                                </button>
+                              </div>
+                              {message.file_name && (
+                                <div className="mt-2 text-xs opacity-75">
+                                  {message.file_name}
+                                </div>
+                              )}
+                            </div>
+                          ) : message.file_type?.startsWith("video/") ? (
+                            <div className="relative">
+                              <video
+                                src={message.file_url}
+                                controls
+                                className="max-w-full h-auto rounded"
+                                preload="metadata"
+                              >
+                                Your browser does not support the video tag.
+                              </video>
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex-1 min-w-0">
+                                  <div
+                                    className={`text-sm font-medium truncate ${
+                                      isOwnMessage
+                                        ? "text-white"
+                                        : "text-gray-900"
+                                    }`}
+                                  >
+                                    {message.file_name}
+                                  </div>
+                                  <div
+                                    className={`text-xs ${
+                                      isOwnMessage
+                                        ? "text-blue-100"
+                                        : "text-gray-500"
+                                    }`}
+                                  >
+                                    {formatFileSize(message.file_size)}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() =>
+                                    handleFileDownload(
+                                      message.file_url,
+                                      message.file_name
+                                    )
+                                  }
+                                  className={`p-1 rounded cursor-pointer ml-2 ${
+                                    isOwnMessage
+                                      ? "hover:bg-blue-600"
+                                      : "hover:bg-gray-200"
+                                  }`}
+                                  title="Download video"
+                                >
+                                  <Download
+                                    size={16}
+                                    className={
+                                      isOwnMessage
+                                        ? "text-white"
+                                        : "text-gray-600"
+                                    }
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                          ) : message.file_type?.startsWith("audio/") ? (
+                            <div className="space-y-2">
+                              <audio
+                                src={message.file_url}
+                                controls
+                                className="w-full"
+                                preload="metadata"
+                              >
+                                Your browser does not support the audio tag.
+                              </audio>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">
+                                    {getFileIcon(
+                                      message.file_type,
+                                      message.file_name
+                                    )}
+                                  </span>
+                                  <div className="flex-1 min-w-0">
+                                    <div
+                                      className={`text-sm font-medium truncate ${
+                                        isOwnMessage
+                                          ? "text-white"
+                                          : "text-gray-900"
+                                      }`}
+                                    >
+                                      {message.file_name}
+                                    </div>
+                                    <div
+                                      className={`text-xs ${
+                                        isOwnMessage
+                                          ? "text-blue-100"
+                                          : "text-gray-500"
+                                      }`}
+                                    >
+                                      {formatFileSize(message.file_size)}
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() =>
+                                    handleFileDownload(
+                                      message.file_url,
+                                      message.file_name
+                                    )
+                                  }
+                                  className={`p-1 rounded cursor-pointer ${
+                                    isOwnMessage
+                                      ? "hover:bg-blue-600"
+                                      : "hover:bg-gray-200"
+                                  }`}
+                                  title="Download audio"
+                                >
+                                  <Download
+                                    size={16}
+                                    className={
+                                      isOwnMessage
+                                        ? "text-white"
+                                        : "text-gray-600"
+                                    }
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              <div className="flex-shrink-0">
+                                <span className="text-2xl">
+                                  {getFileIcon(
+                                    message.file_type,
+                                    message.file_name
+                                  )}
+                                </span>
+                              </div>
                               <div className="flex-1 min-w-0">
                                 <div
                                   className={`text-sm font-medium truncate ${
@@ -839,33 +1279,62 @@ const TeamChat = ({ channelId, channelName }) => {
                                       : "text-gray-500"
                                   }`}
                                 >
-                                  {message.file_size &&
-                                    `${(
-                                      message.file_size /
-                                      1024 /
-                                      1024
-                                    ).toFixed(1)} MB`}
+                                  {formatFileSize(message.file_size)}
+                                  {message.file_type && (
+                                    <span className="ml-1">
+                                      •{" "}
+                                      {message.file_type
+                                        .split("/")[1]
+                                        ?.toUpperCase()}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
-                              <button
-                                onClick={() =>
-                                  window.open(message.file_url, "_blank")
-                                }
-                                className={`p-1 rounded cursor-pointer ${
-                                  isOwnMessage
-                                    ? "hover:bg-blue-600"
-                                    : "hover:bg-gray-200"
-                                }`}
-                              >
-                                <Download
-                                  size={16}
-                                  className={
-                                    isOwnMessage
-                                      ? "text-white"
-                                      : "text-gray-600"
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() =>
+                                    window.open(message.file_url, "_blank")
                                   }
-                                />
-                              </button>
+                                  className={`p-2 rounded cursor-pointer ${
+                                    isOwnMessage
+                                      ? "hover:bg-blue-600"
+                                      : "hover:bg-gray-200"
+                                  }`}
+                                  title="Open file"
+                                >
+                                  <File
+                                    size={16}
+                                    className={
+                                      isOwnMessage
+                                        ? "text-white"
+                                        : "text-gray-600"
+                                    }
+                                  />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleFileDownload(
+                                      message.file_url,
+                                      message.file_name
+                                    )
+                                  }
+                                  className={`p-2 rounded cursor-pointer ${
+                                    isOwnMessage
+                                      ? "hover:bg-blue-600"
+                                      : "hover:bg-gray-200"
+                                  }`}
+                                  title="Download file"
+                                >
+                                  <Download
+                                    size={16}
+                                    className={
+                                      isOwnMessage
+                                        ? "text-white"
+                                        : "text-gray-600"
+                                    }
+                                  />
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -1042,26 +1511,34 @@ const TeamChat = ({ channelId, channelName }) => {
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200 cursor-pointer"
-                  title="Attach file"
-                >
-                  <Paperclip size={18} className="sm:w-5 sm:h-5" />
-                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowFileUpload(true)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }}
+                    className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200 cursor-pointer"
+                    title="Attach files - Click to browse, right-click for quick upload, or drag & drop files anywhere"
+                  >
+                    <Paperclip size={18} className="sm:w-5 sm:h-5" />
+                  </button>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files?.length) {
-                      handleFileUpload(Array.from(e.target.files));
-                    }
-                  }}
-                />
+                  {/* Quick file input for single file uploads */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files?.length) {
+                        handleFileUpload(Array.from(e.target.files));
+                        e.target.value = ""; // Reset input
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               <button
@@ -1086,6 +1563,31 @@ const TeamChat = ({ channelId, channelName }) => {
           </div>
         </form>
       </div>
+
+      {/* Drag and Drop Overlay */}
+      {dragOver && (
+        <div className="absolute inset-0 bg-purple-500/10 backdrop-blur-sm border-2 border-dashed border-purple-400 rounded-lg flex items-center justify-center z-40">
+          <div className="text-center p-8">
+            <div className="text-6xl mb-4">📁</div>
+            <h3 className="text-xl font-semibold text-purple-700 mb-2">
+              Drop files here
+            </h3>
+            <p className="text-purple-600">
+              Release to upload files to #{channelName}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* File Upload Modal */}
+      {showFileUpload && (
+        <FileUpload
+          onUpload={handleFileUpload}
+          onClose={() => setShowFileUpload(false)}
+          maxFiles={5}
+          maxSize={10 * 1024 * 1024} // 10MB
+        />
+      )}
     </div>
   );
 };

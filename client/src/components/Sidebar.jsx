@@ -350,9 +350,7 @@ const Sidebar = ({
               >
                 <span
                   className={`mr-3 transition-all duration-300 group-hover:scale-110 ${
-                    isActive(item.path)
-                      ? "text-purple-400"
-                      : "text-white/70"
+                    isActive(item.path) ? "text-purple-400" : "text-white/70"
                   }`}
                 >
                   {React.cloneElement(item.icon, { size: 20 })}

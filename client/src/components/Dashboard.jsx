@@ -129,7 +129,7 @@ const Dashboard = ({ onSettingsClick, onJoinOrgClick, onCreateOrgClick, onMessag
   }
 
   return (
-    <div className="max-h-screen p-3 sm:p-6">
+    <div className="h-screen p-3 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8">
         {/* ---------------- HEADER ---------------- */}
         <header className="flex pt-15 sm:pt-2 flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 p-3 sm:pb-2 lg:mt-5">

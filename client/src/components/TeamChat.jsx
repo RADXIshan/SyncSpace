@@ -670,7 +670,7 @@ const TeamChat = ({ channelId, channelName }) => {
   // Handle file download
   const handleFileDownload = async (fileUrl, fileName) => {
     if (!fileUrl) {
-      toast.error("File URL is not available");
+      safeToast.error("File URL is not available");
       return;
     }
 
@@ -685,6 +685,8 @@ const TeamChat = ({ channelId, channelName }) => {
 
     setActiveToasts((prev) => new Set([...prev, downloadKey]));
 
+    const downloadToast = safeToast.loading(`Preparing download for ${safeFileName}...`);
+
     try {
       // Try using our backend proxy first for better compatibility
       const proxyUrl = `${
@@ -692,6 +694,8 @@ const TeamChat = ({ channelId, channelName }) => {
       }/api/files/download?url=${encodeURIComponent(
         fileUrl
       )}&filename=${encodeURIComponent(safeFileName)}`;
+
+      console.log(`Attempting download via proxy: ${proxyUrl}`);
 
       const response = await fetch(proxyUrl, {
         method: "GET",
@@ -702,11 +706,17 @@ const TeamChat = ({ channelId, channelName }) => {
       });
 
       if (!response.ok) {
-        // If proxy fails, try direct download
-        throw new Error(`Proxy failed with status: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Proxy failed with status: ${response.status}, error: ${errorText}`);
+        throw new Error(`Proxy failed with status: ${response.status} - ${errorText}`);
       }
 
       const blob = await response.blob();
+      console.log(`Downloaded blob size: ${blob.size} bytes`);
+
+      if (blob.size === 0) {
+        throw new Error("Downloaded file is empty");
+      }
 
       // Create a temporary URL for the blob
       const url = window.URL.createObjectURL(blob);
@@ -725,68 +735,18 @@ const TeamChat = ({ channelId, channelName }) => {
         window.URL.revokeObjectURL(url);
       }, 100);
 
-      safeToast.success(`${safeFileName} downloaded successfully!`);
+      safeToast.success(`${safeFileName} downloaded successfully!`, { id: downloadToast });
     } catch (error) {
-      console.error(
-        "Error downloading via proxy, trying direct download:",
-        error
-      );
+      console.error("Error downloading via proxy:", error);
+      safeToast.error(`Download failed: ${error.message}`, { id: downloadToast });
 
-      try {
-        // Fallback: try direct download
-        const response = await fetch(fileUrl, {
-          method: "GET",
-          headers: {
-            Accept: "*/*",
-          },
-          mode: "cors",
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Direct download failed with status: ${response.status}`
-          );
-        }
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = safeFileName;
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-
-        setTimeout(() => {
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-        }, 100);
-
-        safeToast.success(`${safeFileName} downloaded successfully!`);
-      } catch (directError) {
-        console.error("Direct download also failed:", directError);
-
-        // Final fallback: open in new tab
-        try {
-          const link = document.createElement("a");
-          link.href = fileUrl;
-          link.download = safeFileName;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.style.display = "none";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-
-          safeToast.success(`Opening ${safeFileName} in new tab...`);
-        } catch (fallbackError) {
-          console.error("All download methods failed:", fallbackError);
-          safeToast.error(
-            `Unable to download ${safeFileName}. You can try right-clicking the file and selecting "Save as..."`
-          );
-        }
-      }
+      // Show alternative options to user
+      setTimeout(() => {
+        safeToast.error(
+          `Unable to download ${safeFileName}. Try right-clicking the file and selecting "Save as..." or contact support if the issue persists.`,
+          { duration: 8000 }
+        );
+      }, 1000);
     } finally {
       // Remove from active toasts after a delay
       setTimeout(() => {
@@ -797,6 +757,27 @@ const TeamChat = ({ channelId, channelName }) => {
         });
       }, 1000);
     }
+  };
+
+  // Helper function to determine if file can be viewed inline
+  const canViewInline = (fileType, fileName) => {
+    if (!fileType && !fileName) return false;
+    
+    // Check by MIME type
+    if (fileType) {
+      if (fileType.includes('pdf')) return true;
+      if (fileType.startsWith('image/')) return true;
+      if (fileType.startsWith('text/')) return true;
+    }
+    
+    // Check by file extension
+    if (fileName) {
+      const extension = fileName.split('.').pop()?.toLowerCase();
+      const viewableExtensions = ['pdf', 'txt', 'md', 'json', 'xml', 'csv'];
+      return viewableExtensions.includes(extension);
+    }
+    
+    return false;
   };
 
   // Get file icon based on file type
@@ -1116,9 +1097,15 @@ const TeamChat = ({ channelId, channelName }) => {
                                 src={message.file_url}
                                 alt={message.file_name}
                                 className="max-w-full h-auto rounded cursor-pointer transition-transform hover:scale-105"
-                                onClick={() =>
-                                  window.open(message.file_url, "_blank")
-                                }
+                                onClick={() => {
+                                  // For images, try direct URL first, fallback to view proxy if needed
+                                  window.open(message.file_url, "_blank");
+                                }}
+                                onError={(e) => {
+                                  // If image fails to load, try the view proxy
+                                  const viewUrl = `${import.meta.env.VITE_BASE_URL}/api/files/view?url=${encodeURIComponent(message.file_url)}&filename=${encodeURIComponent(message.file_name)}`;
+                                  e.target.src = viewUrl;
+                                }}
                               />
                               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
@@ -1301,9 +1288,16 @@ const TeamChat = ({ channelId, channelName }) => {
                               </div>
                               <div className="flex gap-1">
                                 <button
-                                  onClick={() =>
-                                    window.open(message.file_url, "_blank")
-                                  }
+                                  onClick={() => {
+                                    // For viewable files, use the view proxy
+                                    if (canViewInline(message.file_type, message.file_name)) {
+                                      const viewUrl = `${import.meta.env.VITE_BASE_URL}/api/files/view?url=${encodeURIComponent(message.file_url)}&filename=${encodeURIComponent(message.file_name)}`;
+                                      window.open(viewUrl, "_blank");
+                                    } else {
+                                      // For other files, try direct URL first
+                                      window.open(message.file_url, "_blank");
+                                    }
+                                  }}
                                   className={`p-2 rounded cursor-pointer ${
                                     isOwnMessage
                                       ? "hover:bg-blue-600"

@@ -307,6 +307,8 @@ export const uploadFile = async (req, res) => {
       resourceType = "image";
     } else if (file.mimetype.startsWith('audio/')) {
       resourceType = "video"; // Cloudinary uses 'video' for audio files
+    } else if (file.mimetype === 'application/pdf' || extension === 'pdf') {
+      resourceType = "raw"; // PDFs are always raw
     } else {
       resourceType = "raw"; // For documents, PDFs, etc.
     }
@@ -323,10 +325,20 @@ export const uploadFile = async (req, res) => {
         type: "upload"
       };
 
-      // Add format preservation for certain file types
+      // Special handling for different file types
       if (resourceType === "raw") {
+        // For raw files (PDFs, documents, etc.), ensure proper format and flags
         uploadOptions.format = extension;
+        uploadOptions.flags = "attachment"; // This helps with download behavior
+        uploadOptions.resource_type = "raw";
+      } else if (file.mimetype === 'application/pdf') {
+        // Special handling for PDFs - treat as raw but with specific settings
+        uploadOptions.resource_type = "raw";
+        uploadOptions.format = "pdf";
+        uploadOptions.flags = "attachment";
       }
+
+      console.log(`Uploading file: ${file.originalname}, type: ${file.mimetype}, resourceType: ${resourceType}`, uploadOptions);
 
       const uploadStream = cloudinary.uploader.upload_stream(
         uploadOptions,
@@ -335,6 +347,7 @@ export const uploadFile = async (req, res) => {
             console.error("Cloudinary upload error:", error);
             reject(new Error(`Upload failed: ${error.message}`));
           } else {
+            console.log("Upload successful:", result.secure_url);
             resolve(result);
           }
         }

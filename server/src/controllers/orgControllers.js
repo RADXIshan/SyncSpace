@@ -204,9 +204,9 @@ export const getOrganization = async (req, res) => {
       ORDER BY channel_id ASC
     `;
 
-    // Determine user's accessible teams for channel filtering
+    // Determine user's accessible teams and permissions for channel filtering
     const [memberWithRole] = await sql`
-      SELECT om.role, r.accessible_teams
+      SELECT om.role, r.accessible_teams, r.manage_channels, r.settings_access
       FROM org_members om
       LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
       WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
@@ -215,8 +215,12 @@ export const getOrganization = async (req, res) => {
 
     const isOwner = organization.created_by === userId;
     const accessibleTeams = memberWithRole?.accessible_teams || null;
+    const hasManageChannels = memberWithRole?.manage_channels || false;
+    const hasSettingsAccess = memberWithRole?.settings_access || false;
 
-    if (!isOwner && Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
+    // Users with manage_channels or settings_access permissions should see all channels
+    // Only filter channels if user is not owner and doesn't have manage_channels or settings_access permissions
+    if (!isOwner && !hasManageChannels && !hasSettingsAccess && Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
       channels = channels.filter(ch => accessibleTeams.includes(ch.channel_name));
     }
 
@@ -1261,7 +1265,7 @@ export const getChannel = async (req, res) => {
 
     if (!isOwner) {
       const [memberWithRole] = await sql`
-        SELECT r.accessible_teams
+        SELECT r.accessible_teams, r.manage_channels, r.settings_access
         FROM org_members om
         LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
         WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
@@ -1269,7 +1273,11 @@ export const getChannel = async (req, res) => {
       `;
 
       const accessibleTeams = memberWithRole?.accessible_teams || null;
-      if (Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
+      const hasManageChannels = memberWithRole?.manage_channels || false;
+      const hasSettingsAccess = memberWithRole?.settings_access || false;
+
+      // Users with manage_channels or settings_access permissions can access all channels
+      if (!hasManageChannels && !hasSettingsAccess && Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
         const canAccess = accessibleTeams.includes(channel.channel_name);
         if (!canAccess) {
           return res.status(403).json({ message: "You don't have access to this channel" });

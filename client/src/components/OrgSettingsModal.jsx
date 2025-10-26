@@ -33,7 +33,8 @@ const OrgSettingsModal = ({
   onSuccess,
 }) => {
   const isOwner = userPermissions?.isOwner || false;
-  const { isUserOnline, onlineUsers, refreshOnlineUsers, useHttpFallback } = useSocket();
+  const { isUserOnline, onlineUsers, refreshOnlineUsers, useHttpFallback } =
+    useSocket();
   const [orgName, setOrgName] = useState(organization?.name || "");
   const [accessLevel, setAccessLevel] = useState(
     organization?.accessLevel || "invite-only"
@@ -296,15 +297,15 @@ const OrgSettingsModal = ({
     try {
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
       await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${
           organization.id
         }/members/${memberId}/role`,
         { role: tempRole },
-        { 
+        {
           withCredentials: true,
-          headers
+          headers,
         }
       );
       toast.success("Member role updated successfully");
@@ -470,10 +471,10 @@ const OrgSettingsModal = ({
     filteredMembers.sort((a, b) => {
       const aOnline = isUserOnline(a.id);
       const bOnline = isUserOnline(b.id);
-      
+
       if (aOnline && !bOnline) return -1;
       if (!aOnline && bOnline) return 1;
-      
+
       // If both have same online status, sort by name
       return (a.name || a.email).localeCompare(b.name || b.email);
     });
@@ -504,10 +505,15 @@ const OrgSettingsModal = ({
 
       if (organization.roles && organization.roles.length > 0) {
         // Deep clone roles to avoid shared references with original values
+        const allChannelNames = (organization.channels || [])
+          .filter((ch) => ch.name?.trim())
+          .map((ch) => ch.name.trim());
         const clonedRoles = organization.roles.map((r) => ({
           ...r,
           permissions: { ...r.permissions },
-          accessible_teams: Array.isArray(r.accessible_teams)
+          accessible_teams: r.permissions?.manage_channels
+            ? allChannelNames // Roles with manage_channels get all channels
+            : Array.isArray(r.accessible_teams)
             ? [...r.accessible_teams]
             : [],
         }));
@@ -546,13 +552,33 @@ const OrgSettingsModal = ({
       (activeTab === "members" || activeTab === "danger")
     ) {
       fetchMembers();
-      
+
       // Also refresh online users if using HTTP fallback
       if (activeTab === "members" && useHttpFallback && refreshOnlineUsers) {
         refreshOnlineUsers();
       }
     }
   }, [organization, activeTab]);
+
+  // Auto-update accessible_teams for roles with manage_channels permission
+  useEffect(() => {
+    const allChannelNames = channels
+      .filter((ch) => ch.name?.trim())
+      .map((ch) => ch.name.trim());
+
+    setRoles((prevRoles) => {
+      return prevRoles.map((role) => {
+        // If role has manage_channels permission, ensure it has access to all channels
+        if (role.permissions?.manage_channels) {
+          return {
+            ...role,
+            accessible_teams: allChannelNames,
+          };
+        }
+        return role;
+      });
+    });
+  }, [channels]);
 
   // Track changes for unsaved changes detection
   useEffect(() => {
@@ -655,18 +681,33 @@ const OrgSettingsModal = ({
 
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
+      // Prepare roles data, ensuring roles with manage_channels have all channels
+      const allChannelNames = channels
+        .filter((ch) => ch.name.trim())
+        .map((ch) => ch.name.trim());
+      const processedRoles = roles
+        .filter((role) => role.name.trim())
+        .map((role) => ({
+          ...role,
+          accessible_teams: role.permissions?.manage_channels
+            ? allChannelNames // Roles with manage_channels get all channels
+            : Array.isArray(role.accessible_teams)
+            ? role.accessible_teams
+            : [],
+        }));
+
       const response = await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}`,
         {
           name: orgName.trim(),
           accessLevel,
           channels: channels.filter((ch) => ch.name.trim()),
-          roles: roles.filter((role) => role.name.trim()),
+          roles: processedRoles,
         },
-        { 
+        {
           withCredentials: true,
-          headers
+          headers,
         }
       );
 
@@ -798,12 +839,38 @@ const OrgSettingsModal = ({
     const updated = [...roles];
     updated[roleIndex].permissions[permission] =
       !updated[roleIndex].permissions[permission];
+
+    // If manage_channels permission is being toggled on, give access to all channels
+    if (
+      permission === "manage_channels" &&
+      updated[roleIndex].permissions[permission]
+    ) {
+      const allChannelNames = channels
+        .filter((ch) => ch.name?.trim())
+        .map((ch) => ch.name.trim());
+      updated[roleIndex].accessible_teams = allChannelNames;
+    }
+    // If manage_channels permission is being toggled off, clear accessible teams
+    else if (
+      permission === "manage_channels" &&
+      !updated[roleIndex].permissions[permission]
+    ) {
+      updated[roleIndex].accessible_teams = [];
+    }
+
     setRoles(updated);
   };
 
   const toggleRoleChannelAccess = (roleIndex, channelName) => {
     const updated = [...roles];
     const role = updated[roleIndex] || {};
+
+    // If role has manage_channels permission, they should have access to all channels
+    // Don't allow individual channel toggling for roles with manage_channels
+    if (role.permissions?.manage_channels) {
+      return; // Do nothing if role has manage_channels permission
+    }
+
     const current = Array.isArray(role.accessible_teams)
       ? role.accessible_teams
       : [];
@@ -1266,29 +1333,60 @@ const OrgSettingsModal = ({
                                 Accessible Channels
                               </label>
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                {channels.map((ch, i) => (
-                                  <label
-                                    key={ch.id || `${ch.name}-${i}`}
-                                    className="flex items-center gap-2 cursor-pointer"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={(Array.isArray(
-                                        role.accessible_teams
-                                      )
-                                        ? role.accessible_teams
-                                        : []
-                                      ).includes(ch.name)}
-                                      onChange={() =>
-                                        toggleRoleChannelAccess(index, ch.name)
-                                      }
-                                    />
-                                    <span className="text-xs text-gray-300">
-                                      {ch.name}
-                                    </span>
-                                  </label>
-                                ))}
+                                {channels.map((ch, i) => {
+                                  const hasManageChannels =
+                                    role.permissions?.manage_channels;
+                                  const isChecked =
+                                    hasManageChannels ||
+                                    (Array.isArray(role.accessible_teams)
+                                      ? role.accessible_teams
+                                      : []
+                                    ).includes(ch.name);
+
+                                  return (
+                                    <label
+                                      key={ch.id || `${ch.name}-${i}`}
+                                      className={`flex items-center gap-2 ${
+                                        hasManageChannels
+                                          ? "cursor-not-allowed opacity-75"
+                                          : "cursor-pointer"
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        disabled={hasManageChannels}
+                                        onChange={() =>
+                                          toggleRoleChannelAccess(
+                                            index,
+                                            ch.name
+                                          )
+                                        }
+                                        className={
+                                          hasManageChannels
+                                            ? "cursor-not-allowed"
+                                            : ""
+                                        }
+                                      />
+                                      <span
+                                        className={`text-xs ${
+                                          hasManageChannels
+                                            ? "text-green-300"
+                                            : "text-gray-300"
+                                        }`}
+                                      >
+                                        {ch.name}
+                                      </span>
+                                    </label>
+                                  );
+                                })}
                               </div>
+                              {role.permissions?.manage_channels && (
+                                <p className="text-xs text-green-400/80 mt-2">
+                                  This role has Manage Channels permission and
+                                  automatically has access to all channels.
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -1305,10 +1403,14 @@ const OrgSettingsModal = ({
                         Organization Members
                       </h3>
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs sm:text-sm text-gray-400">
-                        <OnlineCounter members={members} className="text-xs sm:text-sm" />
+                        <OnlineCounter
+                          members={members}
+                          className="text-xs sm:text-sm"
+                        />
                         <div className="hidden sm:block text-gray-500">•</div>
                         <div>
-                          {getFilteredMembers().length} of {members.length} member
+                          {getFilteredMembers().length} of {members.length}{" "}
+                          member
                           {members.length !== 1 ? "s" : ""} shown
                         </div>
                         {useHttpFallback && (
@@ -1537,7 +1639,10 @@ const OrgSettingsModal = ({
                                     </div>
                                     {/* Online Status Indicator */}
                                     <div className="absolute -bottom-0.5 -right-0.5">
-                                      <OnlineStatus userId={member.id} size="md" />
+                                      <OnlineStatus
+                                        userId={member.id}
+                                        size="md"
+                                      />
                                     </div>
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -1566,7 +1671,11 @@ const OrgSettingsModal = ({
                                         {member.role}
                                       </span>
                                       <div className="flex items-center gap-1">
-                                        <OnlineStatus userId={member.id} showText={true} size="xs" />
+                                        <OnlineStatus
+                                          userId={member.id}
+                                          showText={true}
+                                          size="xs"
+                                        />
                                       </div>
                                       <span className="text-xs text-gray-500 hidden sm:inline">
                                         Joined{" "}

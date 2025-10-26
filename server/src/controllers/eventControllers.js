@@ -235,9 +235,9 @@ const checkChannelAccess = async (userId, channelId, orgId) => {
       return true; // Organization owner has access to all channels
     }
 
-    // Get user's role and accessible teams
+    // Get user's role, accessible teams, and permissions
     const [memberWithRole] = await sql`
-      SELECT om.role, r.accessible_teams
+      SELECT om.role, r.accessible_teams, r.manage_channels, r.settings_access
       FROM org_members om
       LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
       WHERE om.org_id = ${orgId} AND om.user_id = ${userId}
@@ -248,6 +248,13 @@ const checkChannelAccess = async (userId, channelId, orgId) => {
     }
 
     const accessibleTeams = memberWithRole.accessible_teams;
+    const hasManageChannels = memberWithRole.manage_channels || false;
+    const hasSettingsAccess = memberWithRole.settings_access || false;
+
+    // Users with manage_channels or settings_access permissions have access to all channels
+    if (hasManageChannels || hasSettingsAccess) {
+      return true;
+    }
 
     // If accessible_teams is null or empty, user has access to all channels
     if (!Array.isArray(accessibleTeams) || accessibleTeams.length === 0) {

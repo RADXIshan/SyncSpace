@@ -54,6 +54,24 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
   const channelRefs = useRef([]);
   const roleRefs = useRef([]);
 
+  // Auto-update accessible channels for roles with manage_channels permission
+  useEffect(() => {
+    const allChannelNames = channels.filter(ch => ch.name?.trim()).map(ch => ch.name.trim());
+    
+    setRoles(prevRoles => {
+      return prevRoles.map(role => {
+        // If role has manage_channels permission, ensure it has access to all channels
+        if (role.permissions?.manage_channels) {
+          return {
+            ...role,
+            accessibleChannels: allChannelNames
+          };
+        }
+        return role;
+      });
+    });
+  }, [channels]);
+
   // Initialize role colors whenever roles change
   useEffect(() => {
     const roleNames = roles.map(role => role.name.trim()).filter(name => name);
@@ -142,12 +160,30 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
     const updated = [...roles];
     updated[roleIndex].permissions[permission] =
       !updated[roleIndex].permissions[permission];
+    
+    // If manage_channels permission is being toggled on, give access to all channels
+    if (permission === 'manage_channels' && updated[roleIndex].permissions[permission]) {
+      const allChannelNames = channels.filter(ch => ch.name?.trim()).map(ch => ch.name.trim());
+      updated[roleIndex].accessibleChannels = allChannelNames;
+    }
+    // If manage_channels permission is being toggled off, clear accessible channels
+    else if (permission === 'manage_channels' && !updated[roleIndex].permissions[permission]) {
+      updated[roleIndex].accessibleChannels = [];
+    }
+    
     setRoles(updated);
   };
 
   const toggleChannelAccess = (roleIndex, channelName) => {
     const updated = [...roles];
     const role = updated[roleIndex];
+    
+    // If role has manage_channels permission, they should have access to all channels
+    // Don't allow individual channel toggling for roles with manage_channels
+    if (role.permissions?.manage_channels) {
+      return; // Do nothing if role has manage_channels permission
+    }
+    
     const hasAccess = role.accessibleChannels.includes(channelName);
 
     updated[roleIndex].accessibleChannels = hasAccess
@@ -218,9 +254,11 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
             roles_access: role.permissions.roles_access,
             invite_access: role.permissions.invite_access,
           },
-          accessible_teams: Array.isArray(role.accessibleChannels)
-            ? role.accessibleChannels.map((c) => c?.trim()).filter(Boolean)
-            : [],
+          accessible_teams: role.permissions.manage_channels
+            ? channels.filter(ch => ch.name?.trim()).map(ch => ch.name.trim()) // Roles with manage_channels get all channels
+            : (Array.isArray(role.accessibleChannels)
+                ? role.accessibleChannels.map((c) => c?.trim()).filter(Boolean)
+                : []),
         }))
       };
 
@@ -505,29 +543,51 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                     <div className="mt-4">
                       <h2 className="text-lg font-medium text-white">
                         Accessible Channels
+                        {role.permissions?.manage_channels && (
+                          <span className="ml-2 text-sm text-green-400 font-medium">
+                            (All channels - manage_channels permission)
+                          </span>
+                        )}
                       </h2>
                       <div className="grid grid-cols-2 gap-2 mt-2">
-                        {channels.map((ch, i) => (
-                          <label
-                            key={i}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={role.accessibleChannels.includes(
-                                ch.name
-                              )}
-                              onChange={() =>
-                                toggleChannelAccess(roleIndex, ch.name)
-                              }
-                              className="rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500"
-                            />
-                            <span className="text-sm text-gray-300">
-                              {ch.name}
-                            </span>
-                          </label>
-                        ))}
+                        {channels.map((ch, i) => {
+                          const hasManageChannels = role.permissions?.manage_channels;
+                          const isChecked = hasManageChannels || role.accessibleChannels.includes(ch.name);
+                          
+                          return (
+                            <label
+                              key={i}
+                              className={`flex items-center gap-2 ${
+                                hasManageChannels 
+                                  ? 'cursor-not-allowed opacity-75' 
+                                  : 'cursor-pointer'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                disabled={hasManageChannels}
+                                onChange={() =>
+                                  toggleChannelAccess(roleIndex, ch.name)
+                                }
+                                className={`rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500 ${
+                                  hasManageChannels ? 'cursor-not-allowed' : ''
+                                }`}
+                              />
+                              <span className={`text-sm ${
+                                hasManageChannels ? 'text-green-300' : 'text-gray-300'
+                              }`}>
+                                {ch.name}
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
+                      {role.permissions?.manage_channels && (
+                        <p className="text-xs text-green-400/80 mt-2">
+                          This role has manage_channels permission and automatically has access to all channels.
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

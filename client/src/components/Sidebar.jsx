@@ -337,22 +337,22 @@ const Sidebar = ({
         </div>
 
         <div className="flex-1 overflow-y-auto relative z-10 p-2">
-          <nav className="space-y-2">
+          <nav className="">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex rounded-lg items-center px-4 py-3 transition-all duration-300 font-medium group nav-item-hover ${
+                className={`flex rounded-lg items-center border-1 border-transparent px-4 py-3 transition-all duration-300 font-medium group ${
                   isActive(item.path)
-                    ? "glass-button-enhanced text-white shadow-lg"
-                    : "glass text-white/80 hover:text-white"
+                    ? "glass-button-enhanced text-purple-400 shadow-lg"
+                    : "text-white/70 hover:text-white hover:bg-white/5"
                 }`}
               >
                 <span
                   className={`mr-3 transition-all duration-300 group-hover:scale-110 ${
                     isActive(item.path)
-                      ? "text-white"
-                      : "text-white/70 group-hover:text-purple-400"
+                      ? "text-purple-400"
+                      : "text-white/70"
                   }`}
                 >
                   {React.cloneElement(item.icon, { size: 20 })}
@@ -446,15 +446,15 @@ const Sidebar = ({
                   Channels
                 </h3>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {organization.channels.map((channel) => (
                   <Link
                     key={channel.id}
                     to={`/home/channels/${channel.id}`}
-                    className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 font-medium group nav-item-hover ${
+                    className={`flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 font-medium group ${
                       isActive(`/home/channels/${channel.id}`)
                         ? "glass-button-enhanced text-white shadow-lg"
-                        : "glass text-white/80 hover:text-white"
+                        : "text-white/70 hover:text-white hover:bg-white/5"
                     }`}
                     title={channel.description || channel.name}
                   >

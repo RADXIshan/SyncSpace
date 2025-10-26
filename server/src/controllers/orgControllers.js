@@ -1197,11 +1197,17 @@ export const sendInvitations = async (req, res) => {
 
     const confirmationMail = {
         from: {
-            name: "Ishan Roy",
+            name: "SyncSpace Team",
             address: "trickster10ishan@gmail.com"
         },
+        replyTo: "noreply@syncspace.com",
+        headers: {
+            'X-Priority': '2',
+            'X-MSMail-Priority': 'Normal',
+            'Importance': 'normal'
+        },
         to: emails,
-        subject: `Invitation Code to join ${organizationName}`,
+        subject: `Team Invitation - Join ${organizationName} Workspace`,
         html: generateInviteEmail(organizationName, message, inviteCode),
     };    
 

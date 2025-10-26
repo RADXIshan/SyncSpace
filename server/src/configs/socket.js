@@ -266,6 +266,8 @@ export const setupSocketHandlers = (io) => {
       socket.leave(`channel_${channelId}`);
       // Silently leave channel
     });
+
+
   });
 };
 
@@ -319,14 +321,14 @@ export const getUserSocketId = (userId) => {
 };
 
 // Helper function to check if a user has access to a specific channel
-const checkChannelAccess = async (userId, channelId, orgId) => {
+const checkChannelAccess = async (userId, channelId) => {
   try {
     const sql = (await import('../database/db.js')).default;
     
     // Get channel details
     const [channel] = await sql`
-      SELECT channel_name FROM org_channels 
-      WHERE channel_id = ${channelId} AND org_id = ${orgId}
+      SELECT channel_name, org_id FROM org_channels 
+      WHERE channel_id = ${channelId}
     `;
     
     if (!channel) {
@@ -335,7 +337,7 @@ const checkChannelAccess = async (userId, channelId, orgId) => {
 
     // Check if user is organization owner (has access to all channels)
     const [org] = await sql`
-      SELECT created_by FROM organisations WHERE org_id = ${orgId}
+      SELECT created_by FROM organisations WHERE org_id = ${channel.org_id}
     `;
     
     if (org?.created_by === userId) {
@@ -347,7 +349,7 @@ const checkChannelAccess = async (userId, channelId, orgId) => {
       SELECT om.role, r.accessible_teams, r.manage_channels, r.settings_access
       FROM org_members om
       LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.role_name = om.role
-      WHERE om.org_id = ${orgId} AND om.user_id = ${userId}
+      WHERE om.org_id = ${channel.org_id} AND om.user_id = ${userId}
     `;
 
     if (!memberWithRole) {
@@ -364,12 +366,23 @@ const checkChannelAccess = async (userId, channelId, orgId) => {
     }
     
     // If accessible_teams is null or empty, user has access to all channels
-    if (!Array.isArray(accessibleTeams) || accessibleTeams.length === 0) {
-      return true;
+    if (!accessibleTeams || accessibleTeams === null) return true;
+    
+    // Handle JSONB array - parse if it's a string, use directly if it's already an array
+    let teamsArray;
+    try {
+      teamsArray = typeof accessibleTeams === 'string' 
+        ? JSON.parse(accessibleTeams) 
+        : accessibleTeams;
+    } catch (e) {
+      // If parsing fails, assume no access
+      return false;
     }
+    
+    if (!Array.isArray(teamsArray) || teamsArray.length === 0) return true;
 
     // Check if user has access to this specific channel
-    return accessibleTeams.includes(channel.channel_name);
+    return teamsArray.includes(channel.channel_name);
   } catch (error) {
     console.error('Error checking channel access:', error);
     return false;
@@ -383,7 +396,7 @@ export const getOnlineUsersWithChannelAccess = async (orgId, channelId) => {
   const orgUsers = [];
   for (const [userId, user] of onlineUsers) {
     if (user.org_id === orgId) {
-      const hasAccess = await checkChannelAccess(userId, channelId, orgId);
+      const hasAccess = await checkChannelAccess(userId, channelId);
       if (hasAccess) {
         orgUsers.push({
           id: userId,

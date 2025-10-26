@@ -12,15 +12,15 @@ const TypingIndicator = ({ users }) => {
   };
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2">
+    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-2xl mx-4 mb-2 shadow-sm">
       <div className="w-10 flex-shrink-0"></div>
-      <div className="flex items-center gap-2">
-        <div className="flex gap-1">
-          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+      <div className="flex items-center gap-3">
+        <div className="flex gap-1 bg-white rounded-full px-3 py-2 shadow-sm">
+          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
         </div>
-        <span className="text-sm text-gray-500 italic">
+        <span className="text-sm text-gray-600 font-medium">
           {getTypingText()}
         </span>
       </div>

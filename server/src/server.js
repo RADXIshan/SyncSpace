@@ -25,8 +25,25 @@ const server = createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // Configure CORS for both Express and Socket.IO
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://syncspace-client.vercel.app",
+  process.env.CLIENT_URL
+].filter(Boolean); // Remove any undefined values
+
 const corsOptions = {
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log("CORS blocked origin:", origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -35,10 +52,13 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 // Initialize Socket.IO with production-ready configuration
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   },

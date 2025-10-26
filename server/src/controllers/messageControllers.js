@@ -99,23 +99,54 @@ export const sendMessage = async (req, res) => {
 
     // Emit to channel room
     const io = req.app.get("io");
-    io.to(`channel_${channel_id}`).emit("new_message", messageWithUser);
+    if (io) {
+      io.to(`channel_${channel_id}`).emit("new_message", messageWithUser);
+    }
 
     // Send notifications for mentions
     if (mentions.length > 0) {
+      // Get channel info for notifications
+      const [channelInfo] = await sql`
+        SELECT org_id, channel_name FROM org_channels WHERE channel_id = ${channel_id}
+      `;
+      
       for (const mentionedUserId of mentions) {
         if (mentionedUserId !== userId) {
-          await createNotification({
-            user_id: mentionedUserId,
-            type: "mention",
-            title: "You were mentioned",
-            message: `${user.name} mentioned you in #${await getChannelName(channel_id)}`,
-            data: {
-              channel_id,
-              message_id: message.message_id,
-              mentioned_by: userId
+          try {
+            // Create database notification
+            await createNotification(
+              mentionedUserId,
+              channelInfo.org_id,
+              "mention",
+              "You were mentioned",
+              `${user.name} mentioned you in #${channelInfo.channel_name}`,
+              {
+                relatedId: message.message_id,
+                relatedType: "message",
+                link: `/channels/${channel_id}`
+              }
+            );
+
+            // Send real-time notification via socket to specific user
+            if (io) {
+              // Get the mentioned user's socket ID and send notification only to them
+              const { getUserSocketId } = await import('../configs/socket.js');
+              const mentionedUserSocketId = getUserSocketId(mentionedUserId);
+              
+              if (mentionedUserSocketId) {
+                io.to(mentionedUserSocketId).emit("user_mentioned", {
+                  mentionedUserId,
+                  mentionedBy: user.name,
+                  channelName: channelInfo.channel_name,
+                  messageId: message.message_id,
+                  channelId: channel_id,
+                  content: content
+                });
+              }
             }
-          });
+          } catch (error) {
+            console.error(`Error sending mention notification to user ${mentionedUserId}:`, error);
+          }
         }
       }
     }
@@ -166,7 +197,9 @@ export const updateMessage = async (req, res) => {
 
     // Emit update to channel room
     const io = req.app.get("io");
-    io.to(`channel_${existingMessage.channel_id}`).emit("message_updated", messageWithUser);
+    if (io) {
+      io.to(`channel_${existingMessage.channel_id}`).emit("message_updated", messageWithUser);
+    }
 
     res.json({ message: messageWithUser });
   } catch (error) {
@@ -199,7 +232,9 @@ export const deleteMessage = async (req, res) => {
 
     // Emit deletion to channel room
     const io = req.app.get("io");
-    io.to(`channel_${existingMessage.channel_id}`).emit("message_deleted", messageId);
+    if (io) {
+      io.to(`channel_${existingMessage.channel_id}`).emit("message_deleted", parseInt(messageId));
+    }
 
     res.json({ message: "Message deleted successfully" });
   } catch (error) {
@@ -268,7 +303,9 @@ export const uploadFile = async (req, res) => {
 
     // Emit to channel room
     const io = req.app.get("io");
-    io.to(`channel_${channel_id}`).emit("new_message", messageWithUser);
+    if (io) {
+      io.to(`channel_${channel_id}`).emit("new_message", messageWithUser);
+    }
 
     res.status(201).json({ message: messageWithUser });
   } catch (error) {
@@ -321,7 +358,13 @@ export const addReaction = async (req, res) => {
 
     // Get updated reactions for this message
     const reactions = await sql`
-      SELECT mr.*, u.name as user_name
+      SELECT 
+        mr.reaction_id,
+        mr.message_id,
+        mr.user_id,
+        mr.emoji,
+        mr.created_at,
+        u.name as user_name
       FROM message_reactions mr
       JOIN users u ON mr.user_id = u.user_id
       WHERE mr.message_id = ${messageId}
@@ -330,61 +373,21 @@ export const addReaction = async (req, res) => {
 
     // Emit reaction update to channel room
     const io = req.app.get("io");
-    io.to(`channel_${message.channel_id}`).emit("reaction_updated", {
-      messageId,
-      reactions
-    });
+    if (io) {
+      io.to(`channel_${message.channel_id}`).emit("reaction_updated", {
+        messageId: parseInt(messageId),
+        reactions: reactions || []
+      });
+    }
 
-    res.json({ reactions });
+    res.json({ reactions: reactions || [] });
   } catch (error) {
     console.error("Error adding reaction:", error);
     res.status(500).json({ message: "Failed to add reaction" });
   }
 };
 
-// Remove reaction from message
-export const removeReaction = async (req, res) => {
-  try {
-    const { messageId, emoji } = req.params;
-    const userId = req.user.userId;
 
-    // Check if message exists and get channel_id
-    const [message] = await sql`
-      SELECT channel_id FROM channel_messages WHERE message_id = ${messageId}
-    `;
-
-    if (!message) {
-      return res.status(404).json({ message: "Message not found" });
-    }
-
-    // Remove reaction
-    await sql`
-      DELETE FROM message_reactions 
-      WHERE message_id = ${messageId} AND user_id = ${userId} AND emoji = ${emoji}
-    `;
-
-    // Get updated reactions for this message
-    const reactions = await sql`
-      SELECT mr.*, u.name as user_name
-      FROM message_reactions mr
-      JOIN users u ON mr.user_id = u.user_id
-      WHERE mr.message_id = ${messageId}
-      ORDER BY mr.created_at ASC
-    `;
-
-    // Emit reaction update to channel room
-    const io = req.app.get("io");
-    io.to(`channel_${message.channel_id}`).emit("reaction_updated", {
-      messageId,
-      reactions
-    });
-
-    res.json({ reactions });
-  } catch (error) {
-    console.error("Error removing reaction:", error);
-    res.status(500).json({ message: "Failed to remove reaction" });
-  }
-};
 
 // Get channel members for mentions
 export const getChannelMembers = async (req, res) => {

@@ -103,6 +103,26 @@ router.delete('/online', authenticateToken, async (req, res) => {
   }
 });
 
+// Get all online users (admin only) - Must come before /:userId route
+router.get('/online/all', authenticateToken, async (req, res) => {
+  try {
+    // You might want to add admin check here
+    const allOnlineUsers = getAllOnlineUsers();
+    
+    res.json({
+      success: true,
+      onlineUsers: allOnlineUsers,
+      count: allOnlineUsers.length
+    });
+  } catch (error) {
+    console.error('Error fetching all online users:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch online users' 
+    });
+  }
+});
+
 // Check if a specific user is online
 router.get('/online/:userId', authenticateToken, async (req, res) => {
   try {
@@ -119,26 +139,6 @@ router.get('/online/:userId', authenticateToken, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Failed to check user status' 
-    });
-  }
-});
-
-// Get all online users (admin only)
-router.get('/online/all', authenticateToken, async (req, res) => {
-  try {
-    // You might want to add admin check here
-    const allOnlineUsers = getAllOnlineUsers();
-    
-    res.json({
-      success: true,
-      onlineUsers: allOnlineUsers,
-      count: allOnlineUsers.length
-    });
-  } catch (error) {
-    console.error('Error fetching all online users:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch online users' 
     });
   }
 });

@@ -7,7 +7,6 @@ import {
   deleteMessage,
   uploadFile,
   addReaction,
-  removeReaction,
   getChannelMembers
 } from "../controllers/messageControllers.js";
 import { authenticateToken } from "../middleware/auth.js";
@@ -41,7 +40,6 @@ router.post("/messages/file", upload.single("file"), uploadFile);
 
 // Reactions
 router.post("/messages/:messageId/reactions", addReaction);
-router.delete("/messages/:messageId/reactions/:emoji", removeReaction);
 
 // Channel members (for mentions)
 router.get("/channels/:channelId/members", getChannelMembers);

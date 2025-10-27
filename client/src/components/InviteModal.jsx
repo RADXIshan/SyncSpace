@@ -139,7 +139,7 @@ const InviteModal = ({ organization, onClose }) => {
           {activeTab === "copy" && (
             <div className="space-y-4 sm:space-y-6">
               {/* Organization Info */}
-              <div className="glass-button-enhanced rounded-xl p-3 sm:p-4">
+              <div className="border border-violet-500/20 bg-violet-500/5 rounded-xl p-3 sm:p-4">
                 <div className="flex items-center mb-3">
                   <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400 mr-2" />
                   <h3 className="font-semibold text-violet-300 text-sm sm:text-base">Organization Invite Code</h3>
@@ -149,7 +149,7 @@ const InviteModal = ({ organization, onClose }) => {
                 </p>
                 
                 {/* Invite Code Display */}
-                <div className="glass-effect rounded-lg p-3 sm:p-4 mb-4">
+                <div className="border border-white/10 bg-black/20 rounded-lg p-3 sm:p-4 mb-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-gray-400 mb-1">Invite Code</p>
@@ -159,10 +159,10 @@ const InviteModal = ({ organization, onClose }) => {
                     </div>
                     <button
                       onClick={handleCopyCode}
-                      className={`flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 w-full sm:w-auto ${
+                      className={`flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 w-full sm:w-auto border ${
                         copied
-                          ? "glass-button-enhanced text-green-300 border border-green-500/30"
-                          : "glass-button-enhanced text-violet-300 border border-violet-500/30"
+                          ? "bg-green-500/10 text-green-300 border-green-500/30 hover:bg-green-500/15"
+                          : "bg-violet-500/10 text-violet-300 border-violet-500/30 hover:bg-violet-500/15"
                       }`}
                     >
                       {copied ? <Check size={14} className="mr-1 sm:mr-2 sm:w-4 sm:h-4" /> : <Copy size={14} className="mr-1 sm:mr-2 sm:w-4 sm:h-4" />}
@@ -172,7 +172,7 @@ const InviteModal = ({ organization, onClose }) => {
                 </div>
 
                 {/* Instructions */}
-                <div className="text-xs sm:text-sm text-gray-300 glass-effect rounded-lg p-3">
+                <div className="text-xs sm:text-sm text-gray-300 border border-white/10 bg-white/5 rounded-lg p-3">
                   <p className="font-medium mb-2">How to share:</p>
                   <ol className="list-decimal list-inside space-y-1 text-xs text-gray-400">
                     <li>Copy the invite code above</li>

@@ -1821,7 +1821,7 @@ const OrgSettingsModal = ({
                     </div>
 
                     {/* Transfer Ownership Section */}
-                    <div className="glass-button-enhanced border border-orange-500/30 rounded-xl p-6 space-y-4">
+                    <div className="border border-orange-500/30 bg-orange-500/5 rounded-xl p-6 space-y-4">
                       <div className="flex items-start space-x-3">
                         <Crown
                           size={20}
@@ -1848,7 +1848,7 @@ const OrgSettingsModal = ({
                                   members.filter((member) => !member.isOwner)
                                     .length === 0
                                 }
-                                className="flex items-center px-4 py-2 glass-button-enhanced border border-orange-500/40 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center px-4 py-2 bg-orange-500/10 border border-orange-500/40 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 hover:bg-orange-500/15 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                               >
                                 <Crown size={16} className="mr-2" />
                                 Transfer Ownership
@@ -1864,7 +1864,7 @@ const OrgSettingsModal = ({
                             </div>
                           ) : (
                             <div className="space-y-4">
-                              <div className="p-4 bg-orange-600/10 border border-orange-500/30 rounded-lg space-y-3">
+                              <div className="p-4 border border-orange-500/30 bg-orange-600/10 rounded-lg space-y-3">
                                 <div>
                                   <p className="text-orange-300 text-sm font-medium mb-2">
                                     Select new owner:
@@ -1875,7 +1875,7 @@ const OrgSettingsModal = ({
                                       setSelectedNewOwner(e.target.value)
                                     }
                                     disabled={membersLoading}
-                                    className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 focus:outline-none disabled:opacity-50 transition-all duration-200"
+                                    className="w-full px-3 py-2 rounded-lg border border-orange-500/30 bg-orange-500/5 text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 focus:outline-none disabled:opacity-50 transition-all duration-200"
                                   >
                                     <option value="">
                                       {membersLoading
@@ -1914,7 +1914,7 @@ const OrgSettingsModal = ({
                                     To confirm transfer, please type the
                                     organization name:
                                   </p>
-                                  <p className="text-white font-mono text-sm mb-2 bg-black/20 px-3 py-2 rounded-lg border">
+                                  <p className="text-white font-mono text-sm mb-2 bg-black/30 px-3 py-2 rounded-lg border border-white/10">
                                     {organization?.name}
                                   </p>
                                   <input
@@ -1924,7 +1924,7 @@ const OrgSettingsModal = ({
                                       setTransferConfirmation(e.target.value)
                                     }
                                     placeholder="Type organization name here"
-                                    className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 focus:outline-none transition-all duration-200"
+                                    className="w-full px-3 py-2 rounded-lg border border-orange-500/30 bg-orange-500/5 text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 focus:outline-none transition-all duration-200"
                                   />
                                 </div>
                               </div>
@@ -1937,7 +1937,7 @@ const OrgSettingsModal = ({
                                     setSelectedNewOwner("");
                                     setTransferConfirmation("");
                                   }}
-                                  className="px-4 py-2 glass-button text-gray-400 hover:text-gray-300 text-sm font-medium transition-all duration-200 cursor-pointer rounded-lg"
+                                  className="px-4 py-2 border border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/15 text-gray-400 hover:text-gray-300 text-sm font-medium transition-all duration-200 cursor-pointer rounded-lg shadow-lg hover:shadow-xl"
                                 >
                                   Cancel
                                 </button>
@@ -1953,7 +1953,7 @@ const OrgSettingsModal = ({
                                     members.filter((member) => !member.isOwner)
                                       .length === 0
                                   }
-                                  className="flex items-center px-4 py-2 glass-button-enhanced border border-orange-500/40 rounded-lg text-orange-300 hover:text-orange-200 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                  className="flex items-center px-4 py-2 bg-orange-500/10 border border-orange-500/40 rounded-lg text-orange-300 hover:text-orange-200 hover:bg-orange-500/15 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg hover:shadow-xl"
                                 >
                                   {loading ? (
                                     <>
@@ -1974,7 +1974,7 @@ const OrgSettingsModal = ({
                       </div>
                     </div>
 
-                    <div className="glass-button-enhanced border border-red-500/30 rounded-xl p-6 space-y-4">
+                    <div className="border border-red-500/30 bg-red-500/5 rounded-xl p-6 space-y-4">
                       <div className="flex items-start space-x-3">
                         <AlertTriangle
                           size={20}
@@ -1995,19 +1995,19 @@ const OrgSettingsModal = ({
                             <button
                               type="button"
                               onClick={() => setShowDeleteConfirm(true)}
-                              className="flex items-center px-4 py-2 glass-button-enhanced border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-medium cursor-pointer"
+                              className="flex items-center px-4 py-2 bg-red-500/10 border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 hover:bg-red-500/15 text-sm font-medium cursor-pointer shadow-lg hover:shadow-xl"
                             >
                               <Trash2 size={16} className="mr-2" />
                               Delete Organization
                             </button>
                           ) : (
                             <div className="space-y-4">
-                              <div className="p-4 bg-red-600/10 border border-red-500/30 rounded-lg">
+                              <div className="p-4 border border-red-500/30 bg-red-600/10 rounded-lg">
                                 <p className="text-red-300 text-sm font-medium mb-3">
                                   To confirm deletion, please type the
                                   organization name:
                                 </p>
-                                <p className="text-white font-mono text-sm mb-3 bg-black/20 px-3 py-2 rounded-lg border">
+                                <p className="text-white font-mono text-sm mb-3 bg-black/30 px-3 py-2 rounded-lg border border-white/10">
                                   {organization?.name}
                                 </p>
                                 <input
@@ -2017,7 +2017,7 @@ const OrgSettingsModal = ({
                                     setDeleteConfirmation(e.target.value)
                                   }
                                   placeholder="Type organization name here"
-                                  className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500/50 focus:outline-none transition-all duration-200"
+                                  className="w-full px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/5 text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500/50 focus:outline-none transition-all duration-200"
                                 />
                               </div>
 
@@ -2028,7 +2028,7 @@ const OrgSettingsModal = ({
                                     setShowDeleteConfirm(false);
                                     setDeleteConfirmation("");
                                   }}
-                                  className="px-4 py-2 glass-button text-gray-400 hover:text-gray-300 text-sm font-medium transition-all duration-200 cursor-pointer rounded-lg"
+                                  className="px-4 py-2 border border-gray-500/30 bg-gray-500/10 hover:bg-gray-500/15 text-gray-400 hover:text-gray-300 text-sm font-medium transition-all duration-200 cursor-pointer rounded-lg shadow-lg hover:shadow-xl"
                                 >
                                   Cancel
                                 </button>
@@ -2039,7 +2039,7 @@ const OrgSettingsModal = ({
                                     deleteConfirmation !== organization?.name ||
                                     loading
                                   }
-                                  className="flex items-center px-4 py-2 glass-button-enhanced border border-red-500/40 rounded-lg text-red-300 hover:text-red-200 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                  className="flex items-center px-4 py-2 bg-red-500/10 border border-red-500/40 rounded-lg text-red-300 hover:text-red-200 hover:bg-red-500/15 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg hover:shadow-xl"
                                 >
                                   {loading ? (
                                     <>
@@ -2060,7 +2060,7 @@ const OrgSettingsModal = ({
                       </div>
                     </div>
 
-                    <div className="glass-button-enhanced border border-yellow-500/30 rounded-xl p-4">
+                    <div className="border border-yellow-500/30 bg-yellow-500/5 rounded-xl p-4">
                       <div className="flex items-start space-x-3">
                         <AlertTriangle
                           size={16}

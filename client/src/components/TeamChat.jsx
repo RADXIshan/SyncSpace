@@ -156,7 +156,18 @@ const TeamChat = ({ channelId, channelName }) => {
 
     // Listen for message deletions
     const handleMessageDelete = (messageId) => {
-      setMessages((prev) => prev.filter((msg) => msg.message_id !== messageId));
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === messageId
+            ? { 
+                ...msg, 
+                isDeleted: true, 
+                originalContent: msg.originalContent || msg.content,
+                content: "This message was deleted" 
+              }
+            : msg
+        )
+      );
     };
 
     // Listen for typing indicators
@@ -636,18 +647,43 @@ const TeamChat = ({ channelId, channelName }) => {
 
   // Handle message deletion
   const handleDeleteMessage = async (messageId) => {
+    // Show loading toast
+    const deleteToast = safeToast.loading("Deleting message...");
+    
     try {
+      // Optimistically update the message to show as deleted
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === messageId
+            ? { 
+                ...msg, 
+                isDeleted: true, 
+                originalContent: msg.originalContent || msg.content,
+                content: "This message was deleted" 
+              }
+            : msg
+        )
+      );
+
       await axios.delete(
         `${import.meta.env.VITE_BASE_URL}/api/messages/${messageId}`,
         { withCredentials: true }
       );
 
-      // Update local state immediately for better UX
-      setMessages((prev) => prev.filter((msg) => msg.message_id !== messageId));
-      toast.success("Message deleted");
+      safeToast.success("Message deleted", { id: deleteToast });
     } catch (error) {
       console.error("Error deleting message:", error);
-      toast.error("Failed to delete message");
+      
+      // Revert the optimistic update on error
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === messageId && msg.isDeleted
+            ? { ...msg, isDeleted: false, content: msg.originalContent || msg.content }
+            : msg
+        )
+      );
+      
+      safeToast.error("Failed to delete message", { id: deleteToast });
     }
   };
 
@@ -1012,34 +1048,35 @@ const TeamChat = ({ channelId, channelName }) => {
                       </div>
 
                       {/* Message actions in header */}
-                      <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
-                        <div className="bg-white border border-gray-200 rounded-full shadow-lg flex">
-                          <button
-                            onClick={() =>
-                              handleReaction(message.message_id, "👍")
-                            }
-                            className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                            title="Like"
-                          >
-                            <ThumbsUp size={12} />
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleReaction(message.message_id, "❤️")
-                            }
-                            className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
-                            title="Love"
-                          >
-                            <Heart size={12} />
-                          </button>
-                          <button
-                            onClick={() => handleReply(message)}
-                            className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                            title="Reply"
-                          >
-                            <Reply size={12} />
-                          </button>
-                          {isOwnMessage && (
+                      {!message.isDeleted && (
+                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
+                          <div className="bg-white border border-gray-200 rounded-full shadow-lg flex">
+                            <button
+                              onClick={() =>
+                                handleReaction(message.message_id, "👍")
+                              }
+                              className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                              title="Like"
+                            >
+                              <ThumbsUp size={12} />
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleReaction(message.message_id, "❤️")
+                              }
+                              className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+                              title="Love"
+                            >
+                              <Heart size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleReply(message)}
+                              className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                              title="Reply"
+                            >
+                              <Reply size={12} />
+                            </button>
+                          {isOwnMessage && !message.isDeleted && (
                             <>
                               <button
                                 onClick={() => handleEditMessage(message)}
@@ -1049,9 +1086,17 @@ const TeamChat = ({ channelId, channelName }) => {
                                 <Edit2 size={12} />
                               </button>
                               <button
-                                onClick={() =>
-                                  handleDeleteMessage(message.message_id)
-                                }
+                                onClick={() => {
+                                  // Store original content before deletion for potential recovery
+                                  setMessages((prev) =>
+                                    prev.map((msg) =>
+                                      msg.message_id === message.message_id
+                                        ? { ...msg, originalContent: msg.content }
+                                        : msg
+                                    )
+                                  );
+                                  handleDeleteMessage(message.message_id);
+                                }}
                                 className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
                                 title="Delete"
                               >
@@ -1059,8 +1104,9 @@ const TeamChat = ({ channelId, channelName }) => {
                               </button>
                             </>
                           )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
 
@@ -1368,27 +1414,31 @@ const TeamChat = ({ channelId, channelName }) => {
                       ) : (
                         <div
                           className={`text-sm leading-relaxed break-words p-4 rounded-2xl shadow-sm transition-all duration-200 inline-block max-w-xs sm:max-w-md lg:max-w-lg ${
-                            isOwnMessage
+                            message.isDeleted
+                              ? "message-deleted message-delete-animation"
+                              : isOwnMessage
                               ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md hover:shadow-md"
                               : "bg-white text-gray-800 rounded-bl-md border border-gray-200 hover:shadow-md hover:border-gray-300"
                           }`}
                           dangerouslySetInnerHTML={{
-                            __html: renderMessageContent(message.content),
+                            __html: message.isDeleted ? message.content : renderMessageContent(message.content),
                           }}
                         />
                       )}
 
                       {/* Reactions */}
-                      <div className="mt-1">
-                        <MessageReactions
-                          reactions={message.reactions || []}
-                          onReactionClick={(emoji) =>
-                            handleReaction(message.message_id, emoji)
-                          }
-                          currentUserId={user.user_id}
-                          isOwnMessage={isOwnMessage}
-                        />
-                      </div>
+                      {!message.isDeleted && (
+                        <div className="mt-1">
+                          <MessageReactions
+                            reactions={message.reactions || []}
+                            onReactionClick={(emoji) =>
+                              handleReaction(message.message_id, emoji)
+                            }
+                            currentUserId={user.user_id}
+                            isOwnMessage={isOwnMessage}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

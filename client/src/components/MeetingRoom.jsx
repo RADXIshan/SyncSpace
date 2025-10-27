@@ -876,7 +876,7 @@ const MeetingRoom = () => {
       console.error("Error toggling audio:", error);
       toast.error("Failed to toggle microphone");
     }
-  };ideoRef.current.srcObject = newStream;
+
 
 
   // Toggle screen share
@@ -998,6 +998,7 @@ const MeetingRoom = () => {
       setIsScreenSharing(false);
       setScreenSharingUser(null);
     }
+  };
   };
 
   // Leave meeting

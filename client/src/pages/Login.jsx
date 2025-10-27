@@ -96,6 +96,19 @@ const Login = () => {
       // Navigate immediately - the PublicRoute will handle the redirect
       navigate("/home/dashboard", { replace: true });
     } catch (err) {
+      // Handle email verification requirement
+      if (err.response?.status === 403 && err.response?.data?.requiresVerification) {
+        showError("Please verify your email before logging in", { id: toastId });
+        // Redirect to verification page with email
+        navigate("/verify-email", {
+          state: {
+            email: err.response.data.email,
+            message: "Please verify your email before logging in",
+          },
+        });
+        return;
+      }
+      
       showError(
         err.response?.data?.error || err.response?.data?.message || err.message,
         { id: toastId }

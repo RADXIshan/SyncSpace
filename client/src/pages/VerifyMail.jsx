@@ -78,8 +78,9 @@ const VerifyMail = () => {
       );
   
       toast.success("Email verified successfully", { id: toastId });
-      await checkAuth();
-      navigate("/home/dashboard", { state: { message: "Welcome!" } });
+      // Force auth check to update user state
+      await checkAuth(true);
+      navigate("/home/dashboard", { state: { message: "Welcome! Your email has been verified." } });
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to verify OTP", { id: toastId });
       console.error("OTP verify error:", err);

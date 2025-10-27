@@ -32,6 +32,15 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       lastAuthCheckRef.current = now;
     } catch (error) {
+      // Handle email verification requirement
+      if (error.response?.status === 403 && error.response?.data?.requiresVerification) {
+        // Don't clear the token, but don't set user either
+        // This allows the verification process to continue
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
       // Only log error if it's not a 401 (which is expected when not authenticated)
       if (error.response?.status !== 401) {
         console.error("Authentication check failed:", error);

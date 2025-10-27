@@ -156,35 +156,54 @@ const Dashboard = ({
           {organization ? (
             <JoinedOrgDash />
           ) : (
-            <div className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 h-full flex items-center justify-center flex-col gap-4 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-indigo-500/5"></div>
-              <div className="relative z-10 flex flex-col items-center gap-4">
-                <h1 className="text-2xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400 text-center px-4">
-                  Join and collaborate with your team
-                </h1>
+            <div className="glass-dark rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 h-full flex items-center justify-center flex-col gap-6 relative overflow-hidden">
+              <div className="absolute inset-0 cosmic-bg"></div>
+              
+              {/* Background Elements */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-gradient-to-r from-purple-500/3 to-blue-500/3 rounded-full blur-2xl"></div>
+              </div>
 
-                <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8 w-full max-w-sm sm:max-w-none sm:flex-row sm:justify-center">
+              <div className="relative z-10 flex flex-col items-center gap-6 text-center max-w-4xl mx-auto">
+                <div className="space-y-4">
+                  <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold gradient-text-purple leading-tight">
+                    Join and collaborate with your team
+                  </h1>
+                  <p className="text-white/70 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed">
+                    Connect with your organization to access channels, meetings, and collaborative tools
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-4 sm:gap-6 mt-8 sm:mt-12 w-full max-w-md sm:max-w-none sm:flex-row sm:justify-center">
                   <button
                     onClick={onJoinOrgClick}
-                    className="glass-button hover:glass-button-enhanced font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] text-base sm:text-lg py-3 sm:py-4 text-white hover:text-purple-300"
+                    className="glass-button hover:glass-button-enhanced font-semibold transition-all duration-300 cursor-pointer active:scale-95 w-full sm:w-[320px] text-base sm:text-lg py-4 sm:py-5 text-white/80 hover:text-purple-300 group/join rounded-xl"
                   >
                     <Users
                       size={20}
-                      className="inline-block mr-2 sm:w-6 sm:h-6"
+                      className="inline-block mr-3 group-hover/join:scale-110 transition-transform duration-300 sm:w-6 sm:h-6"
                     />
                     Join Organisation
                   </button>
 
                   <button
                     onClick={onCreateOrgClick}
-                    className="glass-button hover:glass-button-enhanced font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] text-base sm:text-lg py-3 sm:py-4 text-white hover:text-purple-300"
+                    className="glass-button hover:glass-button-enhanced font-semibold transition-all duration-300 cursor-pointer active:scale-95 w-full sm:w-[320px] text-base sm:text-lg py-4 sm:py-5 text-white/80 hover:text-purple-300 group/create rounded-xl"
                   >
                     <Plus
                       size={20}
-                      className="inline-block mr-2 sm:w-6 sm:h-6"
+                      className="inline-block mr-3 group-hover/create:scale-110 group-hover/create:rotate-90 transition-all duration-300 sm:w-6 sm:h-6"
                     />
                     Create Organisation
                   </button>
+                </div>
+
+                <div className="mt-8 sm:mt-12 text-center">
+                  <p className="text-white/50 text-sm sm:text-base">
+                    New to the platform? Create your own organization or ask your team admin for an invite code
+                  </p>
                 </div>
               </div>
             </div>

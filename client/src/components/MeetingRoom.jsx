@@ -30,6 +30,7 @@ const MeetingRoom = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [screenSharingUser, setScreenSharingUser] = useState(null);
 
   // Load settings from localStorage or URL params on component mount
   useEffect(() => {
@@ -50,7 +51,7 @@ const MeetingRoom = () => {
       }
     }
     
-    // URL params take precedence over localStorage
+    // URL params take precedence over localStorage, default to true if neither exists
     const initialVideoEnabled = videoParam !== null ? videoParam === 'true' : (settings.videoEnabled !== false);
     const initialAudioEnabled = audioParam !== null ? audioParam === 'true' : (settings.audioEnabled !== false);
     
@@ -58,6 +59,10 @@ const MeetingRoom = () => {
     setIsAudioEnabled(initialAudioEnabled);
     
     console.log('Initial settings loaded:', { video: initialVideoEnabled, audio: initialAudioEnabled });
+    
+    // Clean up URL params immediately to prevent conflicts
+    const newUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
   }, []);
 
   // Refs
@@ -159,52 +164,24 @@ const MeetingRoom = () => {
           }
         }
         
-        // Build constraints based on enabled settings and saved devices
-        const constraints = {};
-        if (isVideoEnabled) {
-          constraints.video = deviceSettings.videoDevice ? 
+        // Always request both video and audio to avoid permission issues
+        // We'll control the enabled state after getting the stream
+        const constraints = {
+          video: deviceSettings.videoDevice ? 
             { deviceId: deviceSettings.videoDevice } : 
             {
               width: { ideal: 1280 },
               height: { ideal: 720 },
               facingMode: "user",
-            };
-        }
-        if (isAudioEnabled) {
-          constraints.audio = deviceSettings.audioInput ? 
+            },
+          audio: deviceSettings.audioInput ? 
             { deviceId: deviceSettings.audioInput } : 
             {
               echoCancellation: true,
               noiseSuppression: true,
               autoGainControl: true,
-            };
-        }
-        
-        // If both are disabled, create a minimal stream for future use
-        if (!isVideoEnabled && !isAudioEnabled) {
-          console.log("Both video and audio disabled, creating minimal stream for future use");
-          try {
-            // Create a minimal audio stream that we can disable immediately
-            const minimalStream = await navigator.mediaDevices.getUserMedia({ 
-              audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-              }
-            });
-            const audioTrack = minimalStream.getAudioTracks()[0];
-            if (audioTrack) {
-              audioTrack.enabled = false; // Disable it immediately
             }
-            setLocalStream(minimalStream);
-            console.log("Minimal stream created for future track addition");
-            return;
-          } catch (error) {
-            console.log("Could not create minimal stream, will create on demand");
-            setLocalStream(null);
-            return;
-          }
-        }
+        };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
@@ -215,7 +192,7 @@ const MeetingRoom = () => {
             .map((t) => `${t.kind}: ${t.enabled}, readyState: ${t.readyState}`)
         );
 
-        // Set track states based on our settings
+        // Set track states based on our initial settings
         const videoTrack = stream.getVideoTracks()[0];
         const audioTrack = stream.getAudioTracks()[0];
 
@@ -227,19 +204,6 @@ const MeetingRoom = () => {
             "readyState:",
             videoTrack.readyState
           );
-
-          // Add track event listeners for debugging
-          videoTrack.onended = () => {
-            console.log("Video track ended");
-          };
-
-          videoTrack.onmute = () => {
-            console.log("Video track muted");
-          };
-
-          videoTrack.onunmute = () => {
-            console.log("Video track unmuted");
-          };
         }
 
         if (audioTrack) {
@@ -250,19 +214,6 @@ const MeetingRoom = () => {
             "readyState:",
             audioTrack.readyState
           );
-
-          // Add track event listeners for debugging
-          audioTrack.onended = () => {
-            console.log("Audio track ended");
-          };
-
-          audioTrack.onmute = () => {
-            console.log("Audio track muted");
-          };
-
-          audioTrack.onunmute = () => {
-            console.log("Audio track unmuted");
-          };
         }
 
         setLocalStream(stream);
@@ -287,10 +238,10 @@ const MeetingRoom = () => {
       }
     };
 
-    if (isConnected) {
+    if (isConnected && !localStream) {
       initializeMedia();
     }
-  }, [isConnected]); // Remove isVideoEnabled and isAudioEnabled from dependencies to prevent re-initialization
+  }, [isConnected, isVideoEnabled, isAudioEnabled]); // Depend on media settings too
 
   // Handle local video element setup
   useEffect(() => {
@@ -556,6 +507,27 @@ const MeetingRoom = () => {
       }
     });
 
+    // Handle screen sharing events
+    socket.on("user-started-screen-share", (data) => {
+      console.log("User started screen sharing:", data);
+      setScreenSharingUser(data.socketId);
+      const peerObj = peersRef.current.find((p) => p.peerID === data.socketId);
+      if (peerObj) {
+        peerObj.isScreenSharing = true;
+        setPeers([...peersRef.current]);
+      }
+    });
+
+    socket.on("user-stopped-screen-share", (data) => {
+      console.log("User stopped screen sharing:", data);
+      setScreenSharingUser(null);
+      const peerObj = peersRef.current.find((p) => p.peerID === data.socketId);
+      if (peerObj) {
+        peerObj.isScreenSharing = false;
+        setPeers([...peersRef.current]);
+      }
+    });
+
     return () => {
       socket.off("existing-users");
       socket.off("user-joined");
@@ -563,6 +535,8 @@ const MeetingRoom = () => {
       socket.off("user-left");
       socket.off("user-video-toggle");
       socket.off("user-audio-toggle");
+      socket.off("user-started-screen-share");
+      socket.off("user-stopped-screen-share");
     };
   }, [socket, localStream, roomId]);
 
@@ -784,118 +758,68 @@ const MeetingRoom = () => {
 
   // Toggle video
   const toggleVideo = async () => {
+    if (isScreenSharing) {
+      toast.error("Cannot toggle camera while screen sharing");
+      return;
+    }
+
     const newState = !isVideoEnabled;
     console.log("Toggling video from", isVideoEnabled, "to", newState);
 
-    // Update UI state immediately for responsiveness
-    setIsVideoEnabled(newState);
-    
-    // Broadcast state change immediately to other participants
-    if (socket) {
-      socket.emit("toggle-video", {
-        roomId,
-        videoEnabled: newState,
-      });
-    }
-
     try {
-      if (newState) {
-        // Turning video ON
-        if (localStream) {
-          const videoTrack = localStream.getVideoTracks()[0];
-          if (videoTrack) {
-            // Video track exists, just enable it
-            videoTrack.enabled = true;
-            setIsVideoPlaying(true);
-            console.log("Video track enabled");
-          } else {
-            // No video track, need to create one and replace in peer connections
-            const videoConstraints = {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              facingMode: "user",
-            };
-            
-            const videoStream = await navigator.mediaDevices.getUserMedia({
-              video: videoConstraints
-            });
-            
-            const newVideoTrack = videoStream.getVideoTracks()[0];
-            
-            // Add the new video track to existing stream
-            localStream.addTrack(newVideoTrack);
-            
-            // Update video element
-            if (localVideoRef.current) {
-              localVideoRef.current.srcObject = localStream;
-            }
-            
-            // Replace video track in all peer connections (don't add, replace!)
-            peersRef.current.forEach((peerObj) => {
-              const videoSender = peerObj.peer.getSenders().find(
-                sender => sender.track && sender.track.kind === 'video'
-              );
-              
-              if (videoSender) {
-                // Replace existing video sender
-                videoSender.replaceTrack(newVideoTrack).catch(console.error);
-              } else {
-                // No existing video sender, add new one
-                peerObj.peer.addTrack(newVideoTrack, localStream);
-              }
-            });
-            
-            console.log("New video track added and replaced in peer connections");
-          }
-        } else {
-          // No stream at all, create new one with video
-          const constraints = {
-            video: {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              facingMode: "user",
-            },
-            audio: isAudioEnabled ? {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            } : false
+      if (localStream) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        if (videoTrack) {
+          // Video track exists, just enable/disable it
+          videoTrack.enabled = newState;
+          setIsVideoEnabled(newState);
+          setIsVideoPlaying(newState);
+          console.log("Video track", newState ? "enabled" : "disabled");
+        } else if (newState) {
+          // No video track but want to enable, create new one
+          const videoConstraints = {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user",
           };
           
-          const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-          setLocalStream(newStream);
-          
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = newStream;
-          }
-          
-          // Add all tracks to peer connections
-          peersRef.current.forEach((peerObj) => {
-            newStream.getTracks().forEach(track => {
-              peerObj.peer.addTrack(track, newStream);
-            });
+          const videoStream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraints
           });
           
-          console.log("New stream created with video");
-        }
-      } else {
-        // Turning video OFF - just disable the track (don't remove from peer connections)
-        if (localStream) {
-          const videoTrack = localStream.getVideoTracks()[0];
-          if (videoTrack) {
-            videoTrack.enabled = false;
-            setIsVideoPlaying(false);
-            console.log("Video track disabled");
+          const newVideoTrack = videoStream.getVideoTracks()[0];
+          newVideoTrack.enabled = true;
+          
+          // Add the new video track to existing stream
+          localStream.addTrack(newVideoTrack);
+          
+          // Update video element
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = localStream;
           }
+          
+          // Add video track to all peer connections
+          peersRef.current.forEach((peerObj) => {
+            peerObj.peer.addTrack(newVideoTrack, localStream);
+          });
+          
+          setIsVideoEnabled(true);
+          setIsVideoPlaying(true);
+          console.log("New video track added");
         }
+      }
+
+      // Broadcast state change to other participants
+      if (socket) {
+        socket.emit("toggle-video", {
+          roomId,
+          videoEnabled: newState,
+        });
       }
 
     } catch (error) {
       console.error("Error toggling video:", error);
       toast.error("Failed to toggle camera");
-      // Revert state on error
-      setIsVideoEnabled(!newState);
-      setIsVideoPlaying(false);
     }
   };
 
@@ -904,114 +828,67 @@ const MeetingRoom = () => {
     const newState = !isAudioEnabled;
     console.log("Toggling audio from", isAudioEnabled, "to", newState);
 
-    // Update UI state immediately for responsiveness
-    setIsAudioEnabled(newState);
-    
-    // Broadcast state change immediately to other participants
-    if (socket) {
-      socket.emit("toggle-audio", {
-        roomId,
-        audioEnabled: newState,
-      });
-    }
-
     try {
-      if (newState) {
-        // Turning audio ON
-        if (localStream) {
-          const audioTrack = localStream.getAudioTracks()[0];
-          if (audioTrack) {
-            // Audio track exists, just enable it
-            audioTrack.enabled = true;
-            console.log("Audio track enabled");
-          } else {
-            // No audio track, need to create one and replace in peer connections
-            const audioConstraints = {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            };
-            
-            const audioStream = await navigator.mediaDevices.getUserMedia({
-              audio: audioConstraints
-            });
-            
-            const newAudioTrack = audioStream.getAudioTracks()[0];
-            
-            // Add the new audio track to existing stream
-            localStream.addTrack(newAudioTrack);
-            
-            // Replace audio track in all peer connections (don't add, replace!)
-            peersRef.current.forEach((peerObj) => {
-              const audioSender = peerObj.peer.getSenders().find(
-                sender => sender.track && sender.track.kind === 'audio'
-              );
-              
-              if (audioSender) {
-                // Replace existing audio sender
-                audioSender.replaceTrack(newAudioTrack).catch(console.error);
-              } else {
-                // No existing audio sender, add new one
-                peerObj.peer.addTrack(newAudioTrack, localStream);
-              }
-            });
-            
-            console.log("New audio track added and replaced in peer connections");
-          }
-        } else {
-          // No stream at all, create new one with audio
-          const constraints = {
-            video: isVideoEnabled ? {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              facingMode: "user",
-            } : false,
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            }
+      if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          // Audio track exists, just enable/disable it
+          audioTrack.enabled = newState;
+          setIsAudioEnabled(newState);
+          console.log("Audio track", newState ? "enabled" : "disabled");
+        } else if (newState) {
+          // No audio track but want to enable, create new one
+          const audioConstraints = {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
           };
           
-          const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-          setLocalStream(newStream);
-          
-          if (isVideoEnabled && localVideoRef.current) {
-            localVideoRef.current.srcObject = newStream;
-          }
-          
-          // Add all tracks to peer connections
-          peersRef.current.forEach((peerObj) => {
-            newStream.getTracks().forEach(track => {
-              peerObj.peer.addTrack(track, newStream);
-            });
+          const audioStream = await navigator.mediaDevices.getUserMedia({
+            audio: audioConstraints
           });
           
-          console.log("New stream created with audio");
+          const newAudioTrack = audioStream.getAudioTracks()[0];
+          newAudioTrack.enabled = true;
+          
+          // Add the new audio track to existing stream
+          localStream.addTrack(newAudioTrack);
+          
+          // Add audio track to all peer connections
+          peersRef.current.forEach((peerObj) => {
+            peerObj.peer.addTrack(newAudioTrack, localStream);
+          });
+          
+          setIsAudioEnabled(true);
+          console.log("New audio track added");
         }
-      } else {
-        // Turning audio OFF - just disable the track (don't remove from peer connections)
-        if (localStream) {
-          const audioTrack = localStream.getAudioTracks()[0];
-          if (audioTrack) {
-            audioTrack.enabled = false;
-            console.log("Audio track disabled");
-          }
-        }
+      }
+
+      // Broadcast state change to other participants
+      if (socket) {
+        socket.emit("toggle-audio", {
+          roomId,
+          audioEnabled: newState,
+        });
       }
 
     } catch (error) {
       console.error("Error toggling audio:", error);
       toast.error("Failed to toggle microphone");
-      // Revert state on error
-      setIsAudioEnabled(!newState);
     }
-  };
+  };ideoRef.current.srcObject = newStream;
+
 
   // Toggle screen share
   const toggleScreenShare = async () => {
     try {
       if (!isScreenSharing) {
+        // Check if someone else is already screen sharing
+        if (screenSharingUser && screenSharingUser !== socket.id) {
+          toast.error("Someone else is already sharing their screen");
+          return;
+        }
+
         const screenStream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
           audio: false,
@@ -1042,57 +919,84 @@ const MeetingRoom = () => {
           localVideoRef.current.srcObject = localStream;
         }
 
+        // Notify others about screen sharing
+        if (socket) {
+          socket.emit("start-screen-share", { roomId });
+        }
+
         // Handle screen share ending
         videoTrack.onended = async () => {
-          setIsScreenSharing(false);
-
-          try {
-            // Get camera back
-            const cameraStream = await navigator.mediaDevices.getUserMedia({
-              video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-              },
-              audio: false,
-            });
-
-            const newVideoTrack = cameraStream.getVideoTracks()[0];
-
-            // Replace screen share with camera in all peer connections
-            peersRef.current.forEach((peerObj) => {
-              const sender = peerObj.peer
-                .getSenders()
-                .find((s) => s.track && s.track.kind === "video");
-              if (sender) {
-                sender.replaceTrack(newVideoTrack);
-              }
-            });
-
-            // Update local stream
-            localStream.removeTrack(videoTrack);
-            localStream.addTrack(newVideoTrack);
-
-            if (localVideoRef.current) {
-              localVideoRef.current.srcObject = localStream;
-            }
-          } catch (error) {
-            console.error("Error switching back to camera:", error);
-          }
+          await stopScreenShare();
         };
 
         setIsScreenSharing(true);
+        setScreenSharingUser(socket.id);
         toast.success("Screen sharing started");
       } else {
-        // Stop screen sharing manually
-        const videoTrack = localStream.getVideoTracks()[0];
-        if (videoTrack) {
-          videoTrack.stop();
-        }
-        setIsScreenSharing(false);
+        await stopScreenShare();
       }
     } catch (error) {
       console.error("Error toggling screen share:", error);
-      toast.error("Failed to share screen");
+      if (error.name === "NotAllowedError") {
+        toast.error("Screen sharing permission denied");
+      } else {
+        toast.error("Failed to share screen");
+      }
+    }
+  };
+
+  // Stop screen sharing helper
+  const stopScreenShare = async () => {
+    try {
+      // Get camera back
+      const cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: isVideoEnabled ? {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        } : false,
+        audio: false,
+      });
+
+      const newVideoTrack = cameraStream.getVideoTracks()[0];
+
+      // Replace screen share with camera in all peer connections
+      peersRef.current.forEach((peerObj) => {
+        const sender = peerObj.peer
+          .getSenders()
+          .find((s) => s.track && s.track.kind === "video");
+        if (sender && newVideoTrack) {
+          sender.replaceTrack(newVideoTrack);
+        }
+      });
+
+      // Update local stream
+      const oldVideoTrack = localStream.getVideoTracks()[0];
+      if (oldVideoTrack) {
+        localStream.removeTrack(oldVideoTrack);
+        oldVideoTrack.stop();
+      }
+      
+      if (newVideoTrack) {
+        newVideoTrack.enabled = isVideoEnabled;
+        localStream.addTrack(newVideoTrack);
+      }
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream;
+      }
+
+      // Notify others about stopping screen sharing
+      if (socket) {
+        socket.emit("stop-screen-share", { roomId });
+      }
+
+      setIsScreenSharing(false);
+      setScreenSharingUser(null);
+      toast.success("Screen sharing stopped");
+    } catch (error) {
+      console.error("Error stopping screen share:", error);
+      setIsScreenSharing(false);
+      setScreenSharingUser(null);
     }
   };
 
@@ -1125,6 +1029,8 @@ const MeetingRoom = () => {
     userEmail,
     videoEnabled,
     audioEnabled,
+    isScreenShare = false,
+    isThumbnail = false,
   }) => {
     const ref = useRef();
     const [remoteStream, setRemoteStream] = useState(null);
@@ -1248,7 +1154,9 @@ const MeetingRoom = () => {
     }, [peer, userName]);
 
     return (
-      <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
+      <div className={`relative bg-black overflow-hidden min-h-0 ${
+        isThumbnail ? 'rounded-lg' : 'rounded-2xl'
+      }`}>
         {videoEnabled && remoteStream && isStreamReady && 
          remoteStream.getVideoTracks().length > 0 ? (
           <video
@@ -1256,7 +1164,9 @@ const MeetingRoom = () => {
             autoPlay
             playsInline
             muted={false}
-            className="w-full h-full object-cover"
+            className={`w-full h-full ${
+              isScreenShare ? 'object-contain' : 'object-cover'
+            }`}
             onLoadedData={() =>
               console.log(`Remote video loaded for ${userName}`)
             }
@@ -1270,40 +1180,62 @@ const MeetingRoom = () => {
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-            <div className="mb-4">
-              <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20">
-                <span className="text-2xl font-bold text-white">
+            <div className={isThumbnail ? "mb-1" : "mb-4"}>
+              <div className={`rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20 ${
+                isThumbnail ? "w-8 h-8" : "w-24 h-24"
+              }`}>
+                <span className={`font-bold text-white ${
+                  isThumbnail ? "text-xs" : "text-2xl"
+                }`}>
                   {(userName || userEmail || "U").charAt(0).toUpperCase()}
                 </span>
               </div>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              {userName || userEmail?.split("@")[0] || "User"}
-            </h3>
-            <div className="flex items-center gap-2 text-white/60">
-              <VideoOff size={20} />
-              <span className="text-sm">
-                {!remoteStream ? "Connecting..." : "Camera is off"}
-              </span>
-            </div>
+            {!isThumbnail && (
+              <>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  {userName || userEmail?.split("@")[0] || "User"}
+                </h3>
+                <div className="flex items-center gap-2 text-white/60">
+                  <VideoOff size={20} />
+                  <span className="text-sm">
+                    {!remoteStream ? "Connecting..." : "Camera is off"}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
-          <span className="text-white text-sm font-medium">
-            {userName || userEmail?.split("@")[0] || "User"}
-          </span>
-        </div>
+        {!isThumbnail && (
+          <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
+            <span className="text-white text-sm font-medium">
+              {userName || userEmail?.split("@")[0] || "User"}
+            </span>
+          </div>
+        )}
 
-        <div className="absolute top-4 right-4 flex gap-2">
+        {isThumbnail && (
+          <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
+            {userName || userEmail?.split("@")[0] || "User"}
+          </div>
+        )}
+
+        <div className={`absolute flex gap-2 ${
+          isThumbnail ? "top-1 right-1" : "top-4 right-4"
+        }`}>
           {!audioEnabled && (
-            <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-              <MicOff size={16} className="text-white" />
+            <div className={`bg-red-500 rounded-full flex items-center justify-center ${
+              isThumbnail ? "w-4 h-4" : "w-8 h-8"
+            }`}>
+              <MicOff size={isThumbnail ? 8 : 16} className="text-white" />
             </div>
           )}
           {/* Connection status */}
           <div
-            className={`w-3 h-3 rounded-full ${
+            className={`rounded-full ${
+              isThumbnail ? "w-2 h-2" : "w-3 h-3"
+            } ${
               remoteStream && isStreamReady
                 ? "bg-green-500"
                 : remoteStream
@@ -1368,98 +1300,187 @@ const MeetingRoom = () => {
 
       {/* Video Area */}
       <div className="flex-1 p-4 overflow-hidden">
-        <div
-          className="w-full grid gap-4 overflow-hidden"
-          style={{
-            height: "calc(100vh - 200px)",
-            gridTemplateColumns:
-              peers.length === 0
-                ? "1fr"
-                : peers.length === 1
-                ? "1fr 1fr"
-                : peers.length <= 4
-                ? "repeat(2, 1fr)"
-                : "repeat(3, 1fr)",
-            gridTemplateRows:
-              peers.length <= 2
-                ? "1fr"
-                : peers.length <= 4
-                ? "repeat(2, 1fr)"
-                : "repeat(3, 1fr)",
-          }}
-        >
-          {/* Local Video */}
-          <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
-            {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 ? (
-              <video
-                ref={localVideoRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full object-cover -scale-x-100"
-                onLoadedData={() => console.log("Local video loaded")}
-                onError={(e) => console.error("Local video error:", e)}
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                <div className="mb-4">
-                  <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20">
-                    <span className="text-2xl font-bold text-white">
-                      {(currentUser?.name || currentUser?.email || "U")
-                        .charAt(0)
-                        .toUpperCase()}
+        {screenSharingUser ? (
+          // Screen sharing layout - main screen in center, others as thumbnails
+          <div className="w-full h-full flex gap-4" style={{ height: "calc(100vh - 200px)" }}>
+            {/* Main screen sharing area */}
+            <div className="flex-1 flex items-center justify-center">
+              {screenSharingUser === socket.id ? (
+                // Local screen share
+                <div className="relative bg-black rounded-2xl overflow-hidden w-full h-full max-w-6xl">
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    muted
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                  <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
+                    <span className="text-white text-sm font-medium">You (Screen Sharing)</span>
+                  </div>
+                </div>
+              ) : (
+                // Remote screen share
+                peers
+                  .filter(peer => peer.peerID === screenSharingUser)
+                  .map((peerObj, index) => (
+                    <div key={`screen-${peerObj.peerID}-${index}`} className="relative bg-black rounded-2xl overflow-hidden w-full h-full max-w-6xl">
+                      <PeerVideo
+                        peer={peerObj.peer}
+                        userName={peerObj.userName}
+                        userEmail={peerObj.userEmail}
+                        videoEnabled={true}
+                        audioEnabled={peerObj.audioEnabled}
+                        isScreenShare={true}
+                      />
+                      <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
+                        <span className="text-white text-sm font-medium">{peerObj.userName || peerObj.userEmail?.split("@")[0] || "User"} (Screen Sharing)</span>
+                      </div>
+                    </div>
+                  ))
+              )}
+            </div>
+            
+            {/* Thumbnail videos on the right */}
+            <div className="w-64 flex flex-col gap-2 overflow-y-auto">
+              {/* Local video thumbnail (if not screen sharing) */}
+              {screenSharingUser !== socket.id && (
+                <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                  {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 ? (
+                    <video
+                      ref={screenSharingUser === socket.id ? null : localVideoRef}
+                      autoPlay
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover -scale-x-100"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                      <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
+                        <span className="text-sm font-bold text-white">
+                          {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
+                    You
+                  </div>
+                </div>
+              )}
+              
+              {/* Remote video thumbnails (excluding screen sharer) */}
+              {peers
+                .filter(peer => peer.peerID !== screenSharingUser)
+                .map((peerObj, index) => (
+                  <div key={`thumb-${peerObj.peerID}-${index}`} className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                    <PeerVideo
+                      peer={peerObj.peer}
+                      userName={peerObj.userName}
+                      userEmail={peerObj.userEmail}
+                      videoEnabled={peerObj.videoEnabled}
+                      audioEnabled={peerObj.audioEnabled}
+                      isThumbnail={true}
+                    />
+                  </div>
+                ))}
+            </div>
+          </div>
+        ) : (
+          // Normal grid layout when no screen sharing
+          <div
+            className="w-full grid gap-4 overflow-hidden"
+            style={{
+              height: "calc(100vh - 200px)",
+              gridTemplateColumns:
+                peers.length === 0
+                  ? "1fr"
+                  : peers.length === 1
+                  ? "1fr 1fr"
+                  : peers.length <= 4
+                  ? "repeat(2, 1fr)"
+                  : "repeat(3, 1fr)",
+              gridTemplateRows:
+                peers.length <= 2
+                  ? "1fr"
+                  : peers.length <= 4
+                  ? "repeat(2, 1fr)"
+                  : "repeat(3, 1fr)",
+            }}
+          >
+            {/* Local Video */}
+            <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
+              {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 ? (
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover -scale-x-100"
+                  onLoadedData={() => console.log("Local video loaded")}
+                  onError={(e) => console.error("Local video error:", e)}
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                  <div className="mb-4">
+                    <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20">
+                      <span className="text-2xl font-bold text-white">
+                        {(currentUser?.name || currentUser?.email || "U")
+                          .charAt(0)
+                          .toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    {currentUser?.name ||
+                      currentUser?.email?.split("@")[0] ||
+                      "You"}
+                  </h3>
+                  <div className="flex items-center gap-2 text-white/60">
+                    <VideoOff size={20} />
+                    <span className="text-sm">
+                      {!localStream ? "Loading camera..." : "Camera is off"}
                     </span>
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {currentUser?.name ||
-                    currentUser?.email?.split("@")[0] ||
-                    "You"}
-                </h3>
-                <div className="flex items-center gap-2 text-white/60">
-                  <VideoOff size={20} />
-                  <span className="text-sm">
-                    {!localStream ? "Loading camera..." : "Camera is off"}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
-              <span className="text-white text-sm font-medium">You</span>
-            </div>
-
-            <div className="absolute top-4 right-4 flex gap-2">
-              {!isAudioEnabled && (
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                  <MicOff size={16} className="text-white" />
-                </div>
               )}
-              {/* Connection status indicator */}
-              <div
-                className={`w-3 h-3 rounded-full ${
-                  localStream && (isVideoEnabled ? isVideoPlaying : isAudioEnabled)
-                    ? "bg-green-500"
-                    : localStream
-                    ? "bg-yellow-500 animate-pulse"
-                    : "bg-red-500"
-                }`}
-              ></div>
-            </div>
-          </div>
 
-          {/* Remote Videos */}
-          {peers.map((peerObj, index) => (
-            <PeerVideo
-              key={`${peerObj.peerID}-${index}`}
-              peer={peerObj.peer}
-              userName={peerObj.userName}
-              userEmail={peerObj.userEmail}
-              videoEnabled={peerObj.videoEnabled}
-              audioEnabled={peerObj.audioEnabled}
-            />
-          ))}
-        </div>
+              <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-lg">
+                <span className="text-white text-sm font-medium">You</span>
+              </div>
+
+              <div className="absolute top-4 right-4 flex gap-2">
+                {!isAudioEnabled && (
+                  <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                    <MicOff size={16} className="text-white" />
+                  </div>
+                )}
+                {/* Connection status indicator */}
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    localStream && isConnected
+                      ? "bg-green-500"
+                      : localStream
+                      ? "bg-yellow-500 animate-pulse"
+                      : "bg-red-500"
+                  }`}
+                ></div>
+              </div>
+            </div>
+
+            {/* Remote Videos */}
+            {peers.map((peerObj, index) => (
+              <PeerVideo
+                key={`${peerObj.peerID}-${index}`}
+                peer={peerObj.peer}
+                userName={peerObj.userName}
+                userEmail={peerObj.userEmail}
+                videoEnabled={peerObj.videoEnabled}
+                audioEnabled={peerObj.audioEnabled}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Controls */}

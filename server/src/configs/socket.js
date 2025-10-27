@@ -341,6 +341,23 @@ export const setupSocketHandlers = (io) => {
       });
     });
 
+    // Screen sharing events
+    socket.on('start-screen-share', (data) => {
+      console.log(`User ${socket.id} started screen sharing in room ${data.roomId}`);
+      socket.to(data.roomId).emit('user-started-screen-share', {
+        socketId: socket.id,
+        userName: socket.userName || 'Unknown User'
+      });
+    });
+
+    socket.on('stop-screen-share', (data) => {
+      console.log(`User ${socket.id} stopped screen sharing in room ${data.roomId}`);
+      socket.to(data.roomId).emit('user-stopped-screen-share', {
+        socketId: socket.id,
+        userName: socket.userName || 'Unknown User'
+      });
+    });
+
 
 
 

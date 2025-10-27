@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Camera, Mic, Speaker, Monitor, Settings } from 'lucide-react';
+import { X, Camera, Mic, Speaker, Settings } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const MeetingSettings = ({ isOpen, onClose, localStream }) => {
@@ -218,6 +218,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
               <h2 className="text-2xl font-bold text-white">Meeting Settings</h2>
             </div>
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-700"
             >
@@ -239,7 +240,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                   autoPlay
                   muted
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover -scale-x-100"
                 />
                 {!videoEnabled && (
                   <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
@@ -258,6 +259,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                   Audio Output Test
                 </h4>
                 <button
+                  type="button"
                   onClick={testAudioOutput}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
@@ -375,12 +377,14 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
           {/* Action Buttons */}
           <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-700">
             <button
+              type="button"
               onClick={onClose}
               className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={applySettings}
               disabled={loading}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-lg transition-colors flex items-center gap-2"

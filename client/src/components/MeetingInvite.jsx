@@ -89,6 +89,7 @@ const MeetingInvite = () => {
           <h2 className="text-2xl font-bold mb-2">Meeting Not Found</h2>
           <p className="text-gray-400 mb-6">The meeting you're looking for doesn't exist or has been removed.</p>
           <button
+            type="button"
             onClick={() => navigate('/home/dashboard')}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
           >
@@ -148,6 +149,7 @@ const MeetingInvite = () => {
         <div className="space-y-3">
           {isInternal ? (
             <button
+              type="button"
               onClick={joinMeeting}
               disabled={joining}
               className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -166,6 +168,7 @@ const MeetingInvite = () => {
             </button>
           ) : (
             <button
+              type="button"
               onClick={openExternalLink}
               className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
             >
@@ -175,6 +178,7 @@ const MeetingInvite = () => {
           )}
 
           <button
+            type="button"
             onClick={() => navigate('/home/dashboard')}
             className="w-full px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
           >

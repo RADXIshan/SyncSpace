@@ -70,7 +70,7 @@ const MeetingRoom = () => {
 
   // Initialize socket connection
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Authentication required");
       navigate("/login");

@@ -180,13 +180,18 @@ const MeetingRoom = () => {
             };
         }
         
-        // Always create a stream, even if both are disabled (for future enabling)
-        // If both are disabled, create a minimal stream that we can add tracks to later
+        // If both are disabled, create a minimal stream for future use
         if (!isVideoEnabled && !isAudioEnabled) {
           console.log("Both video and audio disabled, creating minimal stream for future use");
-          // Create a minimal audio stream that we can disable immediately
           try {
-            const minimalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Create a minimal audio stream that we can disable immediately
+            const minimalStream = await navigator.mediaDevices.getUserMedia({ 
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+              }
+            });
             const audioTrack = minimalStream.getAudioTracks()[0];
             if (audioTrack) {
               audioTrack.enabled = false; // Disable it immediately
@@ -195,7 +200,7 @@ const MeetingRoom = () => {
             console.log("Minimal stream created for future track addition");
             return;
           } catch (error) {
-            console.log("Could not create minimal stream, setting null");
+            console.log("Could not create minimal stream, will create on demand");
             setLocalStream(null);
             return;
           }
@@ -307,22 +312,32 @@ const MeetingRoom = () => {
           localVideoRef.current.videoHeight
         );
         
-        // Always try to play, the video track enabled state will control visibility
-        localVideoRef.current
-          .play()
-          .then(() => {
-            console.log("Local video started playing successfully");
-            setIsVideoPlaying(true);
-          })
-          .catch((error) => {
-            console.error("Local video play error:", error);
-            setIsVideoPlaying(false);
-          });
+        // Check if we have video tracks and they're enabled
+        const videoTrack = localStream.getVideoTracks()[0];
+        const shouldPlay = videoTrack && videoTrack.enabled && isVideoEnabled;
+        
+        if (shouldPlay) {
+          localVideoRef.current
+            .play()
+            .then(() => {
+              console.log("Local video started playing successfully");
+              setIsVideoPlaying(true);
+            })
+            .catch((error) => {
+              console.error("Local video play error:", error);
+              setIsVideoPlaying(false);
+            });
+        } else {
+          setIsVideoPlaying(false);
+        }
       };
 
       localVideoRef.current.oncanplay = () => {
         console.log("Local video can play");
-        setIsVideoPlaying(true);
+        const videoTrack = localStream.getVideoTracks()[0];
+        if (videoTrack && videoTrack.enabled && isVideoEnabled) {
+          setIsVideoPlaying(true);
+        }
       };
 
       localVideoRef.current.onplaying = () => {
@@ -339,8 +354,19 @@ const MeetingRoom = () => {
         console.error("Local video error:", e);
         setIsVideoPlaying(false);
       };
+
+      // Trigger initial setup
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack && videoTrack.enabled && isVideoEnabled) {
+        // Small delay to ensure everything is ready
+        setTimeout(() => {
+          if (localVideoRef.current && localVideoRef.current.readyState >= 2) {
+            localVideoRef.current.play().catch(console.error);
+          }
+        }, 100);
+      }
     }
-  }, [localStream]); // Remove isVideoEnabled dependency to prevent re-setup
+  }, [localStream, isVideoEnabled]); // Add isVideoEnabled back to handle state changes
 
   // Setup WebRTC signaling
   useEffect(() => {
@@ -771,13 +797,21 @@ const MeetingRoom = () => {
           videoTrack.enabled = true;
           setIsVideoEnabled(true);
           
-          // Update video element
+          // Ensure video element is properly set up and playing
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = localStream;
-            localVideoRef.current.play().catch(console.error);
+            // Add a small delay to ensure the track is ready
+            setTimeout(() => {
+              if (localVideoRef.current) {
+                localVideoRef.current.play()
+                  .then(() => {
+                    setIsVideoPlaying(true);
+                    console.log("Video track enabled and playing");
+                  })
+                  .catch(console.error);
+              }
+            }, 100);
           }
-          
-          console.log("Video track enabled");
         } else {
           // No video track, need to get new stream with video
           try {
@@ -797,10 +831,17 @@ const MeetingRoom = () => {
             localStream.addTrack(newVideoTrack);
             setIsVideoEnabled(true);
             
-            // Update video element
+            // Update video element with proper setup
             if (localVideoRef.current) {
               localVideoRef.current.srcObject = localStream;
-              localVideoRef.current.play().catch(console.error);
+              localVideoRef.current.onloadedmetadata = () => {
+                localVideoRef.current.play()
+                  .then(() => {
+                    setIsVideoPlaying(true);
+                    console.log("New video track playing");
+                  })
+                  .catch(console.error);
+              };
             }
             
             // Update all peer connections with new video track
@@ -837,7 +878,14 @@ const MeetingRoom = () => {
           
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = newStream;
-            localVideoRef.current.play().catch(console.error);
+            localVideoRef.current.onloadedmetadata = () => {
+              localVideoRef.current.play()
+                .then(() => {
+                  setIsVideoPlaying(true);
+                  console.log("New stream with video playing");
+                })
+                .catch(console.error);
+            };
           }
           
           // Update all peer connections with new tracks
@@ -855,12 +903,13 @@ const MeetingRoom = () => {
         }
       }
     } else {
-      // Turning video OFF - just disable the track, don't remove it or null the srcObject
+      // Turning video OFF - just disable the track
       if (localStream) {
         const videoTrack = localStream.getVideoTracks()[0];
         if (videoTrack) {
           videoTrack.enabled = false;
           setIsVideoEnabled(false);
+          setIsVideoPlaying(false); // Update playing state immediately
           console.log("Video track disabled");
         }
       }
@@ -1300,7 +1349,8 @@ const MeetingRoom = () => {
     );
   }
 
-  if (!localStream) {
+  // Only show loading if we're still trying to initialize and both video/audio are enabled
+  if (!localStream && (isVideoEnabled || isAudioEnabled)) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
@@ -1325,13 +1375,6 @@ const MeetingRoom = () => {
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-white font-medium">
               Meeting Room: {roomId}
-            </span>
-            {/* Debug info */}
-            <span className="text-xs text-white/50">
-              Video: {isVideoEnabled ? "ON" : "OFF"} | Audio:{" "}
-              {isAudioEnabled ? "ON" : "OFF"} | Stream:{" "}
-              {localStream ? "OK" : "LOADING"} | Playing:{" "}
-              {isVideoPlaying ? "YES" : "NO"}
             </span>
           </div>
           <div className="flex items-center gap-2 text-white/80">
@@ -1416,28 +1459,13 @@ const MeetingRoom = () => {
               {/* Connection status indicator */}
               <div
                 className={`w-3 h-3 rounded-full ${
-                  isVideoPlaying
+                  localStream && (isVideoEnabled ? isVideoPlaying : isAudioEnabled)
                     ? "bg-green-500"
                     : localStream
                     ? "bg-yellow-500 animate-pulse"
                     : "bg-red-500"
                 }`}
               ></div>
-
-              {/* Debug play button */}
-              {localStream && !isVideoPlaying && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (localVideoRef.current) {
-                      localVideoRef.current.play().catch(console.error);
-                    }
-                  }}
-                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
-                >
-                  Play
-                </button>
-              )}
             </div>
           </div>
 

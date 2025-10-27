@@ -40,6 +40,9 @@ const MeetingRoom = () => {
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
       { urls: "stun:stun1.l.google.com:19302" },
+      { urls: "stun:stun2.l.google.com:19302" },
+      { urls: "stun:stun3.l.google.com:19302" },
+      { urls: "stun:stun4.l.google.com:19302" },
     ],
   };
 
@@ -268,8 +271,10 @@ const MeetingRoom = () => {
       if (item && payload.signal) {
         try {
           if (payload.signal.type === "answer") {
+            console.log(`Setting remote description (answer) for ${payload.id}`);
             item.peer.setRemoteDescription(new RTCSessionDescription(payload.signal));
           } else if (payload.signal.candidate) {
+            console.log(`Adding ICE candidate for ${payload.id}`);
             item.peer.addIceCandidate(new RTCIceCandidate(payload.signal));
           }
         } catch (error) {
@@ -327,6 +332,20 @@ const MeetingRoom = () => {
     // Add connection state logging
     peer.onconnectionstatechange = () => {
       console.log(`Peer connection state (${userToSignal}):`, peer.connectionState);
+      if (peer.connectionState === 'failed') {
+        console.error(`Peer connection failed for ${userToSignal}`);
+      }
+    };
+
+    // Add ICE connection state logging
+    peer.oniceconnectionstatechange = () => {
+      console.log(`ICE connection state (${userToSignal}):`, peer.iceConnectionState);
+    };
+
+    // Handle incoming remote stream - THIS WAS MISSING!
+    peer.ontrack = (event) => {
+      console.log(`Received ${event.track.kind} track from ${userToSignal}`);
+      // The PeerVideo component will handle the stream display
     };
 
     // Add local stream tracks
@@ -352,11 +371,13 @@ const MeetingRoom = () => {
       .createOffer()
       .then((offer) => {
         console.log(`Created offer for ${userToSignal}`);
-        peer.setLocalDescription(offer);
+        return peer.setLocalDescription(offer);
+      })
+      .then(() => {
         socket.emit("sending-signal", {
           userToSignal,
           callerID,
-          signal: offer,
+          signal: peer.localDescription,
         });
       })
       .catch((error) => {
@@ -374,6 +395,20 @@ const MeetingRoom = () => {
     // Add connection state logging
     peer.onconnectionstatechange = () => {
       console.log(`Peer connection state (${callerID}):`, peer.connectionState);
+      if (peer.connectionState === 'failed') {
+        console.error(`Peer connection failed for ${callerID}`);
+      }
+    };
+
+    // Add ICE connection state logging
+    peer.oniceconnectionstatechange = () => {
+      console.log(`ICE connection state (${callerID}):`, peer.iceConnectionState);
+    };
+
+    // Handle incoming remote stream - THIS WAS MISSING!
+    peer.ontrack = (event) => {
+      console.log(`Received ${event.track.kind} track from ${callerID}`);
+      // The PeerVideo component will handle the stream display
     };
 
     // Add local stream tracks
@@ -410,9 +445,11 @@ const MeetingRoom = () => {
       })
       .then((answer) => {
         console.log(`Created answer for ${callerID}`);
-        peer.setLocalDescription(answer);
+        return peer.setLocalDescription(answer);
+      })
+      .then(() => {
         socket.emit("returning-signal", {
-          signal: answer,
+          signal: peer.localDescription,
           callerID,
         });
       })
@@ -591,24 +628,66 @@ const MeetingRoom = () => {
   // Peer video component
   const PeerVideo = ({ peer, userName, userEmail, videoEnabled, audioEnabled }) => {
     const ref = useRef();
+    const [remoteStream, setRemoteStream] = useState(null);
 
     useEffect(() => {
-      peer.ontrack = (event) => {
-        console.log("Received track from peer:", event.track.kind);
-        if (ref.current && event.streams[0]) {
-          ref.current.srcObject = event.streams[0];
+      if (!peer) return;
+
+      const handleTrack = (event) => {
+        console.log(`PeerVideo: Received ${event.track.kind} track from ${userName}`);
+        if (event.streams && event.streams[0]) {
+          console.log(`PeerVideo: Setting remote stream for ${userName}`);
+          setRemoteStream(event.streams[0]);
+          if (ref.current) {
+            ref.current.srcObject = event.streams[0];
+            // Ensure video plays
+            ref.current.play().catch(console.error);
+          }
         }
       };
-    }, [peer]);
+
+      // Set up the track handler
+      peer.ontrack = handleTrack;
+
+      // Check if there are already tracks (in case the event fired before this component mounted)
+      const receivers = peer.getReceivers();
+      if (receivers.length > 0) {
+        const streams = receivers
+          .map(receiver => receiver.track)
+          .filter(track => track)
+          .reduce((streams, track) => {
+            // Group tracks by stream
+            const stream = new MediaStream([track]);
+            return [...streams, stream];
+          }, []);
+        
+        if (streams.length > 0) {
+          console.log(`PeerVideo: Found existing tracks for ${userName}`);
+          setRemoteStream(streams[0]);
+          if (ref.current) {
+            ref.current.srcObject = streams[0];
+            ref.current.play().catch(console.error);
+          }
+        }
+      }
+
+      return () => {
+        if (peer) {
+          peer.ontrack = null;
+        }
+      };
+    }, [peer, userName]);
 
     return (
       <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
-        {videoEnabled ? (
+        {videoEnabled && remoteStream ? (
           <video
             ref={ref}
             autoPlay
             playsInline
             className="w-full h-full object-cover"
+            onLoadedData={() => console.log(`Remote video loaded for ${userName}`)}
+            onError={(e) => console.error(`Remote video error for ${userName}:`, e)}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
@@ -641,7 +720,8 @@ const MeetingRoom = () => {
               <MicOff size={16} className="text-white" />
             </div>
           )}
-          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          {/* Connection status - green if stream exists, red if not */}
+          <div className={`w-3 h-3 rounded-full ${remoteStream ? 'bg-green-500' : 'bg-red-500'}`}></div>
         </div>
       </div>
     );

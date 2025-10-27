@@ -182,6 +182,12 @@ export const setupSocketHandlers = (io) => {
         onlineUsers.delete(userId);
         userSockets.delete(userId);
       }
+
+      // WebRTC cleanup - notify all rooms that this user left
+      console.log(`User ${socket.id} disconnected`);
+      if (socket.currentRoom) {
+        socket.to(socket.currentRoom).emit('user-left', socket.id);
+      }
     });
 
     // Handle typing indicators for channels
@@ -249,6 +255,95 @@ export const setupSocketHandlers = (io) => {
     socket.on('leave_channel', (channelId) => {
       socket.leave(`channel_${channelId}`);
     });
+
+    // WebRTC Video Call Handlers - Clean and Simple
+    socket.on('join-room', (roomID) => {
+      console.log(`User ${socket.id} (${socket.userName}) joining room ${roomID}`);
+      
+      // Get users already in the room
+      const usersInThisRoom = [];
+      const room = io.sockets.adapter.rooms.get(roomID);
+      
+      if (room) {
+        room.forEach(socketId => {
+          if (socketId !== socket.id) {
+            const participantSocket = io.sockets.sockets.get(socketId);
+            if (participantSocket) {
+              usersInThisRoom.push({
+                socketId: socketId,
+                userName: participantSocket.userName || 'Unknown User',
+                userEmail: participantSocket.userEmail || 'unknown@email.com',
+                userId: participantSocket.userId || socketId
+              });
+            }
+          }
+        });
+      }
+      
+      console.log(`Sending ${usersInThisRoom.length} existing users to new user`);
+      // Send existing users to the new user
+      socket.emit('existing-users', usersInThisRoom);
+      
+      // Join the room
+      socket.join(roomID);
+      
+      // Notify existing users about the new user (without signal - just notification)
+      socket.to(roomID).emit('user-joined', {
+        callerID: socket.id,
+        userName: socket.userName || 'Unknown User',
+        userEmail: socket.userEmail || 'unknown@email.com',
+        userId: socket.userId || socket.id
+      });
+
+      // Store room association for this socket
+      socket.currentRoom = roomID;
+    });
+
+    socket.on('sending-signal', (payload) => {
+      console.log(`Sending signal from ${socket.id} to ${payload.userToSignal}`);
+      io.to(payload.userToSignal).emit('user-joined', {
+        signal: payload.signal,
+        callerID: payload.callerID,
+        userName: socket.userName || 'Unknown User',
+        userEmail: socket.userEmail || 'unknown@email.com',
+        userId: socket.userId || socket.id
+      });
+    });
+
+    socket.on('returning-signal', (payload) => {
+      console.log(`Returning signal from ${socket.id} to ${payload.callerID}`);
+      io.to(payload.callerID).emit('receiving-answer', {
+        signal: payload.signal,
+        id: socket.id
+      });
+    });
+
+    socket.on('leave-room', (roomID) => {
+      console.log(`User ${socket.id} leaving room ${roomID}`);
+      socket.leave(roomID);
+      socket.to(roomID).emit('user-left', socket.id);
+    });
+
+    // Media control events for meetings
+    socket.on('toggle-video', (data) => {
+      console.log(`User ${socket.id} toggled video:`, data.videoEnabled);
+      socket.to(data.roomId).emit('user-video-toggle', {
+        socketId: socket.id,
+        videoEnabled: data.videoEnabled
+      });
+    });
+
+    socket.on('toggle-audio', (data) => {
+      console.log(`User ${socket.id} toggled audio:`, data.audioEnabled);
+      socket.to(data.roomId).emit('user-audio-toggle', {
+        socketId: socket.id,
+        audioEnabled: data.audioEnabled
+      });
+    });
+
+
+
+
 
 
   });

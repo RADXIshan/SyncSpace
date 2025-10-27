@@ -190,13 +190,13 @@ const MeetingModal = ({
       if (isEditing) {
         const token = localStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        
+
         await axios.put(
           `${import.meta.env.VITE_BASE_URL}/api/meetings/${meeting.meeting_id}`,
           meetingData,
-          { 
+          {
             withCredentials: true,
-            headers
+            headers,
           }
         );
         toast.success("Meeting updated successfully");
@@ -291,8 +291,15 @@ const MeetingModal = ({
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
                   Date and Time
                 </label>
-                <div className={`relative w-full pl-5 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 flex items-center gap-1.5 ${isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""}`}>
-                  <Calendar className="text-violet-400 pointer-events-none z-10" size={20} />
+                <div
+                  className={`relative w-full pl-5 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 flex items-center gap-1.5 ${
+                    isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
+                >
+                  <Calendar
+                    className="text-violet-400 pointer-events-none z-10"
+                    size={20}
+                  />
                   <DatePicker
                     selected={startDateTime}
                     onChange={(date) => setStartDateTime(date)}
@@ -345,9 +352,7 @@ const MeetingModal = ({
                       onChange={(e) => setLinkOption(e.target.value)}
                       className="w-4 h-4 accent-violet-600 bg-gray-800 border-gray-600 focus:ring-violet-500"
                     />
-                    <span className="text-sm text-gray-300">
-                      Custom link
-                    </span>
+                    <span className="text-sm text-gray-300">Custom link</span>
                   </label>
                 </div>
 
@@ -373,7 +378,10 @@ const MeetingModal = ({
                       type="url"
                       value={formData.meeting_link}
                       onChange={(e) =>
-                        setFormData({ ...formData, meeting_link: e.target.value })
+                        setFormData({
+                          ...formData,
+                          meeting_link: e.target.value,
+                        })
                       }
                       required
                       placeholder="https://meet.google.com/abc-defg-hij"
@@ -401,7 +409,12 @@ const MeetingModal = ({
               </button>
               <button
                 type="submit"
-                disabled={isLoading || !formData.title.trim() || !startDateTime || !formData.meeting_link.trim()}
+                disabled={
+                  isLoading ||
+                  !formData.title.trim() ||
+                  !startDateTime ||
+                  !formData.meeting_link.trim()
+                }
                 className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center glass-button-enhanced ${
                   isEditing && hasUnsavedChanges
                     ? "border border-orange-500/30 text-orange-400 hover:text-orange-300"
@@ -419,7 +432,9 @@ const MeetingModal = ({
                     <span>
                       {isEditing && hasUnsavedChanges
                         ? "Save Changes*"
-                        : "Save Changes"}
+                        : isEditing
+                        ? "Update Meeting"
+                        : "Create Meeting"}
                     </span>
                     {isEditing && hasUnsavedChanges && (
                       <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />

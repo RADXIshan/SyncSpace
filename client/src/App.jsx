@@ -16,6 +16,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import MeetingRoom from "./components/MeetingRoom";
+import MeetingInvite from "./components/MeetingInvite";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 const App = () => {
@@ -112,6 +113,11 @@ const App = () => {
                     }
                   />
                   <Route path="/meeting/:roomId" element={<MeetingRoom />} />
+                  <Route
+                    path="/invite/:meetingId"
+                    element={<MeetingInvite />}
+                  />
+
                   <Route
                     path="/home/*"
                     element={

@@ -44,11 +44,37 @@ const FileUpload = ({ onUpload, onClose, maxFiles = 5, maxSize = 10 * 1024 * 102
         return false;
       }
       
-      // Check for potentially problematic file types (optional security check)
-      const dangerousExtensions = ['exe', 'bat', 'cmd', 'scr', 'pif', 'com'];
+      // Check for potentially problematic file types (expanded security check)
+      const dangerousExtensions = [
+        'exe', 'bat', 'cmd', 'scr', 'pif', 'com', 'vbs', 'jar', 'app', 'deb', 'pkg', 'dmg',
+        'msi', 'run', 'bin', 'sh', 'ps1', 'psm1', 'psd1', 'ps1xml', 'psc1', 'psc2'
+      ];
       const extension = fileName.split('.').pop()?.toLowerCase();
       if (dangerousExtensions.includes(extension)) {
         safeToast.error(`${fileName} file type is not allowed for security reasons`);
+        return false;
+      }
+
+      // Check for supported file types
+      const supportedExtensions = [
+        // Images
+        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif',
+        // Videos
+        'mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v',
+        // Audio
+        'mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma',
+        // Documents
+        'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp',
+        // Text files
+        'txt', 'rtf', 'csv', 'json', 'xml', 'html', 'htm', 'css', 'md',
+        // Archives
+        'zip', 'rar', '7z', 'tar', 'gz', 'bz2',
+        // Other
+        'eps', 'ai', 'psd', 'sketch', 'fig'
+      ];
+      
+      if (extension && !supportedExtensions.includes(extension)) {
+        safeToast.error(`${fileName} file type is not supported. Please use a supported format.`);
         return false;
       }
       
@@ -140,34 +166,91 @@ const FileUpload = ({ onUpload, onClose, maxFiles = 5, maxSize = 10 * 1024 * 102
       return <span className="text-lg">🗜️</span>;
     }
     
-    // Fallback based on file extension
+    // Fallback based on file extension (expanded)
     const extension = file.name.split('.').pop()?.toLowerCase();
     switch (extension) {
+      // Documents
       case 'pdf':
         return <span className="text-lg">📄</span>;
+      case 'doc':
+      case 'docx':
+      case 'odt':
+        return <span className="text-lg">📝</span>;
+      case 'xls':
+      case 'xlsx':
+      case 'ods':
+        return <span className="text-lg">📊</span>;
+      case 'ppt':
+      case 'pptx':
+      case 'odp':
+        return <span className="text-lg">📽️</span>;
+      
+      // Audio
       case 'mp3':
       case 'wav':
       case 'ogg':
       case 'm4a':
+      case 'aac':
+      case 'flac':
+      case 'wma':
         return <span className="text-lg">🎵</span>;
+      
+      // Video
       case 'mp4':
       case 'avi':
       case 'mov':
       case 'wmv':
+      case 'flv':
+      case 'webm':
+      case 'mkv':
+      case 'm4v':
         return <span className="text-lg">🎬</span>;
-      case 'doc':
-      case 'docx':
-        return <span className="text-lg">📝</span>;
-      case 'xls':
-      case 'xlsx':
-        return <span className="text-lg">📊</span>;
-      case 'ppt':
-      case 'pptx':
-        return <span className="text-lg">📽️</span>;
+      
+      // Images
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'bmp':
+      case 'webp':
+      case 'svg':
+      case 'ico':
+      case 'tiff':
+      case 'tif':
+        return <span className="text-lg">🖼️</span>;
+      
+      // Archives
       case 'zip':
       case 'rar':
       case '7z':
+      case 'tar':
+      case 'gz':
+      case 'bz2':
         return <span className="text-lg">🗜️</span>;
+      
+      // Text files
+      case 'txt':
+      case 'rtf':
+      case 'md':
+        return <span className="text-lg">📝</span>;
+      case 'csv':
+        return <span className="text-lg">📊</span>;
+      case 'json':
+      case 'xml':
+      case 'html':
+      case 'htm':
+      case 'css':
+        return <span className="text-lg">💻</span>;
+      
+      // Design files
+      case 'psd':
+      case 'ai':
+      case 'eps':
+        return <span className="text-lg">🎨</span>;
+      case 'sketch':
+      case 'fig':
+        return <span className="text-lg">🎨</span>;
+      
       default:
         return <File size={20} className="text-gray-500" />;
     }

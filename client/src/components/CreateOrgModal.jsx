@@ -299,9 +299,9 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4 transition-all duration-300">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 transition-all duration-300">
+      <div className="relative w-full max-w-4xl max-h-[90vh] glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 cosmic-bg"></div>
         <div className="relative overflow-y-auto max-h-[90vh] px-8 py-10">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Close Button */}
@@ -315,10 +315,13 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
 
             {/* Header */}
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Users size={24} className="text-purple-400 sm:w-8 sm:h-8" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 gradient-text">
                 Create Organisation
               </h2>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-300 text-sm sm:text-base">
                 Set up your organization with channels and roles
               </p>
             </div>
@@ -338,7 +341,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
                   placeholder="Enter organisation name"
-                  className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                 />
               </div>
             </div>
@@ -371,8 +374,8 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                       <div
                         className={`p-4 rounded-xl border transition-all cursor-pointer ${
                           accessLevel === value
-                            ? "border-violet-500 bg-violet-500/10 shadow-lg shadow-violet-500/20"
-                            : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
+                            ? "border-violet-500 glass-button-enhanced shadow-lg shadow-violet-500/20"
+                            : "glass-effect hover:border-white/20"
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -418,7 +421,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                   <div
                     key={index}
                     ref={(el) => channelRefs.current[index] = el}
-                    className="p-4 rounded-lg border border-white/10 bg-white/5"
+                    className="p-4 rounded-lg glass-effect"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-sm font-medium text-gray-300">
@@ -446,7 +449,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                             updateChannel(index, "name", e.target.value)
                           }
                           placeholder="e.g., general"
-                          className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500"
+                          className="w-full px-3 py-2 rounded-xl glass-effect text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                         />
                       </div>
                       <div>
@@ -460,7 +463,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                             updateChannel(index, "description", e.target.value)
                           }
                           placeholder="Channel purpose..."
-                          className="w-full px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500"
+                          className="w-full px-3 py-2 rounded-xl glass-effect text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                         />
                       </div>
                     </div>
@@ -491,7 +494,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                   <div
                     key={roleIndex}
                     ref={(el) => roleRefs.current[roleIndex] = el}
-                    className="p-4 rounded-lg border border-white/10 bg-white/5"
+                    className="p-4 rounded-lg glass-effect"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3 flex-1">
@@ -502,7 +505,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                             updateRole(roleIndex, "name", e.target.value)
                           }
                           placeholder="Role name"
-                          className="px-3 py-2 rounded-xl border border-white/10 bg-white/5 text-white focus:ring-2 focus:ring-violet-500 flex-1"
+                          className="px-3 py-2 rounded-xl glass-effect text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 flex-1"
                         />
                         {role.name.trim() && (
                           <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${getRoleStyle(role.name).background} ${getRoleStyle(role.name).border} ${getRoleStyle(role.name).text}`}>
@@ -600,14 +603,14 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="px-6 py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto disabled:opacity-50 shadow-lg hover:shadow-xl"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg glass-button text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto disabled:opacity-50 text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl"
+                className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center glass-button-enhanced text-violet-400 hover:text-violet-300 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>

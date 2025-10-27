@@ -43,8 +43,8 @@ const NoteInputModal = ({ isOpen, onClose, onSubmit }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
-      <div className="relative w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-gray-900/50 to-indigo-900/20"></div>
+      <div className="relative w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 cosmic-bg"></div>
         <div className="relative overflow-y-auto max-h-[98vh] sm:max-h-[95vh] px-4 py-6 sm:px-8 sm:py-10">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Close Button */}
@@ -59,10 +59,10 @@ const NoteInputModal = ({ isOpen, onClose, onSubmit }) => {
 
             {/* Header */}
             <div className="text-center mb-6 sm:mb-8">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
-                <FileText size={24} className="text-white sm:w-8 sm:h-8" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <FileText size={24} className="text-purple-400 sm:w-8 sm:h-8" />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 gradient-text">
                 Create New Note
               </h2>
               <p className="text-gray-300 text-sm sm:text-base">
@@ -85,7 +85,7 @@ const NoteInputModal = ({ isOpen, onClose, onSubmit }) => {
                   required
                   disabled={loading}
                   placeholder="Enter your note title"
-                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -102,12 +102,12 @@ const NoteInputModal = ({ isOpen, onClose, onSubmit }) => {
                   disabled={loading}
                   rows="4"
                   placeholder="Write your note content here..."
-                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Pin Toggle */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 border border-gray-600/30">
+              <div className="flex items-center justify-between p-4 rounded-xl glass-effect">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                     <Pin size={18} className="text-purple-400" />
@@ -140,14 +140,14 @@ const NoteInputModal = ({ isOpen, onClose, onSubmit }) => {
                 type="button"
                 onClick={handleClose}
                 disabled={loading}
-                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg glass-button text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading || !title.trim() || !body.trim()}
-                className="px-6 py-3 rounded-xl font-medium bg-gradient-to-r bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl cursor-pointer"
+                className="px-6 py-3 rounded-xl font-semibold glass-button-enhanced text-violet-400 hover:text-violet-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">

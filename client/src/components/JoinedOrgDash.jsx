@@ -127,14 +127,14 @@ const JoinedOrgDash = () => {
       {/* Dashboard Grid - Side by side layout */}
       <main className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 h-full">
         {/* Meetings - Left side */}
-        <section className="relative bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden group/meetings flex flex-col transition-all duration-500 hover:scale-[1.02]">
-          {/* Background gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+        <section className="relative glass-dark rounded-2xl sm:rounded-3xl overflow-hidden group/meetings flex flex-col transition-all duration-500 hover:scale-[1.02]">
+          {/* Background Elements */}
+          <div className="absolute inset-0 cosmic-bg"></div>
 
           <div className="relative z-10 p-4 pb-4.5 sm:p-6 lg:p-8 flex flex-col sm:max-h-[40rem] max-h-[25rem]">
             <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
               <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
-                <div className="p-2 sm:p-3 lg:p-4 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover/meetings:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                <div className="p-2 sm:p-3 lg:p-4 rounded-full glass-button group-hover/meetings:glass-button-enhanced transition-all duration-300 flex-shrink-0">
                   <Clock
                     size={18}
                     className="text-purple-400 group-hover/meetings:scale-110 transition-all duration-300 sm:w-6 sm:h-6"
@@ -151,17 +151,17 @@ const JoinedOrgDash = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-hidden overflow-x-visible z-100">
               {meetings.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16 text-center px-4">
                   <div className="relative mb-4 sm:mb-6">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/30">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full glass-button flex items-center justify-center">
                       <Calendar
                         size={24}
                         className="text-purple-400 opacity-60 sm:w-8 sm:h-8"
                       />
                     </div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 animate-pulse"></div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full glass-button animate-pulse"></div>
                   </div>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-300 mb-2">
                     No meetings scheduled
@@ -171,11 +171,11 @@ const JoinedOrgDash = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2 sm:space-y-3 max-h-full overflow-y-auto pr-1 sm:pr-2 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+                <div className="space-y-2 sm:space-y-3 max-h-full overflow-y-auto overflow-x-visible pr-1 sm:pr-2 scrollbar-extrathin scrollbar-thumb-purple-500/30 scrollbar-track-transparent z-100">
                   {meetings.map((meeting, index) => (
                     <div
                       key={meeting.event_id || index}
-                      className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
+                      className="group/card relative glass hover:glass-button-enhanced rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 cursor-pointer transition-all duration-300 transform"
                     >
                       {/* Hover gradient overlay */}
                       <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
@@ -233,10 +233,10 @@ const JoinedOrgDash = () => {
             </div>
 
             {/* View Calendar Button */}
-            <div className="mt-4 pt-4 border-t border-gray-700/50">
+            <div className="mt-4 pt-4 border-t border-white/10">
               <button
                 onClick={() => navigate("/home/calendar")}
-                className="w-full px-4 py-3 text-sm font-semibold rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg backdrop-blur-sm group/btn cursor-pointer"
+                className="w-full px-4 py-3 text-sm font-semibold rounded-xl glass-button hover:glass-button-enhanced text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] group/btn cursor-pointer"
               >
                 <div className="flex items-center justify-center gap-2">
                   <Calendar

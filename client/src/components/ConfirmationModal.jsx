@@ -32,8 +32,8 @@ const ConfirmationModal = ({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-4 transition-all duration-300">
-      <div className="relative w-full max-w-sm sm:max-w-md bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn mx-auto px-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-gray-900/50 to-indigo-900/20"></div>
+      <div className="relative w-full max-w-sm sm:max-w-md glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform mx-auto px-4">
+        <div className="absolute inset-0 cosmic-bg"></div>
         <div className="relative p-4 sm:p-8">
           {/* Close Button */}
           <button
@@ -48,12 +48,12 @@ const ConfirmationModal = ({
           {/* Content */}
           <div className="text-center">
             {/* Icon */}
-            <div className={`w-16 h-16 sm:w-20 sm:h-20 ${styles.bg} ${styles.border} border rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-sm`}>
+            <div className={`w-16 h-16 sm:w-20 sm:h-20 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6`}>
               <AlertTriangle size={28} className={`${styles.icon} sm:w-9 sm:h-9`} />
             </div>
 
             {/* Title */}
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 px-2">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-2 gradient-text">
               {title}
             </h3>
 
@@ -72,7 +72,7 @@ const ConfirmationModal = ({
                   onClose();
                 }}
                 disabled={loading}
-                className="w-full sm:flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/50 rounded-lg sm:rounded-xl text-gray-300 hover:text-white font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl active:scale-95"
+                className="w-full sm:flex-1 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl glass-button text-gray-400 hover:text-gray-300 font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 cursor-pointer active:scale-95"
               >
                 {cancelText}
               </button>
@@ -84,7 +84,7 @@ const ConfirmationModal = ({
                   onConfirm();
                 }}
                 disabled={loading}
-                className={`w-full sm:flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl active:scale-95 ${styles.button}`}
+                className={`w-full sm:flex-1 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 disabled:opacity-50 cursor-pointer active:scale-95 glass-button-enhanced ${styles.button}`}
               >
                 {loading ? (
                   <div className="flex items-center justify-center">

@@ -86,9 +86,9 @@ const InviteModal = ({ organization, onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-3 sm:p-4 transition-all duration-300">
-      <div className="relative w-full max-w-sm sm:max-w-2xl bg-white/10 dark:bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform max-h-[90vh] overflow-y-auto">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-4 transition-all duration-300">
+      <div className="relative w-full max-w-sm sm:max-w-2xl glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform max-h-[90vh] overflow-y-auto">
+        <div className="absolute inset-0 cosmic-bg"></div>
         <div className="relative px-4 sm:px-8 py-6 sm:py-10">
           {/* Close Button */}
           <button
@@ -101,10 +101,13 @@ const InviteModal = ({ organization, onClose }) => {
 
           {/* Header */}
           <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <UserPlus size={24} className="text-purple-400 sm:w-8 sm:h-8" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 gradient-text">
               Invite People
             </h2>
-            <p className="text-gray-400 text-sm px-2">
+            <p className="text-gray-300 text-sm sm:text-base px-2">
               Invite others to join <span className="font-semibold text-violet-300">{organization?.name}</span>
             </p>
           </div>
@@ -120,8 +123,8 @@ const InviteModal = ({ organization, onClose }) => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 flex items-center justify-center px-2 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                     activeTab === tab.id
-                      ? "bg-violet-600/30 text-violet-300 border border-violet-500/30"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300"
+                      ? "glass-button-enhanced text-violet-300 border border-violet-500/30"
+                      : "glass-effect text-gray-400 hover:text-gray-300"
                   }`}
                 >
                   <Icon size={14} className="mr-1 sm:mr-2 sm:w-4 sm:h-4" />
@@ -136,7 +139,7 @@ const InviteModal = ({ organization, onClose }) => {
           {activeTab === "copy" && (
             <div className="space-y-4 sm:space-y-6">
               {/* Organization Info */}
-              <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-3 sm:p-4">
+              <div className="glass-button-enhanced rounded-xl p-3 sm:p-4">
                 <div className="flex items-center mb-3">
                   <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-violet-400 mr-2" />
                   <h3 className="font-semibold text-violet-300 text-sm sm:text-base">Organization Invite Code</h3>
@@ -146,7 +149,7 @@ const InviteModal = ({ organization, onClose }) => {
                 </p>
                 
                 {/* Invite Code Display */}
-                <div className="bg-black/20 rounded-lg p-3 sm:p-4 mb-4">
+                <div className="glass-effect rounded-lg p-3 sm:p-4 mb-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-gray-400 mb-1">Invite Code</p>
@@ -158,8 +161,8 @@ const InviteModal = ({ organization, onClose }) => {
                       onClick={handleCopyCode}
                       className={`flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 w-full sm:w-auto ${
                         copied
-                          ? "bg-green-600/20 text-green-300 border border-green-500/30"
-                          : "bg-violet-600/20 text-violet-300 border border-violet-500/30 hover:bg-violet-600/30"
+                          ? "glass-button-enhanced text-green-300 border border-green-500/30"
+                          : "glass-button-enhanced text-violet-300 border border-violet-500/30"
                       }`}
                     >
                       {copied ? <Check size={14} className="mr-1 sm:mr-2 sm:w-4 sm:h-4" /> : <Copy size={14} className="mr-1 sm:mr-2 sm:w-4 sm:h-4" />}
@@ -169,7 +172,7 @@ const InviteModal = ({ organization, onClose }) => {
                 </div>
 
                 {/* Instructions */}
-                <div className="text-xs sm:text-sm text-gray-300 bg-white/5 rounded-lg p-3">
+                <div className="text-xs sm:text-sm text-gray-300 glass-effect rounded-lg p-3">
                   <p className="font-medium mb-2">How to share:</p>
                   <ol className="list-decimal list-inside space-y-1 text-xs text-gray-400">
                     <li>Copy the invite code above</li>
@@ -193,7 +196,7 @@ const InviteModal = ({ organization, onClose }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter email address"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                   required
                 />
               </div>
@@ -208,7 +211,7 @@ const InviteModal = ({ organization, onClose }) => {
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Enter a custom message..."
                   rows={3}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:outline-none resize-none sm:rows-4"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none resize-none placeholder-gray-400 transition-all duration-200 sm:rows-4"
                 />
                 <p className="text-xs text-gray-400 mt-2">
                   The invite code will be automatically included in the email
@@ -221,14 +224,14 @@ const InviteModal = ({ organization, onClose }) => {
                   type="button"
                   onClick={onClose}
                   disabled={loading}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold text-sm sm:text-base transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 shadow-lg hover:shadow-xl"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-lg glass-button text-gray-400 hover:text-gray-300 font-semibold text-sm sm:text-base transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading || !email.trim()}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold text-sm sm:text-base transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 rounded-xl glass-button-enhanced text-violet-400 hover:text-violet-300 font-semibold text-sm sm:text-base transition-all duration-300 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>

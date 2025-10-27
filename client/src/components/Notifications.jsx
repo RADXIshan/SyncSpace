@@ -19,7 +19,7 @@ const DeleteAllModal = ({ isOpen, onClose, onConfirm, isDeleting }) => {
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isDeleting) {
@@ -42,11 +42,13 @@ const DeleteAllModal = ({ isOpen, onClose, onConfirm, isDeleting }) => {
               </p>
             </div>
           </div>
-          
+
           <p className="text-gray-700 mb-6">
-            Are you sure you want to delete all notifications? This will permanently remove all notifications from your account and cannot be undone.
+            Are you sure you want to delete all notifications? This will
+            permanently remove all notifications from your account and cannot be
+            undone.
           </p>
-          
+
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -66,7 +68,7 @@ const DeleteAllModal = ({ isOpen, onClose, onConfirm, isDeleting }) => {
                   Deleting...
                 </>
               ) : (
-                'Delete All'
+                "Delete All"
               )}
             </button>
           </div>
@@ -318,7 +320,7 @@ const Notifications = () => {
                 Mark All Read
               </button>
             )}
-            
+
             {notifications.length > 0 && (
               <button
                 onClick={handleDeleteAllNotifications}
@@ -346,8 +348,13 @@ const Notifications = () => {
           {deletingAll && (
             <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
               <div className="text-center">
-                <Loader2 size={32} className="animate-spin text-red-600 mx-auto mb-2" />
-                <p className="text-gray-600 font-medium">Deleting all notifications...</p>
+                <Loader2
+                  size={32}
+                  className="animate-spin text-red-600 mx-auto mb-2"
+                />
+                <p className="text-gray-600 font-medium">
+                  Deleting all notifications...
+                </p>
               </div>
             </div>
           )}

@@ -872,3 +872,63 @@ input[type="checkbox"]:disabled:hover {
 .react-hot-toast div[data-rich-colors="true"] > div {
   gap: 6px !important;
 }
+/* Deleted Message Styles */
+.message-deleted {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+  color: #6b7280 !important;
+  border: 1px solid #d1d5db !important;
+  font-style: italic;
+  opacity: 0.75;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.message-deleted::before {
+  content: "🗑️";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.message-deleted:hover {
+  opacity: 0.9;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Loading toast animation enhancement */
+.toast-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Deleted message fade-in animation */
+.message-delete-animation {
+  animation: messageDeleteFade 0.5s ease-in-out;
+}
+
+@keyframes messageDeleteFade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+}

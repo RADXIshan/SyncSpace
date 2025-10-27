@@ -332,17 +332,13 @@ export const NotificationProvider = ({ children }) => {
       );
 
       // Add notification to the list for the notifications page
+      // This will automatically show a toast via addNotification -> showNotification
       addNotification({
         type: "mention",
         title: "You were mentioned",
         message: `${mentionedBy} mentioned you in #${channelName}`,
         priority: "high",
         actionUrl: `/channels/${data.channelId}`,
-      });
-
-      // Also show toast notification
-      toast(`${mentionedBy} mentioned you in #${channelName}`, {
-        icon: "👋",
       });
     };
 

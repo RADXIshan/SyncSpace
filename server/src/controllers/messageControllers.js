@@ -150,21 +150,8 @@ export const sendMessage = async (req, res) => {
                   userName: safeUser.name // Add this for consistency with NotificationContext
                 };
                 
-                // Send mention event for toast notification
+                // Send mention event - this will handle both toast and notifications page update
                 io.to(mentionedUserSocketId).emit("user_mentioned", mentionData);
-                
-                // Also send new_notification event for notifications page real-time update
-                const notificationData = {
-                  type: "mention",
-                  title: "You were mentioned",
-                  message: `${safeUser.name} mentioned you in #${channelInfo.channel_name}`,
-                  priority: "high",
-                  actionUrl: `/channels/${channel_id}`,
-                  timestamp: new Date().toISOString(),
-                  isRead: false
-                };
-                
-                io.to(mentionedUserSocketId).emit("new_notification", notificationData);
               }
             }
           } catch (error) {

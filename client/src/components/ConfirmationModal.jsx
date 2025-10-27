@@ -1,31 +1,33 @@
 import { X, AlertTriangle } from "lucide-react";
 
-const ConfirmationModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  title, 
-  message, 
-  confirmText = "Confirm", 
+const ConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Confirm",
   cancelText = "Cancel",
   type = "danger",
-  loading = false 
+  loading = false,
 }) => {
   if (!isOpen) return null;
 
   const typeStyles = {
     danger: {
       icon: "text-red-400",
-      button: "bg-red-900/40 hover:bg-red-900/60 border-red-700/50 text-red-400 hover:text-red-300",
+      button:
+        "bg-red-900/40 hover:bg-red-900/60 border-red-700/50 text-red-400 hover:text-red-300",
       border: "border-red-700/50",
-      bg: "bg-red-900/20"
+      bg: "bg-red-900/20",
     },
     warning: {
       icon: "text-amber-400",
-      button: "bg-amber-900/40 hover:bg-amber-900/60 border-amber-700/50 text-amber-400 hover:text-amber-300",
+      button:
+        "bg-amber-900/40 hover:bg-amber-900/60 border-amber-700/50 text-amber-400 hover:text-amber-300",
       border: "border-amber-700/50",
-      bg: "bg-amber-900/20"
-    }
+      bg: "bg-amber-900/20",
+    },
   };
 
   const styles = typeStyles[type];
@@ -48,8 +50,13 @@ const ConfirmationModal = ({
           {/* Content */}
           <div className="text-center">
             {/* Icon */}
-            <div className={`w-16 h-16 sm:w-20 sm:h-20 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6`}>
-              <AlertTriangle size={28} className={`${styles.icon} sm:w-9 sm:h-9`} />
+            <div
+              className={`w-16 h-16 sm:w-20 sm:h-20 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6`}
+            >
+              <AlertTriangle
+                size={28}
+                className={`${styles.icon} sm:w-9 sm:h-9`}
+              />
             </div>
 
             {/* Title */}

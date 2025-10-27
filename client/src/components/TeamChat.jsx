@@ -220,9 +220,8 @@ const TeamChat = ({ channelId, channelName }) => {
 
         // Only show toast if we're not currently in this channel to avoid duplicate notifications
         if (data.channelId !== channelId) {
-          toast.success(`${mentionedBy} mentioned you in #${channelName}`, {
-            duration: 5000,
-            icon: "👋",
+          toast(`${mentionedBy} mentioned you in #${channelName}`, {
+            icon: '👋',
           });
         }
       }

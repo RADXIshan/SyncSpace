@@ -1,15 +1,24 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useSocket } from './SocketContext';
-import { useAuth } from './AuthContext';
-import { useToast } from './ToastContext';
-import axios from 'axios';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { toast } from "react-hot-toast";
+import { useSocket } from "./SocketContext";
+import { useAuth } from "./AuthContext";
+import { useToast } from "./ToastContext";
+import axios from "axios";
 
 const NotificationContext = createContext();
 
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
+    throw new Error(
+      "useNotifications must be used within a NotificationProvider"
+    );
   }
   return context;
 };
@@ -30,56 +39,59 @@ export const NotificationProvider = ({ children }) => {
       setLoading(false);
       return;
     }
-    
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/api/notifications`,
         { withCredentials: true }
       );
-      
+
       setNotifications(response.data.notifications || []);
       setUnreadCount(response.data.unreadCount || 0);
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      console.error("Failed to fetch notifications:", error);
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   // Add new notification
-  const addNotification = useCallback((notification) => {
-    const newNotification = {
-      id: Date.now() + Math.random(),
-      timestamp: new Date().toISOString(),
-      isRead: false,
-      ...notification,
-    };
+  const addNotification = useCallback(
+    (notification) => {
+      const newNotification = {
+        id: Date.now() + Math.random(),
+        timestamp: new Date().toISOString(),
+        isRead: false,
+        ...notification,
+      };
 
-    setNotifications(prev => [newNotification, ...prev]);
-    setUnreadCount(prev => prev + 1);
-    
-    // Show toast notification
-    showNotification(newNotification);
-  }, [showNotification]);
+      setNotifications((prev) => [newNotification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+
+      // Show toast notification
+      showNotification(newNotification);
+    },
+    [showNotification]
+  );
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId) => {
     try {
       await axios.patch(
-        `${import.meta.env.VITE_BASE_URL}/api/notifications/${notificationId}/read`,
+        `${
+          import.meta.env.VITE_BASE_URL
+        }/api/notifications/${notificationId}/read`,
         {},
         { withCredentials: true }
       );
 
-      setNotifications(prev =>
-        prev.map(n =>
-          n.id === notificationId ? { ...n, isRead: true } : n
-        )
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
       );
-      
-      setUnreadCount(prev => Math.max(0, prev - 1));
+
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+      console.error("Failed to mark notification as read:", error);
     }
   }, []);
 
@@ -92,87 +104,93 @@ export const NotificationProvider = ({ children }) => {
         { withCredentials: true }
       );
 
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, isRead: true }))
-      );
-      
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
       setUnreadCount(0);
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      console.error("Failed to mark all notifications as read:", error);
     }
   }, []);
 
   // Delete notification
-  const deleteNotification = useCallback(async (notificationId) => {
-    setDeletingIds(prev => new Set(prev).add(notificationId));
-    try {
-      await axios.delete(
-        `${import.meta.env.VITE_BASE_URL}/api/notifications/${notificationId}`,
-        { withCredentials: true }
-      );
+  const deleteNotification = useCallback(
+    async (notificationId) => {
+      setDeletingIds((prev) => new Set(prev).add(notificationId));
+      try {
+        await axios.delete(
+          `${
+            import.meta.env.VITE_BASE_URL
+          }/api/notifications/${notificationId}`,
+          { withCredentials: true }
+        );
 
-      const notification = notifications.find(n => n.id === notificationId);
-      
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      
-      if (notification && !notification.isRead) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        const notification = notifications.find((n) => n.id === notificationId);
+
+        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+
+        if (notification && !notification.isRead) {
+          setUnreadCount((prev) => Math.max(0, prev - 1));
+        }
+
+        // Removed success toast for individual deletes to reduce noise
+      } catch (error) {
+        console.error("Failed to delete notification:", error);
+        showError("Failed to delete notification");
+        throw error;
+      } finally {
+        setDeletingIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(notificationId);
+          return newSet;
+        });
       }
-
-      // Removed success toast for individual deletes to reduce noise
-    } catch (error) {
-      console.error('Failed to delete notification:', error);
-      showError('Failed to delete notification');
-      throw error;
-    } finally {
-      setDeletingIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(notificationId);
-        return newSet;
-      });
-    }
-  }, [notifications, showSuccess, showError]);
+    },
+    [notifications, showSuccess, showError]
+  );
 
   // Delete all notifications
   const deleteAllNotifications = useCallback(async () => {
     setDeletingAll(true);
     const startTime = Date.now();
-    
+
     try {
       const response = await axios.delete(
         `${import.meta.env.VITE_BASE_URL}/api/notifications`,
-        { 
+        {
           withCredentials: true,
-          timeout: 30000 // 30 second timeout
+          timeout: 30000, // 30 second timeout
         }
       );
 
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
+
       setNotifications([]);
       setUnreadCount(0);
-      
+
       const deletedCount = response.data.deletedCount || 0;
-      showSuccess(`Successfully deleted ${deletedCount} notifications (${duration}ms)`);
+      showSuccess(
+        `Successfully deleted ${deletedCount} notifications (${duration}ms)`
+      );
     } catch (error) {
       const endTime = Date.now();
       const duration = endTime - startTime;
-      
-      console.error(`Failed to delete all notifications after ${duration}ms:`, error);
-      
-      if (error.code === 'ECONNABORTED') {
-        showError('Delete operation timed out. Please try again.');
+
+      console.error(
+        `Failed to delete all notifications after ${duration}ms:`,
+        error
+      );
+
+      if (error.code === "ECONNABORTED") {
+        showError("Delete operation timed out. Please try again.");
       } else {
-        showError('Failed to delete all notifications');
+        showError("Failed to delete all notifications");
       }
       throw error;
     } finally {
       setDeletingAll(false);
     }
   }, [showSuccess, showError]);
-
-
 
   // Socket event handlers
   useEffect(() => {
@@ -185,13 +203,14 @@ export const NotificationProvider = ({ children }) => {
 
     // Listen for member joining
     const handleMemberJoined = (data) => {
-      if (data.userId !== user.user_id) { // Don't notify about yourself
+      if (data.userId !== user.user_id) {
+        // Don't notify about yourself
         addNotification({
-          type: 'member_joined',
-          title: 'New Member Joined',
+          type: "member_joined",
+          title: "New Member Joined",
           message: `${data.userName} has joined your organization`,
-          priority: 'low',
-          actionUrl: '/members',
+          priority: "low",
+          actionUrl: "/members",
         });
       }
     };
@@ -199,21 +218,23 @@ export const NotificationProvider = ({ children }) => {
     // Listen for new notices
     const handleNewNotice = (data) => {
       addNotification({
-        type: 'notice',
-        title: 'New Notice Posted',
+        type: "notice",
+        title: "New Notice Posted",
         message: `${data.title}`,
-        priority: 'medium',
-        actionUrl: '/notices',
+        priority: "medium",
+        actionUrl: "/notices",
       });
     };
 
     // Listen for new meetings
     const handleNewMeeting = (data) => {
       addNotification({
-        type: 'meeting',
-        title: 'New Meeting Scheduled',
-        message: `${data.title} - ${new Date(data.start_time).toLocaleString()}`,
-        priority: 'high',
+        type: "meeting",
+        title: "New Meeting Scheduled",
+        message: `${data.title} - ${new Date(
+          data.start_time
+        ).toLocaleString()}`,
+        priority: "high",
         actionUrl: `/meetings/${data.id}`,
       });
     };
@@ -221,10 +242,10 @@ export const NotificationProvider = ({ children }) => {
     // Listen for meeting reminders
     const handleMeetingReminder = (data) => {
       addNotification({
-        type: 'meeting',
-        title: 'Meeting Starting Soon',
+        type: "meeting",
+        title: "Meeting Starting Soon",
         message: `${data.title} starts in ${data.minutesUntil} minutes`,
-        priority: 'high',
+        priority: "high",
         actionUrl: `/meeting-prep/${data.id}`,
       });
     };
@@ -232,10 +253,10 @@ export const NotificationProvider = ({ children }) => {
     // Listen for channel updates
     const handleChannelUpdate = (data) => {
       addNotification({
-        type: 'channel_update',
-        title: 'Channel Updated',
+        type: "channel_update",
+        title: "Channel Updated",
         message: `${data.channelName} has been updated`,
-        priority: 'low',
+        priority: "low",
         actionUrl: `/channels/${data.channelId}`,
       });
     };
@@ -243,20 +264,20 @@ export const NotificationProvider = ({ children }) => {
     // Listen for new tasks/notes in channels
     const handleNewTask = (data) => {
       addNotification({
-        type: 'task',
-        title: 'New Task Added',
+        type: "task",
+        title: "New Task Added",
         message: `New task in ${data.channelName}: ${data.title}`,
-        priority: 'medium',
+        priority: "medium",
         actionUrl: `/channels/${data.channelId}`,
       });
     };
 
     const handleNewNote = (data) => {
       addNotification({
-        type: 'task',
-        title: 'New Note Added',
+        type: "task",
+        title: "New Note Added",
         message: `New note in ${data.channelName}: ${data.title}`,
-        priority: 'medium',
+        priority: "medium",
         actionUrl: `/channels/${data.channelId}`,
       });
     };
@@ -265,10 +286,14 @@ export const NotificationProvider = ({ children }) => {
     const handleNewMessage = (data) => {
       if (data.mentioned || data.important) {
         addNotification({
-          type: data.mentioned ? 'mention' : 'message',
-          title: data.mentioned ? `${data.userName} mentioned you` : 'New Message',
-          message: `In ${data.channelName}: "${data.message.substring(0, 50)}${data.message.length > 50 ? '...' : ''}"`,
-          priority: data.mentioned ? 'high' : 'medium',
+          type: data.mentioned ? "mention" : "message",
+          title: data.mentioned
+            ? `${data.userName} mentioned you`
+            : "New Message",
+          message: `In ${data.channelName}: "${data.message.substring(0, 50)}${
+            data.message.length > 50 ? "..." : ""
+          }"`,
+          priority: data.mentioned ? "high" : "medium",
           actionUrl: `/channels/${data.channelId}`,
         });
       }
@@ -277,10 +302,10 @@ export const NotificationProvider = ({ children }) => {
     // Listen for meeting updates
     const handleMeetingUpdate = (data) => {
       addNotification({
-        type: 'meeting',
-        title: 'Meeting Updated',
+        type: "meeting",
+        title: "Meeting Updated",
         message: `${data.title} has been updated`,
-        priority: 'medium',
+        priority: "medium",
         actionUrl: `/meetings/${data.id}`,
       });
     };
@@ -288,59 +313,56 @@ export const NotificationProvider = ({ children }) => {
     // Listen for organization updates
     const handleOrgUpdate = (data) => {
       addNotification({
-        type: 'system',
-        title: 'Organization Updated',
-        message: data.message || 'Your organization settings have been updated',
-        priority: 'low',
-        actionUrl: '/settings',
+        type: "system",
+        title: "Organization Updated",
+        message: data.message || "Your organization settings have been updated",
+        priority: "low",
+        actionUrl: "/settings",
       });
     };
 
     // Listen for mentions
     const handleMention = (data) => {
       console.log("NotificationContext received user_mentioned:", data);
-      const mentionedBy = data.userName || data.mentionedBy || 'Someone';
-      const channelName = data.channelName || 'a channel';
-      const message = data.content || data.message || 'mentioned you';
-      
-      console.log(`Adding notification for mention from ${mentionedBy} in ${channelName}`);
-      
-      addNotification({
-        type: 'mention',
-        title: `${mentionedBy} mentioned you`,
-        message: `In ${channelName}: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`,
-        priority: 'high',
-        actionUrl: `/channels/${data.channelId}`,
+      const mentionedBy = data.userName || data.mentionedBy || "Someone";
+      const channelName = data.channelName || "a channel";
+
+      console.log(
+        `Adding notification for mention from ${mentionedBy} in ${channelName}`
+      );
+
+      toast(`${mentionedBy} mentioned you in #${channelName}`, {
+        icon: "👋",
       });
     };
 
     // Register socket listeners
-    socket.on('new_notification', handleNewNotification);
-    socket.on('member_joined', handleMemberJoined);
-    socket.on('new_notice', handleNewNotice);
-    socket.on('new_meeting', handleNewMeeting);
-    socket.on('meeting_reminder', handleMeetingReminder);
-    socket.on('channel_updated', handleChannelUpdate);
-    socket.on('new_task', handleNewTask);
-    socket.on('new_note', handleNewNote);
-    socket.on('user_mentioned', handleMention);
-    socket.on('new_message', handleNewMessage);
-    socket.on('meeting_updated', handleMeetingUpdate);
-    socket.on('organization_updated', handleOrgUpdate);
+    socket.on("new_notification", handleNewNotification);
+    socket.on("member_joined", handleMemberJoined);
+    socket.on("new_notice", handleNewNotice);
+    socket.on("new_meeting", handleNewMeeting);
+    socket.on("meeting_reminder", handleMeetingReminder);
+    socket.on("channel_updated", handleChannelUpdate);
+    socket.on("new_task", handleNewTask);
+    socket.on("new_note", handleNewNote);
+    socket.on("user_mentioned", handleMention);
+    socket.on("new_message", handleNewMessage);
+    socket.on("meeting_updated", handleMeetingUpdate);
+    socket.on("organization_updated", handleOrgUpdate);
 
     return () => {
-      socket.off('new_notification', handleNewNotification);
-      socket.off('member_joined', handleMemberJoined);
-      socket.off('new_notice', handleNewNotice);
-      socket.off('new_meeting', handleNewMeeting);
-      socket.off('meeting_reminder', handleMeetingReminder);
-      socket.off('channel_updated', handleChannelUpdate);
-      socket.off('new_task', handleNewTask);
-      socket.off('new_note', handleNewNote);
-      socket.off('user_mentioned', handleMention);
-      socket.off('new_message', handleNewMessage);
-      socket.off('meeting_updated', handleMeetingUpdate);
-      socket.off('organization_updated', handleOrgUpdate);
+      socket.off("new_notification", handleNewNotification);
+      socket.off("member_joined", handleMemberJoined);
+      socket.off("new_notice", handleNewNotice);
+      socket.off("new_meeting", handleNewMeeting);
+      socket.off("meeting_reminder", handleMeetingReminder);
+      socket.off("channel_updated", handleChannelUpdate);
+      socket.off("new_task", handleNewTask);
+      socket.off("new_note", handleNewNote);
+      socket.off("user_mentioned", handleMention);
+      socket.off("new_message", handleNewMessage);
+      socket.off("meeting_updated", handleMeetingUpdate);
+      socket.off("organization_updated", handleOrgUpdate);
     };
   }, [socket, user, addNotification]);
 

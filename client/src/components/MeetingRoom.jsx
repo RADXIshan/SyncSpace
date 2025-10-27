@@ -29,6 +29,7 @@ const MeetingRoom = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   // Refs
   const localVideoRef = useRef();
@@ -113,6 +114,7 @@ const MeetingRoom = () => {
   useEffect(() => {
     const initializeMedia = async () => {
       try {
+        console.log("Requesting user media...");
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 1280 },
@@ -124,12 +126,24 @@ const MeetingRoom = () => {
           },
         });
 
+        console.log("Got media stream:", stream.getTracks().map(t => `${t.kind}: ${t.enabled}`));
+        
         setLocalStream(stream);
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
+        
+        // Set initial states based on actual track states
+        const videoTrack = stream.getVideoTracks()[0];
+        const audioTrack = stream.getAudioTracks()[0];
+        
+        if (videoTrack) {
+          setIsVideoEnabled(videoTrack.enabled);
+          console.log("Video track enabled:", videoTrack.enabled);
+        }
+        if (audioTrack) {
+          setIsAudioEnabled(audioTrack.enabled);
+          console.log("Audio track enabled:", audioTrack.enabled);
         }
 
-        console.log("Local media initialized");
+        console.log("Local media initialized successfully");
       } catch (error) {
         console.error("Error accessing media devices:", error);
         toast.error("Failed to access camera/microphone");
@@ -140,6 +154,36 @@ const MeetingRoom = () => {
       initializeMedia();
     }
   }, [isConnected]);
+
+  // Handle local video element setup
+  useEffect(() => {
+    if (localStream && localVideoRef.current && isVideoEnabled) {
+      console.log("Setting up local video element");
+      localVideoRef.current.srcObject = localStream;
+      
+      // Ensure video plays
+      localVideoRef.current.onloadedmetadata = () => {
+        console.log("Local video metadata loaded, dimensions:", 
+          localVideoRef.current.videoWidth, 'x', localVideoRef.current.videoHeight);
+        localVideoRef.current.play().catch(console.error);
+      };
+
+      localVideoRef.current.oncanplay = () => {
+        console.log("Local video can play");
+        setIsVideoPlaying(true);
+      };
+
+      localVideoRef.current.onplaying = () => {
+        console.log("Local video is playing");
+        setIsVideoPlaying(true);
+      };
+
+      localVideoRef.current.onerror = (e) => {
+        console.error("Local video error:", e);
+        setIsVideoPlaying(false);
+      };
+    }
+  }, [localStream, isVideoEnabled]);
 
   // Setup WebRTC signaling
   useEffect(() => {
@@ -390,6 +434,17 @@ const MeetingRoom = () => {
 
         console.log("Video toggled:", newState);
 
+        // Update video element visibility
+        if (localVideoRef.current) {
+          if (newState) {
+            localVideoRef.current.srcObject = localStream;
+            localVideoRef.current.play().catch(console.error);
+          } else {
+            // Keep the stream but hide the video
+            localVideoRef.current.srcObject = null;
+          }
+        }
+
         // Broadcast state change
         if (socket) {
           socket.emit("toggle-video", {
@@ -593,12 +648,24 @@ const MeetingRoom = () => {
   };
 
   // Loading state
-  if (!isConnected || !localStream) {
+  if (!isConnected) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Connecting to meeting...</p>
+          <p>Connecting to meeting server...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!localStream) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Accessing camera and microphone...</p>
+          <p className="text-sm text-white/60 mt-2">Please allow camera and microphone access</p>
         </div>
       </div>
     );
@@ -615,6 +682,10 @@ const MeetingRoom = () => {
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-white font-medium">
               Meeting Room: {roomId}
+            </span>
+            {/* Debug info */}
+            <span className="text-xs text-white/50">
+              Video: {isVideoEnabled ? 'ON' : 'OFF'} | Audio: {isAudioEnabled ? 'ON' : 'OFF'} | Stream: {localStream ? 'OK' : 'LOADING'} | Playing: {isVideoPlaying ? 'YES' : 'NO'}
             </span>
           </div>
           <div className="flex items-center gap-2 text-white/80">
@@ -650,13 +721,15 @@ const MeetingRoom = () => {
         >
           {/* Local Video */}
           <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
-            {isVideoEnabled ? (
+            {isVideoEnabled && localStream ? (
               <video
                 ref={localVideoRef}
                 autoPlay
                 muted
                 playsInline
                 className="w-full h-full object-cover -scale-x-100"
+                onLoadedData={() => console.log("Local video loaded")}
+                onError={(e) => console.error("Local video error:", e)}
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
@@ -676,7 +749,9 @@ const MeetingRoom = () => {
                 </h3>
                 <div className="flex items-center gap-2 text-white/60">
                   <VideoOff size={20} />
-                  <span className="text-sm">Camera is off</span>
+                  <span className="text-sm">
+                    {!localStream ? "Loading camera..." : "Camera is off"}
+                  </span>
                 </div>
               </div>
             )}
@@ -690,6 +765,22 @@ const MeetingRoom = () => {
                 <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                   <MicOff size={16} className="text-white" />
                 </div>
+              )}
+              {/* Connection status indicator */}
+              <div className={`w-3 h-3 rounded-full ${isVideoPlaying ? 'bg-green-500' : localStream ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`}></div>
+              
+              {/* Debug play button */}
+              {localStream && !isVideoPlaying && (
+                <button
+                  onClick={() => {
+                    if (localVideoRef.current) {
+                      localVideoRef.current.play().catch(console.error);
+                    }
+                  }}
+                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                >
+                  Play
+                </button>
               )}
             </div>
           </div>

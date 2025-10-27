@@ -34,10 +34,10 @@ const MeetingModal = ({
     meeting && (meeting.started || new Date(meeting.start_time) <= new Date());
 
   const getBaseUrl = () => {
-    if (typeof window !== "undefined") {
-      return window.location.origin;
-    }
-    return "";
+    // For meeting room URLs, we want the frontend URL, not the API URL
+    // In production, this should be the actual domain where users access the app
+    // In development, it falls back to the current origin
+    return import.meta.env.VITE_FRONTEND_URL || window.location.origin;
   };
 
   // Initialize form data when modal opens or meeting prop changes

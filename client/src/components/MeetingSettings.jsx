@@ -84,7 +84,8 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
   const testAudioOutput = async () => {
     try {
       // Create a simple beep sound using Web Audio API
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
       const audioContext = new AudioContextClass();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();

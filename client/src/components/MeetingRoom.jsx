@@ -295,33 +295,22 @@ const MeetingRoom = () => {
   // Handle local video element setup
   useEffect(() => {
     if (localStream && localVideoRef.current) {
-      console.log(
-        "Setting up local video element, video enabled:",
-        isVideoEnabled
-      );
+      console.log("Setting up local video element, video enabled:", isVideoEnabled);
       
-      // Always set the stream object, regardless of video enabled state
+      // Always set the stream object
       localVideoRef.current.srcObject = localStream;
 
-      // Ensure video plays
-      localVideoRef.current.onloadedmetadata = () => {
-        console.log(
-          "Local video metadata loaded, dimensions:",
-          localVideoRef.current.videoWidth,
-          "x",
-          localVideoRef.current.videoHeight
-        );
-        
-        // Check if we have video tracks and they're enabled
+      // Set up event handlers
+      const videoElement = localVideoRef.current;
+      
+      const handleLoadedMetadata = () => {
+        console.log("Local video metadata loaded");
         const videoTrack = localStream.getVideoTracks()[0];
-        const shouldPlay = videoTrack && videoTrack.enabled && isVideoEnabled;
-        
-        if (shouldPlay) {
-          localVideoRef.current
-            .play()
+        if (videoTrack && videoTrack.enabled && isVideoEnabled) {
+          videoElement.play()
             .then(() => {
-              console.log("Local video started playing successfully");
               setIsVideoPlaying(true);
+              console.log("Local video playing");
             })
             .catch((error) => {
               console.error("Local video play error:", error);
@@ -332,41 +321,51 @@ const MeetingRoom = () => {
         }
       };
 
-      localVideoRef.current.oncanplay = () => {
-        console.log("Local video can play");
+      const handleCanPlay = () => {
         const videoTrack = localStream.getVideoTracks()[0];
         if (videoTrack && videoTrack.enabled && isVideoEnabled) {
           setIsVideoPlaying(true);
         }
       };
 
-      localVideoRef.current.onplaying = () => {
-        console.log("Local video is playing");
+      const handlePlaying = () => {
         setIsVideoPlaying(true);
       };
 
-      localVideoRef.current.onpause = () => {
-        console.log("Local video paused");
+      const handlePause = () => {
         setIsVideoPlaying(false);
       };
 
-      localVideoRef.current.onerror = (e) => {
+      const handleError = (e) => {
         console.error("Local video error:", e);
         setIsVideoPlaying(false);
       };
 
-      // Trigger initial setup
+      // Add event listeners
+      videoElement.onloadedmetadata = handleLoadedMetadata;
+      videoElement.oncanplay = handleCanPlay;
+      videoElement.onplaying = handlePlaying;
+      videoElement.onpause = handlePause;
+      videoElement.onerror = handleError;
+
+      // Immediate check for existing video
       const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack && videoTrack.enabled && isVideoEnabled) {
-        // Small delay to ensure everything is ready
-        setTimeout(() => {
-          if (localVideoRef.current && localVideoRef.current.readyState >= 2) {
-            localVideoRef.current.play().catch(console.error);
-          }
-        }, 100);
+      if (videoTrack && videoTrack.enabled && isVideoEnabled && videoElement.readyState >= 2) {
+        videoElement.play().catch(console.error);
       }
+
+      // Cleanup function
+      return () => {
+        if (videoElement) {
+          videoElement.onloadedmetadata = null;
+          videoElement.oncanplay = null;
+          videoElement.onplaying = null;
+          videoElement.onpause = null;
+          videoElement.onerror = null;
+        }
+      };
     }
-  }, [localStream, isVideoEnabled]); // Add isVideoEnabled back to handle state changes
+  }, [localStream, isVideoEnabled]);
 
   // Setup WebRTC signaling
   useEffect(() => {
@@ -788,33 +787,29 @@ const MeetingRoom = () => {
     const newState = !isVideoEnabled;
     console.log("Toggling video from", isVideoEnabled, "to", newState);
 
-    if (newState) {
-      // Turning video ON
-      if (localStream) {
-        const videoTrack = localStream.getVideoTracks()[0];
-        if (videoTrack) {
-          // Video track exists, just enable it
-          videoTrack.enabled = true;
-          setIsVideoEnabled(true);
-          
-          // Ensure video element is properly set up and playing
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = localStream;
-            // Add a small delay to ensure the track is ready
-            setTimeout(() => {
-              if (localVideoRef.current) {
-                localVideoRef.current.play()
-                  .then(() => {
-                    setIsVideoPlaying(true);
-                    console.log("Video track enabled and playing");
-                  })
-                  .catch(console.error);
-              }
-            }, 100);
-          }
-        } else {
-          // No video track, need to get new stream with video
-          try {
+    // Update UI state immediately for responsiveness
+    setIsVideoEnabled(newState);
+    
+    // Broadcast state change immediately to other participants
+    if (socket) {
+      socket.emit("toggle-video", {
+        roomId,
+        videoEnabled: newState,
+      });
+    }
+
+    try {
+      if (newState) {
+        // Turning video ON
+        if (localStream) {
+          const videoTrack = localStream.getVideoTracks()[0];
+          if (videoTrack) {
+            // Video track exists, just enable it
+            videoTrack.enabled = true;
+            setIsVideoPlaying(true);
+            console.log("Video track enabled");
+          } else {
+            // No video track, need to create one and replace in peer connections
             const videoConstraints = {
               width: { ideal: 1280 },
               height: { ideal: 720 },
@@ -829,36 +824,31 @@ const MeetingRoom = () => {
             
             // Add the new video track to existing stream
             localStream.addTrack(newVideoTrack);
-            setIsVideoEnabled(true);
             
-            // Update video element with proper setup
+            // Update video element
             if (localVideoRef.current) {
               localVideoRef.current.srcObject = localStream;
-              localVideoRef.current.onloadedmetadata = () => {
-                localVideoRef.current.play()
-                  .then(() => {
-                    setIsVideoPlaying(true);
-                    console.log("New video track playing");
-                  })
-                  .catch(console.error);
-              };
             }
             
-            // Update all peer connections with new video track
+            // Replace video track in all peer connections (don't add, replace!)
             peersRef.current.forEach((peerObj) => {
-              peerObj.peer.addTrack(newVideoTrack, localStream);
+              const videoSender = peerObj.peer.getSenders().find(
+                sender => sender.track && sender.track.kind === 'video'
+              );
+              
+              if (videoSender) {
+                // Replace existing video sender
+                videoSender.replaceTrack(newVideoTrack).catch(console.error);
+              } else {
+                // No existing video sender, add new one
+                peerObj.peer.addTrack(newVideoTrack, localStream);
+              }
             });
             
-            console.log("New video track added to existing stream");
-          } catch (error) {
-            console.error("Error enabling video:", error);
-            toast.error("Failed to enable camera");
-            return;
+            console.log("New video track added and replaced in peer connections");
           }
-        }
-      } else {
-        // No stream at all, create new one with video
-        try {
+        } else {
+          // No stream at all, create new one with video
           const constraints = {
             video: {
               width: { ideal: 1280 },
@@ -874,53 +864,38 @@ const MeetingRoom = () => {
           
           const newStream = await navigator.mediaDevices.getUserMedia(constraints);
           setLocalStream(newStream);
-          setIsVideoEnabled(true);
           
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = newStream;
-            localVideoRef.current.onloadedmetadata = () => {
-              localVideoRef.current.play()
-                .then(() => {
-                  setIsVideoPlaying(true);
-                  console.log("New stream with video playing");
-                })
-                .catch(console.error);
-            };
           }
           
-          // Update all peer connections with new tracks
+          // Add all tracks to peer connections
           peersRef.current.forEach((peerObj) => {
             newStream.getTracks().forEach(track => {
               peerObj.peer.addTrack(track, newStream);
             });
           });
           
-          console.log("New stream created with video (no existing stream)");
-        } catch (error) {
-          console.error("Error creating stream with video:", error);
-          toast.error("Failed to enable camera");
-          return;
+          console.log("New stream created with video");
+        }
+      } else {
+        // Turning video OFF - just disable the track (don't remove from peer connections)
+        if (localStream) {
+          const videoTrack = localStream.getVideoTracks()[0];
+          if (videoTrack) {
+            videoTrack.enabled = false;
+            setIsVideoPlaying(false);
+            console.log("Video track disabled");
+          }
         }
       }
-    } else {
-      // Turning video OFF - just disable the track
-      if (localStream) {
-        const videoTrack = localStream.getVideoTracks()[0];
-        if (videoTrack) {
-          videoTrack.enabled = false;
-          setIsVideoEnabled(false);
-          setIsVideoPlaying(false); // Update playing state immediately
-          console.log("Video track disabled");
-        }
-      }
-    }
 
-    // Broadcast state change
-    if (socket) {
-      socket.emit("toggle-video", {
-        roomId,
-        videoEnabled: newState,
-      });
+    } catch (error) {
+      console.error("Error toggling video:", error);
+      toast.error("Failed to toggle camera");
+      // Revert state on error
+      setIsVideoEnabled(!newState);
+      setIsVideoPlaying(false);
     }
   };
 
@@ -929,18 +904,28 @@ const MeetingRoom = () => {
     const newState = !isAudioEnabled;
     console.log("Toggling audio from", isAudioEnabled, "to", newState);
 
-    if (newState) {
-      // Turning audio ON
-      if (localStream) {
-        const audioTrack = localStream.getAudioTracks()[0];
-        if (audioTrack) {
-          // Audio track exists, just enable it
-          audioTrack.enabled = true;
-          setIsAudioEnabled(true);
-          console.log("Audio track enabled");
-        } else {
-          // No audio track, need to get new stream with audio
-          try {
+    // Update UI state immediately for responsiveness
+    setIsAudioEnabled(newState);
+    
+    // Broadcast state change immediately to other participants
+    if (socket) {
+      socket.emit("toggle-audio", {
+        roomId,
+        audioEnabled: newState,
+      });
+    }
+
+    try {
+      if (newState) {
+        // Turning audio ON
+        if (localStream) {
+          const audioTrack = localStream.getAudioTracks()[0];
+          if (audioTrack) {
+            // Audio track exists, just enable it
+            audioTrack.enabled = true;
+            console.log("Audio track enabled");
+          } else {
+            // No audio track, need to create one and replace in peer connections
             const audioConstraints = {
               echoCancellation: true,
               noiseSuppression: true,
@@ -955,23 +940,26 @@ const MeetingRoom = () => {
             
             // Add the new audio track to existing stream
             localStream.addTrack(newAudioTrack);
-            setIsAudioEnabled(true);
             
-            // Update all peer connections with new audio track
+            // Replace audio track in all peer connections (don't add, replace!)
             peersRef.current.forEach((peerObj) => {
-              peerObj.peer.addTrack(newAudioTrack, localStream);
+              const audioSender = peerObj.peer.getSenders().find(
+                sender => sender.track && sender.track.kind === 'audio'
+              );
+              
+              if (audioSender) {
+                // Replace existing audio sender
+                audioSender.replaceTrack(newAudioTrack).catch(console.error);
+              } else {
+                // No existing audio sender, add new one
+                peerObj.peer.addTrack(newAudioTrack, localStream);
+              }
             });
             
-            console.log("New audio track added to existing stream");
-          } catch (error) {
-            console.error("Error enabling audio:", error);
-            toast.error("Failed to enable microphone");
-            return;
+            console.log("New audio track added and replaced in peer connections");
           }
-        }
-      } else {
-        // No stream at all, create new one with audio
-        try {
+        } else {
+          // No stream at all, create new one with audio
           const constraints = {
             video: isVideoEnabled ? {
               width: { ideal: 1280 },
@@ -987,44 +975,36 @@ const MeetingRoom = () => {
           
           const newStream = await navigator.mediaDevices.getUserMedia(constraints);
           setLocalStream(newStream);
-          setIsAudioEnabled(true);
           
           if (isVideoEnabled && localVideoRef.current) {
             localVideoRef.current.srcObject = newStream;
           }
           
-          // Update all peer connections with new tracks
+          // Add all tracks to peer connections
           peersRef.current.forEach((peerObj) => {
             newStream.getTracks().forEach(track => {
               peerObj.peer.addTrack(track, newStream);
             });
           });
           
-          console.log("New stream created with audio (no existing stream)");
-        } catch (error) {
-          console.error("Error creating stream with audio:", error);
-          toast.error("Failed to enable microphone");
-          return;
+          console.log("New stream created with audio");
+        }
+      } else {
+        // Turning audio OFF - just disable the track (don't remove from peer connections)
+        if (localStream) {
+          const audioTrack = localStream.getAudioTracks()[0];
+          if (audioTrack) {
+            audioTrack.enabled = false;
+            console.log("Audio track disabled");
+          }
         }
       }
-    } else {
-      // Turning audio OFF - just disable the track, don't remove it
-      if (localStream) {
-        const audioTrack = localStream.getAudioTracks()[0];
-        if (audioTrack) {
-          audioTrack.enabled = false;
-          setIsAudioEnabled(false);
-          console.log("Audio track disabled");
-        }
-      }
-    }
 
-    // Broadcast state change
-    if (socket) {
-      socket.emit("toggle-audio", {
-        roomId,
-        audioEnabled: newState,
-      });
+    } catch (error) {
+      console.error("Error toggling audio:", error);
+      toast.error("Failed to toggle microphone");
+      // Revert state on error
+      setIsAudioEnabled(!newState);
     }
   };
 
@@ -1270,8 +1250,7 @@ const MeetingRoom = () => {
     return (
       <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
         {videoEnabled && remoteStream && isStreamReady && 
-         remoteStream.getVideoTracks().length > 0 && 
-         remoteStream.getVideoTracks()[0].enabled ? (
+         remoteStream.getVideoTracks().length > 0 ? (
           <video
             ref={ref}
             autoPlay
@@ -1411,7 +1390,7 @@ const MeetingRoom = () => {
         >
           {/* Local Video */}
           <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
-            {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 && localStream.getVideoTracks()[0].enabled ? (
+            {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 ? (
               <video
                 ref={localVideoRef}
                 autoPlay

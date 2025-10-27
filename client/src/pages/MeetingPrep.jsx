@@ -591,9 +591,14 @@ const MeetingPrep = () => {
           window.open(meetingInfo.meeting_link, "_blank");
           navigate(-1); // Go back to previous page
         } else {
-          // If it's an internal meeting room, navigate to it
+          // If it's an internal meeting room, navigate to it with settings
           const roomId = meetingInfo.meeting_link.split("/meeting/")[1];
-          navigate(`/meeting/${roomId}?email=${encodeURIComponent(email)}`);
+          const params = new URLSearchParams({
+            email: email,
+            video: isVideoEnabled.toString(),
+            audio: isAudioEnabled.toString()
+          });
+          navigate(`/meeting/${roomId}?${params.toString()}`);
         }
       }
     } catch (error) {

@@ -288,12 +288,40 @@ export const uploadFile = async (req, res) => {
       });
     }
 
-    // Check for dangerous file types
-    const dangerousExtensions = ['exe', 'bat', 'cmd', 'scr', 'pif', 'com', 'vbs', 'js'];
+    // Check for dangerous file types (expanded list)
+    const dangerousExtensions = [
+      'exe', 'bat', 'cmd', 'scr', 'pif', 'com', 'vbs', 'jar', 'app', 'deb', 'pkg', 'dmg',
+      'msi', 'run', 'bin', 'sh', 'ps1', 'psm1', 'psd1', 'ps1xml', 'psc1', 'psc2',
+      'msh', 'msh1', 'msh2', 'mshxml', 'msh1xml', 'msh2xml'
+    ];
     const extension = file.originalname.split('.').pop()?.toLowerCase();
     if (dangerousExtensions.includes(extension)) {
       return res.status(400).json({ 
         message: "File type not allowed for security reasons" 
+      });
+    }
+
+    // Validate supported file types (allow most common formats)
+    const supportedExtensions = [
+      // Images
+      'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif',
+      // Videos
+      'mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', 'm4v',
+      // Audio
+      'mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma',
+      // Documents
+      'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp',
+      // Text files
+      'txt', 'rtf', 'csv', 'json', 'xml', 'html', 'htm', 'css', 'md',
+      // Archives
+      'zip', 'rar', '7z', 'tar', 'gz', 'bz2',
+      // Other
+      'eps', 'ai', 'psd', 'sketch', 'fig'
+    ];
+    
+    if (extension && !supportedExtensions.includes(extension)) {
+      return res.status(400).json({ 
+        message: `File type '.${extension}' is not supported. Supported formats: ${supportedExtensions.slice(0, 10).join(', ')}...` 
       });
     }
 
@@ -312,27 +340,32 @@ export const uploadFile = async (req, res) => {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
       
-      // Generate unique filename
+      // Generate unique filename for storage
       const timestamp = Date.now();
-      const safeFileName = `${timestamp}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const filePath = path.join(uploadsDir, safeFileName);
+      const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const uniqueFileName = `${timestamp}-${sanitizedOriginalName}`;
+      const filePath = path.join(uploadsDir, uniqueFileName);
       
       // Write file to disk
       fs.writeFileSync(filePath, file.buffer);
       
+      console.log(`[FILE UPLOAD] File saved to: ${filePath}`);
+      console.log(`[FILE UPLOAD] Unique filename: ${uniqueFileName}`);
+      console.log(`[FILE UPLOAD] Original filename: ${file.originalname}`);
+      
       // Generate URL for local file - use the server's base URL
       const serverBaseUrl = `${req.protocol}://${req.get('host')}`;
-      fileUrl = `${serverBaseUrl}/api/files/local/${safeFileName}`;
+      fileUrl = `${serverBaseUrl}/api/files/local/${uniqueFileName}`;
       uploadMethod = 'local';
+      
+      console.log(`[FILE UPLOAD] Generated URL: ${fileUrl}`);
       
     } catch (localError) {
       throw new Error("File upload failed: " + localError.message);
     }
 
-
-
     // Ensure all file properties are defined
-    const safeFileName = file.originalname || 'Unknown file';
+    const originalFileName = file.originalname || 'Unknown file';
     const safeFileType = file.mimetype || 'application/octet-stream';
     const safeFileSize = file.size || 0;
 
@@ -342,8 +375,8 @@ export const uploadFile = async (req, res) => {
         channel_id, user_id, content, file_url, file_name, file_type, file_size
       )
       VALUES (
-        ${channel_id}, ${userId}, ${safeFileName}, 
-        ${fileUrl}, ${safeFileName}, 
+        ${channel_id}, ${userId}, ${originalFileName}, 
+        ${fileUrl}, ${originalFileName}, 
         ${safeFileType}, ${safeFileSize}
       )
       RETURNING *

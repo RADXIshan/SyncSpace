@@ -523,13 +523,17 @@ const TeamChat = ({ channelId, channelName }) => {
           {
             withCredentials: true,
             headers: { "Content-Type": "multipart/form-data" },
+            timeout: 60000, // 60 second timeout for large files
             onUploadProgress: (progressEvent) => {
               if (progressEvent.total && progressEvent.loaded) {
                 const percentCompleted = Math.round(
                   (progressEvent.loaded * 100) / progressEvent.total
                 );
+                const uploadedMB = (progressEvent.loaded / 1024 / 1024).toFixed(1);
+                const totalMB = (progressEvent.total / 1024 / 1024).toFixed(1);
+                
                 safeToast.loading(
-                  `Uploading ${fileName}... ${percentCompleted}%`,
+                  `Uploading ${fileName}... ${percentCompleted}% (${uploadedMB}/${totalMB} MB)`,
                   {
                     id: uploadToast,
                   }
@@ -700,102 +704,68 @@ const TeamChat = ({ channelId, channelName }) => {
     textareaRef.current?.focus();
   };
 
-  // Handle file download
+  // Handle file download - Simplified version
   const handleFileDownload = async (fileUrl, fileName) => {
+    console.log(`[DOWNLOAD] Function called with:`, { fileUrl, fileName });
+    
     if (!fileUrl) {
+      console.log(`[DOWNLOAD] No file URL provided`);
       safeToast.error("File URL is not available");
       return;
     }
 
-    // Ensure fileName is not undefined or null
     const safeFileName = fileName || "download";
-
-    // Prevent duplicate download notifications
-    const downloadKey = `download-${fileUrl}-${safeFileName}`;
-    if (activeToasts.has(downloadKey)) {
-      return;
-    }
-
-    setActiveToasts((prev) => new Set([...prev, downloadKey]));
-
+    console.log(`[DOWNLOAD] Starting download for: ${safeFileName}`);
+    
+    // Show loading toast
     const downloadToast = safeToast.loading(`Downloading ${safeFileName}...`);
 
     try {
-      // For local files, use the download proxy which handles them directly
-      const proxyUrl = `${
-        import.meta.env.VITE_BASE_URL
-      }/api/files/download?url=${encodeURIComponent(
-        fileUrl
-      )}&filename=${encodeURIComponent(safeFileName)}`;
-
-      const response = await fetch(proxyUrl, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          Accept: "*/*",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Download failed: ${response.status} ${response.statusText}`
-        );
-      }
-
-      const blob = await response.blob();
-
-      if (blob.size === 0) {
-        throw new Error("Downloaded file is empty");
-      }
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
+      // Simple approach: try direct download first
+      console.log(`[DOWNLOAD] Trying direct download approach`);
+      
       const link = document.createElement("a");
-      link.href = url;
+      link.href = fileUrl;
       link.download = safeFileName;
-      link.style.display = "none";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      
+      // Add to DOM temporarily
       document.body.appendChild(link);
+      
+      // Trigger download
       link.click();
-
+      
       // Clean up
       setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        if (document.body.contains(link)) {
+          document.body.removeChild(link);
+        }
       }, 100);
 
-      safeToast.success(`${safeFileName} downloaded successfully!`, {
+      // Show success message
+      safeToast.success(`Download started for ${safeFileName}`, {
         id: downloadToast,
       });
+      
+      console.log(`[DOWNLOAD] Direct download triggered successfully`);
+      
     } catch (error) {
-      // Try direct download as fallback
+      console.error("Download error:", error);
+      
+      // Fallback: open in new tab
       try {
-        const link = document.createElement("a");
-        link.href = fileUrl;
-        link.download = safeFileName;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        safeToast.success(`Opening ${safeFileName} for download...`, {
+        console.log(`[DOWNLOAD] Trying fallback - open in new tab`);
+        window.open(fileUrl, '_blank');
+        safeToast.success(`Opening ${safeFileName} in new tab`, {
           id: downloadToast,
         });
       } catch (fallbackError) {
+        console.error("Fallback error:", fallbackError);
         safeToast.error(`Download failed: ${error.message}`, {
           id: downloadToast,
         });
       }
-    } finally {
-      // Remove from active toasts after a delay
-      setTimeout(() => {
-        setActiveToasts((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(downloadKey);
-          return newSet;
-        });
-      }, 1000);
     }
   };
 
@@ -808,12 +778,27 @@ const TeamChat = ({ channelId, channelName }) => {
       if (fileType.includes("pdf")) return true;
       if (fileType.startsWith("image/")) return true;
       if (fileType.startsWith("text/")) return true;
+      if (fileType.startsWith("video/")) return true;
+      if (fileType.startsWith("audio/")) return true;
+      if (fileType.includes("json")) return true;
+      if (fileType.includes("xml")) return true;
     }
 
-    // Check by file extension
+    // Check by file extension (expanded list)
     if (fileName) {
       const extension = fileName.split(".").pop()?.toLowerCase();
-      const viewableExtensions = ["pdf", "txt", "md", "json", "xml", "csv"];
+      const viewableExtensions = [
+        // Documents
+        "pdf", 
+        // Text files
+        "txt", "md", "json", "xml", "csv", "html", "htm", "css",
+        // Images (browser can display)
+        "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg",
+        // Videos (browser can play)
+        "mp4", "webm", "ogg",
+        // Audio (browser can play)
+        "mp3", "wav", "ogg", "m4a"
+      ];
       return viewableExtensions.includes(extension);
     }
 
@@ -822,51 +807,105 @@ const TeamChat = ({ channelId, channelName }) => {
 
   // Get file icon based on file type
   const getFileIcon = (fileType, fileName) => {
-    if (!fileType && fileName) {
-      const extension = fileName.split(".").pop()?.toLowerCase();
-      switch (extension) {
-        case "pdf":
-          return "📄";
-        case "mp3":
-        case "wav":
-        case "ogg":
-        case "m4a":
-          return "🎵";
-        case "mp4":
-        case "avi":
-        case "mov":
-        case "wmv":
-          return "🎬";
-        case "doc":
-        case "docx":
-          return "📝";
-        case "xls":
-        case "xlsx":
-          return "📊";
-        case "ppt":
-        case "pptx":
-          return "📽️";
-        case "zip":
-        case "rar":
-        case "7z":
-          return "🗜️";
-        default:
-          return "📎";
-      }
-    }
-
+    // First check by MIME type
     if (fileType?.startsWith("image/")) return "🖼️";
     if (fileType?.startsWith("video/")) return "🎬";
     if (fileType?.startsWith("audio/")) return "🎵";
     if (fileType?.includes("pdf")) return "📄";
-    if (fileType?.includes("document") || fileType?.includes("word"))
-      return "📝";
-    if (fileType?.includes("spreadsheet") || fileType?.includes("excel"))
-      return "📊";
-    if (fileType?.includes("presentation") || fileType?.includes("powerpoint"))
-      return "📽️";
-    if (fileType?.includes("zip") || fileType?.includes("compressed"))
-      return "🗜️";
+    if (fileType?.includes("document") || fileType?.includes("word")) return "📝";
+    if (fileType?.includes("spreadsheet") || fileType?.includes("excel")) return "📊";
+    if (fileType?.includes("presentation") || fileType?.includes("powerpoint")) return "📽️";
+    if (fileType?.includes("zip") || fileType?.includes("compressed")) return "🗜️";
+
+    // Fallback to file extension (expanded)
+    if (fileName) {
+      const extension = fileName.split(".").pop()?.toLowerCase();
+      switch (extension) {
+        // Documents
+        case "pdf":
+          return "📄";
+        case "doc":
+        case "docx":
+        case "odt":
+          return "📝";
+        case "xls":
+        case "xlsx":
+        case "ods":
+          return "📊";
+        case "ppt":
+        case "pptx":
+        case "odp":
+          return "📽️";
+        
+        // Audio
+        case "mp3":
+        case "wav":
+        case "ogg":
+        case "m4a":
+        case "aac":
+        case "flac":
+        case "wma":
+          return "🎵";
+        
+        // Video
+        case "mp4":
+        case "avi":
+        case "mov":
+        case "wmv":
+        case "flv":
+        case "webm":
+        case "mkv":
+        case "m4v":
+          return "🎬";
+        
+        // Images
+        case "jpg":
+        case "jpeg":
+        case "png":
+        case "gif":
+        case "bmp":
+        case "webp":
+        case "svg":
+        case "ico":
+        case "tiff":
+        case "tif":
+          return "🖼️";
+        
+        // Archives
+        case "zip":
+        case "rar":
+        case "7z":
+        case "tar":
+        case "gz":
+        case "bz2":
+          return "🗜️";
+        
+        // Text files
+        case "txt":
+        case "rtf":
+        case "md":
+          return "📝";
+        case "csv":
+          return "📊";
+        case "json":
+        case "xml":
+        case "html":
+        case "htm":
+        case "css":
+          return "💻";
+        
+        // Design files
+        case "psd":
+        case "ai":
+        case "eps":
+        case "sketch":
+        case "fig":
+          return "🎨";
+        
+        default:
+          return "📎";
+      }
+    }
 
     return "📎";
   };
@@ -1163,10 +1202,14 @@ const TeamChat = ({ channelId, channelName }) => {
                                   e.target.src = viewUrl;
                                 }}
                               />
-                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="absolute top-2 right-2 opacity-100 transition-opacity">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    console.log(`[DOWNLOAD BUTTON] Image download clicked:`, {
+                                      fileUrl: message.file_url,
+                                      fileName: message.file_name
+                                    });
                                     handleFileDownload(
                                       message.file_url,
                                       message.file_name
@@ -1576,6 +1619,19 @@ const TeamChat = ({ channelId, channelName }) => {
 
             <div className="flex items-center justify-between px-2 sm:px-4 pb-3 sm:pb-4">
               <div className="flex items-center gap-1 sm:gap-3">
+                {/* Test download button - temporary */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    console.log("Test download button clicked");
+                    handleFileDownload("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "test-file.pdf");
+                  }}
+                  className="p-1.5 sm:p-2 hover:bg-red-100 rounded-xl text-gray-600 hover:text-red-600 transition-all duration-200 cursor-pointer"
+                  title="Test Download"
+                >
+                  <Download size={18} className="sm:w-5 sm:h-5" />
+                </button>
+                
                 <div className="relative" ref={emojiPickerRef}>
                   <button
                     type="button"

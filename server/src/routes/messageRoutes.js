@@ -237,9 +237,15 @@ router.get("/files/view", async (req, res) => {
 // Serve local files
 router.get("/files/local/:filename", async (req, res) => {
   try {
-    const { filename } = req.params;
+    let { filename } = req.params;
     const path = await import("path");
     const fs = await import("fs");
+
+    console.log(`[FILE SERVE] Requested filename: ${filename}`);
+
+    // Decode the filename in case it's URL encoded
+    filename = decodeURIComponent(filename);
+    console.log(`[FILE SERVE] Decoded filename: ${filename}`);
 
     // Security check - prevent directory traversal
     if (
@@ -247,6 +253,7 @@ router.get("/files/local/:filename", async (req, res) => {
       filename.includes("/") ||
       filename.includes("\\")
     ) {
+      console.log(`[FILE SERVE] Invalid filename rejected: ${filename}`);
       return res.status(400).json({ message: "Invalid filename" });
     }
 
@@ -257,30 +264,126 @@ router.get("/files/local/:filename", async (req, res) => {
       filename
     );
 
+    console.log(`[FILE SERVE] Looking for file at: ${filePath}`);
+
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: "File not found" });
+      console.log(`[FILE SERVE] File not found: ${filePath}`);
+      
+      // List files in directory for debugging
+      const uploadsDir = path.join(process.cwd(), "uploads", "chat-files");
+      if (fs.existsSync(uploadsDir)) {
+        const files = fs.readdirSync(uploadsDir);
+        console.log(`[FILE SERVE] Available files in directory:`, files);
+        
+        // Try to find a file that matches the pattern (in case of encoding issues)
+        const matchingFile = files.find(f => 
+          f.includes(filename) || 
+          filename.includes(f) ||
+          decodeURIComponent(f) === filename ||
+          f === decodeURIComponent(filename)
+        );
+        
+        if (matchingFile) {
+          console.log(`[FILE SERVE] Found matching file: ${matchingFile}`);
+          const matchingFilePath = path.join(uploadsDir, matchingFile);
+          if (fs.existsSync(matchingFilePath)) {
+            filename = matchingFile;
+            // Update filePath to use the matching file
+            const correctedFilePath = path.join(uploadsDir, filename);
+            console.log(`[FILE SERVE] Using corrected path: ${correctedFilePath}`);
+          }
+        }
+      } else {
+        console.log(`[FILE SERVE] Uploads directory does not exist: ${uploadsDir}`);
+      }
+      
+      // Final check with corrected filename
+      const finalFilePath = path.join(process.cwd(), "uploads", "chat-files", filename);
+      if (!fs.existsSync(finalFilePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
     }
 
+    // Use the final corrected file path
+    const correctedFilePath = path.join(process.cwd(), "uploads", "chat-files", filename);
+    
     // Get file stats
-    const stats = fs.statSync(filePath);
+    const stats = fs.statSync(correctedFilePath);
     const fileExtension = path.extname(filename).toLowerCase();
 
     // Set appropriate content type
     let contentType = "application/octet-stream";
     const mimeTypes = {
-      ".pdf": "application/pdf",
+      // Images
       ".jpg": "image/jpeg",
       ".jpeg": "image/jpeg",
       ".png": "image/png",
       ".gif": "image/gif",
-      ".txt": "text/plain",
+      ".bmp": "image/bmp",
+      ".webp": "image/webp",
+      ".svg": "image/svg+xml",
+      ".ico": "image/x-icon",
+      ".tiff": "image/tiff",
+      ".tif": "image/tiff",
+      
+      // Videos
+      ".mp4": "video/mp4",
+      ".avi": "video/x-msvideo",
+      ".mov": "video/quicktime",
+      ".wmv": "video/x-ms-wmv",
+      ".flv": "video/x-flv",
+      ".webm": "video/webm",
+      ".mkv": "video/x-matroska",
+      ".m4v": "video/x-m4v",
+      
+      // Audio
+      ".mp3": "audio/mpeg",
+      ".wav": "audio/wav",
+      ".ogg": "audio/ogg",
+      ".m4a": "audio/mp4",
+      ".aac": "audio/aac",
+      ".flac": "audio/flac",
+      ".wma": "audio/x-ms-wma",
+      
+      // Documents
+      ".pdf": "application/pdf",
       ".doc": "application/msword",
-      ".docx":
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       ".xls": "application/vnd.ms-excel",
-      ".xlsx":
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ".ppt": "application/vnd.ms-powerpoint",
+      ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ".odt": "application/vnd.oasis.opendocument.text",
+      ".ods": "application/vnd.oasis.opendocument.spreadsheet",
+      ".odp": "application/vnd.oasis.opendocument.presentation",
+      
+      // Text files
+      ".txt": "text/plain",
+      ".rtf": "application/rtf",
+      ".csv": "text/csv",
+      ".json": "application/json",
+      ".xml": "application/xml",
+      ".html": "text/html",
+      ".htm": "text/html",
+      ".css": "text/css",
+      ".js": "application/javascript",
+      ".md": "text/markdown",
+      
+      // Archives
+      ".zip": "application/zip",
+      ".rar": "application/vnd.rar",
+      ".7z": "application/x-7z-compressed",
+      ".tar": "application/x-tar",
+      ".gz": "application/gzip",
+      ".bz2": "application/x-bzip2",
+      
+      // Other common formats
+      ".eps": "application/postscript",
+      ".ai": "application/postscript",
+      ".psd": "image/vnd.adobe.photoshop",
+      ".sketch": "application/x-sketch",
+      ".fig": "application/x-figma",
     };
 
     if (mimeTypes[fileExtension]) {
@@ -293,7 +396,7 @@ router.get("/files/local/:filename", async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
 
     // Stream the file
-    const fileStream = fs.createReadStream(filePath);
+    const fileStream = fs.createReadStream(correctedFilePath);
     fileStream.pipe(res);
   } catch (error) {
     res.status(500).json({ message: "Failed to serve file" });
@@ -447,6 +550,65 @@ router.get("/files/download", async (req, res) => {
     res
       .status(500)
       .json({ message: `Failed to download file: ${error.message}` });
+  }
+});
+
+// Test endpoint to check file access
+router.get("/test/file/:filename", async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const path = await import("path");
+    const fs = await import("fs");
+    
+    const filePath = path.join(process.cwd(), "uploads", "chat-files", filename);
+    
+    res.json({
+      filename,
+      filePath,
+      exists: fs.existsSync(filePath),
+      decodedFilename: decodeURIComponent(filename),
+      cwd: process.cwd()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug endpoint to list uploaded files
+router.get("/debug/files", async (req, res) => {
+  try {
+    const path = await import("path");
+    const fs = await import("fs");
+    
+    const uploadsDir = path.join(process.cwd(), "uploads", "chat-files");
+    
+    if (!fs.existsSync(uploadsDir)) {
+      return res.json({ 
+        message: "Uploads directory does not exist",
+        path: uploadsDir,
+        files: []
+      });
+    }
+    
+    const files = fs.readdirSync(uploadsDir);
+    const fileDetails = files.map(file => {
+      const filePath = path.join(uploadsDir, file);
+      const stats = fs.statSync(filePath);
+      return {
+        name: file,
+        size: stats.size,
+        created: stats.birthtime,
+        modified: stats.mtime
+      };
+    });
+    
+    res.json({
+      uploadsDir,
+      totalFiles: files.length,
+      files: fileDetails
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

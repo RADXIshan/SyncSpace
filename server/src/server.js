@@ -226,3 +226,4 @@ server.listen(PORT, () => {
 });
 
 export default app;
+export { io };

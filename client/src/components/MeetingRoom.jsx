@@ -29,9 +29,9 @@ const MeetingRoom = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [screenSharingUser, setScreenSharingUser] = useState(null);
   const [savedSettings, setSavedSettings] = useState({ videoEnabled: true, audioEnabled: true });
+  const [cameraStream, setCameraStream] = useState(null);
 
   // Load settings from URL params on component mount
   useEffect(() => {
@@ -55,6 +55,7 @@ const MeetingRoom = () => {
 
   // Refs
   const localVideoRef = useRef();
+  const cameraVideoRef = useRef();
   const peersRef = useRef([]);
   const socketRef = useRef();
 
@@ -114,6 +115,10 @@ const MeetingRoom = () => {
       return () => {
         if (localStream) {
           localStream.getTracks().forEach((track) => track.stop());
+        }
+
+        if (cameraStream) {
+          cameraStream.getTracks().forEach((track) => track.stop());
         }
 
         peersRef.current.forEach((peerObj) => {
@@ -216,36 +221,28 @@ const MeetingRoom = () => {
         if (videoTrack && videoTrack.enabled && isVideoEnabled) {
           videoElement.play()
             .then(() => {
-              setIsVideoPlaying(true);
               console.log("Local video playing");
             })
             .catch((error) => {
               console.error("Local video play error:", error);
-              setIsVideoPlaying(false);
             });
-        } else {
-          setIsVideoPlaying(false);
         }
       };
 
       const handleCanPlay = () => {
-        const videoTrack = localStream.getVideoTracks()[0];
-        if (videoTrack && videoTrack.enabled && isVideoEnabled) {
-          setIsVideoPlaying(true);
-        }
+        console.log("Local video can play");
       };
 
       const handlePlaying = () => {
-        setIsVideoPlaying(true);
+        console.log("Local video is playing");
       };
 
       const handlePause = () => {
-        setIsVideoPlaying(false);
+        console.log("Local video paused");
       };
 
       const handleError = (e) => {
         console.error("Local video error:", e);
-        setIsVideoPlaying(false);
       };
 
       videoElement.onloadedmetadata = handleLoadedMetadata;
@@ -333,6 +330,12 @@ const MeetingRoom = () => {
         } else {
           console.log(`Peer already exists for ${payload.callerID}, skipping`);
         }
+      } else if (!payload.signal) {
+        // New user joined notification
+        toast(`${payload.userName || "User"} joined the meeting`, {
+          icon: "👋",
+          duration: 3000,
+        });
       } else if (payload.signal && payload.signal.candidate) {
         const existingPeer = peersRef.current.find((p) => p.peerID === payload.callerID);
         if (existingPeer) {
@@ -348,8 +351,6 @@ const MeetingRoom = () => {
         } else {
           console.warn(`No peer found for ICE candidate from ${payload.callerID}`);
         }
-      } else if (!payload.signal) {
-        console.log("New user joined room (notification only):", payload.callerID);
       }
     });
 
@@ -384,6 +385,10 @@ const MeetingRoom = () => {
       const peerObj = peersRef.current.find((p) => p.peerID === id);
       if (peerObj) {
         peerObj.peer.close();
+        toast(`${peerObj.userName || "User"} left the meeting`, {
+          icon: "👋",
+          duration: 3000,
+        });
       }
       const filteredPeers = peersRef.current.filter((p) => p.peerID !== id);
       peersRef.current = filteredPeers;
@@ -428,6 +433,14 @@ const MeetingRoom = () => {
       }
     });
 
+    socket.on("meeting_started_notification", (data) => {
+      console.log("Meeting started notification:", data);
+      toast.success(data.message, {
+        duration: 5000,
+        icon: "📹",
+      });
+    });
+
     return () => {
       socket.off("existing-users");
       socket.off("user-joined");
@@ -437,6 +450,7 @@ const MeetingRoom = () => {
       socket.off("user-audio-toggle");
       socket.off("user-started-screen-share");
       socket.off("user-stopped-screen-share");
+      socket.off("meeting_started_notification");
     };
   }, [socket, localStream, roomId]);
 
@@ -615,7 +629,6 @@ const MeetingRoom = () => {
         if (videoTrack) {
           videoTrack.enabled = newState;
           setIsVideoEnabled(newState);
-          setIsVideoPlaying(newState);
           console.log("Video track", newState ? "enabled" : "disabled");
           
           // Force video element refresh when enabling video
@@ -654,7 +667,6 @@ const MeetingRoom = () => {
           });
           
           setIsVideoEnabled(true);
-          setIsVideoPlaying(true);
           console.log("New video track added");
         }
       }
@@ -738,6 +750,27 @@ const MeetingRoom = () => {
 
         const videoTrack = screenStream.getVideoTracks()[0];
 
+        // Keep camera stream separate for user's video
+        if (isVideoEnabled) {
+          try {
+            const newCameraStream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                facingMode: "user",
+              },
+              audio: false,
+            });
+            setCameraStream(newCameraStream);
+            
+            if (cameraVideoRef.current) {
+              cameraVideoRef.current.srcObject = newCameraStream;
+            }
+          } catch (error) {
+            console.error("Error getting camera stream for screen share:", error);
+          }
+        }
+
         peersRef.current.forEach((peerObj) => {
           const sender = peerObj.peer
             .getSenders()
@@ -785,7 +818,13 @@ const MeetingRoom = () => {
   // Stop screen sharing helper
   const stopScreenShare = async () => {
     try {
-      const cameraStream = await navigator.mediaDevices.getUserMedia({
+      // Clean up camera stream
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        setCameraStream(null);
+      }
+
+      const newCameraStream = await navigator.mediaDevices.getUserMedia({
         video: isVideoEnabled ? {
           width: { ideal: 1280 },
           height: { ideal: 720 },
@@ -794,7 +833,7 @@ const MeetingRoom = () => {
         audio: false,
       });
 
-      const newVideoTrack = cameraStream.getVideoTracks()[0];
+      const newVideoTrack = newCameraStream.getVideoTracks()[0];
 
       // Replace track in peer connections
       peersRef.current.forEach((peerObj) => {
@@ -1165,11 +1204,13 @@ const MeetingRoom = () => {
             </div>
             
             <div className="w-64 flex flex-col gap-2 overflow-y-auto">
-              {screenSharingUser !== socket.id && (
-                <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-                  {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 ? (
+              {/* Always show user's camera video when screen sharing */}
+              <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                {screenSharingUser === socket.id ? (
+                  // Show camera stream when user is screen sharing
+                  isVideoEnabled && cameraStream ? (
                     <video
-                      ref={screenSharingUser === socket.id ? null : localVideoRef}
+                      ref={cameraVideoRef}
                       autoPlay
                       muted
                       playsInline
@@ -1183,12 +1224,38 @@ const MeetingRoom = () => {
                         </span>
                       </div>
                     </div>
-                  )}
-                  <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
-                    You
-                  </div>
+                  )
+                ) : (
+                  // Show local video when someone else is screen sharing
+                  isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 ? (
+                    <video
+                      ref={localVideoRef}
+                      autoPlay
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover -scale-x-100"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                      <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
+                        <span className="text-sm font-bold text-white">
+                          {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                )}
+                <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
+                  You {screenSharingUser === socket.id ? "(Camera)" : ""}
                 </div>
-              )}
+                <div className="absolute top-1 right-1 flex gap-1">
+                  {!isAudioEnabled && (
+                    <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                      <MicOff size={8} className="text-white" />
+                    </div>
+                  )}
+                </div>
+              </div>
               
               {peers
                 .filter(peer => peer.peerID !== screenSharingUser)

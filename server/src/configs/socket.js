@@ -7,6 +7,12 @@ const onlineUsers = new Map();
 // Store user to socket mapping for easy lookup
 const userSockets = new Map();
 
+// Store active meetings with participant tracking
+const activeMeetings = new Map();
+
+// Store meeting deletion timers
+const meetingDeletionTimers = new Map();
+
 // Helper function to get user identifier for logging
 const getUserIdentifier = (socket) => {
   if (socket.userEmail && socket.userEmail !== 'Unknown') {
@@ -187,6 +193,18 @@ export const setupSocketHandlers = (io) => {
       console.log(`User ${socket.id} disconnected`);
       if (socket.currentRoom) {
         socket.to(socket.currentRoom).emit('user-left', socket.id);
+        
+        // Update meeting participants on disconnect
+        if (activeMeetings.has(socket.currentRoom)) {
+          const meeting = activeMeetings.get(socket.currentRoom);
+          meeting.participants.delete(socket.userId);
+          
+          // Check if meeting is now empty
+          if (meeting.participants.size === 0) {
+            console.log(`Meeting ${socket.currentRoom} is now empty after disconnect, starting deletion timer`);
+            startMeetingDeletionTimer(socket.currentRoom);
+          }
+        }
       }
     });
 
@@ -257,7 +275,7 @@ export const setupSocketHandlers = (io) => {
     });
 
     // WebRTC Video Call Handlers - Clean and Simple
-    socket.on('join-room', (roomID) => {
+    socket.on('join-room', async (roomID) => {
       console.log(`User ${socket.id} (${socket.userName}) joining room ${roomID}`);
       
       // Get users already in the room
@@ -278,6 +296,31 @@ export const setupSocketHandlers = (io) => {
             }
           }
         });
+      }
+      
+      // Track meeting participants
+      if (!activeMeetings.has(roomID)) {
+        // First user joining - this is the meeting starter
+        activeMeetings.set(roomID, {
+          startedBy: socket.userId,
+          startedAt: new Date(),
+          participants: new Set([socket.userId]),
+          roomId: roomID
+        });
+        
+        // Send meeting start notifications to channel members
+        await sendMeetingStartNotifications(roomID, socket.userId, socket.userName);
+      } else {
+        // Add participant to existing meeting
+        const meeting = activeMeetings.get(roomID);
+        meeting.participants.add(socket.userId);
+        
+        // Clear deletion timer if it exists
+        if (meetingDeletionTimers.has(roomID)) {
+          clearTimeout(meetingDeletionTimers.get(roomID));
+          meetingDeletionTimers.delete(roomID);
+          console.log(`Cleared deletion timer for meeting ${roomID} - user rejoined`);
+        }
       }
       
       console.log(`Sending ${usersInThisRoom.length} existing users to new user`);
@@ -322,6 +365,18 @@ export const setupSocketHandlers = (io) => {
       console.log(`User ${socket.id} leaving room ${roomID}`);
       socket.leave(roomID);
       socket.to(roomID).emit('user-left', socket.id);
+      
+      // Update meeting participants
+      if (activeMeetings.has(roomID)) {
+        const meeting = activeMeetings.get(roomID);
+        meeting.participants.delete(socket.userId);
+        
+        // Check if meeting is now empty
+        if (meeting.participants.size === 0) {
+          console.log(`Meeting ${roomID} is now empty, starting deletion timer`);
+          startMeetingDeletionTimer(roomID);
+        }
+      }
     });
 
     // Media control events for meetings
@@ -509,5 +564,103 @@ export const getOnlineUsersWithChannelAccess = async (orgId, channelId) => {
   return orgUsers;
 };
 
+// Meeting management helper functions
+const startMeetingDeletionTimer = (roomID) => {
+  // Set 10-minute timer to delete empty meeting
+  const timer = setTimeout(async () => {
+    try {
+      console.log(`Deleting empty meeting ${roomID} after 10 minutes`);
+      
+      // Remove from active meetings
+      activeMeetings.delete(roomID);
+      meetingDeletionTimers.delete(roomID);
+      
+      // Delete meeting from database
+      await deleteMeetingFromDatabase(roomID);
+      
+    } catch (error) {
+      console.error(`Error deleting meeting ${roomID}:`, error);
+    }
+  }, 10 * 60 * 1000); // 10 minutes
+  
+  meetingDeletionTimers.set(roomID, timer);
+};
+
+const sendMeetingStartNotifications = async (roomID, startedByUserId, startedByUserName) => {
+  try {
+    const sql = (await import('../database/db.js')).default;
+    
+    // Get meeting details from database
+    const [meeting] = await sql`
+      SELECT m.*, c.channel_name, c.org_id 
+      FROM meetings m
+      JOIN org_channels c ON m.channel_id = c.channel_id
+      WHERE m.meeting_id = ${roomID}
+    `;
+    
+    if (!meeting) {
+      console.log(`Meeting ${roomID} not found in database`);
+      return;
+    }
+    
+    // Get all users with access to this channel (excluding the starter)
+    const channelUsers = await getOnlineUsersWithChannelAccess(meeting.org_id, meeting.channel_id);
+    const usersToNotify = channelUsers.filter(user => user.id !== startedByUserId);
+    
+    // Create notification for each user
+    for (const user of usersToNotify) {
+      try {
+        await createNotification({
+          user_id: user.id,
+          type: 'meeting_started',
+          title: 'Meeting Started',
+          message: `${startedByUserName} started a meeting in #${meeting.channel_name}`,
+          data: {
+            meetingId: roomID,
+            channelId: meeting.channel_id,
+            channelName: meeting.channel_name,
+            startedBy: startedByUserName,
+            startedAt: new Date().toISOString()
+          }
+        });
+        
+        // Send real-time notification if user is online
+        if (user.socketId) {
+          const io = (await import('../server.js')).io;
+          io.to(user.socketId).emit('meeting_started_notification', {
+            meetingId: roomID,
+            channelName: meeting.channel_name,
+            startedBy: startedByUserName,
+            message: `${startedByUserName} started a meeting in #${meeting.channel_name}`
+          });
+        }
+      } catch (error) {
+        console.error(`Error sending notification to user ${user.id}:`, error);
+      }
+    }
+    
+    console.log(`Sent meeting start notifications to ${usersToNotify.length} users`);
+    
+  } catch (error) {
+    console.error('Error sending meeting start notifications:', error);
+  }
+};
+
+const deleteMeetingFromDatabase = async (roomID) => {
+  try {
+    const sql = (await import('../database/db.js')).default;
+    
+    // Delete meeting from database
+    await sql`
+      DELETE FROM meetings 
+      WHERE meeting_id = ${roomID}
+    `;
+    
+    console.log(`Successfully deleted meeting ${roomID} from database`);
+  } catch (error) {
+    console.error(`Error deleting meeting ${roomID} from database:`, error);
+  }
+};
+
 // Export the maps for use in other modules
-export { onlineUsers, userSockets };
+export { onlineUsers, userSockets, activeMeetings };

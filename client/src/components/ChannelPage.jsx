@@ -183,22 +183,25 @@ const ChannelPage = () => {
           status: err.response?.status,
           message: err.response?.data?.message,
           orgId: user.org_id,
-          channelId: channelId
+          channelId: channelId,
         });
-        
+
         // Provide more specific error messages
         let errorMessage = "Failed to load channel";
         if (err.response?.status === 500) {
           errorMessage = "Server error - please try again in a moment";
-          console.warn("💡 Server error detected. This might be a temporary database issue.");
+          console.warn(
+            "💡 Server error detected. This might be a temporary database issue."
+          );
         } else if (err.response?.status === 401) {
-          errorMessage = "Authentication error - please log out and log back in";
+          errorMessage =
+            "Authentication error - please log out and log back in";
         } else if (err.response?.status === 404) {
           errorMessage = "Channel not found or you don't have access";
         } else if (err.response?.data?.message) {
           errorMessage = err.response.data.message;
         }
-        
+
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -212,7 +215,7 @@ const ChannelPage = () => {
   useEffect(() => {
     if (channelId && joinChannel) {
       joinChannel(channelId);
-      
+
       return () => {
         if (leaveChannel) {
           leaveChannel(channelId);
@@ -221,24 +224,23 @@ const ChannelPage = () => {
     }
   }, [channelId, joinChannel, leaveChannel]);
 
-
-
   // Fetch user permissions (with caching to prevent repeated calls)
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchPermissions = async () => {
       if (!user?.org_id) return;
-      
+
       // Simple cache key
       const cacheKey = `permissions_${user.org_id}_${user.user_id}`;
       const cached = sessionStorage.getItem(cacheKey);
-      
+
       // Use cached data if available and less than 5 minutes old
       if (cached) {
         try {
           const { data, timestamp } = JSON.parse(cached);
-          if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            // 5 minutes
             if (isMounted) setUserPermissions(data);
             return;
           }
@@ -246,23 +248,26 @@ const ChannelPage = () => {
           // Invalid cache, continue with API call
         }
       }
-      
+
       try {
         const res = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/api/orgs/${user.org_id}/role`,
           { withCredentials: true }
         );
-        
+
         const permissions = res.data.permissions || null;
-        
+
         if (isMounted) {
           setUserPermissions(permissions);
-          
+
           // Cache the result
-          sessionStorage.setItem(cacheKey, JSON.stringify({
-            data: permissions,
-            timestamp: Date.now()
-          }));
+          sessionStorage.setItem(
+            cacheKey,
+            JSON.stringify({
+              data: permissions,
+              timestamp: Date.now(),
+            })
+          );
         }
       } catch (err) {
         console.error("Error fetching permissions:", err);
@@ -270,22 +275,26 @@ const ChannelPage = () => {
           status: err.response?.status,
           message: err.response?.data?.message,
           orgId: user.org_id,
-          userId: user.user_id
+          userId: user.user_id,
         });
-        
+
         // Show user-friendly error message
         if (err.response?.status === 500) {
-          console.warn("💡 Server error detected. This might be a temporary issue or a database problem.");
+          console.warn(
+            "💡 Server error detected. This might be a temporary issue or a database problem."
+          );
         } else if (err.response?.status === 401) {
-          console.warn("💡 Authentication error. You might need to log out and log back in.");
+          console.warn(
+            "💡 Authentication error. You might need to log out and log back in."
+          );
         }
-        
+
         if (isMounted) setUserPermissions(null);
       }
     };
 
     fetchPermissions();
-    
+
     return () => {
       isMounted = false;
     };
@@ -413,13 +422,13 @@ const ChannelPage = () => {
     try {
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
       await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/notes/${noteId}`,
         noteData,
-        { 
+        {
           withCredentials: true,
-          headers
+          headers,
         }
       );
       refreshNotes(); // Refresh notes after update
@@ -510,11 +519,11 @@ const ChannelPage = () => {
         { withCredentials: true }
       );
       hotToast.success("Meeting deleted successfully");
-      
+
       // Close modal and reset state first
       setShowDeleteMeetingModal(false);
       setMeetingToDelete(null);
-      
+
       // Then refresh meetings
       refreshMeetings();
     } catch (error) {
@@ -540,11 +549,19 @@ const ChannelPage = () => {
   const formatMeetingTime = (startTime) => {
     const date = new Date(startTime);
     const now = new Date();
-    
+
     // Compare dates by setting time to midnight for accurate day comparison
-    const meetingDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+    const meetingDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+    const todayDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
     const diffTime = meetingDate.getTime() - todayDate.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
@@ -580,15 +597,15 @@ const ChannelPage = () => {
     try {
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
       const response = await axios.put(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${
           user.org_id
         }/channels/${channelId}`,
         channelData,
-        { 
+        {
           withCredentials: true,
-          headers
+          headers,
         }
       );
 
@@ -601,7 +618,9 @@ const ChannelPage = () => {
       window.dispatchEvent(new Event("organizationUpdated"));
     } catch (error) {
       console.error("Error updating channel:", error);
-      hotToast.error(error.response?.data?.message || "Failed to update channel");
+      hotToast.error(
+        error.response?.data?.message || "Failed to update channel"
+      );
     }
   };
 
@@ -631,7 +650,9 @@ const ChannelPage = () => {
       navigate("/home/dashboard");
     } catch (error) {
       console.error("Error deleting channel:", error);
-      hotToast.error(error.response?.data?.message || "Failed to delete channel");
+      hotToast.error(
+        error.response?.data?.message || "Failed to delete channel"
+      );
     } finally {
       setChannelDeleteLoading(false);
     }
@@ -734,7 +755,7 @@ const ChannelPage = () => {
           {/* Only show menu button if user has permissions for any menu items */}
           {(userPermissions?.manage_channels ||
             userPermissions?.settings_access) && (
-            <div className="pr-2 sm:pr-6 cursor-pointer">
+            <div className="relative pr-2 sm:pr-6 cursor-pointer">
               <button
                 onClick={() => setShowChannelMenu(true)}
                 className="p-1.5 sm:p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
@@ -744,6 +765,131 @@ const ChannelPage = () => {
                   className="text-gray-700 group-hover:text-violet-700 transition-all duration-300 sm:w-5 sm:h-5"
                 />
               </button>
+
+              {/* Channel Settings Menu */}
+              {showChannelMenu && (
+                <>
+                  {/* Backdrop */}
+                  <div
+                    className="fixed inset-0 z-40 bg-black/20"
+                    onClick={() => setShowChannelMenu(false)}
+                  />
+
+                  {/* Menu */}
+                  <div className="top-full right-0 w-80 glass-dropdown rounded-2xl z-50 animate-fadeIn overflow-hidden max-h-[70vh] transition-all duration-300 shadow-2xl">
+                    {/* Background gradient overlay */}
+                    <div className="absolute inset-0 cosmic-bg"></div>
+
+                    {/* Header */}
+                    <div className="relative z-10 flex items-center justify-between px-4 sm:px-5 py-3 sm:py-5 border-b border-gray-700/50">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <div className="p-2 sm:p-3 rounded-full glass-button-enhanced group-hover:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                          <Hash
+                            size={18}
+                            className="text-purple-400 sm:w-5 sm:h-5"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-base sm:text-xl font-bold text-white truncate">
+                            Channel Settings
+                          </h3>
+                          <p className="text-gray-400 text-xs sm:text-sm mt-0.5 hidden sm:block">
+                            Manage channel options
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowChannelMenu(false)}
+                        className="p-2 rounded-full hover:bg-gray-800/80 text-gray-400 hover:text-white transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-90 cursor-pointer flex-shrink-0"
+                      >
+                        <X size={18} className="sm:w-5 sm:h-5" />
+                      </button>
+                    </div>
+
+                    {/* Menu items */}
+                    <div className="relative z-10 p-3 sm:p-4 space-y-2 sm:space-y-3 overflow-y-auto max-h-[calc(100vh-10rem)] sm:max-h-none">
+                      {/* Show message if no permissions */}
+                      {!(
+                        userPermissions?.manage_channels ||
+                        userPermissions?.settings_access
+                      ) && (
+                        <div className="text-center py-4 sm:py-8">
+                          <div className="relative mb-3 sm:mb-4">
+                            <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full glass-button flex items-center justify-center mx-auto">
+                              <Hash
+                                size={20}
+                                className="text-gray-400 opacity-60 sm:w-8 sm:h-8"
+                              />
+                            </div>
+                            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full glass-button animate-pulse"></div>
+                          </div>
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-300 mb-1 sm:mb-2">
+                            No actions available
+                          </h3>
+                          <p className="text-gray-400 text-xs sm:text-sm max-w-xs mx-auto px-4">
+                            You don't have permission to manage this channel
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Edit Channel - Only show if user has permission */}
+                      {(userPermissions?.manage_channels ||
+                        userPermissions?.settings_access) && (
+                        <div
+                          onClick={() => {
+                            setShowEditChannelModal(true);
+                            setShowChannelMenu(false);
+                          }}
+                          className="group/card relative glass-effect hover:border-purple-500/50 rounded-xl sm:rounded-2xl p-3 sm:px-4 sm:py-3 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
+                        >
+                          {/* Hover gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-xl sm:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+
+                          <div className="relative z-10 flex items-center gap-3 sm:gap-4">
+                            <div className="p-2 sm:p-3 rounded-xl glass-button-enhanced group-hover/card:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                              <Edit2
+                                size={18}
+                                className="text-purple-400 group-hover/card:text-purple-300 transition-all duration-300 group-hover/card:rotate-12 sm:w-5 sm:h-5"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-white font-semibold group-hover/card:text-purple-100 transition-colors duration-300 text-sm sm:text-lg">
+                                Edit Channel
+                              </h4>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Delete Channel - Only show if user has permission */}
+                      {(userPermissions?.manage_channels ||
+                        userPermissions?.settings_access) && (
+                        <div
+                          onClick={handleDeleteChannelClick}
+                          className="group/card relative glass-effect hover:border-red-500/50 rounded-xl sm:rounded-2xl p-3 sm:px-4 sm:py-3 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-red-500/10"
+                        >
+                          {/* Hover gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-red-600/5 rounded-xl sm:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
+
+                          <div className="relative z-10 flex items-center gap-3 sm:gap-4">
+                            <div className="p-2 sm:p-3 rounded-xl bg-red-500/20 border border-red-500/30 group-hover/card:bg-red-500/30 transition-all duration-300 flex-shrink-0">
+                              <Trash2
+                                size={18}
+                                className="text-red-400 group-hover/card:text-red-300 transition-all duration-300 group-hover/card:rotate-12 sm:w-5 sm:h-5"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-white font-semibold group-hover/card:text-red-100 transition-colors duration-300 text-sm sm:text-lg">
+                                Delete Channel
+                              </h4>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -1212,71 +1358,71 @@ const ChannelPage = () => {
                   .sort((a, b) => {
                     const aOnline = isUserOnline(a.id);
                     const bOnline = isUserOnline(b.id);
-                    
+
                     if (aOnline && !bOnline) return -1;
                     if (!aOnline && bOnline) return 1;
-                    
+
                     // If both have same online status, sort by name
                     return (a.name || a.email).localeCompare(b.name || b.email);
                   })
                   .map((member) => (
-                  <div
-                    key={member.id}
-                    className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-shadow duration-200"
-                  >
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <div className="relative">
-                        {member.userPhoto ? (
-                          <img
-                            src={member.userPhoto}
-                            alt={member.name}
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 flex-shrink-0">
-                            {member.name?.charAt(0) || "U"}
+                    <div
+                      key={member.id}
+                      className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-shadow duration-200"
+                    >
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <div className="relative">
+                          {member.userPhoto ? (
+                            <img
+                              src={member.userPhoto}
+                              alt={member.name}
+                              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm border-2 border-gray-200 flex-shrink-0">
+                              {member.name?.charAt(0) || "U"}
+                            </div>
+                          )}
+                          <div className="absolute -bottom-0.5 -right-0.5">
+                            <OnlineStatus userId={member.id} size="sm" />
                           </div>
-                        )}
-                        <div className="absolute -bottom-0.5 -right-0.5">
-                          <OnlineStatus userId={member.id} size="sm" />
                         </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                          {member.name}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 truncate">
-                          {member.email}
-                        </p>
-                        <div className="mt-2 flex items-center gap-2">
-                          <div
-                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 ${
-                              getRoleStyle(member.role).background
-                            } border ${
-                              getRoleStyle(member.role).border
-                            } rounded flex items-center gap-1`}
-                          >
-                            {member.isOwner && (
-                              <Crown
-                                size={10}
-                                className={`${
-                                  getMessagesRoleStyle(member.role).text
-                                } sm:w-3 sm:h-3`}
-                              />
-                            )}
-                            <span
-                              className={`text-xs font-medium ${
-                                getMessagesRoleStyle(member.role).text
-                              } capitalize`}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
+                            {member.name}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-600 truncate">
+                            {member.email}
+                          </p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <div
+                              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 ${
+                                getRoleStyle(member.role).background
+                              } border ${
+                                getRoleStyle(member.role).border
+                              } rounded flex items-center gap-1`}
                             >
-                              {member.role}
-                            </span>
+                              {member.isOwner && (
+                                <Crown
+                                  size={10}
+                                  className={`${
+                                    getMessagesRoleStyle(member.role).text
+                                  } sm:w-3 sm:h-3`}
+                                />
+                              )}
+                              <span
+                                className={`text-xs font-medium ${
+                                  getMessagesRoleStyle(member.role).text
+                                } capitalize`}
+                              >
+                                {member.role}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
 
               {members.length === 0 && (
@@ -1294,133 +1440,6 @@ const ChannelPage = () => {
           </div>
         )}
       </div>
-
-      {showChannelMenu && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40 bg-black/20"
-            onClick={() => setShowChannelMenu(false)}
-          />
-
-          {/* Menu */}
-          <div className="fixed sm:absolute top-16 sm:top-1 left-2 right-2 sm:left-auto sm:right-6 sm:w-80 glass-dark rounded-2xl sm:rounded-3xl z-50 animate-fadeIn overflow-hidden max-h-[calc(100vh-5rem)] sm:max-h-[70vh] transition-all duration-300">
-            {/* Background gradient overlay */}
-            <div className="absolute inset-0 cosmic-bg"></div>
-
-            {/* Header */}
-            <div className="relative z-10 flex items-center justify-between px-4 sm:px-5 py-3 sm:py-5 border-b border-gray-700/50">
-              <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                <div className="p-2 sm:p-3 rounded-full glass-button-enhanced group-hover:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
-                  <Hash size={18} className="text-purple-400 sm:w-5 sm:h-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-base sm:text-xl font-bold text-white truncate">
-                    Channel Settings
-                  </h3>
-                  <p className="text-gray-400 text-xs sm:text-sm mt-0.5 hidden sm:block">
-                    Manage channel options
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowChannelMenu(false)}
-                className="p-2 rounded-full hover:bg-gray-800/80 text-gray-400 hover:text-white transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-90 cursor-pointer flex-shrink-0"
-              >
-                <X size={18} className="sm:w-5 sm:h-5" />
-              </button>
-            </div>
-
-            {/* Menu items */}
-            <div className="relative z-10 p-3 sm:p-6 space-y-2 sm:space-y-3 overflow-y-auto max-h-[calc(100vh-10rem)] sm:max-h-none">
-              {/* Show message if no permissions */}
-              {!(
-                userPermissions?.manage_channels ||
-                userPermissions?.settings_access
-              ) && (
-                <div className="text-center py-4 sm:py-8">
-                  <div className="relative mb-3 sm:mb-4">
-                    <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full glass-button flex items-center justify-center mx-auto">
-                      <Hash
-                        size={20}
-                        className="text-gray-400 opacity-60 sm:w-8 sm:h-8"
-                      />
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full glass-button animate-pulse"></div>
-                  </div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-300 mb-1 sm:mb-2">
-                    No actions available
-                  </h3>
-                  <p className="text-gray-400 text-xs sm:text-sm max-w-xs mx-auto px-4">
-                    You don't have permission to manage this channel
-                  </p>
-                </div>
-              )}
-
-              {/* Edit Channel - Only show if user has permission */}
-              {(userPermissions?.manage_channels ||
-                userPermissions?.settings_access) && (
-                <div
-                  onClick={() => {
-                    setShowEditChannelModal(true);
-                    setShowChannelMenu(false);
-                  }}
-                  className="group/card relative glass-effect hover:border-purple-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
-                >
-                  {/* Hover gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-xl sm:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
-
-                  <div className="relative z-10 flex items-center gap-3 sm:gap-4">
-                    <div className="p-2 sm:p-3 rounded-xl glass-button-enhanced group-hover/card:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
-                      <Edit2
-                        size={18}
-                        className="text-purple-400 group-hover/card:text-purple-300 transition-all duration-300 group-hover/card:rotate-12 sm:w-5 sm:h-5"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-semibold group-hover/card:text-purple-100 transition-colors duration-300 text-sm sm:text-lg">
-                        Edit Channel
-                      </h4>
-                      <p className="text-gray-400 group-hover/card:text-gray-300 text-xs sm:text-sm mt-0.5 sm:mt-1 transition-colors duration-300">
-                        Modify channel name and description
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Delete Channel - Only show if user has permission */}
-              {(userPermissions?.manage_channels ||
-                userPermissions?.settings_access) && (
-                <div
-                  onClick={handleDeleteChannelClick}
-                  className="group/card relative glass-effect hover:border-red-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-red-500/10"
-                >
-                  {/* Hover gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-red-600/5 rounded-xl sm:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
-
-                  <div className="relative z-10 flex items-center gap-3 sm:gap-4">
-                    <div className="p-2 sm:p-3 rounded-xl bg-red-500/20 border border-red-500/30 group-hover/card:bg-red-500/30 transition-all duration-300 flex-shrink-0">
-                      <Trash2
-                        size={18}
-                        className="text-red-400 group-hover/card:text-red-300 transition-all duration-300 group-hover/card:rotate-12 sm:w-5 sm:h-5"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-semibold group-hover/card:text-red-100 transition-colors duration-300 text-sm sm:text-lg">
-                        Delete Channel
-                      </h4>
-                      <p className="text-gray-400 group-hover/card:text-gray-300 text-xs sm:text-sm mt-0.5 sm:mt-1 transition-colors duration-300">
-                        Permanently remove this channel
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
 
       {showEditChannelModal && (
         <EditChannel

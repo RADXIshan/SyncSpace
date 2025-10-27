@@ -11,9 +11,11 @@
 @supports (backdrop-filter: blur(1px)) {
   .glass,
   .glass-dark,
+  .glass-dropdown,
   .glass-button,
   .glass-button-enhanced,
   .glass-effect,
+  .glass-effect-pinned,
   .glass-effect-dark,
   .glass-subtle,
   .glass-intense,
@@ -29,9 +31,11 @@
 @supports not (backdrop-filter: blur(1px)) {
   .glass,
   .glass-dark,
+  .glass-dropdown,
   .glass-button,
   .glass-button-enhanced,
   .glass-effect,
+  .glass-effect-pinned,
   .glass-effect-dark,
   .glass-subtle,
   .glass-intense,
@@ -67,6 +71,19 @@
     inset 1px 0 0 rgba(255, 255, 255, 0.06),
     inset -1px 0 0 rgba(255, 255, 255, 0.02) !important;
   position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-dropdown {
+  background: rgba(0, 0, 0, 0.02) !important;
+  backdrop-filter: blur(40px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02),
+    inset 1px 0 0 rgba(255, 255, 255, 0.06),
+    inset -1px 0 0 rgba(255, 255, 255, 0.02) !important;
+  position: absolute;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -440,6 +457,31 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.25),
     inset 0 -1px 0 rgba(255, 255, 255, 0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-effect-pinned {
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 0 0 1px rgba(168, 85, 247, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-effect-pinned:hover {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(35px) saturate(210%);
+  -webkit-backdrop-filter: blur(35px) saturate(210%);
+  border: 1px solid rgba(168, 85, 247, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(168, 85, 247, 0.2),
+    0 0 20px rgba(168, 85, 247, 0.1);
 }
 
 .glass-effect-dark {

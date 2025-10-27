@@ -243,31 +243,11 @@ export const setupSocketHandlers = (io) => {
 
     // Handle joining/leaving channel rooms
     socket.on('join_channel', (channelId) => {
-      console.log(`User ${socket.userId} joined channel ${channelId}`);
       socket.join(`channel_${channelId}`);
     });
 
     socket.on('leave_channel', (channelId) => {
-      console.log(`User ${socket.userId} left channel ${channelId}`);
       socket.leave(`channel_${channelId}`);
-    });
-
-    // Test handlers for debugging
-    socket.on('test_connection', (data) => {
-      console.log('Test connection received:', data);
-      socket.emit('test_event', { message: 'Connection test successful', data });
-    });
-
-    socket.on('test_mention', (data) => {
-      console.log('Test mention received:', data);
-      socket.emit('user_mentioned', {
-        mentionedUserId: data.mentionedUserId,
-        mentionedBy: data.mentionedBy,
-        channelName: data.channelName,
-        channelId: data.channelId,
-        content: 'This is a test mention',
-        userName: data.mentionedBy
-      });
     });
 
 

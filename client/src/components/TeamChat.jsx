@@ -122,18 +122,11 @@ const TeamChat = ({ channelId, channelName }) => {
   // Socket event handlers
   useEffect(() => {
     if (!socket || !isConnected || !channelId) {
-      console.log("Socket not ready:", { socket: !!socket, isConnected, channelId });
       return;
     }
-    
-    console.log("Setting up socket handlers for channel:", channelId);
-    console.log("User ID:", user.user_id);
-    
+
     // Join channel room
     socket.emit("join_channel", channelId);
-
-    // Test socket connection
-    socket.emit("test_connection", { userId: user.user_id, channelId });
 
     // Listen for new messages
     const handleNewMessage = (message) => {
@@ -217,19 +210,11 @@ const TeamChat = ({ channelId, channelName }) => {
     socket.on("user_stopped_typing", handleUserStoppedTyping);
     socket.on("reaction_updated", handleReactionUpdate);
 
-    // Test handler to verify socket is working
-    socket.on("test_event", (data) => {
-      console.log("Test event received:", data);
-    });
-
     // Listen for mention notifications
     socket.on("user_mentioned", (data) => {
-      console.log("TeamChat received user_mentioned:", data);
       if (data.mentionedUserId === user.user_id) {
         const mentionedBy = data.mentionedBy || data.userName || "Someone";
         const channelName = data.channelName || "a channel";
-
-        console.log(`Processing mention from ${mentionedBy} in channel ${channelName}, current channel: ${channelId}`);
 
         // Always show toast notification for mentions, but with different styling for current channel
         if (data.channelId === channelId) {
@@ -238,9 +223,9 @@ const TeamChat = ({ channelId, channelName }) => {
             duration: 3000,
             icon: "👋",
             style: {
-              background: '#f3f4f6',
-              color: '#374151',
-            }
+              background: "#f3f4f6",
+              color: "#374151",
+            },
           });
         } else {
           // If in a different channel, show a more prominent notification
@@ -248,24 +233,22 @@ const TeamChat = ({ channelId, channelName }) => {
             duration: 5000,
             icon: "👋",
             style: {
-              background: '#3b82f6',
-              color: 'white',
-            }
+              background: "#3b82f6",
+              color: "white",
+            },
           });
         }
       }
     });
 
     return () => {
-      console.log("Cleaning up socket handlers for channel:", channelId);
       socket.off("new_message", handleNewMessage);
       socket.off("message_updated", handleMessageUpdate);
       socket.off("message_deleted", handleMessageDelete);
       socket.off("user_typing", handleUserTyping);
       socket.off("user_stopped_typing", handleUserStoppedTyping);
       socket.off("reaction_updated", handleReactionUpdate);
-      socket.off("test_event");
-      socket.off("user_mentioned"); // Remove the specific handler
+      socket.off("user_mentioned");
       socket.emit("leave_channel", channelId);
     };
   }, [socket, isConnected, channelId, user?.user_id, scrollToBottom]);
@@ -326,8 +309,6 @@ const TeamChat = ({ channelId, channelName }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
-
-
 
   // Cleanup typing timeout on unmount or channel change
   useEffect(() => {
@@ -725,8 +706,6 @@ const TeamChat = ({ channelId, channelName }) => {
         fileUrl
       )}&filename=${encodeURIComponent(safeFileName)}`;
 
-      console.log(`Downloading file: ${fileUrl}`);
-
       const response = await fetch(proxyUrl, {
         method: "GET",
         credentials: "include",
@@ -736,11 +715,12 @@ const TeamChat = ({ channelId, channelName }) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Download failed: ${response.status} ${response.statusText}`
+        );
       }
 
       const blob = await response.blob();
-      console.log(`Downloaded blob size: ${blob.size} bytes`);
 
       if (blob.size === 0) {
         throw new Error("Downloaded file is empty");
@@ -761,14 +741,12 @@ const TeamChat = ({ channelId, channelName }) => {
         window.URL.revokeObjectURL(url);
       }, 100);
 
-      safeToast.success(`${safeFileName} downloaded successfully!`, { id: downloadToast });
-      
+      safeToast.success(`${safeFileName} downloaded successfully!`, {
+        id: downloadToast,
+      });
     } catch (error) {
-      console.error("Download failed:", error);
-      
       // Try direct download as fallback
       try {
-        console.log("Trying direct download...");
         const link = document.createElement("a");
         link.href = fileUrl;
         link.download = safeFileName;
@@ -779,10 +757,13 @@ const TeamChat = ({ channelId, channelName }) => {
         link.click();
         document.body.removeChild(link);
 
-        safeToast.success(`Opening ${safeFileName} for download...`, { id: downloadToast });
+        safeToast.success(`Opening ${safeFileName} for download...`, {
+          id: downloadToast,
+        });
       } catch (fallbackError) {
-        console.error("Direct download also failed:", fallbackError);
-        safeToast.error(`Download failed: ${error.message}`, { id: downloadToast });
+        safeToast.error(`Download failed: ${error.message}`, {
+          id: downloadToast,
+        });
       }
     } finally {
       // Remove from active toasts after a delay
@@ -799,21 +780,21 @@ const TeamChat = ({ channelId, channelName }) => {
   // Helper function to determine if file can be viewed inline
   const canViewInline = (fileType, fileName) => {
     if (!fileType && !fileName) return false;
-    
+
     // Check by MIME type
     if (fileType) {
-      if (fileType.includes('pdf')) return true;
-      if (fileType.startsWith('image/')) return true;
-      if (fileType.startsWith('text/')) return true;
+      if (fileType.includes("pdf")) return true;
+      if (fileType.startsWith("image/")) return true;
+      if (fileType.startsWith("text/")) return true;
     }
-    
+
     // Check by file extension
     if (fileName) {
-      const extension = fileName.split('.').pop()?.toLowerCase();
-      const viewableExtensions = ['pdf', 'txt', 'md', 'json', 'xml', 'csv'];
+      const extension = fileName.split(".").pop()?.toLowerCase();
+      const viewableExtensions = ["pdf", "txt", "md", "json", "xml", "csv"];
       return viewableExtensions.includes(extension);
     }
-    
+
     return false;
   };
 
@@ -1140,7 +1121,13 @@ const TeamChat = ({ channelId, channelName }) => {
                                 }}
                                 onError={(e) => {
                                   // If image fails to load, try the view proxy
-                                  const viewUrl = `${import.meta.env.VITE_BASE_URL}/api/files/view?url=${encodeURIComponent(message.file_url)}&filename=${encodeURIComponent(message.file_name)}`;
+                                  const viewUrl = `${
+                                    import.meta.env.VITE_BASE_URL
+                                  }/api/files/view?url=${encodeURIComponent(
+                                    message.file_url
+                                  )}&filename=${encodeURIComponent(
+                                    message.file_name
+                                  )}`;
                                   e.target.src = viewUrl;
                                 }}
                               />
@@ -1327,8 +1314,22 @@ const TeamChat = ({ channelId, channelName }) => {
                                 <button
                                   onClick={() => {
                                     // For local files or viewable files, use the view proxy
-                                    if (message.file_url.includes('/api/files/local/') || canViewInline(message.file_type, message.file_name)) {
-                                      const viewUrl = `${import.meta.env.VITE_BASE_URL}/api/files/view?url=${encodeURIComponent(message.file_url)}&filename=${encodeURIComponent(message.file_name)}`;
+                                    if (
+                                      message.file_url.includes(
+                                        "/api/files/local/"
+                                      ) ||
+                                      canViewInline(
+                                        message.file_type,
+                                        message.file_name
+                                      )
+                                    ) {
+                                      const viewUrl = `${
+                                        import.meta.env.VITE_BASE_URL
+                                      }/api/files/view?url=${encodeURIComponent(
+                                        message.file_url
+                                      )}&filename=${encodeURIComponent(
+                                        message.file_name
+                                      )}`;
                                       window.open(viewUrl, "_blank");
                                     } else {
                                       // For other files, try direct URL
@@ -1473,7 +1474,7 @@ const TeamChat = ({ channelId, channelName }) => {
             <TypingIndicator users={typingUsers} />
           </div>
         )}
-        
+
         <form onSubmit={sendMessage} className="relative">
           {/* Mentions dropdown - positioned above input */}
           {showMentions && (

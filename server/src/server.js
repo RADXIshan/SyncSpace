@@ -25,7 +25,6 @@ dotenv.config();
 const uploadsDir = path.join(process.cwd(), 'uploads', 'chat-files');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('Created uploads directory:', uploadsDir);
 }
 
 const app = express();

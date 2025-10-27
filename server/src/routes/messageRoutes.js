@@ -101,8 +101,6 @@ router.get("/files/view", async (req, res) => {
       return res.status(400).json({ message: "File URL is required" });
     }
 
-    console.log(`View request for: ${url}, filename: ${filename}`);
-
     // Check if it's a local file URL
     if (url.includes("/api/files/local/")) {
       const localFilename = url.split("/api/files/local/")[1];
@@ -183,8 +181,6 @@ router.get("/files/view", async (req, res) => {
     // Try each URL variation
     for (const fetchUrl of urlsToTry) {
       try {
-        console.log(`Trying to fetch for view from: ${fetchUrl}`);
-
         const response = await fetch(fetchUrl, {
           method: "GET",
           headers: {
@@ -198,10 +194,6 @@ router.get("/files/view", async (req, res) => {
           const contentType =
             response.headers.get("content-type") || "application/octet-stream";
           const contentLength = response.headers.get("content-length");
-
-          console.log(
-            `File fetched successfully for viewing from ${fetchUrl}. Content-Type: ${contentType}, Content-Length: ${contentLength}`
-          );
 
           // Set headers for inline viewing
           res.setHeader("Content-Type", contentType);
@@ -227,23 +219,17 @@ router.get("/files/view", async (req, res) => {
           lastError = new Error(
             `HTTP ${response.status}: ${response.statusText}`
           );
-          console.log(
-            `Failed to fetch for view from ${fetchUrl}: ${response.status} ${response.statusText}`
-          );
         }
       } catch (error) {
         lastError = error;
-        console.log(`Error fetching for view from ${fetchUrl}:`, error.message);
       }
     }
 
     // If we get here, all URLs failed
-    console.error("All view attempts failed. Last error:", lastError);
     return res.status(500).json({
       message: `Failed to view file: ${lastError?.message || "Unknown error"}`,
     });
   } catch (error) {
-    console.error("View proxy error:", error);
     res.status(500).json({ message: `Failed to view file: ${error.message}` });
   }
 });
@@ -310,82 +296,10 @@ router.get("/files/local/:filename", async (req, res) => {
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
   } catch (error) {
-    console.error("Local file serving error:", error);
     res.status(500).json({ message: "Failed to serve file" });
   }
 });
 
-// Test endpoint to check if file URLs are accessible
-router.get("/files/test", async (req, res) => {
-  try {
-    const { url } = req.query;
-
-    if (!url) {
-      return res.status(400).json({ message: "File URL is required" });
-    }
-
-    console.log(`Testing file access for: ${url}`);
-
-    // Check if it's a local file
-    if (url.includes("/api/files/local/")) {
-      const localFilename = url.split("/api/files/local/")[1];
-      const path = await import("path");
-      const fs = await import("fs");
-
-      const filePath = path.join(
-        process.cwd(),
-        "uploads",
-        "chat-files",
-        localFilename
-      );
-      const exists = fs.existsSync(filePath);
-
-      if (exists) {
-        const stats = fs.statSync(filePath);
-        res.json({
-          url,
-          accessible: true,
-          type: "local",
-          size: stats.size,
-          modified: stats.mtime,
-        });
-      } else {
-        res.json({
-          url,
-          accessible: false,
-          type: "local",
-          error: "File not found on disk",
-        });
-      }
-      return;
-    }
-
-    // For external URLs, try to fetch
-    const response = await fetch(url, {
-      method: "HEAD",
-      headers: {
-        "User-Agent": "SyncSpace-FileProxy/1.0",
-      },
-    });
-
-    res.json({
-      url,
-      accessible: response.ok,
-      type: "external",
-      status: response.status,
-      statusText: response.statusText,
-      contentType: response.headers.get("content-type"),
-      contentLength: response.headers.get("content-length"),
-    });
-  } catch (error) {
-    console.error("File test error:", error);
-    res.json({
-      url: req.query.url,
-      accessible: false,
-      error: error.message,
-    });
-  }
-});
 
 // File download proxy
 router.get("/files/download", async (req, res) => {
@@ -395,8 +309,6 @@ router.get("/files/download", async (req, res) => {
     if (!url) {
       return res.status(400).json({ message: "File URL is required" });
     }
-
-    console.log(`Download request for: ${url}, filename: ${filename}`);
 
     // Check if it's a local file URL
     if (url.includes("/api/files/local/")) {
@@ -479,8 +391,6 @@ router.get("/files/download", async (req, res) => {
     // Try each URL variation
     for (const fetchUrl of urlsToTry) {
       try {
-        console.log(`Trying to fetch from: ${fetchUrl}`);
-
         const response = await fetch(fetchUrl, {
           method: "GET",
           headers: {
@@ -495,10 +405,6 @@ router.get("/files/download", async (req, res) => {
           const contentType =
             response.headers.get("content-type") || "application/octet-stream";
           const contentLength = response.headers.get("content-length");
-
-          console.log(
-            `File fetched successfully from ${fetchUrl}. Content-Type: ${contentType}, Content-Length: ${contentLength}`
-          );
 
           // Set appropriate headers for download
           res.setHeader("Content-Type", contentType);
@@ -525,25 +431,19 @@ router.get("/files/download", async (req, res) => {
           lastError = new Error(
             `HTTP ${response.status}: ${response.statusText}`
           );
-          console.log(
-            `Failed to fetch from ${fetchUrl}: ${response.status} ${response.statusText}`
-          );
         }
       } catch (error) {
         lastError = error;
-        console.log(`Error fetching from ${fetchUrl}:`, error.message);
       }
     }
 
     // If we get here, all URLs failed
-    console.error("All download attempts failed. Last error:", lastError);
     return res.status(500).json({
       message: `Failed to download file: ${
         lastError?.message || "Unknown error"
       }`,
     });
   } catch (error) {
-    console.error("Download proxy error:", error);
     res
       .status(500)
       .json({ message: `Failed to download file: ${error.message}` });

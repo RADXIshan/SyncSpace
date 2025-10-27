@@ -150,10 +150,7 @@ export const sendMessage = async (req, res) => {
                   userName: safeUser.name // Add this for consistency with NotificationContext
                 };
                 
-                console.log(`Sending mention notification to user ${mentionedUserId}:`, mentionData);
                 io.to(mentionedUserSocketId).emit("user_mentioned", mentionData);
-              } else {
-                console.log(`No socket found for mentioned user ${mentionedUserId}`);
               }
             }
           } catch (error) {
@@ -327,10 +324,7 @@ export const uploadFile = async (req, res) => {
       fileUrl = `${serverBaseUrl}/api/files/local/${safeFileName}`;
       uploadMethod = 'local';
       
-      console.log("Local storage upload successful:", fileUrl);
-      
     } catch (localError) {
-      console.error("Local storage failed:", localError);
       throw new Error("File upload failed: " + localError.message);
     }
 

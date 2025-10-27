@@ -617,6 +617,11 @@ const MeetingRoom = () => {
           setIsVideoEnabled(newState);
           setIsVideoPlaying(newState);
           console.log("Video track", newState ? "enabled" : "disabled");
+          
+          // Force video element refresh when enabling video
+          if (newState && localVideoRef.current) {
+            localVideoRef.current.play().catch(console.error);
+          }
         } else if (newState) {
           const videoConstraints = {
             width: { ideal: 1280 },
@@ -633,8 +638,15 @@ const MeetingRoom = () => {
           
           localStream.addTrack(newVideoTrack);
           
+          // Force video element refresh
           if (localVideoRef.current) {
-            localVideoRef.current.srcObject = localStream;
+            localVideoRef.current.srcObject = null;
+            setTimeout(() => {
+              if (localVideoRef.current && localStream) {
+                localVideoRef.current.srcObject = localStream;
+                localVideoRef.current.play().catch(console.error);
+              }
+            }, 100);
           }
           
           peersRef.current.forEach((peerObj) => {
@@ -777,12 +789,14 @@ const MeetingRoom = () => {
         video: isVideoEnabled ? {
           width: { ideal: 1280 },
           height: { ideal: 720 },
+          facingMode: "user",
         } : false,
         audio: false,
       });
 
       const newVideoTrack = cameraStream.getVideoTracks()[0];
 
+      // Replace track in peer connections
       peersRef.current.forEach((peerObj) => {
         const sender = peerObj.peer
           .getSenders()
@@ -792,19 +806,32 @@ const MeetingRoom = () => {
         }
       });
 
+      // Stop and remove old video track
       const oldVideoTrack = localStream.getVideoTracks()[0];
       if (oldVideoTrack) {
         localStream.removeTrack(oldVideoTrack);
         oldVideoTrack.stop();
       }
       
+      // Add new video track if camera should be enabled
       if (newVideoTrack) {
         newVideoTrack.enabled = isVideoEnabled;
         localStream.addTrack(newVideoTrack);
       }
 
+      // Force video element refresh by clearing and reassigning srcObject
       if (localVideoRef.current) {
-        localVideoRef.current.srcObject = localStream;
+        localVideoRef.current.srcObject = null;
+        // Small delay to ensure the video element resets
+        setTimeout(() => {
+          if (localVideoRef.current && localStream) {
+            localVideoRef.current.srcObject = localStream;
+            // Force play if video is enabled
+            if (isVideoEnabled && newVideoTrack) {
+              localVideoRef.current.play().catch(console.error);
+            }
+          }
+        }, 100);
       }
 
       if (socket) {

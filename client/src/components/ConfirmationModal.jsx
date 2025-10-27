@@ -53,7 +53,7 @@ const ConfirmationModal = ({
             </div>
 
             {/* Title */}
-            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-2 gradient-text">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 px-2 text-white">
               {title}
             </h3>
 

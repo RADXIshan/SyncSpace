@@ -28,6 +28,12 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
+    // Check if there's a token but user is null (might be unverified)
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Don't clear token, redirect to verification
+      return <Navigate to="/verify-email" replace />;
+    }
     localStorage.removeItem("token");
     return <Navigate to="/login" replace />;
   }

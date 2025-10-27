@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -98,7 +99,13 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (loading || isSubmitted) return;
+    
     setLoading(true);
+    setIsSubmitted(true);
+    
     const payload = {
       name: formData.name,
       email: formData.email,
@@ -106,14 +113,14 @@ const Signup = () => {
     };
     let toastId;
     try {
-      toastId = toast.loading("Signing up...");
+      toastId = toast.loading("Creating your account...");
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/auth/signup`, 
         payload, 
         { withCredentials: true }
       );
       
-      // Store token in localStorage
+      // Store token in localStorage for verification process
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
       }
@@ -122,11 +129,13 @@ const Signup = () => {
         state: {
           email: formData.email,
           message: "Account created successfully. Please verify your email.",
+          token: response.data.token
         },
       });
     } catch (err) {
       toast.error(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
       console.error("Signup error:", err);
+      setIsSubmitted(false); // Allow retry on error
     } finally {
       setLoading(false);
     }
@@ -378,9 +387,9 @@ const Signup = () => {
             <button
               type="submit"
               className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-              disabled={loading || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
+              disabled={loading || isSubmitted || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
             >
-              {loading ? "Creating Account..." : (
+              {loading ? "Creating Account..." : isSubmitted ? "Account Created - Redirecting..." : (
                 <>
                   <Sparkles className="w-5 h-5" />
                   Create Account

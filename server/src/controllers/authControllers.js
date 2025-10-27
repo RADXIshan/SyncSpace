@@ -99,9 +99,10 @@ export const signup = async (req, res) => {
     }
 
     res.status(201).json({
-      message: "User created successfully",
+      message: "User created successfully. Please verify your email.",
       user: newUser,
       token,
+      requiresVerification: true
     });
   } catch (error) {
     console.error("Error creating user:", error);
@@ -123,7 +124,7 @@ export const login = async (req, res) => {
 
   try {
     const [user] =
-      await sql`SELECT user_id, name, email, password, user_photo FROM users WHERE email = ${email}`;
+      await sql`SELECT user_id, name, email, password, user_photo, otp FROM users WHERE email = ${email}`;
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -133,6 +134,15 @@ export const login = async (req, res) => {
 
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Check if email is verified (otp should be null for verified users)
+    if (user.otp !== null) {
+      return res.status(403).json({ 
+        message: "Please verify your email before logging in",
+        requiresVerification: true,
+        email: user.email
+      });
     }
 
     const token = jwt.sign(
@@ -493,9 +503,9 @@ export const authUser = async (req, res) => {
     return res.status(401).json({ message: "Invalid token" });
   }
 
-  // ✅ FIX: Include org_id in the user select query
+  // ✅ FIX: Include org_id and otp in the user select query
   const [user] = await sql`
-    SELECT user_id, name, email, user_photo, org_id
+    SELECT user_id, name, email, user_photo, org_id, otp
     FROM users
     WHERE user_id = ${userId}
   `;
@@ -504,7 +514,18 @@ export const authUser = async (req, res) => {
     return res.status(401).json({ message: "User not found" });
   }
 
-  return res.json({ user });
+  // Check if email is verified (otp should be null for verified users)
+  if (user.otp !== null) {
+    return res.status(403).json({ 
+      message: "Email verification required",
+      requiresVerification: true,
+      email: user.email
+    });
+  }
+
+  // Remove otp from response
+  const { otp, ...userResponse } = user;
+  return res.json({ user: userResponse });
 };
 
 export const refreshToken = async (req, res) => {

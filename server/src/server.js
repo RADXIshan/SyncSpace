@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import authRoutes from "./routes/authRoutes.js";
@@ -19,7 +21,12 @@ import sql from "./database/db.js";
 import fs from "fs";
 import path from "path";
 
-dotenv.config();
+// Load environment variables with explicit path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env from the server root directory
+dotenv.config({ path: join(__dirname, "../.env") });
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(process.cwd(), "uploads", "chat-files");
@@ -88,16 +95,16 @@ const io = new Server(server, {
 app.use((req, res, next) => {
   req.setTimeout(30000, () => {
     if (!res.headersSent) {
-      res.status(408).json({ message: 'Request timeout' });
+      res.status(408).json({ message: "Request timeout" });
     }
   });
-  
+
   res.setTimeout(30000, () => {
     if (!res.headersSent) {
-      res.status(408).json({ message: 'Response timeout' });
+      res.status(408).json({ message: "Response timeout" });
     }
   });
-  
+
   next();
 });
 
@@ -168,8 +175,6 @@ app.put("/debug/test", (req, res) => {
     hasCookie: !!req.cookies.jwt,
   });
 });
-
-
 
 // Migration endpoint
 app.post("/debug/migrate", async (req, res) => {

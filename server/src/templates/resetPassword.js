@@ -1,4 +1,4 @@
-export const generatePasswordResetEmail = (resetLink) => {
+const generatePasswordResetEmail = (resetLink) => {
   const year = new Date().getFullYear();
   return `
   <!DOCTYPE html>
@@ -422,3 +422,5 @@ export const generatePasswordResetEmail = (resetLink) => {
   </html>
   `;
 };
+
+export { generatePasswordResetEmail };

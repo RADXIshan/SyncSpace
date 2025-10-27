@@ -3,194 +3,93 @@ import { generateOtpEmail } from "../templates/emailTemplate.js";
 import { generatePasswordResetEmail } from "../templates/resetPassword.js";
 
 class EmailService {
-  constructor() {
-    this.transporter = null;
-    this.isInitialized = false;
-  }
-
-  // Initialize the email service with the best working configuration
-  async initialize() {
-    if (this.isInitialized) return;
-
-    const configs = [
-      {
-        name: "Standard Gmail SMTP",
-        config: {
-          service: "gmail",
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          pool: false,
-          connectionTimeout: 15000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
-          auth: {
-            user: process.env.EMAIL,
-            pass: process.env.APP_PASSWORD,
-          },
-        },
-      },
-      {
-        name: "Gmail SMTP with TLS",
-        config: {
-          service: "gmail",
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          pool: false,
-          connectionTimeout: 15000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
-          auth: {
-            user: process.env.EMAIL,
-            pass: process.env.APP_PASSWORD,
-          },
-          tls: {
-            rejectUnauthorized: false,
-          },
-        },
-      },
-    ];
-
-    for (const { name, config } of configs) {
-      try {
-        const testTransporter = nodemailer.createTransport(config);
-        await testTransporter.verify();
-        testTransporter.close();
-
-        this.config = config;
-        this.configName = name;
-        this.isInitialized = true;
-        console.log(`✅ Email service initialized with: ${name}`);
-        return;
-      } catch (error) {
-        console.log(`❌ Failed to initialize with ${name}:`, error.message);
-      }
-    }
-
-    throw new Error(
-      "Failed to initialize email service with any configuration"
-    );
-  }
-
-  // Create a fresh transporter for each email
+  // Create transporter with Gmail SMTP
   createTransporter() {
-    return nodemailer.createTransport(this.config);
+    return nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.MAIL_PASSWORD,
+      },
+    });
   }
 
   // Send email with retry logic
-  async sendEmail(mailOptions, maxRetries = 3) {
-    if (!this.isInitialized) {
-      await this.initialize();
-    }
-
+  async sendEmail(message, maxRetries = 3) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const transporter = this.createTransporter();
-        const result = await transporter.sendMail(mailOptions);
+        const info = await transporter.sendMail(message);
+        
+        // Close the transporter
         transporter.close();
-
-        console.log(
-          `✅ Email sent successfully (attempt ${attempt}):`,
-          result.messageId
-        );
-        return result;
+        
+        console.log(`✅ Email sent successfully via Gmail SMTP (attempt ${attempt})`);
+        console.log("Message ID: %s", info.messageId);
+        console.log("📧 Email sent to: %s", message.to);
+        return info;
       } catch (error) {
-        console.error(`❌ Email attempt ${attempt} failed:`, error.message);
-
+        console.log(`❌ Gmail SMTP attempt ${attempt} failed: ${error.message}`);
+        
         if (attempt === maxRetries) {
+          console.log("❌ All email attempts failed");
           throw error;
         }
-
+        
         // Wait before retrying (exponential backoff)
         const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        console.log(`⏳ Retrying in ${delay/1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
 
   // Send verification email
   async sendVerificationEmail(email, name, otp) {
-    const mailOptions = {
-      from: {
-        name: "SyncSpace Security",
-        address: process.env.EMAIL,
-      },
-      replyTo: "noreply@syncspace.com",
-      headers: {
-        "X-Priority": "1",
-        "X-MSMail-Priority": "High",
-        Importance: "high",
-      },
+    const message = {
+      from: `SyncSpace Security <${process.env.EMAIL}>`,
       to: email,
       subject: "Account Verification Code - Action Required",
       html: generateOtpEmail(name, otp),
     };
 
-    return await this.sendEmail(mailOptions);
+    return await this.sendEmail(message);
   }
 
   // Send OTP resend email
   async sendOtpResendEmail(email, name, otp) {
-    const mailOptions = {
-      from: {
-        name: "SyncSpace Security",
-        address: process.env.EMAIL,
-      },
-      replyTo: "noreply@syncspace.com",
-      headers: {
-        "X-Priority": "1",
-        "X-MSMail-Priority": "High",
-        Importance: "high",
-      },
+    const message = {
+      from: `SyncSpace Security <${process.env.EMAIL}>`,
       to: email,
       subject: "New Verification Code - Please Confirm",
       html: generateOtpEmail(name, otp),
     };
 
-    return await this.sendEmail(mailOptions);
+    return await this.sendEmail(message);
   }
 
   // Send password reset email
   async sendPasswordResetEmail(email, resetLink) {
-    const mailOptions = {
-      from: {
-        name: "SyncSpace Security",
-        address: process.env.EMAIL,
-      },
-      replyTo: "noreply@syncspace.com",
-      headers: {
-        "X-Priority": "1",
-        "X-MSMail-Priority": "High",
-        Importance: "high",
-      },
+    const message = {
+      from: `SyncSpace Security <${process.env.EMAIL}>`,
       to: email,
       subject: "Password Reset Request - Secure Link Inside",
       html: generatePasswordResetEmail(resetLink),
     };
 
-    return await this.sendEmail(mailOptions);
+    return await this.sendEmail(message);
   }
 
   // Send team invitation email
   async sendTeamInviteEmail(email, inviterName, teamName, inviteLink) {
-    const mailOptions = {
-      from: {
-        name: "SyncSpace Team",
-        address: process.env.EMAIL,
-      },
-      replyTo: "noreply@syncspace.com",
-      headers: {
-        "X-Priority": "1",
-        "X-MSMail-Priority": "High",
-        Importance: "high",
-      },
+    const message = {
+      from: `SyncSpace Team <${process.env.EMAIL}>`,
       to: email,
       subject: `You're invited to join ${teamName} on SyncSpace`,
       html: this.generateTeamInviteEmail(inviterName, teamName, inviteLink),
     };
 
-    return await this.sendEmail(mailOptions);
+    return await this.sendEmail(message);
   }
 
   // Generate team invite email template

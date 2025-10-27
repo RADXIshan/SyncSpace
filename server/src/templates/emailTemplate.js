@@ -1,4 +1,4 @@
-export const generateOtpEmail = (name, otp) => {
+const generateOtpEmail = (name, otp) => {
   const year = new Date().getFullYear();
   return `
   <!DOCTYPE html>
@@ -62,7 +62,7 @@ export const generateOtpEmail = (name, otp) => {
 
       /* Dark mode (default) */
       body {
-        background: linear-gradient(135deg, #0f0d2a 0%, #1a1654 25%, #0f1a3a 50%, #0f1629 75%, #0f0d2a 100%);
+        background: black;
         color: #ffffff;
       }
 
@@ -413,3 +413,5 @@ export const generateOtpEmail = (name, otp) => {
   </html>
   `;
 };
+
+export { generateOtpEmail };

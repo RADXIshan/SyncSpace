@@ -58,6 +58,7 @@ export const NotificationProvider = ({ children }) => {
   // Add new notification
   const addNotification = useCallback(
     (notification) => {
+      console.log("🔔 Adding notification:", notification);
       const newNotification = {
         id: Date.now() + Math.random(),
         timestamp: new Date().toISOString(),
@@ -69,6 +70,7 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount((prev) => prev + 1);
 
       // Show toast notification
+      console.log("🍞 Showing toast notification:", newNotification);
       showNotification(newNotification);
     },
     [showNotification]
@@ -310,6 +312,19 @@ export const NotificationProvider = ({ children }) => {
       });
     };
 
+    // Listen for meeting started notifications
+    const handleMeetingStarted = (data) => {
+      console.log("🔔 NotificationContext received meeting_started_notification:", data);
+      addNotification({
+        type: "meeting",
+        title: "Meeting Started",
+        message: data.message || `${data.startedBy} started a meeting in #${data.channelName}`,
+        priority: "high",
+        actionUrl: `/meeting/${data.meetingId}`,
+      });
+      console.log("✅ Meeting started notification added to context");
+    };
+
     // Listen for organization updates
     const handleOrgUpdate = (data) => {
       addNotification({
@@ -354,6 +369,7 @@ export const NotificationProvider = ({ children }) => {
     socket.on("user_mentioned", handleMention);
     socket.on("new_message", handleNewMessage);
     socket.on("meeting_updated", handleMeetingUpdate);
+    socket.on("meeting_started_notification", handleMeetingStarted);
     socket.on("organization_updated", handleOrgUpdate);
 
     return () => {
@@ -368,6 +384,7 @@ export const NotificationProvider = ({ children }) => {
       socket.off("user_mentioned", handleMention);
       socket.off("new_message", handleNewMessage);
       socket.off("meeting_updated", handleMeetingUpdate);
+      socket.off("meeting_started_notification", handleMeetingStarted);
       socket.off("organization_updated", handleOrgUpdate);
     };
   }, [socket, user, addNotification]);

@@ -482,11 +482,17 @@ const MeetingRoom = () => {
     });
 
     socket.on("meeting_started_notification", (data) => {
-      console.log("Meeting started notification:", data);
+      console.log("🔔 MeetingRoom received meeting_started_notification:", data);
       toast.success(data.message, {
-        duration: 5000,
+        duration: 8000,
         icon: "📹",
+        style: {
+          background: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          color: '#1d4ed8',
+        },
       });
+      console.log("🍞 Meeting start toast displayed");
     });
 
     return () => {

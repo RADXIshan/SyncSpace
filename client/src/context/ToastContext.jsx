@@ -66,6 +66,7 @@ export const ToastProvider = ({ children }) => {
 
   // Enhanced notification display using existing toast system
   const showNotification = useCallback((notification) => {
+    console.log("🍞 ToastContext showNotification called with:", notification);
     const { type, title, message, priority = 'medium' } = notification;
     
     // Get appropriate icon and styling based on type and priority
@@ -80,8 +81,13 @@ export const ToastProvider = ({ children }) => {
         icon = '👤';
         break;
       case 'meeting':
-        icon = '📅';
-        toastOptions.duration = 6000; // Longer for meetings
+        icon = '📹';
+        toastOptions.duration = 8000; // Longer for meetings
+        toastOptions.style = {
+          background: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          color: '#1d4ed8',
+        };
         break;
       case 'member_joined':
         icon = '👋';
@@ -130,6 +136,8 @@ export const ToastProvider = ({ children }) => {
     
     // Format message
     const notificationMessage = `${title}${message ? `: ${message}` : ''}`;
+    
+    console.log(`🚀 Displaying toast: "${notificationMessage}" with icon ${icon} and options:`, toastOptions);
     
     // Show the toast
     toast(notificationMessage, { 

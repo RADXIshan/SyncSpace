@@ -276,7 +276,7 @@ export const setupSocketHandlers = (io) => {
 
     // WebRTC Video Call Handlers - Clean and Simple
     socket.on('join-room', async (roomID) => {
-      console.log(`User ${socket.id} (${socket.userName}) joining room ${roomID}`);
+      console.log(`🚪 User ${socket.id} (${socket.userName}) joining room ${roomID}`);
       
       // Get users already in the room
       const usersInThisRoom = [];
@@ -300,6 +300,7 @@ export const setupSocketHandlers = (io) => {
       
       // Track meeting participants
       if (!activeMeetings.has(roomID)) {
+        console.log(`🎬 First user joining room ${roomID} - starting meeting notifications`);
         // First user joining - this is the meeting starter
         activeMeetings.set(roomID, {
           startedBy: socket.userId,
@@ -309,8 +310,13 @@ export const setupSocketHandlers = (io) => {
         });
         
         // Send meeting start notifications to channel members
-        await sendMeetingStartNotifications(roomID, socket.userId, socket.userName, io);
+        try {
+          await sendMeetingStartNotifications(roomID, socket.userId, socket.userName, io);
+        } catch (error) {
+          console.error(`💥 Error sending meeting start notifications for room ${roomID}:`, error);
+        }
       } else {
+        console.log(`👥 User joining existing meeting ${roomID}`);
         // Add participant to existing meeting
         const meeting = activeMeetings.get(roomID);
         meeting.participants.add(socket.userId);
@@ -319,11 +325,11 @@ export const setupSocketHandlers = (io) => {
         if (meetingDeletionTimers.has(roomID)) {
           clearTimeout(meetingDeletionTimers.get(roomID));
           meetingDeletionTimers.delete(roomID);
-          console.log(`Cleared deletion timer for meeting ${roomID} - user rejoined`);
+          console.log(`⏰ Cleared deletion timer for meeting ${roomID} - user rejoined`);
         }
       }
       
-      console.log(`Sending ${usersInThisRoom.length} existing users to new user`);
+      console.log(`📤 Sending ${usersInThisRoom.length} existing users to new user`);
       // Send existing users to the new user
       socket.emit('existing-users', usersInThisRoom);
       
@@ -597,71 +603,79 @@ const startMeetingDeletionTimer = (roomID) => {
 
 const sendMeetingStartNotifications = async (roomID, startedByUserId, startedByUserName, io) => {
   try {
-    console.log(`Starting notification process for meeting ${roomID} started by ${startedByUserName}`);
+    console.log(`🔔 Starting notification process for meeting ${roomID} started by ${startedByUserName}`);
     const sql = (await import('../database/db.js')).default;
     
     // Get meeting details from database
+    // The roomID is actually the room identifier from the meeting link, not the meeting_id
     const [meeting] = await sql`
       SELECT m.*, c.channel_name, c.org_id 
       FROM org_meetings m
       JOIN org_channels c ON m.channel_id = c.channel_id
-      WHERE m.meeting_id = ${roomID}
+      WHERE m.meeting_link LIKE ${`%/meeting/${roomID}`}
     `;
     
-    console.log(`Meeting query result:`, meeting);
+    console.log(`📋 Meeting query result:`, meeting);
     
     if (!meeting) {
-      console.log(`Meeting ${roomID} not found in database`);
+      console.log(`❌ Meeting ${roomID} not found in database - might be a custom room or external meeting`);
+      // For custom rooms, we can't send notifications since we don't know the channel/org context
       return;
     }
     
     // Get all users with access to this channel (excluding the starter)
     const channelUsers = await getOnlineUsersWithChannelAccess(meeting.org_id, meeting.channel_id);
-    console.log(`Found ${channelUsers.length} users with channel access`);
+    console.log(`👥 Found ${channelUsers.length} users with channel access`);
     
     const usersToNotify = channelUsers.filter(user => user.id !== startedByUserId);
-    console.log(`Users to notify (excluding starter):`, usersToNotify.map(u => u.name || u.email));
+    console.log(`📢 Users to notify (excluding starter):`, usersToNotify.map(u => u.name || u.email));
     
     // Create notification for each user
     for (const user of usersToNotify) {
       try {
-        console.log(`Creating notification for user ${user.name || user.email} (${user.id})`);
+        console.log(`📝 Creating notification for user ${user.name || user.email} (${user.id})`);
         
-        await createNotification({
-          user_id: user.id,
-          type: 'meeting_started',
-          title: 'Meeting Started',
-          message: `${startedByUserName} started a meeting in #${meeting.channel_name}`,
-          data: {
-            meetingId: roomID,
-            channelId: meeting.channel_id,
-            channelName: meeting.channel_name,
-            startedBy: startedByUserName,
-            startedAt: new Date().toISOString()
+        const notificationResult = await createNotification(
+          user.id,
+          meeting.org_id,
+          'meeting_started',
+          'Meeting Started',
+          `${startedByUserName} started a meeting in #${meeting.channel_name}`,
+          {
+            relatedId: meeting.channel_id,
+            relatedType: 'channel',
+            link: `/meeting/${roomID}`
           }
-        });
+        );
+        
+        console.log(`📝 Notification creation result:`, notificationResult);
+        
+        console.log(`✅ Database notification created for user ${user.id}`);
         
         // Send real-time notification if user is online
         if (user.socketId) {
-          console.log(`Sending real-time notification to socket ${user.socketId}`);
-          io.to(user.socketId).emit('meeting_started_notification', {
+          console.log(`🚀 Sending real-time notification to socket ${user.socketId}`);
+          const notificationData = {
             meetingId: roomID,
             channelName: meeting.channel_name,
             startedBy: startedByUserName,
             message: `${startedByUserName} started a meeting in #${meeting.channel_name}`
-          });
+          };
+          
+          io.to(user.socketId).emit('meeting_started_notification', notificationData);
+          console.log(`📡 Emitted meeting_started_notification to ${user.socketId}:`, notificationData);
         } else {
-          console.log(`User ${user.name || user.email} is not online (no socketId)`);
+          console.log(`⚠️ User ${user.name || user.email} is not online (no socketId)`);
         }
       } catch (error) {
-        console.error(`Error sending notification to user ${user.id}:`, error);
+        console.error(`❌ Error sending notification to user ${user.id}:`, error);
       }
     }
     
-    console.log(`Sent meeting start notifications to ${usersToNotify.length} users`);
+    console.log(`🎉 Sent meeting start notifications to ${usersToNotify.length} users`);
     
   } catch (error) {
-    console.error('Error sending meeting start notifications:', error);
+    console.error('💥 Error sending meeting start notifications:', error);
   }
 };
 
@@ -669,10 +683,10 @@ const deleteMeetingFromDatabase = async (roomID) => {
   try {
     const sql = (await import('../database/db.js')).default;
     
-    // Delete meeting from database
+    // Delete meeting from database using meeting_link
     await sql`
       DELETE FROM org_meetings 
-      WHERE meeting_id = ${roomID}
+      WHERE meeting_link LIKE ${`%/meeting/${roomID}`}
     `;
     
     console.log(`Successfully deleted meeting ${roomID} from database`);

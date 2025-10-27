@@ -31,36 +31,24 @@ const MeetingRoom = () => {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [screenSharingUser, setScreenSharingUser] = useState(null);
+  const [savedSettings, setSavedSettings] = useState({ videoEnabled: true, audioEnabled: true });
 
-  // Load settings from localStorage or URL params on component mount
+  // Load settings from URL params on component mount
   useEffect(() => {
-    // Check URL params for settings (from MeetingPrep)
     const urlParams = new URLSearchParams(window.location.search);
     const videoParam = urlParams.get('video');
     const audioParam = urlParams.get('audio');
     
-    // Load saved settings from localStorage
-    const savedSettings = localStorage.getItem('meetingSettings');
-    let settings = {};
-    
-    if (savedSettings) {
-      try {
-        settings = JSON.parse(savedSettings);
-      } catch (error) {
-        console.error('Error parsing saved settings:', error);
-      }
-    }
-    
-    // URL params take precedence over localStorage, default to true if neither exists
-    const initialVideoEnabled = videoParam !== null ? videoParam === 'true' : (settings.videoEnabled !== false);
-    const initialAudioEnabled = audioParam !== null ? audioParam === 'true' : (settings.audioEnabled !== false);
+    // URL params take precedence, default to true if not provided
+    const initialVideoEnabled = videoParam !== null ? videoParam === 'true' : savedSettings.videoEnabled;
+    const initialAudioEnabled = audioParam !== null ? audioParam === 'true' : savedSettings.audioEnabled;
     
     setIsVideoEnabled(initialVideoEnabled);
     setIsAudioEnabled(initialAudioEnabled);
     
     console.log('Initial settings loaded:', { video: initialVideoEnabled, audio: initialAudioEnabled });
     
-    // Clean up URL params immediately to prevent conflicts
+    // Clean up URL params
     const newUrl = window.location.pathname;
     window.history.replaceState({}, document.title, newUrl);
   }, []);
@@ -82,7 +70,7 @@ const MeetingRoom = () => {
 
   // Initialize socket connection
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (!token) {
       toast.error("Authentication required");
       navigate("/login");
@@ -124,7 +112,6 @@ const MeetingRoom = () => {
       });
 
       return () => {
-        // Cleanup on unmount
         if (localStream) {
           localStream.getTracks().forEach((track) => track.stop());
         }
@@ -153,29 +140,16 @@ const MeetingRoom = () => {
       try {
         console.log("Requesting user media with settings:", { video: isVideoEnabled, audio: isAudioEnabled });
         
-        // Load saved device preferences
-        const savedSettings = localStorage.getItem('meetingSettings');
-        let deviceSettings = {};
-        if (savedSettings) {
-          try {
-            deviceSettings = JSON.parse(savedSettings);
-          } catch (error) {
-            console.error('Error parsing saved device settings:', error);
-          }
-        }
-        
-        // Always request both video and audio to avoid permission issues
-        // We'll control the enabled state after getting the stream
         const constraints = {
-          video: deviceSettings.videoDevice ? 
-            { deviceId: deviceSettings.videoDevice } : 
+          video: savedSettings.videoDevice ? 
+            { deviceId: savedSettings.videoDevice } : 
             {
               width: { ideal: 1280 },
               height: { ideal: 720 },
               facingMode: "user",
             },
-          audio: deviceSettings.audioInput ? 
-            { deviceId: deviceSettings.audioInput } : 
+          audio: savedSettings.audioInput ? 
+            { deviceId: savedSettings.audioInput } : 
             {
               echoCancellation: true,
               noiseSuppression: true,
@@ -192,28 +166,17 @@ const MeetingRoom = () => {
             .map((t) => `${t.kind}: ${t.enabled}, readyState: ${t.readyState}`)
         );
 
-        // Set track states based on our initial settings
         const videoTrack = stream.getVideoTracks()[0];
         const audioTrack = stream.getAudioTracks()[0];
 
         if (videoTrack) {
           videoTrack.enabled = isVideoEnabled;
-          console.log(
-            "Video track enabled:",
-            videoTrack.enabled,
-            "readyState:",
-            videoTrack.readyState
-          );
+          console.log("Video track enabled:", videoTrack.enabled, "readyState:", videoTrack.readyState);
         }
 
         if (audioTrack) {
           audioTrack.enabled = isAudioEnabled;
-          console.log(
-            "Audio track enabled:",
-            audioTrack.enabled,
-            "readyState:",
-            audioTrack.readyState
-          );
+          console.log("Audio track enabled:", audioTrack.enabled, "readyState:", audioTrack.readyState);
         }
 
         setLocalStream(stream);
@@ -221,17 +184,12 @@ const MeetingRoom = () => {
       } catch (error) {
         console.error("Error accessing media devices:", error);
 
-        // Provide more specific error messages
         if (error.name === "NotAllowedError") {
-          toast.error(
-            "Camera/microphone access denied. Please allow access and refresh."
-          );
+          toast.error("Camera/microphone access denied. Please allow access and refresh.");
         } else if (error.name === "NotFoundError") {
           toast.error("No camera/microphone found. Please check your devices.");
         } else if (error.name === "NotReadableError") {
-          toast.error(
-            "Camera/microphone is being used by another application."
-          );
+          toast.error("Camera/microphone is being used by another application.");
         } else {
           toast.error("Failed to access camera/microphone: " + error.message);
         }
@@ -241,17 +199,15 @@ const MeetingRoom = () => {
     if (isConnected && !localStream) {
       initializeMedia();
     }
-  }, [isConnected, isVideoEnabled, isAudioEnabled]); // Depend on media settings too
+  }, [isConnected, isVideoEnabled, isAudioEnabled]);
 
   // Handle local video element setup
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       console.log("Setting up local video element, video enabled:", isVideoEnabled);
       
-      // Always set the stream object
       localVideoRef.current.srcObject = localStream;
 
-      // Set up event handlers
       const videoElement = localVideoRef.current;
       
       const handleLoadedMetadata = () => {
@@ -292,20 +248,17 @@ const MeetingRoom = () => {
         setIsVideoPlaying(false);
       };
 
-      // Add event listeners
       videoElement.onloadedmetadata = handleLoadedMetadata;
       videoElement.oncanplay = handleCanPlay;
       videoElement.onplaying = handlePlaying;
       videoElement.onpause = handlePause;
       videoElement.onerror = handleError;
 
-      // Immediate check for existing video
       const videoTrack = localStream.getVideoTracks()[0];
       if (videoTrack && videoTrack.enabled && isVideoEnabled && videoElement.readyState >= 2) {
         videoElement.play().catch(console.error);
       }
 
-      // Cleanup function
       return () => {
         if (videoElement) {
           videoElement.onloadedmetadata = null;
@@ -324,14 +277,11 @@ const MeetingRoom = () => {
 
     console.log("Setting up WebRTC signaling");
 
-    // Join room
     socket.emit("join-room", roomId);
 
-    // Handle existing users
     socket.on("existing-users", (users) => {
       console.log("Existing users:", users);
 
-      // Clear existing peers to prevent duplicates
       peersRef.current.forEach((peerObj) => {
         if (peerObj.peer) {
           peerObj.peer.close();
@@ -340,9 +290,7 @@ const MeetingRoom = () => {
       peersRef.current = [];
 
       users.forEach((user) => {
-        console.log(
-          `Creating peer for existing user: ${user.userName} (${user.socketId})`
-        );
+        console.log(`Creating peer for existing user: ${user.userName} (${user.socketId})`);
         const peer = createPeer(user.socketId, socket.id, localStream);
         const peerObj = {
           peerID: user.socketId,
@@ -361,19 +309,13 @@ const MeetingRoom = () => {
       setPeers([...peersRef.current]);
     });
 
-    // Handle new user joining
     socket.on("user-joined", (payload) => {
       console.log("User joined:", payload);
 
       if (payload.signal && payload.signal.type === "offer") {
-        // This is a WebRTC offer - check if peer already exists
-        const existingPeer = peersRef.current.find(
-          (p) => p.peerID === payload.callerID
-        );
+        const existingPeer = peersRef.current.find((p) => p.peerID === payload.callerID);
         if (!existingPeer) {
-          console.log(
-            `Adding peer for incoming offer from: ${payload.userName} (${payload.callerID})`
-          );
+          console.log(`Adding peer for incoming offer from: ${payload.userName} (${payload.callerID})`);
           const peer = addPeer(payload.signal, payload.callerID, localStream);
           const peerObj = {
             peerID: payload.callerID,
@@ -392,81 +334,42 @@ const MeetingRoom = () => {
           console.log(`Peer already exists for ${payload.callerID}, skipping`);
         }
       } else if (payload.signal && payload.signal.candidate) {
-        // This is an ICE candidate
-        const existingPeer = peersRef.current.find(
-          (p) => p.peerID === payload.callerID
-        );
+        const existingPeer = peersRef.current.find((p) => p.peerID === payload.callerID);
         if (existingPeer) {
           console.log(`Adding ICE candidate from ${payload.callerID}`);
           try {
             existingPeer.peer
               .addIceCandidate(new RTCIceCandidate(payload.signal))
-              .then(() => {
-                console.log(
-                  `Successfully added ICE candidate from ${payload.callerID}`
-                );
-              })
-              .catch((error) => {
-                console.error(
-                  `Error adding ICE candidate from ${payload.callerID}:`,
-                  error
-                );
-              });
+              .then(() => console.log(`Successfully added ICE candidate from ${payload.callerID}`))
+              .catch((error) => console.error(`Error adding ICE candidate from ${payload.callerID}:`, error));
           } catch (error) {
             console.error("Error adding ICE candidate:", error);
           }
         } else {
-          console.warn(
-            `No peer found for ICE candidate from ${payload.callerID}`
-          );
+          console.warn(`No peer found for ICE candidate from ${payload.callerID}`);
         }
       } else if (!payload.signal) {
-        // This is just a user joined notification, not a WebRTC signal
-        console.log(
-          "New user joined room (notification only):",
-          payload.callerID
-        );
+        console.log("New user joined room (notification only):", payload.callerID);
       }
     });
 
-    // Handle receiving answer
     socket.on("receiving-answer", (payload) => {
       console.log("Receiving answer:", payload);
       const item = peersRef.current.find((p) => p.peerID === payload.id);
       if (item && payload.signal) {
         try {
           if (payload.signal.type === "answer") {
-            console.log(
-              `Setting remote description (answer) for ${payload.id}`
-            );
+            console.log(`Setting remote description (answer) for ${payload.id}`);
             item.peer
               .setRemoteDescription(new RTCSessionDescription(payload.signal))
-              .then(() => {
-                console.log(
-                  `Successfully set remote description for ${payload.id}`
-                );
-              })
-              .catch((error) => {
-                console.error(
-                  `Error setting remote description for ${payload.id}:`,
-                  error
-                );
-              });
+              .then(() => console.log(`Successfully set remote description for ${payload.id}`))
+              .catch((error) => console.error(`Error setting remote description for ${payload.id}:`, error));
           } else if (payload.signal.candidate) {
             console.log(`Adding ICE candidate for ${payload.id}`);
             item.peer
               .addIceCandidate(new RTCIceCandidate(payload.signal))
-              .then(() => {
-                console.log(
-                  `Successfully added ICE candidate for ${payload.id}`
-                );
-              })
-              .catch((error) => {
-                console.error(
-                  `Error adding ICE candidate for ${payload.id}:`,
-                  error
-                );
-              });
+              .then(() => console.log(`Successfully added ICE candidate for ${payload.id}`))
+              .catch((error) => console.error(`Error adding ICE candidate for ${payload.id}:`, error));
           }
         } catch (error) {
           console.error("Error handling answer/candidate:", error);
@@ -476,7 +379,6 @@ const MeetingRoom = () => {
       }
     });
 
-    // Handle user leaving
     socket.on("user-left", (id) => {
       console.log("User left:", id);
       const peerObj = peersRef.current.find((p) => p.peerID === id);
@@ -488,7 +390,6 @@ const MeetingRoom = () => {
       setPeers(filteredPeers);
     });
 
-    // Handle media state changes
     socket.on("user-video-toggle", (data) => {
       console.log("User video toggle:", data);
       const peerObj = peersRef.current.find((p) => p.peerID === data.socketId);
@@ -507,7 +408,6 @@ const MeetingRoom = () => {
       }
     });
 
-    // Handle screen sharing events
     socket.on("user-started-screen-share", (data) => {
       console.log("User started screen sharing:", data);
       setScreenSharingUser(data.socketId);
@@ -545,70 +445,42 @@ const MeetingRoom = () => {
     console.log("Creating peer for:", userToSignal);
     const peer = new RTCPeerConnection(iceServers);
 
-    // Add connection state logging
     peer.onconnectionstatechange = () => {
-      console.log(
-        `Peer connection state (${userToSignal}):`,
-        peer.connectionState
-      );
+      console.log(`Peer connection state (${userToSignal}):`, peer.connectionState);
       if (peer.connectionState === "failed") {
         console.error(`Peer connection failed for ${userToSignal}`);
-        // Try to restart ICE
         peer.restartIce();
       }
     };
 
-    // Add ICE connection state logging
     peer.oniceconnectionstatechange = () => {
-      console.log(
-        `ICE connection state (${userToSignal}):`,
-        peer.iceConnectionState
-      );
+      console.log(`ICE connection state (${userToSignal}):`, peer.iceConnectionState);
       if (peer.iceConnectionState === "failed") {
-        console.error(
-          `ICE connection failed for ${userToSignal}, restarting...`
-        );
+        console.error(`ICE connection failed for ${userToSignal}, restarting...`);
         peer.restartIce();
       }
     };
 
-    // Handle incoming remote stream - CRITICAL FIX
     peer.ontrack = (event) => {
-      console.log(
-        `createPeer: Received ${event.track.kind} track from ${userToSignal}`,
-        event
-      );
-      console.log(
-        `createPeer: Track enabled: ${event.track.enabled}, readyState: ${event.track.readyState}`
-      );
+      console.log(`createPeer: Received ${event.track.kind} track from ${userToSignal}`, event);
+      console.log(`createPeer: Track enabled: ${event.track.enabled}, readyState: ${event.track.readyState}`);
 
       if (event.streams && event.streams[0]) {
-        console.log(
-          `createPeer: Stream has ${event.streams[0].getTracks().length} tracks`
-        );
+        console.log(`createPeer: Stream has ${event.streams[0].getTracks().length} tracks`);
         event.streams[0].getTracks().forEach((track) => {
-          console.log(
-            `createPeer: Stream track - ${track.kind}: enabled=${track.enabled}, readyState=${track.readyState}`
-          );
+          console.log(`createPeer: Stream track - ${track.kind}: enabled=${track.enabled}, readyState=${track.readyState}`);
         });
       }
     };
 
-    // Add local stream tracks
     stream.getTracks().forEach((track) => {
-      console.log(
-        `Adding ${track.kind} track to peer ${userToSignal} - enabled: ${track.enabled}`
-      );
+      console.log(`Adding ${track.kind} track to peer ${userToSignal} - enabled: ${track.enabled}`);
       peer.addTrack(track, stream);
     });
 
-    // Handle ICE candidates
     peer.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log(
-          `Sending ICE candidate to ${userToSignal}:`,
-          event.candidate.type
-        );
+        console.log(`Sending ICE candidate to ${userToSignal}:`, event.candidate.type);
         socket.emit("sending-signal", {
           userToSignal,
           callerID,
@@ -619,7 +491,6 @@ const MeetingRoom = () => {
       }
     };
 
-    // Create and send offer with better error handling
     peer
       .createOffer({
         offerToReceiveAudio: true,
@@ -638,10 +509,7 @@ const MeetingRoom = () => {
         });
       })
       .catch((error) => {
-        console.error(
-          `Error creating/sending offer to ${userToSignal}:`,
-          error
-        );
+        console.error(`Error creating/sending offer to ${userToSignal}:`, error);
       });
 
     return peer;
@@ -652,65 +520,42 @@ const MeetingRoom = () => {
     console.log("Adding peer for incoming call from:", callerID);
     const peer = new RTCPeerConnection(iceServers);
 
-    // Add connection state logging
     peer.onconnectionstatechange = () => {
       console.log(`Peer connection state (${callerID}):`, peer.connectionState);
       if (peer.connectionState === "failed") {
         console.error(`Peer connection failed for ${callerID}`);
-        // Try to restart ICE
         peer.restartIce();
       }
     };
 
-    // Add ICE connection state logging
     peer.oniceconnectionstatechange = () => {
-      console.log(
-        `ICE connection state (${callerID}):`,
-        peer.iceConnectionState
-      );
+      console.log(`ICE connection state (${callerID}):`, peer.iceConnectionState);
       if (peer.iceConnectionState === "failed") {
         console.error(`ICE connection failed for ${callerID}, restarting...`);
         peer.restartIce();
       }
     };
 
-    // Handle incoming remote stream - CRITICAL FIX
     peer.ontrack = (event) => {
-      console.log(
-        `addPeer: Received ${event.track.kind} track from ${callerID}`,
-        event
-      );
-      console.log(
-        `addPeer: Track enabled: ${event.track.enabled}, readyState: ${event.track.readyState}`
-      );
+      console.log(`addPeer: Received ${event.track.kind} track from ${callerID}`, event);
+      console.log(`addPeer: Track enabled: ${event.track.enabled}, readyState: ${event.track.readyState}`);
 
       if (event.streams && event.streams[0]) {
-        console.log(
-          `addPeer: Stream has ${event.streams[0].getTracks().length} tracks`
-        );
+        console.log(`addPeer: Stream has ${event.streams[0].getTracks().length} tracks`);
         event.streams[0].getTracks().forEach((track) => {
-          console.log(
-            `addPeer: Stream track - ${track.kind}: enabled=${track.enabled}, readyState=${track.readyState}`
-          );
+          console.log(`addPeer: Stream track - ${track.kind}: enabled=${track.enabled}, readyState=${track.readyState}`);
         });
       }
     };
 
-    // Add local stream tracks
     stream.getTracks().forEach((track) => {
-      console.log(
-        `Adding ${track.kind} track to peer ${callerID} - enabled: ${track.enabled}`
-      );
+      console.log(`Adding ${track.kind} track to peer ${callerID} - enabled: ${track.enabled}`);
       peer.addTrack(track, stream);
     });
 
-    // Handle ICE candidates
     peer.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log(
-          `Sending return ICE candidate to ${callerID}:`,
-          event.candidate.type
-        );
+        console.log(`Sending return ICE candidate to ${callerID}:`, event.candidate.type);
         socket.emit("returning-signal", {
           signal: event.candidate,
           callerID,
@@ -720,7 +565,6 @@ const MeetingRoom = () => {
       }
     };
 
-    // Validate incoming signal before processing
     if (!incomingSignal || !incomingSignal.type) {
       console.error("Invalid incoming signal:", incomingSignal);
       return peer;
@@ -728,7 +572,6 @@ const MeetingRoom = () => {
 
     console.log(`Processing ${incomingSignal.type} from ${callerID}`);
 
-    // Handle incoming offer with better error handling
     peer
       .setRemoteDescription(new RTCSessionDescription(incomingSignal))
       .then(() => {
@@ -770,13 +613,11 @@ const MeetingRoom = () => {
       if (localStream) {
         const videoTrack = localStream.getVideoTracks()[0];
         if (videoTrack) {
-          // Video track exists, just enable/disable it
           videoTrack.enabled = newState;
           setIsVideoEnabled(newState);
           setIsVideoPlaying(newState);
           console.log("Video track", newState ? "enabled" : "disabled");
         } else if (newState) {
-          // No video track but want to enable, create new one
           const videoConstraints = {
             width: { ideal: 1280 },
             height: { ideal: 720 },
@@ -790,15 +631,12 @@ const MeetingRoom = () => {
           const newVideoTrack = videoStream.getVideoTracks()[0];
           newVideoTrack.enabled = true;
           
-          // Add the new video track to existing stream
           localStream.addTrack(newVideoTrack);
           
-          // Update video element
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = localStream;
           }
           
-          // Add video track to all peer connections
           peersRef.current.forEach((peerObj) => {
             peerObj.peer.addTrack(newVideoTrack, localStream);
           });
@@ -809,7 +647,6 @@ const MeetingRoom = () => {
         }
       }
 
-      // Broadcast state change to other participants
       if (socket) {
         socket.emit("toggle-video", {
           roomId,
@@ -832,12 +669,10 @@ const MeetingRoom = () => {
       if (localStream) {
         const audioTrack = localStream.getAudioTracks()[0];
         if (audioTrack) {
-          // Audio track exists, just enable/disable it
           audioTrack.enabled = newState;
           setIsAudioEnabled(newState);
           console.log("Audio track", newState ? "enabled" : "disabled");
         } else if (newState) {
-          // No audio track but want to enable, create new one
           const audioConstraints = {
             echoCancellation: true,
             noiseSuppression: true,
@@ -851,10 +686,8 @@ const MeetingRoom = () => {
           const newAudioTrack = audioStream.getAudioTracks()[0];
           newAudioTrack.enabled = true;
           
-          // Add the new audio track to existing stream
           localStream.addTrack(newAudioTrack);
           
-          // Add audio track to all peer connections
           peersRef.current.forEach((peerObj) => {
             peerObj.peer.addTrack(newAudioTrack, localStream);
           });
@@ -864,7 +697,6 @@ const MeetingRoom = () => {
         }
       }
 
-      // Broadcast state change to other participants
       if (socket) {
         socket.emit("toggle-audio", {
           roomId,
@@ -876,14 +708,12 @@ const MeetingRoom = () => {
       console.error("Error toggling audio:", error);
       toast.error("Failed to toggle microphone");
     }
-
-
+  };
 
   // Toggle screen share
   const toggleScreenShare = async () => {
     try {
       if (!isScreenSharing) {
-        // Check if someone else is already screen sharing
         if (screenSharingUser && screenSharingUser !== socket.id) {
           toast.error("Someone else is already sharing their screen");
           return;
@@ -896,7 +726,6 @@ const MeetingRoom = () => {
 
         const videoTrack = screenStream.getVideoTracks()[0];
 
-        // Replace video track in all peer connections
         peersRef.current.forEach((peerObj) => {
           const sender = peerObj.peer
             .getSenders()
@@ -906,7 +735,6 @@ const MeetingRoom = () => {
           }
         });
 
-        // Replace local video track
         const oldVideoTrack = localStream.getVideoTracks()[0];
         if (oldVideoTrack) {
           localStream.removeTrack(oldVideoTrack);
@@ -914,17 +742,14 @@ const MeetingRoom = () => {
         }
         localStream.addTrack(videoTrack);
 
-        // Update local video element
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = localStream;
         }
 
-        // Notify others about screen sharing
         if (socket) {
           socket.emit("start-screen-share", { roomId });
         }
 
-        // Handle screen share ending
         videoTrack.onended = async () => {
           await stopScreenShare();
         };
@@ -948,7 +773,6 @@ const MeetingRoom = () => {
   // Stop screen sharing helper
   const stopScreenShare = async () => {
     try {
-      // Get camera back
       const cameraStream = await navigator.mediaDevices.getUserMedia({
         video: isVideoEnabled ? {
           width: { ideal: 1280 },
@@ -959,7 +783,6 @@ const MeetingRoom = () => {
 
       const newVideoTrack = cameraStream.getVideoTracks()[0];
 
-      // Replace screen share with camera in all peer connections
       peersRef.current.forEach((peerObj) => {
         const sender = peerObj.peer
           .getSenders()
@@ -969,7 +792,6 @@ const MeetingRoom = () => {
         }
       });
 
-      // Update local stream
       const oldVideoTrack = localStream.getVideoTracks()[0];
       if (oldVideoTrack) {
         localStream.removeTrack(oldVideoTrack);
@@ -985,7 +807,6 @@ const MeetingRoom = () => {
         localVideoRef.current.srcObject = localStream;
       }
 
-      // Notify others about stopping screen sharing
       if (socket) {
         socket.emit("stop-screen-share", { roomId });
       }
@@ -999,21 +820,17 @@ const MeetingRoom = () => {
       setScreenSharingUser(null);
     }
   };
-  };
 
   // Leave meeting
   const leaveMeeting = () => {
-    // Stop local stream
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
     }
 
-    // Close all peer connections
     peersRef.current.forEach((peerObj) => {
       peerObj.peer.close();
     });
 
-    // Leave room
     if (socket) {
       socket.emit("leave-room", roomId);
       socket.disconnect();
@@ -1022,6 +839,32 @@ const MeetingRoom = () => {
     toast.success("Left meeting");
     navigate("/home/dashboard");
   };
+
+  // Loading state
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Connecting to meeting server...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!localStream && (isVideoEnabled || isAudioEnabled)) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Accessing camera and microphone...</p>
+          <p className="text-sm text-white/60 mt-2">
+            Please allow camera and microphone access
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Peer video component
   const PeerVideo = ({
@@ -1043,24 +886,17 @@ const MeetingRoom = () => {
       let stream = null;
 
       const handleTrack = (event) => {
-        console.log(
-          `PeerVideo: Received ${event.track.kind} track from ${userName}`,
-          event
-        );
+        console.log(`PeerVideo: Received ${event.track.kind} track from ${userName}`, event);
 
         if (event.streams && event.streams[0]) {
           stream = event.streams[0];
-          console.log(
-            `PeerVideo: Setting remote stream for ${userName}`,
-            stream.getTracks().map((t) => `${t.kind}: ${t.enabled}`)
-          );
+          console.log(`PeerVideo: Setting remote stream for ${userName}`, stream.getTracks().map((t) => `${t.kind}: ${t.enabled}`));
           setRemoteStream(stream);
           setIsStreamReady(true);
 
           if (ref.current) {
             ref.current.srcObject = stream;
 
-            // Add event listeners for better debugging
             ref.current.onloadedmetadata = () => {
               console.log(`Remote video metadata loaded for ${userName}`);
               ref.current
@@ -1077,7 +913,6 @@ const MeetingRoom = () => {
             };
           }
 
-          // Add track event listeners to handle mute/unmute
           stream.getTracks().forEach(track => {
             track.onmute = () => {
               console.log(`${track.kind} track muted for ${userName}`);
@@ -1094,10 +929,8 @@ const MeetingRoom = () => {
         }
       };
 
-      // Set up the track handler
       peer.ontrack = handleTrack;
 
-      // Check for existing remote streams
       const checkExistingStreams = () => {
         const receivers = peer.getReceivers();
         const tracks = receivers
@@ -1105,9 +938,7 @@ const MeetingRoom = () => {
           .filter((track) => track);
 
         if (tracks.length > 0) {
-          console.log(
-            `PeerVideo: Found ${tracks.length} existing tracks for ${userName}`
-          );
+          console.log(`PeerVideo: Found ${tracks.length} existing tracks for ${userName}`);
           const existingStream = new MediaStream(tracks);
           setRemoteStream(existingStream);
           setIsStreamReady(true);
@@ -1117,7 +948,6 @@ const MeetingRoom = () => {
             ref.current.play().catch(console.error);
           }
 
-          // Add track event listeners for existing tracks
           tracks.forEach(track => {
             track.onmute = () => {
               console.log(`${track.kind} track muted for ${userName}`);
@@ -1134,7 +964,6 @@ const MeetingRoom = () => {
         }
       };
 
-      // Check immediately and after a short delay
       checkExistingStreams();
       const timeoutId = setTimeout(checkExistingStreams, 1000);
 
@@ -1232,7 +1061,6 @@ const MeetingRoom = () => {
               <MicOff size={isThumbnail ? 8 : 16} className="text-white" />
             </div>
           )}
-          {/* Connection status */}
           <div
             className={`rounded-full ${
               isThumbnail ? "w-2 h-2" : "w-3 h-3"
@@ -1249,38 +1077,10 @@ const MeetingRoom = () => {
     );
   };
 
-  // Loading state
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Connecting to meeting server...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Only show loading if we're still trying to initialize and both video/audio are enabled
-  if (!localStream && (isVideoEnabled || isAudioEnabled)) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-          <p>Accessing camera and microphone...</p>
-          <p className="text-sm text-white/60 mt-2">
-            Please allow camera and microphone access
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const totalParticipants = peers.length + 1;
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col relative">
-      {/* Header */}
       <div className="bg-black/50 backdrop-blur-sm p-4 z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -1299,15 +1099,11 @@ const MeetingRoom = () => {
         </div>
       </div>
 
-      {/* Video Area */}
       <div className="flex-1 p-4 overflow-hidden">
         {screenSharingUser ? (
-          // Screen sharing layout - main screen in center, others as thumbnails
           <div className="w-full h-full flex gap-4" style={{ height: "calc(100vh - 200px)" }}>
-            {/* Main screen sharing area */}
             <div className="flex-1 flex items-center justify-center">
               {screenSharingUser === socket.id ? (
-                // Local screen share
                 <div className="relative bg-black rounded-2xl overflow-hidden w-full h-full max-w-6xl">
                   <video
                     ref={localVideoRef}
@@ -1321,7 +1117,6 @@ const MeetingRoom = () => {
                   </div>
                 </div>
               ) : (
-                // Remote screen share
                 peers
                   .filter(peer => peer.peerID === screenSharingUser)
                   .map((peerObj, index) => (
@@ -1342,9 +1137,7 @@ const MeetingRoom = () => {
               )}
             </div>
             
-            {/* Thumbnail videos on the right */}
             <div className="w-64 flex flex-col gap-2 overflow-y-auto">
-              {/* Local video thumbnail (if not screen sharing) */}
               {screenSharingUser !== socket.id && (
                 <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
                   {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 ? (
@@ -1370,7 +1163,6 @@ const MeetingRoom = () => {
                 </div>
               )}
               
-              {/* Remote video thumbnails (excluding screen sharer) */}
               {peers
                 .filter(peer => peer.peerID !== screenSharingUser)
                 .map((peerObj, index) => (
@@ -1388,7 +1180,6 @@ const MeetingRoom = () => {
             </div>
           </div>
         ) : (
-          // Normal grid layout when no screen sharing
           <div
             className="w-full grid gap-4 overflow-hidden"
             style={{
@@ -1409,7 +1200,6 @@ const MeetingRoom = () => {
                   : "repeat(3, 1fr)",
             }}
           >
-            {/* Local Video */}
             <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
               {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 ? (
                 <video
@@ -1456,7 +1246,6 @@ const MeetingRoom = () => {
                     <MicOff size={16} className="text-white" />
                   </div>
                 )}
-                {/* Connection status indicator */}
                 <div
                   className={`w-3 h-3 rounded-full ${
                     localStream && isConnected
@@ -1469,7 +1258,6 @@ const MeetingRoom = () => {
               </div>
             </div>
 
-            {/* Remote Videos */}
             {peers.map((peerObj, index) => (
               <PeerVideo
                 key={`${peerObj.peerID}-${index}`}
@@ -1484,7 +1272,6 @@ const MeetingRoom = () => {
         )}
       </div>
 
-      {/* Controls */}
       <div className="bg-black/50 backdrop-blur-sm p-6 z-10">
         <div className="flex items-center justify-center gap-4">
           <button
@@ -1550,11 +1337,11 @@ const MeetingRoom = () => {
         </div>
       </div>
 
-      {/* Meeting Settings Modal */}
       <MeetingSettings
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         localStream={localStream}
+        onSettingsChange={(settings) => setSavedSettings(settings)}
       />
     </div>
   );

@@ -7,7 +7,7 @@ import {
   deleteMessage,
   uploadFile,
   addReaction,
-  getChannelMembers
+  getChannelMembers,
 } from "../controllers/messageControllers.js";
 import { authenticateToken } from "../middleware/auth.js";
 
@@ -23,16 +23,25 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Check for dangerous file types
-    const dangerousExtensions = ['exe', 'bat', 'cmd', 'scr', 'pif', 'com', 'vbs', 'js'];
-    const extension = file.originalname.split('.').pop()?.toLowerCase();
-    
+    const dangerousExtensions = [
+      "exe",
+      "bat",
+      "cmd",
+      "scr",
+      "pif",
+      "com",
+      "vbs",
+      "js",
+    ];
+    const extension = file.originalname.split(".").pop()?.toLowerCase();
+
     if (dangerousExtensions.includes(extension)) {
-      return cb(new Error('File type not allowed for security reasons'), false);
+      return cb(new Error("File type not allowed for security reasons"), false);
     }
 
     // Check file size
     if (file.size > 10 * 1024 * 1024) {
-      return cb(new Error('File too large'), false);
+      return cb(new Error("File too large"), false);
     }
 
     // Allow all other file types
@@ -50,22 +59,32 @@ router.put("/messages/:messageId", updateMessage);
 router.delete("/messages/:messageId", deleteMessage);
 
 // File upload with error handling
-router.post("/messages/file", (req, res, next) => {
-  upload.single("file")(req, res, (err) => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ message: 'File too large. Maximum size is 10MB.' });
+router.post(
+  "/messages/file",
+  (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === "LIMIT_FILE_SIZE") {
+          return res
+            .status(400)
+            .json({ message: "File too large. Maximum size is 10MB." });
+        }
+        if (err.code === "LIMIT_FILE_COUNT") {
+          return res.status(400).json({
+            message: "Too many files. Only 1 file allowed per upload.",
+          });
+        }
+        return res
+          .status(400)
+          .json({ message: `Upload error: ${err.message}` });
+      } else if (err) {
+        return res.status(400).json({ message: err.message });
       }
-      if (err.code === 'LIMIT_FILE_COUNT') {
-        return res.status(400).json({ message: 'Too many files. Only 1 file allowed per upload.' });
-      }
-      return res.status(400).json({ message: `Upload error: ${err.message}` });
-    } else if (err) {
-      return res.status(400).json({ message: err.message });
-    }
-    next();
-  });
-}, uploadFile);
+      next();
+    });
+  },
+  uploadFile
+);
 
 // Reactions
 router.post("/messages/:messageId/reactions", addReaction);
@@ -77,134 +96,357 @@ router.get("/channels/:channelId/members", getChannelMembers);
 router.get("/files/view", async (req, res) => {
   try {
     const { url, filename } = req.query;
-    
+
     if (!url) {
       return res.status(400).json({ message: "File URL is required" });
     }
 
-    console.log(`View request for: ${url}, filename: ${filename}`);
+    // Check if it's a local file URL
+    if (url.includes("/api/files/local/")) {
+      const localFilename = url.split("/api/files/local/")[1];
+      const path = await import("path");
+      const fs = await import("fs");
 
-    // For Cloudinary URLs, modify for inline viewing
-    let fetchUrl = url;
-    
-    if (url.includes('cloudinary.com') && url.includes('/raw/')) {
-      // Remove fl_attachment flag and add fl_inline for viewing
-      fetchUrl = url.replace(/fl_attachment[,/]?/g, '');
-      const urlParts = fetchUrl.split('/upload/');
+      // Security check
+      if (
+        localFilename.includes("..") ||
+        localFilename.includes("/") ||
+        localFilename.includes("\\")
+      ) {
+        return res.status(400).json({ message: "Invalid filename" });
+      }
+
+      const filePath = path.join(
+        process.cwd(),
+        "uploads",
+        "chat-files",
+        localFilename
+      );
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      const stats = fs.statSync(filePath);
+      const fileExtension = path.extname(localFilename).toLowerCase();
+
+      let contentType = "application/octet-stream";
+      const mimeTypes = {
+        ".pdf": "application/pdf",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".gif": "image/gif",
+        ".txt": "text/plain",
+      };
+
+      if (mimeTypes[fileExtension]) {
+        contentType = mimeTypes[fileExtension];
+      }
+
+      res.setHeader("Content-Type", contentType);
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="${filename || localFilename}"`
+      );
+      res.setHeader("Content-Length", stats.size);
+      res.setHeader("Access-Control-Allow-Origin", "*");
+
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+      return;
+    }
+
+    // Try multiple approaches for Cloudinary URLs
+    const urlsToTry = [url]; // Start with original URL
+
+    // If it's a Cloudinary URL, add variations
+    if (url.includes("cloudinary.com")) {
+      // Try with fl_inline flag for viewing
+      const urlParts = url.split("/upload/");
       if (urlParts.length === 2) {
-        fetchUrl = `${urlParts[0]}/upload/fl_inline/${urlParts[1]}`;
+        const cleanUrl = url.replace(/\/fl_[^/]+/g, "");
+        urlsToTry.push(
+          `${urlParts[0]}/upload/fl_inline/${urlParts[1].replace(
+            /^fl_[^/]+\//,
+            ""
+          )}`
+        );
+        urlsToTry.push(cleanUrl); // Clean URL without flags
       }
     }
 
-    console.log(`Fetching for view from: ${fetchUrl}`);
+    let lastError = null;
 
-    const response = await fetch(fetchUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'SyncSpace-FileProxy/1.0',
-        'Accept': '*/*',
-      },
+    // Try each URL variation
+    for (const fetchUrl of urlsToTry) {
+      try {
+        const response = await fetch(fetchUrl, {
+          method: "GET",
+          headers: {
+            "User-Agent": "SyncSpace-FileProxy/1.0",
+            Accept: "*/*",
+            Referer: process.env.FRONTEND_URL || "http://localhost:5173",
+          },
+        });
+
+        if (response.ok) {
+          const contentType =
+            response.headers.get("content-type") || "application/octet-stream";
+          const contentLength = response.headers.get("content-length");
+
+          // Set headers for inline viewing
+          res.setHeader("Content-Type", contentType);
+          res.setHeader(
+            "Content-Disposition",
+            `inline; filename="${filename || "file"}"`
+          );
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader(
+            "Access-Control-Allow-Headers",
+            "Content-Type, Content-Disposition"
+          );
+          res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+
+          if (contentLength) {
+            res.setHeader("Content-Length", contentLength);
+          }
+
+          const buffer = await response.arrayBuffer();
+          res.send(Buffer.from(buffer));
+          return; // Success, exit the function
+        } else {
+          lastError = new Error(
+            `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    // If we get here, all URLs failed
+    return res.status(500).json({
+      message: `Failed to view file: ${lastError?.message || "Unknown error"}`,
     });
-    
-    if (!response.ok) {
-      console.error(`Fetch failed with status: ${response.status} ${response.statusText}`);
-      return res.status(response.status).json({ 
-        message: `Failed to fetch file: ${response.status} ${response.statusText}` 
-      });
-    }
-
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
-    const contentLength = response.headers.get('content-length');
-    
-    console.log(`File fetched for viewing. Content-Type: ${contentType}, Content-Length: ${contentLength}`);
-    
-    // Set headers for inline viewing
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `inline; filename="${filename || 'file'}"`);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Disposition');
-    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
-    
-    if (contentLength) {
-      res.setHeader('Content-Length', contentLength);
-    }
-    
-    const buffer = await response.arrayBuffer();
-    res.send(Buffer.from(buffer));
-    
   } catch (error) {
-    console.error('View proxy error:', error);
     res.status(500).json({ message: `Failed to view file: ${error.message}` });
   }
 });
+
+// Serve local files
+router.get("/files/local/:filename", async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const path = await import("path");
+    const fs = await import("fs");
+
+    // Security check - prevent directory traversal
+    if (
+      filename.includes("..") ||
+      filename.includes("/") ||
+      filename.includes("\\")
+    ) {
+      return res.status(400).json({ message: "Invalid filename" });
+    }
+
+    const filePath = path.join(
+      process.cwd(),
+      "uploads",
+      "chat-files",
+      filename
+    );
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    // Get file stats
+    const stats = fs.statSync(filePath);
+    const fileExtension = path.extname(filename).toLowerCase();
+
+    // Set appropriate content type
+    let contentType = "application/octet-stream";
+    const mimeTypes = {
+      ".pdf": "application/pdf",
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".png": "image/png",
+      ".gif": "image/gif",
+      ".txt": "text/plain",
+      ".doc": "application/msword",
+      ".docx":
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ".xls": "application/vnd.ms-excel",
+      ".xlsx":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    };
+
+    if (mimeTypes[fileExtension]) {
+      contentType = mimeTypes[fileExtension];
+    }
+
+    // Set headers
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Length", stats.size);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+
+    // Stream the file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to serve file" });
+  }
+});
+
 
 // File download proxy
 router.get("/files/download", async (req, res) => {
   try {
     const { url, filename } = req.query;
-    
+
     if (!url) {
       return res.status(400).json({ message: "File URL is required" });
     }
 
-    console.log(`Download request for: ${url}, filename: ${filename}`);
+    // Check if it's a local file URL
+    if (url.includes("/api/files/local/")) {
+      const localFilename = url.split("/api/files/local/")[1];
+      const path = await import("path");
+      const fs = await import("fs");
 
-    // For Cloudinary URLs, we might need to modify them for better access
-    let fetchUrl = url;
-    
-    // If it's a Cloudinary raw file, ensure it has the right flags for download
-    if (url.includes('cloudinary.com') && url.includes('/raw/')) {
-      // Add fl_attachment flag if not present to force download behavior
-      if (!url.includes('fl_attachment')) {
-        const urlParts = url.split('/upload/');
+      // Security check
+      if (
+        localFilename.includes("..") ||
+        localFilename.includes("/") ||
+        localFilename.includes("\\")
+      ) {
+        return res.status(400).json({ message: "Invalid filename" });
+      }
+
+      const filePath = path.join(
+        process.cwd(),
+        "uploads",
+        "chat-files",
+        localFilename
+      );
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      const stats = fs.statSync(filePath);
+      const fileExtension = path.extname(localFilename).toLowerCase();
+
+      let contentType = "application/octet-stream";
+      const mimeTypes = {
+        ".pdf": "application/pdf",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".gif": "image/gif",
+        ".txt": "text/plain",
+      };
+
+      if (mimeTypes[fileExtension]) {
+        contentType = mimeTypes[fileExtension];
+      }
+
+      res.setHeader("Content-Type", contentType);
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename || localFilename}"`
+      );
+      res.setHeader("Content-Length", stats.size);
+      res.setHeader("Access-Control-Allow-Origin", "*");
+
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+      return;
+    }
+
+    // Try multiple approaches for Cloudinary URLs
+    const urlsToTry = [url]; // Start with original URL
+
+    // If it's a Cloudinary URL, add variations
+    if (url.includes("cloudinary.com")) {
+      // Try with fl_attachment flag
+      if (!url.includes("fl_attachment")) {
+        const urlParts = url.split("/upload/");
         if (urlParts.length === 2) {
-          fetchUrl = `${urlParts[0]}/upload/fl_attachment/${urlParts[1]}`;
+          urlsToTry.push(`${urlParts[0]}/upload/fl_attachment/${urlParts[1]}`);
         }
+      }
+
+      // Try without any flags (clean URL)
+      const cleanUrl = url.replace(/\/fl_[^/]+/g, "");
+      if (cleanUrl !== url) {
+        urlsToTry.push(cleanUrl);
       }
     }
 
-    console.log(`Fetching from: ${fetchUrl}`);
+    let lastError = null;
 
-    // Fetch the file from Cloudinary with proper headers
-    const response = await fetch(fetchUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'SyncSpace-FileProxy/1.0',
-        'Accept': '*/*',
-      },
+    // Try each URL variation
+    for (const fetchUrl of urlsToTry) {
+      try {
+        const response = await fetch(fetchUrl, {
+          method: "GET",
+          headers: {
+            "User-Agent": "SyncSpace-FileProxy/1.0",
+            Accept: "*/*",
+            Referer: process.env.FRONTEND_URL || "http://localhost:5173",
+          },
+        });
+
+        if (response.ok) {
+          // Success! Process the response
+          const contentType =
+            response.headers.get("content-type") || "application/octet-stream";
+          const contentLength = response.headers.get("content-length");
+
+          // Set appropriate headers for download
+          res.setHeader("Content-Type", contentType);
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${filename || "download"}"`
+          );
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader(
+            "Access-Control-Allow-Headers",
+            "Content-Type, Content-Disposition"
+          );
+          res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+
+          if (contentLength) {
+            res.setHeader("Content-Length", contentLength);
+          }
+
+          // Stream the file to the client
+          const buffer = await response.arrayBuffer();
+          res.send(Buffer.from(buffer));
+          return; // Success, exit the function
+        } else {
+          lastError = new Error(
+            `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    // If we get here, all URLs failed
+    return res.status(500).json({
+      message: `Failed to download file: ${
+        lastError?.message || "Unknown error"
+      }`,
     });
-    
-    if (!response.ok) {
-      console.error(`Fetch failed with status: ${response.status} ${response.statusText}`);
-      return res.status(response.status).json({ 
-        message: `Failed to fetch file: ${response.status} ${response.statusText}` 
-      });
-    }
-
-    // Get the content type from the original response
-    const contentType = response.headers.get('content-type') || 'application/octet-stream';
-    const contentLength = response.headers.get('content-length');
-    
-    console.log(`File fetched successfully. Content-Type: ${contentType}, Content-Length: ${contentLength}`);
-    
-    // Set appropriate headers for download
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${filename || 'download'}"`);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Content-Disposition');
-    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
-    
-    if (contentLength) {
-      res.setHeader('Content-Length', contentLength);
-    }
-    
-    // Stream the file to the client
-    const buffer = await response.arrayBuffer();
-    res.send(Buffer.from(buffer));
-    
   } catch (error) {
-    console.error('Download proxy error:', error);
-    res.status(500).json({ message: `Failed to download file: ${error.message}` });
+    res
+      .status(500)
+      .json({ message: `Failed to download file: ${error.message}` });
   }
 });
 

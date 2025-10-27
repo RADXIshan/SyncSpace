@@ -150,10 +150,7 @@ export const sendMessage = async (req, res) => {
                   userName: safeUser.name // Add this for consistency with NotificationContext
                 };
                 
-                console.log(`Sending mention notification to user ${mentionedUserId}:`, mentionData);
                 io.to(mentionedUserSocketId).emit("user_mentioned", mentionData);
-              } else {
-                console.log(`No socket found for mentioned user ${mentionedUserId}`);
               }
             }
           } catch (error) {
@@ -299,61 +296,39 @@ export const uploadFile = async (req, res) => {
       });
     }
 
-    // Determine resource type for Cloudinary
-    let resourceType = "auto";
-    if (file.mimetype.startsWith('video/')) {
-      resourceType = "video";
-    } else if (file.mimetype.startsWith('image/')) {
-      resourceType = "image";
-    } else if (file.mimetype.startsWith('audio/')) {
-      resourceType = "video"; // Cloudinary uses 'video' for audio files
-    } else if (file.mimetype === 'application/pdf' || extension === 'pdf') {
-      resourceType = "raw"; // PDFs are always raw
-    } else {
-      resourceType = "raw"; // For documents, PDFs, etc.
+    let uploadResult;
+    let fileUrl;
+    let uploadMethod = 'local'; // Use local storage by default to avoid Cloudinary 401 issues
+
+    // Use local storage by default since Cloudinary is causing 401 errors
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'chat-files');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const safeFileName = `${timestamp}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = path.join(uploadsDir, safeFileName);
+      
+      // Write file to disk
+      fs.writeFileSync(filePath, file.buffer);
+      
+      // Generate URL for local file - use the server's base URL
+      const serverBaseUrl = `${req.protocol}://${req.get('host')}`;
+      fileUrl = `${serverBaseUrl}/api/files/local/${safeFileName}`;
+      uploadMethod = 'local';
+      
+    } catch (localError) {
+      throw new Error("File upload failed: " + localError.message);
     }
 
-    // Upload to Cloudinary with appropriate settings
-    const uploadResult = await new Promise((resolve, reject) => {
-      const uploadOptions = {
-        resource_type: resourceType,
-        folder: "chat-files",
-        public_id: `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
-        use_filename: true,
-        unique_filename: true,
-        access_mode: "public",
-        type: "upload"
-      };
 
-      // Special handling for different file types
-      if (resourceType === "raw") {
-        // For raw files (PDFs, documents, etc.), ensure proper format and flags
-        uploadOptions.format = extension;
-        uploadOptions.flags = "attachment"; // This helps with download behavior
-        uploadOptions.resource_type = "raw";
-      } else if (file.mimetype === 'application/pdf') {
-        // Special handling for PDFs - treat as raw but with specific settings
-        uploadOptions.resource_type = "raw";
-        uploadOptions.format = "pdf";
-        uploadOptions.flags = "attachment";
-      }
-
-      console.log(`Uploading file: ${file.originalname}, type: ${file.mimetype}, resourceType: ${resourceType}`, uploadOptions);
-
-      const uploadStream = cloudinary.uploader.upload_stream(
-        uploadOptions,
-        (error, result) => {
-          if (error) {
-            console.error("Cloudinary upload error:", error);
-            reject(new Error(`Upload failed: ${error.message}`));
-          } else {
-            console.log("Upload successful:", result.secure_url);
-            resolve(result);
-          }
-        }
-      );
-      uploadStream.end(file.buffer);
-    });
 
     // Ensure all file properties are defined
     const safeFileName = file.originalname || 'Unknown file';
@@ -367,7 +342,7 @@ export const uploadFile = async (req, res) => {
       )
       VALUES (
         ${channel_id}, ${userId}, ${safeFileName}, 
-        ${uploadResult.secure_url}, ${safeFileName}, 
+        ${fileUrl}, ${safeFileName}, 
         ${safeFileType}, ${safeFileSize}
       )
       RETURNING *
@@ -397,13 +372,18 @@ export const uploadFile = async (req, res) => {
       io.to(`channel_${channel_id}`).emit("new_message", messageWithUser);
     }
 
-    res.status(201).json({ message: messageWithUser });
+    res.status(201).json({ 
+      message: messageWithUser,
+      uploadMethod: uploadMethod // Let client know which method was used
+    });
   } catch (error) {
     console.error("Error uploading file:", error);
     
     // Provide more specific error messages
     let errorMessage = "Failed to upload file";
-    if (error.message.includes("Upload failed")) {
+    if (error.message.includes("Both Cloudinary and local storage failed")) {
+      errorMessage = "File upload failed. Please try again or contact support.";
+    } else if (error.message.includes("Upload failed")) {
       errorMessage = error.message;
     } else if (error.message.includes("File too large")) {
       errorMessage = "File size exceeds the maximum limit";

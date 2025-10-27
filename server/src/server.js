@@ -22,7 +22,7 @@ import path from "path";
 dotenv.config();
 
 // Create uploads directory if it doesn't exist
-const uploadsDir = path.join(process.cwd(), 'uploads', 'chat-files');
+const uploadsDir = path.join(process.cwd(), "uploads", "chat-files");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -37,31 +37,39 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://syncspace-client.vercel.app",
-  process.env.CLIENT_URL
+  process.env.CLIENT_URL,
 ].filter(Boolean); // Remove any undefined values
 
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.log("CORS blocked origin:", origin);
-      callback(new Error('Not allowed by CORS'));
+      console.log("Allowed origins:", allowedOrigins);
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
   exposedHeaders: ["Set-Cookie"],
+  preflightContinue: false,
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 
 // Handle preflight requests
-app.options('*', cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Initialize Socket.IO with production-ready configuration
 const io = new Server(server, {
@@ -147,34 +155,38 @@ app.put("/debug/test", (req, res) => {
 // Migration endpoint
 app.post("/debug/migrate", async (req, res) => {
   try {
-    console.log('Running chat tables migration...');
-    
+    console.log("Running chat tables migration...");
+
     // Read migration file
-    const fs = await import('fs');
-    const path = await import('path');
-    const { fileURLToPath } = await import('url');
-    
+    const fs = await import("fs");
+    const path = await import("path");
+    const { fileURLToPath } = await import("url");
+
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    
-    const migrationPath = path.join(__dirname, 'database', 'create_chat_tables.sql');
-    const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-    
+
+    const migrationPath = path.join(
+      __dirname,
+      "database",
+      "create_chat_tables.sql"
+    );
+    const migrationSQL = fs.readFileSync(migrationPath, "utf8");
+
     // Split by semicolon and execute each statement
     const statements = migrationSQL
-      .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0);
-    
+      .split(";")
+      .map((stmt) => stmt.trim())
+      .filter((stmt) => stmt.length > 0);
+
     for (const statement of statements) {
       await sql.unsafe(statement);
-      console.log('✓ Executed statement');
+      console.log("✓ Executed statement");
     }
-    
-    console.log('✅ Migration completed successfully!');
-    res.json({ message: 'Migration completed successfully!' });
+
+    console.log("✅ Migration completed successfully!");
+    res.json({ message: "Migration completed successfully!" });
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    console.error("❌ Migration failed:", error);
     res.status(500).json({ error: error.message });
   }
 });

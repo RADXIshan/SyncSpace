@@ -1,9 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import sql from "../database/db.js";
-import { generateOtpEmail } from "../templates/emailTemplate.js";
-import { generatePasswordResetEmail } from "../templates/resetPassword.js";
 import { v2 as cloudinary } from "cloudinary";
 import emailService from "../services/emailService.js";
 
@@ -240,47 +237,52 @@ export const forgotPassword = async (req, res) => {
   if (!emailRegex.test(email.trim())) {
     return res.status(400).json({ error: "Invalid email format" });
   }
-  const [user] = await sql`SELECT user_id FROM users WHERE email = ${email}`;
-  if (!user) {
-    return res.status(401).json({ message: "User not found" });
-  }
-
-  const resetLink = process.env.CLIENT_URL + `/reset-password/${email}`;
-
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.APP_PASSWORD,
-    },
-  });
-
-  const confirmationMail = {
-    from: {
-      name: "SyncSpace Security",
-      address: "trickster10ishan@gmail.com",
-    },
-    replyTo: "noreply@syncspace.com",
-    headers: {
-      "X-Priority": "1",
-      "X-MSMail-Priority": "High",
-      Importance: "high",
-    },
-    to: email,
-    subject: "Password Reset Request - Secure Link Inside",
-    html: generatePasswordResetEmail(resetLink),
-  };
 
   try {
-    await transporter.sendMail(confirmationMail);
+    const [user] = await Promise.race([
+      sql`SELECT user_id FROM users WHERE email = ${email}`,
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database timeout')), 5000)
+      )
+    ]);
+    
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    const resetLink = process.env.CLIENT_URL + `/reset-password/${email}`;
+
+    // Send response immediately
+    res.json({ message: `Password reset link sent to ${email}` });
+
+    // Send email asynchronously
+    setImmediate(async () => {
+      try {
+        await Promise.race([
+          emailService.sendPasswordResetEmail(email, resetLink),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Email timeout')), 30000)
+          )
+        ]);
+        
+        console.log(`✅ Password reset email sent successfully to ${email}`);
+      } catch (emailError) {
+        console.error(`❌ Failed to send password reset email to ${email}:`, emailError);
+      }
+    });
+
   } catch (error) {
-    console.error("Error sending email:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Error in forgot password:", error);
+    
+    if (error.message === 'Database timeout') {
+      return res.status(504).json({ 
+        message: "Request timeout. Please try again.",
+        error: "TIMEOUT"
+      });
+    }
+    
+    res.status(500).json({ message: "Internal server error" });
   }
-  return res.json({ message: `Password reset link sent to ${email}` });
 };
 
 export const resetPassword = async (req, res) => {

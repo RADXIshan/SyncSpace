@@ -1,7 +1,6 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
-import { generateInviteEmail } from "../templates/inviteTemplate.js";
+import emailService from "../services/emailService.js";
 import { createNotificationForOrg } from "./notificationControllers.js";
 import { 
   syncMeetingEventsForUser, 
@@ -1184,41 +1183,28 @@ export const sendInvitations = async (req, res) => {
       }
     }
 
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        auth: {
-            user: process.env.EMAIL,
-            pass: process.env.APP_PASSWORD,
-        },
-    });
-
-    const confirmationMail = {
-        from: {
-            name: "SyncSpace Team",
-            address: "trickster10ishan@gmail.com"
-        },
-        replyTo: "noreply@syncspace.com",
-        headers: {
-            'X-Priority': '2',
-            'X-MSMail-Priority': 'Normal',
-            'Importance': 'normal'
-        },
-        to: emails,
-        subject: `Team Invitation - Join ${organizationName} Workspace`,
-        html: generateInviteEmail(organizationName, message, inviteCode),
-    };    
-
-    try {
-        await transporter.sendMail(confirmationMail);
-    } catch (error) {
-        console.error("Error sending email:", error);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-
+    // Send response immediately
     res.status(200).json({ "message": "Invitations sent successfully" });
+
+    // Send emails asynchronously
+    setImmediate(async () => {
+      const inviteLink = `${process.env.CLIENT_URL}/join-organization?code=${inviteCode}`;
+      
+      for (const email of emails) {
+        try {
+          await Promise.race([
+            emailService.sendTeamInviteEmail(email, "Team Member", organizationName, inviteLink),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Email timeout')), 30000)
+            )
+          ]);
+          
+          console.log(`✅ Team invitation sent successfully to ${email}`);
+        } catch (emailError) {
+          console.error(`❌ Failed to send team invitation to ${email}:`, emailError);
+        }
+      }
+    });
   } catch (error) {
     console.error("Error sending invitations:", error);
     if (error.message === "No token provided" || error.message === "Invalid token") {

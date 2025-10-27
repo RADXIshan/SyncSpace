@@ -84,6 +84,23 @@ const io = new Server(server, {
   pingInterval: 25000,
 });
 
+// Add request timeout middleware for production reliability
+app.use((req, res, next) => {
+  req.setTimeout(30000, () => {
+    if (!res.headersSent) {
+      res.status(408).json({ message: 'Request timeout' });
+    }
+  });
+  
+  res.setTimeout(30000, () => {
+    if (!res.headersSent) {
+      res.status(408).json({ message: 'Response timeout' });
+    }
+  });
+  
+  next();
+});
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
@@ -151,6 +168,8 @@ app.put("/debug/test", (req, res) => {
     hasCookie: !!req.cookies.jwt,
   });
 });
+
+
 
 // Migration endpoint
 app.post("/debug/migrate", async (req, res) => {

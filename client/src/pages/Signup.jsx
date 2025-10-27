@@ -114,17 +114,28 @@ const Signup = () => {
     let toastId;
     try {
       toastId = toast.loading("Creating your account...");
+      
+      // Add timeout to the request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/auth/signup`, 
         payload, 
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          signal: controller.signal,
+          timeout: 30000
+        }
       );
+      
+      clearTimeout(timeoutId);
       
       // Store token in localStorage for verification process
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
       }
-      toast.success("Account created successfully. Please verify your email.", { id: toastId });
+      toast.success("Account created successfully! Please check your email for verification code.", { id: toastId });
       navigate("/verify-email", {
         state: {
           email: formData.email,
@@ -133,7 +144,19 @@ const Signup = () => {
         },
       });
     } catch (err) {
-      toast.error(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
+      let errorMessage = "Failed to create account. Please try again.";
+      
+      if (err.code === 'ECONNABORTED' || err.name === 'AbortError') {
+        errorMessage = "Request timeout. Please check your connection and try again.";
+      } else if (err.response?.status === 504) {
+        errorMessage = "Server timeout. Please try again in a moment.";
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      toast.error(errorMessage, { id: toastId });
       console.error("Signup error:", err);
       setIsSubmitted(false); // Allow retry on error
     } finally {

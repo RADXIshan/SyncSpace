@@ -5,6 +5,7 @@ import sql from "../database/db.js";
 import { generateOtpEmail } from "../templates/emailTemplate.js";
 import { generatePasswordResetEmail } from "../templates/resetPassword.js";
 import { v2 as cloudinary } from "cloudinary";
+import emailService from "../services/emailService.js";
 
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
@@ -28,8 +29,15 @@ export const signup = async (req, res) => {
   }
 
   try {
-    const existingUser =
-      await sql`SELECT user_id FROM users WHERE email = ${email}`;
+    // Check if user exists with timeout
+    const existingUserPromise = sql`SELECT user_id FROM users WHERE email = ${email}`;
+    const existingUser = await Promise.race([
+      existingUserPromise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database timeout")), 8000)
+      ),
+    ]);
+
     if (existingUser.length > 0) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -37,12 +45,19 @@ export const signup = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     const otp = Math.floor(100000 + Math.random() * 900000);
-
     const otpString = otp.toString();
 
-    const [newUser] = await sql`INSERT INTO users (name, email, password, otp) 
+    // Create user with timeout
+    const createUserPromise = sql`INSERT INTO users (name, email, password, otp) 
                       VALUES (${name}, ${email}, ${hashedPassword}, ${otpString})
                       RETURNING user_id, name, email, otp`;
+
+    const [newUser] = await Promise.race([
+      createUserPromise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database timeout")), 8000)
+      ),
+    ]);
 
     const token = jwt.sign(
       {
@@ -64,48 +79,47 @@ export const signup = async (req, res) => {
       path: "/",
     });
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.APP_PASSWORD,
-      },
-    });
-
-    const confirmationMail = {
-      from: {
-        name: "SyncSpace Security",
-        address: "trickster10ishan@gmail.com",
-      },
-      replyTo: "noreply@syncspace.com",
-      headers: {
-        "X-Priority": "1",
-        "X-MSMail-Priority": "High",
-        Importance: "high",
-      },
-      to: email,
-      subject: "Account Verification Code - Action Required",
-      html: generateOtpEmail(name, otp),
-    };
-
-    try {
-      await transporter.sendMail(confirmationMail);
-    } catch (error) {
-      console.error("Error sending email:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-
+    // Send response immediately to avoid timeout
     res.status(201).json({
       message: "User created successfully. Please verify your email.",
-      user: newUser,
+      user: {
+        user_id: newUser.user_id,
+        name: newUser.name,
+        email: newUser.email,
+      },
       token,
-      requiresVerification: true
+      requiresVerification: true,
+    });
+
+    // Send email asynchronously to avoid blocking the response
+    setImmediate(async () => {
+      try {
+        // Send email with timeout
+        await Promise.race([
+          emailService.sendVerificationEmail(email, name, otp),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Email timeout")), 30000)
+          ),
+        ]);
+
+        console.log(`✅ Verification email sent successfully to ${email}`);
+      } catch (emailError) {
+        console.error(
+          `❌ Failed to send verification email to ${email}:`,
+          emailError
+        );
+      }
     });
   } catch (error) {
     console.error("Error creating user:", error);
+
+    if (error.message === "Database timeout") {
+      return res.status(504).json({
+        message: "Request timeout. Please try again.",
+        error: "TIMEOUT",
+      });
+    }
+
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -138,10 +152,10 @@ export const login = async (req, res) => {
 
     // Check if email is verified (otp should be null for verified users)
     if (user.otp !== null) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: "Please verify your email before logging in",
         requiresVerification: true,
-        email: user.email
+        email: user.email,
       });
     }
 
@@ -299,49 +313,57 @@ export const resendOtp = async (req, res) => {
     return res.status(400).json({ error: "Invalid email format" });
   }
 
-  const [user] = await sql`SELECT user_id FROM users WHERE email = ${email}`;
-  if (!user) {
-    return res.status(401).json({ message: "User not found" });
-  }
-
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  await sql`UPDATE users SET otp = ${otp} WHERE email = ${email}`;
-
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.APP_PASSWORD,
-    },
-  });
-
-  const confirmationMail = {
-    from: {
-      name: "SyncSpace Security",
-      address: "trickster10ishan@gmail.com",
-    },
-    replyTo: "noreply@syncspace.com",
-    headers: {
-      "X-Priority": "1",
-      "X-MSMail-Priority": "High",
-      Importance: "high",
-    },
-    to: email,
-    subject: "New Verification Code - Please Confirm",
-    html: generateOtpEmail(email, otp),
-  };
-
   try {
-    await transporter.sendMail(confirmationMail);
-  } catch (error) {
-    console.error("Error sending email:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
+    const [user] = await Promise.race([
+      sql`SELECT user_id, name FROM users WHERE email = ${email}`,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database timeout")), 5000)
+      ),
+    ]);
 
-  return res.json({ message: `OTP sent to ${email}` });
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+
+    await Promise.race([
+      sql`UPDATE users SET otp = ${otp} WHERE email = ${email}`,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database timeout")), 5000)
+      ),
+    ]);
+
+    // Send response immediately
+    res.json({ message: `OTP sent to ${email}` });
+
+    // Send email asynchronously
+    setImmediate(async () => {
+      try {
+        await Promise.race([
+          emailService.sendOtpResendEmail(email, user.name || email, otp),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Email timeout")), 30000)
+          ),
+        ]);
+
+        console.log(`✅ OTP resent successfully to ${email}`);
+      } catch (emailError) {
+        console.error(`❌ Failed to resend OTP to ${email}:`, emailError);
+      }
+    });
+  } catch (error) {
+    console.error("Error resending OTP:", error);
+
+    if (error.message === "Database timeout") {
+      return res.status(504).json({
+        message: "Request timeout. Please try again.",
+        error: "TIMEOUT",
+      });
+    }
+
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const updateProfile = async (req, res) => {
@@ -516,10 +538,10 @@ export const authUser = async (req, res) => {
 
   // Check if email is verified (otp should be null for verified users)
   if (user.otp !== null) {
-    return res.status(403).json({ 
+    return res.status(403).json({
       message: "Email verification required",
       requiresVerification: true,
-      email: user.email
+      email: user.email,
     });
   }
 

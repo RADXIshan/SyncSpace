@@ -8,7 +8,9 @@ export const generateOtpEmail = (name, otp) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="x-apple-disable-message-reformatting" />
-    <title>Account Verification - SyncSpace Security Code</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <title>Account Verification - SyncSpace</title>
     <!--[if mso]>
     <noscript>
       <xml>
@@ -20,7 +22,14 @@ export const generateOtpEmail = (name, otp) => {
     </noscript>
     <![endif]-->
     <style>
+      /* Import Montserrat font */
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+      
       /* Reset styles for email clients */
+      * {
+        box-sizing: border-box;
+      }
+      
       body, table, td, p, a, li, blockquote {
         -webkit-text-size-adjust: 100%;
         -ms-text-size-adjust: 100%;
@@ -40,14 +49,21 @@ export const generateOtpEmail = (name, otp) => {
         text-decoration: none;
       }
 
+      /* Base styles */
       body {
         margin: 0 !important;
         padding: 0 !important;
-        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        color: #ffffff;
+        font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         line-height: 1.6;
         min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Dark mode (default) */
+      body {
+        background: linear-gradient(135deg, #0f0d2a 0%, #1a1654 25%, #0f1a3a 50%, #0f1629 75%, #0f0d2a 100%);
+        color: #ffffff;
       }
 
       .email-container {
@@ -56,164 +72,176 @@ export const generateOtpEmail = (name, otp) => {
         background: transparent;
       }
 
+      .brand-container {
+        text-align: center;
+        padding: 40px 20px 20px;
+      }
+
+      .brand-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .brand-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 800;
+        color: white;
+        box-shadow: 0 8px 32px rgba(168, 85, 247, 0.3);
+      }
+
+      .brand-name {
+        font-size: 28px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+      }
+
       .glass-container {
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(255, 255, 255, 0.01);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 24px;
-        margin: 40px 20px;
+        margin: 20px;
         overflow: hidden;
         box-shadow: 
-          0 20px 40px rgba(0, 0, 0, 0.4),
-          0 8px 16px rgba(0, 0, 0, 0.2),
+          0 8px 32px rgba(0, 0, 0, 0.3),
+          0 2px 8px rgba(0, 0, 0, 0.15),
           inset 0 1px 0 rgba(255, 255, 255, 0.15),
-          inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+          inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
       }
 
       .glass-header {
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
         text-align: center;
-        padding: 50px 30px;
-        color: #ffffff;
+        padding: 40px 30px;
+        background: rgba(255, 255, 255, 0.008);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         position: relative;
       }
 
-      .glass-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.05);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      .verification-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 50px;
+        padding: 12px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 24px;
+        backdrop-filter: blur(50px);
+        -webkit-backdrop-filter: blur(50px);
+        box-shadow: 
+          0 12px 40px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
       }
 
       .glass-header h1 {
-        margin: 0;
+        margin: 0 0 12px 0;
         font-size: 32px;
         font-weight: 700;
-        letter-spacing: 0.5px;
-        position: relative;
-        z-index: 1;
+        color: #ffffff;
+        letter-spacing: -0.5px;
       }
 
       .glass-header p {
-        margin: 12px 0 0 0;
+        margin: 0;
         font-size: 16px;
-        color: rgba(255, 255, 255, 0.95);
-        position: relative;
-        z-index: 1;
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
       }
 
       .glass-content {
-        padding: 50px 40px;
-        background: rgba(255, 255, 255, 0.01);
+        padding: 40px;
+        background: rgba(0, 0, 0, 0.02);
         position: relative;
-      }
-
-      .glass-content::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 0 0 24px 24px;
-      }
-
-      .content-inner {
-        position: relative;
-        z-index: 1;
       }
 
       .content-inner p {
         font-size: 16px;
-        color: #e8e8ff;
+        color: rgba(255, 255, 255, 0.9);
         margin: 0 0 20px;
         line-height: 1.7;
+        font-weight: 400;
       }
 
-      .glass-otp-container {
-        background: rgba(102, 126, 234, 0.08);
-        border: 1px solid rgba(118, 75, 162, 0.25);
+      .greeting {
+        font-weight: 600;
+        color: #ffffff;
+      }
+
+      .otp-container {
+        background: rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.06);
         border-radius: 20px;
-        padding: 35px 25px;
-        margin: 35px 0;
+        padding: 32px 24px;
+        margin: 32px 0;
         text-align: center;
         position: relative;
-        overflow: hidden;
-      }
-
-      .glass-otp-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 20px;
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+        box-shadow: 
+          0 8px 32px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.12);
       }
 
       .otp-label {
-        margin: 0 0 15px;
-        color: #c4b5fd;
+        margin: 0 0 16px;
+        color: rgba(168, 85, 247, 0.8);
         font-weight: 600;
         font-size: 14px;
         text-transform: uppercase;
         letter-spacing: 1px;
-        position: relative;
-        z-index: 1;
       }
 
-      .glass-otp-code {
+      .otp-code {
         font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
         font-size: 36px;
         font-weight: 800;
         color: #ffffff;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 12px;
-        padding: 20px 30px;
+        background: linear-gradient(135deg, #a855f7, #3b82f6);
+        border-radius: 16px;
+        padding: 20px 32px;
         display: inline-block;
-        letter-spacing: 8px;
-        position: relative;
-        z-index: 1;
+        letter-spacing: 6px;
         box-shadow: 
-          0 8px 20px rgba(102, 126, 234, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+          0 8px 32px rgba(168, 85, 247, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
       }
 
-      .glass-button {
+      .cta-button {
         display: inline-block;
-        margin: 30px 0;
-        padding: 16px 40px;
-        background: rgba(102, 126, 234, 0.15);
-        border: 1px solid rgba(118, 75, 162, 0.3);
+        margin: 32px 0;
+        padding: 16px 32px;
+        background: rgba(255, 255, 255, 0.008);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         color: #ffffff !important;
         text-decoration: none;
         font-weight: 600;
+        font-size: 16px;
         border-radius: 12px;
-        letter-spacing: 0.5px;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-      }
-
-      .glass-button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
-        border-radius: 12px;
-      }
-
-      .glass-button span {
-        position: relative;
-        z-index: 1;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        box-shadow: 
+          0 8px 32px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
 
       .security-notice {
@@ -221,40 +249,141 @@ export const generateOtpEmail = (name, otp) => {
         border: 1px solid rgba(239, 68, 68, 0.2);
         border-radius: 12px;
         padding: 20px;
-        margin: 25px 0;
+        margin: 24px 0;
         color: #fecaca;
-      }
-
-      .glass-footer {
-        text-align: center;
         font-size: 14px;
-        color: #a1a1aa;
+        line-height: 1.6;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 32px 40px;
         border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 30px 40px;
         background: rgba(0, 0, 0, 0.1);
-        position: relative;
       }
 
-      .glass-footer::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.01);
+      .footer p {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 500;
       }
 
-      .footer-content {
-        position: relative;
-        z-index: 1;
+      .footer .copyright {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .footer .disclaimer {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 8px;
+      }
+
+      /* Light mode support */
+      @media (prefers-color-scheme: light) {
+        body {
+          background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #f1f5f9 50%, #f8fafc 75%, #ffffff 100%);
+          color: #0f172a;
+        }
+
+        .glass-container {
+          background: rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.1),
+            0 2px 8px rgba(0, 0, 0, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .glass-header {
+          background: rgba(255, 255, 255, 0.6);
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-header h1 {
+          color: #0f172a;
+        }
+
+        .glass-header p {
+          color: rgba(15, 23, 42, 0.7);
+        }
+
+        .verification-badge {
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          color: rgba(15, 23, 42, 0.8);
+          box-shadow: 
+            0 4px 16px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 1);
+        }
+
+        .glass-content {
+          background: rgba(255, 255, 255, 0.4);
+        }
+
+        .content-inner p {
+          color: rgba(15, 23, 42, 0.8);
+        }
+
+        .greeting {
+          color: #0f172a;
+        }
+
+        .otp-container {
+          background: rgba(255, 255, 255, 0.6);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          box-shadow: 
+            0 4px 16px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .cta-button {
+          background: rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          color: #0f172a !important;
+          box-shadow: 
+            0 4px 16px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 1);
+        }
+
+        .footer {
+          background: rgba(255, 255, 255, 0.3);
+          border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .footer p {
+          color: rgba(15, 23, 42, 0.6);
+        }
+
+        .footer .copyright {
+          color: rgba(15, 23, 42, 0.8);
+        }
+
+        .footer .disclaimer {
+          color: rgba(15, 23, 42, 0.5);
+        }
       }
 
       /* Mobile responsiveness */
       @media only screen and (max-width: 600px) {
         .glass-container {
-          margin: 20px 10px;
+          margin: 10px;
           border-radius: 16px;
+        }
+        
+        .brand-container {
+          padding: 20px 15px 15px;
+        }
+
+        .brand-icon {
+          width: 40px;
+          height: 40px;
+          font-size: 20px;
+        }
+
+        .brand-name {
+          font-size: 24px;
         }
         
         .glass-header {
@@ -262,73 +391,101 @@ export const generateOtpEmail = (name, otp) => {
         }
         
         .glass-header h1 {
-          font-size: 24px;
+          font-size: 28px;
         }
         
         .glass-content {
-          padding: 30px 25px;
+          padding: 30px 20px;
         }
         
-        .glass-otp-code {
+        .otp-code {
           font-size: 28px;
-          padding: 15px 20px;
+          padding: 16px 24px;
           letter-spacing: 4px;
         }
         
-        .glass-button {
-          padding: 14px 30px;
+        .cta-button {
+          padding: 14px 28px;
+          font-size: 15px;
+        }
+
+        .footer {
+          padding: 24px 20px;
         }
       }
 
-      /* Dark mode support */
-      @media (prefers-color-scheme: dark) {
+      /* High contrast mode support */
+      @media (prefers-contrast: high) {
         .glass-container {
-          background: rgba(255, 255, 255, 0.03);
+          border: 2px solid;
+        }
+        
+        .otp-code {
+          border: 2px solid;
+        }
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
         }
       }
     </style>
   </head>
   <body>
     <div class="email-container">
+      <!-- Brand Header -->
+      <div class="brand-container">
+        <a href="https://syncspace-client.vercel.app" class="brand-logo">
+          <div class="brand-icon">S</div>
+          <h1 class="brand-name">SyncSpace</h1>
+        </a>
+      </div>
+
+      <!-- Main Content -->
       <div class="glass-container">
         <div class="glass-header">
-          <h1>🔐 Account Verification</h1>
-          <p>Secure access to your <strong>SyncSpace</strong> account</p>
+          <div class="verification-badge">
+            🔐 Account Verification
+          </div>
+          <h1>Verify Your Email</h1>
+          <p>Complete your SyncSpace account setup</p>
         </div>
 
         <div class="glass-content">
           <div class="content-inner">
-            <p>Hello ${name},</p>
-            <p>Thank you for using SyncSpace. Please use the verification code below to complete your account security verification. This is an important security step to protect your account.</p>
+            <p class="greeting">Hello ${name},</p>
+            
+            <p>Welcome to SyncSpace! To complete your account setup and ensure the security of your account, please verify your email address using the code below.</p>
 
-            <div class="glass-otp-container">
+            <div class="otp-container">
               <div class="otp-label">Your Verification Code</div>
-              <div class="glass-otp-code">${otp}</div>
+              <div class="otp-code">${otp}</div>
             </div>
 
             <div class="security-notice">
-              <strong>⚠️ Security Notice:</strong> This verification code expires in 10 minutes. Never share this code with anyone. SyncSpace support will never ask for your verification code.
+              <strong>🛡️ Security Notice:</strong> This verification code expires in 10 minutes. Never share this code with anyone. SyncSpace will never ask for your verification code via phone or email.
             </div>
 
-            <p>To complete your verification, please enter this code in your SyncSpace application or click the button below:</p>
+            <p>Enter this code in your SyncSpace application to complete the verification process, or click the button below:</p>
 
             <div style="text-align: center;">
-              <a href="https://syncspace-client.vercel.app" class="glass-button">
-                <span>Complete Verification</span>
+              <a href="https://syncspace-client.vercel.app/verify-email" class="cta-button">
+                Complete Verification →
               </a>
             </div>
 
-            <p style="margin-top: 30px; color: #d1d5db;">
-              If you did not request this verification code, please ignore this email. Your account remains secure and no action is required.
+            <p style="margin-top: 32px; font-size: 14px; color: rgba(255, 255, 255, 0.7);">
+              If you didn't create a SyncSpace account, you can safely ignore this email. Your email address will not be used for any further communications.
             </p>
           </div>
         </div>
 
-        <div class="glass-footer">
-          <div class="footer-content">
-            <p>&copy; ${year} <strong>SyncSpace</strong> - Professional Team Collaboration Platform</p>
-            <p style="margin-top: 8px; font-size: 12px;">This is an automated security notification from SyncSpace. Please do not reply to this email.</p>
-          </div>
+        <div class="footer">
+          <p class="copyright">&copy; ${year} SyncSpace - Team Collaboration Platform</p>
+          <p class="disclaimer">This is an automated message. Please do not reply to this email.</p>
         </div>
       </div>
     </div>

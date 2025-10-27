@@ -54,7 +54,6 @@ const VerifyMail = () => {
   };
 
   // Submit OTP
-  // In your handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
     const code = otp.join("");
@@ -71,33 +70,77 @@ const VerifyMail = () => {
       // Get token from localStorage if you stored it there during signup
       const token = localStorage.getItem("token");
       
+      // Add timeout to the request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/auth/verify-mail`,
         { otp: code, token }, 
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          signal: controller.signal,
+          timeout: 15000
+        }
       );
+      
+      clearTimeout(timeoutId);
   
       toast.success("Email verified successfully", { id: toastId });
       // Force auth check to update user state
       await checkAuth(true);
       navigate("/home/dashboard", { state: { message: "Welcome! Your email has been verified." } });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to verify OTP", { id: toastId });
+      let errorMessage = "Failed to verify OTP";
+      
+      if (err.code === 'ECONNABORTED' || err.name === 'AbortError') {
+        errorMessage = "Verification timeout. Please try again.";
+      } else if (err.response?.status === 504) {
+        errorMessage = "Server timeout. Please try again.";
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      toast.error(errorMessage, { id: toastId });
       console.error("OTP verify error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Resend OTP placeholder
   const handleResend = async () => {
     let toastId;
     try {
       toastId = toast.loading("Resending OTP...");
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/resend-otp`, { email }, { withCredentials: true });
-      toast.success("OTP resent successfully", { id: toastId });
+      
+      // Add timeout to the request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/auth/resend-otp`, 
+        { email }, 
+        { 
+          withCredentials: true,
+          signal: controller.signal,
+          timeout: 15000
+        }
+      );
+      
+      clearTimeout(timeoutId);
+      toast.success("OTP resent successfully! Please check your email.", { id: toastId });
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to resend OTP", { id: toastId });
+      let errorMessage = "Failed to resend OTP";
+      
+      if (err.code === 'ECONNABORTED' || err.name === 'AbortError') {
+        errorMessage = "Request timeout. Please try again.";
+      } else if (err.response?.status === 504) {
+        errorMessage = "Server timeout. Please try again.";
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      toast.error(errorMessage, { id: toastId });
       console.error("Resend OTP error:", err);
     }
   };

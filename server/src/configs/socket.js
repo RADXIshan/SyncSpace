@@ -309,7 +309,7 @@ export const setupSocketHandlers = (io) => {
         });
         
         // Send meeting start notifications to channel members
-        await sendMeetingStartNotifications(roomID, socket.userId, socket.userName);
+        await sendMeetingStartNotifications(roomID, socket.userId, socket.userName, io);
       } else {
         // Add participant to existing meeting
         const meeting = activeMeetings.get(roomID);
@@ -541,12 +541,20 @@ const checkChannelAccess = async (userId, channelId) => {
 
 // Helper function to get online users with access to a specific channel
 export const getOnlineUsersWithChannelAccess = async (orgId, channelId) => {
-  if (!orgId || !channelId) return [];
+  if (!orgId || !channelId) {
+    console.log(`getOnlineUsersWithChannelAccess: Missing orgId (${orgId}) or channelId (${channelId})`);
+    return [];
+  }
+  
+  console.log(`getOnlineUsersWithChannelAccess: Looking for users in org ${orgId} with access to channel ${channelId}`);
+  console.log(`Total online users: ${onlineUsers.size}`);
   
   const orgUsers = [];
   for (const [userId, user] of onlineUsers) {
+    console.log(`Checking user ${userId} (${user.name || user.email}): org_id=${user.org_id}, target_org=${orgId}`);
     if (user.org_id === orgId) {
       const hasAccess = await checkChannelAccess(userId, channelId);
+      console.log(`User ${userId} has channel access: ${hasAccess}`);
       if (hasAccess) {
         orgUsers.push({
           id: userId,
@@ -561,6 +569,7 @@ export const getOnlineUsersWithChannelAccess = async (orgId, channelId) => {
       }
     }
   }
+  console.log(`Found ${orgUsers.length} users with channel access`);
   return orgUsers;
 };
 
@@ -586,17 +595,20 @@ const startMeetingDeletionTimer = (roomID) => {
   meetingDeletionTimers.set(roomID, timer);
 };
 
-const sendMeetingStartNotifications = async (roomID, startedByUserId, startedByUserName) => {
+const sendMeetingStartNotifications = async (roomID, startedByUserId, startedByUserName, io) => {
   try {
+    console.log(`Starting notification process for meeting ${roomID} started by ${startedByUserName}`);
     const sql = (await import('../database/db.js')).default;
     
     // Get meeting details from database
     const [meeting] = await sql`
       SELECT m.*, c.channel_name, c.org_id 
-      FROM meetings m
+      FROM org_meetings m
       JOIN org_channels c ON m.channel_id = c.channel_id
       WHERE m.meeting_id = ${roomID}
     `;
+    
+    console.log(`Meeting query result:`, meeting);
     
     if (!meeting) {
       console.log(`Meeting ${roomID} not found in database`);
@@ -605,11 +617,16 @@ const sendMeetingStartNotifications = async (roomID, startedByUserId, startedByU
     
     // Get all users with access to this channel (excluding the starter)
     const channelUsers = await getOnlineUsersWithChannelAccess(meeting.org_id, meeting.channel_id);
+    console.log(`Found ${channelUsers.length} users with channel access`);
+    
     const usersToNotify = channelUsers.filter(user => user.id !== startedByUserId);
+    console.log(`Users to notify (excluding starter):`, usersToNotify.map(u => u.name || u.email));
     
     // Create notification for each user
     for (const user of usersToNotify) {
       try {
+        console.log(`Creating notification for user ${user.name || user.email} (${user.id})`);
+        
         await createNotification({
           user_id: user.id,
           type: 'meeting_started',
@@ -626,13 +643,15 @@ const sendMeetingStartNotifications = async (roomID, startedByUserId, startedByU
         
         // Send real-time notification if user is online
         if (user.socketId) {
-          const io = (await import('../server.js')).io;
+          console.log(`Sending real-time notification to socket ${user.socketId}`);
           io.to(user.socketId).emit('meeting_started_notification', {
             meetingId: roomID,
             channelName: meeting.channel_name,
             startedBy: startedByUserName,
             message: `${startedByUserName} started a meeting in #${meeting.channel_name}`
           });
+        } else {
+          console.log(`User ${user.name || user.email} is not online (no socketId)`);
         }
       } catch (error) {
         console.error(`Error sending notification to user ${user.id}:`, error);
@@ -652,7 +671,7 @@ const deleteMeetingFromDatabase = async (roomID) => {
     
     // Delete meeting from database
     await sql`
-      DELETE FROM meetings 
+      DELETE FROM org_meetings 
       WHERE meeting_id = ${roomID}
     `;
     

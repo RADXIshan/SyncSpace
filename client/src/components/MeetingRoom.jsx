@@ -268,6 +268,54 @@ const MeetingRoom = () => {
     }
   }, [localStream, isVideoEnabled]);
 
+  // Handle camera video element setup for screen sharing
+  useEffect(() => {
+    if (cameraStream && cameraVideoRef.current) {
+      console.log("Setting up camera video element for screen sharing");
+      
+      cameraVideoRef.current.srcObject = cameraStream;
+      
+      const videoElement = cameraVideoRef.current;
+      
+      const handleLoadedMetadata = () => {
+        console.log("Camera video metadata loaded");
+        videoElement.play().catch((error) => {
+          console.error("Camera video play error:", error);
+        });
+      };
+
+      const handleCanPlay = () => {
+        console.log("Camera video can play");
+      };
+
+      const handlePlaying = () => {
+        console.log("Camera video is playing");
+      };
+
+      const handleError = (e) => {
+        console.error("Camera video error:", e);
+      };
+
+      videoElement.onloadedmetadata = handleLoadedMetadata;
+      videoElement.oncanplay = handleCanPlay;
+      videoElement.onplaying = handlePlaying;
+      videoElement.onerror = handleError;
+
+      if (videoElement.readyState >= 2) {
+        videoElement.play().catch(console.error);
+      }
+
+      return () => {
+        if (videoElement) {
+          videoElement.onloadedmetadata = null;
+          videoElement.oncanplay = null;
+          videoElement.onplaying = null;
+          videoElement.onerror = null;
+        }
+      };
+    }
+  }, [cameraStream]);
+
   // Setup WebRTC signaling
   useEffect(() => {
     if (!socket || !localStream) return;
@@ -761,14 +809,30 @@ const MeetingRoom = () => {
               },
               audio: false,
             });
+            
+            console.log("Created camera stream for screen sharing:", newCameraStream.getVideoTracks().length, "video tracks");
             setCameraStream(newCameraStream);
+            
+            // Ensure video track is enabled
+            const videoTrack = newCameraStream.getVideoTracks()[0];
+            if (videoTrack) {
+              videoTrack.enabled = true;
+              console.log("Camera track enabled for screen sharing");
+            }
             
             if (cameraVideoRef.current) {
               cameraVideoRef.current.srcObject = newCameraStream;
+              setTimeout(() => {
+                if (cameraVideoRef.current) {
+                  cameraVideoRef.current.play().catch(console.error);
+                }
+              }, 100);
             }
           } catch (error) {
             console.error("Error getting camera stream for screen share:", error);
           }
+        } else {
+          console.log("Video is disabled, not creating camera stream for screen sharing");
         }
 
         peersRef.current.forEach((peerObj) => {
@@ -1215,6 +1279,9 @@ const MeetingRoom = () => {
                       muted
                       playsInline
                       className="w-full h-full object-cover -scale-x-100"
+                      onLoadedData={() => console.log("Camera video loaded for screen sharing")}
+                      onError={(e) => console.error("Camera video error for screen sharing:", e)}
+                      onPlay={() => console.log("Camera video started playing for screen sharing")}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">

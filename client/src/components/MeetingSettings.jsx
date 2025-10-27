@@ -1,29 +1,34 @@
-import { useState, useEffect, useRef } from 'react';
-import { X, Camera, Mic, Speaker, Settings } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { useState, useEffect, useRef } from "react";
+import { X, Camera, Mic, Speaker, Settings } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const MeetingSettings = ({ isOpen, onClose, localStream }) => {
   const [videoDevices, setVideoDevices] = useState([]);
   const [audioInputDevices, setAudioInputDevices] = useState([]);
   const [audioOutputDevices, setAudioOutputDevices] = useState([]);
-  const [selectedVideoDevice, setSelectedVideoDevice] = useState('');
-  const [selectedAudioInput, setSelectedAudioInput] = useState('');
-  const [selectedAudioOutput, setSelectedAudioOutput] = useState('');
+  const [selectedVideoDevice, setSelectedVideoDevice] = useState("");
+  const [selectedAudioInput, setSelectedAudioInput] = useState("");
+  const [selectedAudioOutput, setSelectedAudioOutput] = useState("");
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const previewVideoRef = useRef(null);
-  const testAudioRef = useRef(null);
 
   // Get available media devices
   const getMediaDevices = async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
-      
-      const videoInputs = devices.filter(device => device.kind === 'videoinput');
-      const audioInputs = devices.filter(device => device.kind === 'audioinput');
-      const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+
+      const videoInputs = devices.filter(
+        (device) => device.kind === "videoinput"
+      );
+      const audioInputs = devices.filter(
+        (device) => device.kind === "audioinput"
+      );
+      const audioOutputs = devices.filter(
+        (device) => device.kind === "audiooutput"
+      );
 
       setVideoDevices(videoInputs);
       setAudioInputDevices(audioInputs);
@@ -40,8 +45,8 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
         setSelectedAudioOutput(audioOutputs[0].deviceId);
       }
     } catch (error) {
-      console.error('Error getting media devices:', error);
-      toast.error('Failed to get media devices');
+      console.error("Error getting media devices:", error);
+      toast.error("Failed to get media devices");
     }
   };
 
@@ -50,11 +55,11 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
     try {
       const constraints = {
         video: selectedVideoDevice ? { deviceId: selectedVideoDevice } : true,
-        audio: selectedAudioInput ? { deviceId: selectedAudioInput } : true
+        audio: selectedAudioInput ? { deviceId: selectedAudioInput } : true,
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      
+
       if (previewVideoRef.current) {
         previewVideoRef.current.srcObject = stream;
       }
@@ -63,15 +68,15 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
       if (localStream) {
         const videoTrack = localStream.getVideoTracks()[0];
         const audioTrack = localStream.getAudioTracks()[0];
-        
+
         setVideoEnabled(videoTrack ? videoTrack.enabled : false);
         setAudioEnabled(audioTrack ? audioTrack.enabled : false);
       }
 
       return stream;
     } catch (error) {
-      console.error('Error initializing preview:', error);
-      toast.error('Failed to initialize camera/microphone preview');
+      console.error("Error initializing preview:", error);
+      toast.error("Failed to initialize camera/microphone preview");
     }
   };
 
@@ -79,47 +84,54 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
   const testAudioOutput = async () => {
     try {
       // Create a simple beep sound using Web Audio API
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+      const audioContext = new AudioContextClass();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
+
       oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.type = 'sine';
-      
+      oscillator.type = "sine";
+
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.5
+      );
+
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
-      
+
       // If a specific output device is selected, try to set it
       if (selectedAudioOutput && audioContext.setSinkId) {
         await audioContext.setSinkId(selectedAudioOutput);
       }
-      
-      toast.success('Audio output test played');
+
+      toast.success("Audio output test played");
     } catch (error) {
-      console.error('Error testing audio output:', error);
-      toast.error('Failed to test audio output');
+      console.error("Error testing audio output:", error);
+      toast.error("Failed to test audio output");
     }
   };
 
   // Apply settings
   const applySettings = async () => {
     setLoading(true);
-    
+
     try {
       // Update video device
       if (localStream && selectedVideoDevice) {
         const videoTrack = localStream.getVideoTracks()[0];
         if (videoTrack) {
           const newConstraints = { deviceId: selectedVideoDevice };
-          const newStream = await navigator.mediaDevices.getUserMedia({ video: newConstraints });
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            video: newConstraints,
+          });
           const newVideoTrack = newStream.getVideoTracks()[0];
-          
+
           // Replace the track in the stream
           localStream.removeTrack(videoTrack);
           localStream.addTrack(newVideoTrack);
@@ -132,9 +144,11 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
         const audioTrack = localStream.getAudioTracks()[0];
         if (audioTrack) {
           const newConstraints = { deviceId: selectedAudioInput };
-          const newStream = await navigator.mediaDevices.getUserMedia({ audio: newConstraints });
-          const newAudioTrack = newStream.getVideoTracks()[0];
-          
+          const newStream = await navigator.mediaDevices.getUserMedia({
+            audio: newConstraints,
+          });
+          const newAudioTrack = newStream.getAudioTracks()[0]; // Fixed: was getVideoTracks
+
           // Replace the track in the stream
           localStream.removeTrack(audioTrack);
           localStream.addTrack(newAudioTrack);
@@ -143,19 +157,22 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
       }
 
       // Save settings to localStorage
-      localStorage.setItem('meetingSettings', JSON.stringify({
-        videoDevice: selectedVideoDevice,
-        audioInput: selectedAudioInput,
-        audioOutput: selectedAudioOutput,
-        videoEnabled,
-        audioEnabled
-      }));
+      localStorage.setItem(
+        "meetingSettings",
+        JSON.stringify({
+          videoDevice: selectedVideoDevice,
+          audioInput: selectedAudioInput,
+          audioOutput: selectedAudioOutput,
+          videoEnabled,
+          audioEnabled,
+        })
+      );
 
-      toast.success('Settings applied successfully');
+      toast.success("Settings applied successfully");
       onClose();
     } catch (error) {
-      console.error('Error applying settings:', error);
-      toast.error('Failed to apply settings');
+      console.error("Error applying settings:", error);
+      toast.error("Failed to apply settings");
     } finally {
       setLoading(false);
     }
@@ -164,17 +181,17 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
   // Load saved settings
   const loadSavedSettings = () => {
     try {
-      const saved = localStorage.getItem('meetingSettings');
+      const saved = localStorage.getItem("meetingSettings");
       if (saved) {
         const settings = JSON.parse(saved);
-        setSelectedVideoDevice(settings.videoDevice || '');
-        setSelectedAudioInput(settings.audioInput || '');
-        setSelectedAudioOutput(settings.audioOutput || '');
+        setSelectedVideoDevice(settings.videoDevice || "");
+        setSelectedAudioInput(settings.audioInput || "");
+        setSelectedAudioOutput(settings.audioOutput || "");
         setVideoEnabled(settings.videoEnabled !== false);
         setAudioEnabled(settings.audioEnabled !== false);
       }
     } catch (error) {
-      console.error('Error loading saved settings:', error);
+      console.error("Error loading saved settings:", error);
     }
   };
 
@@ -196,7 +213,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
     return () => {
       if (previewVideoRef.current && previewVideoRef.current.srcObject) {
         const stream = previewVideoRef.current.srcObject;
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
   }, []);
@@ -207,7 +224,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
       <div className="relative w-full max-w-4xl max-h-[90vh] bg-gray-800 rounded-2xl overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900"></div>
-        
+
         <div className="relative overflow-y-auto max-h-[90vh] p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -215,7 +232,9 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Settings size={20} className="text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-white">Meeting Settings</h2>
+              <h2 className="text-2xl font-bold text-white">
+                Meeting Settings
+              </h2>
             </div>
             <button
               type="button"
@@ -233,7 +252,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                 <Camera size={20} />
                 Camera Preview
               </h3>
-              
+
               <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
                 <video
                   ref={previewVideoRef}
@@ -265,7 +284,6 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                 >
                   Test Speaker
                 </button>
-
               </div>
             </div>
 
@@ -277,7 +295,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                   <Camera size={20} />
                   Video Settings
                 </h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Camera
@@ -289,7 +307,8 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                   >
                     {videoDevices.map((device) => (
                       <option key={device.deviceId} value={device.deviceId}>
-                        {device.label || `Camera ${device.deviceId.slice(0, 8)}`}
+                        {device.label ||
+                          `Camera ${device.deviceId.slice(0, 8)}`}
                       </option>
                     ))}
                   </select>
@@ -315,7 +334,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                   <Mic size={20} />
                   Audio Input Settings
                 </h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Microphone
@@ -327,7 +346,8 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                   >
                     {audioInputDevices.map((device) => (
                       <option key={device.deviceId} value={device.deviceId}>
-                        {device.label || `Microphone ${device.deviceId.slice(0, 8)}`}
+                        {device.label ||
+                          `Microphone ${device.deviceId.slice(0, 8)}`}
                       </option>
                     ))}
                   </select>
@@ -353,7 +373,7 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                   <Speaker size={20} />
                   Audio Output Settings
                 </h3>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Speaker
@@ -365,7 +385,8 @@ const MeetingSettings = ({ isOpen, onClose, localStream }) => {
                   >
                     {audioOutputDevices.map((device) => (
                       <option key={device.deviceId} value={device.deviceId}>
-                        {device.label || `Speaker ${device.deviceId.slice(0, 8)}`}
+                        {device.label ||
+                          `Speaker ${device.deviceId.slice(0, 8)}`}
                       </option>
                     ))}
                   </select>

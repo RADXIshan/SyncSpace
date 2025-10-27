@@ -148,28 +148,57 @@ const MeetingRoom = () => {
       try {
         console.log("Requesting user media with settings:", { video: isVideoEnabled, audio: isAudioEnabled });
         
-        // Only request media that's enabled
-        const constraints = {};
-        if (isVideoEnabled) {
-          constraints.video = {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            facingMode: "user",
-          };
-        }
-        if (isAudioEnabled) {
-          constraints.audio = {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          };
+        // Load saved device preferences
+        const savedSettings = localStorage.getItem('meetingSettings');
+        let deviceSettings = {};
+        if (savedSettings) {
+          try {
+            deviceSettings = JSON.parse(savedSettings);
+          } catch (error) {
+            console.error('Error parsing saved device settings:', error);
+          }
         }
         
-        // If both are disabled, don't create a stream
+        // Build constraints based on enabled settings and saved devices
+        const constraints = {};
+        if (isVideoEnabled) {
+          constraints.video = deviceSettings.videoDevice ? 
+            { deviceId: deviceSettings.videoDevice } : 
+            {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "user",
+            };
+        }
+        if (isAudioEnabled) {
+          constraints.audio = deviceSettings.audioInput ? 
+            { deviceId: deviceSettings.audioInput } : 
+            {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            };
+        }
+        
+        // Always create a stream, even if both are disabled (for future enabling)
+        // If both are disabled, create a minimal stream that we can add tracks to later
         if (!isVideoEnabled && !isAudioEnabled) {
-          console.log("Both video and audio disabled, not creating stream");
-          setLocalStream(null);
-          return;
+          console.log("Both video and audio disabled, creating minimal stream for future use");
+          // Create a minimal audio stream that we can disable immediately
+          try {
+            const minimalStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const audioTrack = minimalStream.getAudioTracks()[0];
+            if (audioTrack) {
+              audioTrack.enabled = false; // Disable it immediately
+            }
+            setLocalStream(minimalStream);
+            console.log("Minimal stream created for future track addition");
+            return;
+          } catch (error) {
+            console.log("Could not create minimal stream, setting null");
+            setLocalStream(null);
+            return;
+          }
         }
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -197,7 +226,6 @@ const MeetingRoom = () => {
           // Add track event listeners for debugging
           videoTrack.onended = () => {
             console.log("Video track ended");
-            setIsVideoEnabled(false);
           };
 
           videoTrack.onmute = () => {
@@ -221,7 +249,6 @@ const MeetingRoom = () => {
           // Add track event listeners for debugging
           audioTrack.onended = () => {
             console.log("Audio track ended");
-            setIsAudioEnabled(false);
           };
 
           audioTrack.onmute = () => {
@@ -258,7 +285,7 @@ const MeetingRoom = () => {
     if (isConnected) {
       initializeMedia();
     }
-  }, [isConnected, isVideoEnabled, isAudioEnabled]);
+  }, [isConnected]); // Remove isVideoEnabled and isAudioEnabled from dependencies to prevent re-initialization
 
   // Handle local video element setup
   useEffect(() => {
@@ -267,6 +294,8 @@ const MeetingRoom = () => {
         "Setting up local video element, video enabled:",
         isVideoEnabled
       );
+      
+      // Always set the stream object, regardless of video enabled state
       localVideoRef.current.srcObject = localStream;
 
       // Ensure video plays
@@ -277,25 +306,23 @@ const MeetingRoom = () => {
           "x",
           localVideoRef.current.videoHeight
         );
-        if (isVideoEnabled) {
-          localVideoRef.current
-            .play()
-            .then(() => {
-              console.log("Local video started playing successfully");
-              setIsVideoPlaying(true);
-            })
-            .catch((error) => {
-              console.error("Local video play error:", error);
-              setIsVideoPlaying(false);
-            });
-        }
+        
+        // Always try to play, the video track enabled state will control visibility
+        localVideoRef.current
+          .play()
+          .then(() => {
+            console.log("Local video started playing successfully");
+            setIsVideoPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Local video play error:", error);
+            setIsVideoPlaying(false);
+          });
       };
 
       localVideoRef.current.oncanplay = () => {
         console.log("Local video can play");
-        if (isVideoEnabled) {
-          setIsVideoPlaying(true);
-        }
+        setIsVideoPlaying(true);
       };
 
       localVideoRef.current.onplaying = () => {
@@ -312,14 +339,8 @@ const MeetingRoom = () => {
         console.error("Local video error:", e);
         setIsVideoPlaying(false);
       };
-
-      // If video is disabled, pause the video element but keep the stream
-      if (!isVideoEnabled && localVideoRef.current) {
-        localVideoRef.current.pause();
-        setIsVideoPlaying(false);
-      }
     }
-  }, [localStream, isVideoEnabled]);
+  }, [localStream]); // Remove isVideoEnabled dependency to prevent re-setup
 
   // Setup WebRTC signaling
   useEffect(() => {
@@ -760,40 +781,34 @@ const MeetingRoom = () => {
         } else {
           // No video track, need to get new stream with video
           try {
-            const constraints = {
-              video: {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                facingMode: "user",
-              },
-              audio: isAudioEnabled
+            const videoConstraints = {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "user",
             };
             
-            // Stop existing stream
-            localStream.getTracks().forEach(track => track.stop());
+            const videoStream = await navigator.mediaDevices.getUserMedia({
+              video: videoConstraints
+            });
             
-            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-            setLocalStream(newStream);
+            const newVideoTrack = videoStream.getVideoTracks()[0];
+            
+            // Add the new video track to existing stream
+            localStream.addTrack(newVideoTrack);
             setIsVideoEnabled(true);
             
             // Update video element
             if (localVideoRef.current) {
-              localVideoRef.current.srcObject = newStream;
+              localVideoRef.current.srcObject = localStream;
               localVideoRef.current.play().catch(console.error);
             }
             
-            // Update all peer connections with new tracks
+            // Update all peer connections with new video track
             peersRef.current.forEach((peerObj) => {
-              const videoSender = peerObj.peer.getSenders().find(s => s.track && s.track.kind === 'video');
-              const newVideoTrack = newStream.getVideoTracks()[0];
-              if (videoSender && newVideoTrack) {
-                videoSender.replaceTrack(newVideoTrack).catch(console.error);
-              } else if (newVideoTrack) {
-                peerObj.peer.addTrack(newVideoTrack, newStream);
-              }
+              peerObj.peer.addTrack(newVideoTrack, localStream);
             });
             
-            console.log("New stream created with video");
+            console.log("New video track added to existing stream");
           } catch (error) {
             console.error("Error enabling video:", error);
             toast.error("Failed to enable camera");
@@ -809,7 +824,11 @@ const MeetingRoom = () => {
               height: { ideal: 720 },
               facingMode: "user",
             },
-            audio: isAudioEnabled
+            audio: isAudioEnabled ? {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            } : false
           };
           
           const newStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -836,18 +855,12 @@ const MeetingRoom = () => {
         }
       }
     } else {
-      // Turning video OFF
+      // Turning video OFF - just disable the track, don't remove it or null the srcObject
       if (localStream) {
         const videoTrack = localStream.getVideoTracks()[0];
         if (videoTrack) {
           videoTrack.enabled = false;
           setIsVideoEnabled(false);
-          
-          // Update video element visibility
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = null;
-          }
-          
           console.log("Video track disabled");
         }
       }
@@ -879,35 +892,28 @@ const MeetingRoom = () => {
         } else {
           // No audio track, need to get new stream with audio
           try {
-            const constraints = {
-              video: isVideoEnabled,
-              audio: true
+            const audioConstraints = {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
             };
             
-            // Stop existing stream
-            localStream.getTracks().forEach(track => track.stop());
-            
-            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-            setLocalStream(newStream);
-            setIsAudioEnabled(true);
-            
-            // Update video element if video is enabled
-            if (isVideoEnabled && localVideoRef.current) {
-              localVideoRef.current.srcObject = newStream;
-            }
-            
-            // Update all peer connections with new tracks
-            peersRef.current.forEach((peerObj) => {
-              const audioSender = peerObj.peer.getSenders().find(s => s.track && s.track.kind === 'audio');
-              const newAudioTrack = newStream.getAudioTracks()[0];
-              if (audioSender && newAudioTrack) {
-                audioSender.replaceTrack(newAudioTrack).catch(console.error);
-              } else if (newAudioTrack) {
-                peerObj.peer.addTrack(newAudioTrack, newStream);
-              }
+            const audioStream = await navigator.mediaDevices.getUserMedia({
+              audio: audioConstraints
             });
             
-            console.log("New stream created with audio");
+            const newAudioTrack = audioStream.getAudioTracks()[0];
+            
+            // Add the new audio track to existing stream
+            localStream.addTrack(newAudioTrack);
+            setIsAudioEnabled(true);
+            
+            // Update all peer connections with new audio track
+            peersRef.current.forEach((peerObj) => {
+              peerObj.peer.addTrack(newAudioTrack, localStream);
+            });
+            
+            console.log("New audio track added to existing stream");
           } catch (error) {
             console.error("Error enabling audio:", error);
             toast.error("Failed to enable microphone");
@@ -918,8 +924,16 @@ const MeetingRoom = () => {
         // No stream at all, create new one with audio
         try {
           const constraints = {
-            video: isVideoEnabled,
-            audio: true
+            video: isVideoEnabled ? {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "user",
+            } : false,
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            }
           };
           
           const newStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -945,7 +959,7 @@ const MeetingRoom = () => {
         }
       }
     } else {
-      // Turning audio OFF
+      // Turning audio OFF - just disable the track, don't remove it
       if (localStream) {
         const audioTrack = localStream.getAudioTracks()[0];
         if (audioTrack) {
@@ -1126,6 +1140,21 @@ const MeetingRoom = () => {
               console.log(`Remote video is playing for ${userName}`);
             };
           }
+
+          // Add track event listeners to handle mute/unmute
+          stream.getTracks().forEach(track => {
+            track.onmute = () => {
+              console.log(`${track.kind} track muted for ${userName}`);
+            };
+            
+            track.onunmute = () => {
+              console.log(`${track.kind} track unmuted for ${userName}`);
+            };
+            
+            track.onended = () => {
+              console.log(`${track.kind} track ended for ${userName}`);
+            };
+          });
         }
       };
 
@@ -1151,6 +1180,21 @@ const MeetingRoom = () => {
             ref.current.srcObject = existingStream;
             ref.current.play().catch(console.error);
           }
+
+          // Add track event listeners for existing tracks
+          tracks.forEach(track => {
+            track.onmute = () => {
+              console.log(`${track.kind} track muted for ${userName}`);
+            };
+            
+            track.onunmute = () => {
+              console.log(`${track.kind} track unmuted for ${userName}`);
+            };
+            
+            track.onended = () => {
+              console.log(`${track.kind} track ended for ${userName}`);
+            };
+          });
         }
       };
 
@@ -1166,6 +1210,9 @@ const MeetingRoom = () => {
         if (stream) {
           stream.getTracks().forEach((track) => {
             console.log(`Cleaning up ${track.kind} track for ${userName}`);
+            track.onmute = null;
+            track.onunmute = null;
+            track.onended = null;
           });
         }
       };
@@ -1173,7 +1220,9 @@ const MeetingRoom = () => {
 
     return (
       <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
-        {videoEnabled && remoteStream && isStreamReady ? (
+        {videoEnabled && remoteStream && isStreamReady && 
+         remoteStream.getVideoTracks().length > 0 && 
+         remoteStream.getVideoTracks()[0].enabled ? (
           <video
             ref={ref}
             autoPlay
@@ -1319,7 +1368,7 @@ const MeetingRoom = () => {
         >
           {/* Local Video */}
           <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">
-            {isVideoEnabled && localStream ? (
+            {isVideoEnabled && localStream && localStream.getVideoTracks().length > 0 && localStream.getVideoTracks()[0].enabled ? (
               <video
                 ref={localVideoRef}
                 autoPlay

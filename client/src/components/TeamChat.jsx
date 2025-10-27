@@ -1619,19 +1619,6 @@ const TeamChat = ({ channelId, channelName }) => {
 
             <div className="flex items-center justify-between px-2 sm:px-4 pb-3 sm:pb-4">
               <div className="flex items-center gap-1 sm:gap-3">
-                {/* Test download button - temporary */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    console.log("Test download button clicked");
-                    handleFileDownload("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "test-file.pdf");
-                  }}
-                  className="p-1.5 sm:p-2 hover:bg-red-100 rounded-xl text-gray-600 hover:text-red-600 transition-all duration-200 cursor-pointer"
-                  title="Test Download"
-                >
-                  <Download size={18} className="sm:w-5 sm:h-5" />
-                </button>
-                
                 <div className="relative" ref={emojiPickerRef}>
                   <button
                     type="button"

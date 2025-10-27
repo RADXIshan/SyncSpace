@@ -782,15 +782,15 @@ const ChannelPage = () => {
               {/* Two Column Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
                 {/* Left Side - Meetings */}
-                <div className="relative bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden group/meetings flex flex-col transition-all duration-500 hover:scale-[1.02] sm:max-h-[40rem] max-h-[25rem]">
+                <div className="relative glass-dark rounded-2xl sm:rounded-3xl overflow-hidden group/meetings flex flex-col transition-all duration-500 hover:scale-[1.02] sm:max-h-[40rem] max-h-[25rem]">
                   {/* Background gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+                  <div className="absolute inset-0 cosmic-bg"></div>
 
                   <div className="relative z-10 p-4 sm:p-6 lg:p-8 flex flex-col h-full">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
                       <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
-                        <div className="p-2 sm:p-3 lg:p-4 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover/meetings:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                        <div className="p-2 sm:p-3 lg:p-4 rounded-full glass-button-enhanced group-hover/meetings:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
                           <Video
                             size={18}
                             className="text-purple-400 group-hover/meetings:scale-110 transition-all duration-300 sm:w-6 sm:h-6"
@@ -811,7 +811,7 @@ const ChannelPage = () => {
                         <button
                           onClick={() => setShowMeetingModal(true)}
                           title="Schedule New Meeting"
-                          className="p-2 sm:p-3 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg group/plus cursor-pointer flex-shrink-0"
+                          className="p-2 sm:p-3 rounded-full glass-button-enhanced text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 group/plus cursor-pointer flex-shrink-0"
                         >
                           <Plus
                             size={16}
@@ -844,7 +844,7 @@ const ChannelPage = () => {
                             return (
                               <div
                                 key={meeting.meeting_id}
-                                className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
+                                className="group/card relative glass-effect hover:border-purple-500/50 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
                               >
                                 {/* Hover gradient overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
@@ -978,13 +978,13 @@ const ChannelPage = () => {
                       ) : (
                         <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16 text-center px-4">
                           <div className="relative mb-4 sm:mb-6">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/30">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full glass-button-enhanced flex items-center justify-center">
                               <Video
                                 size={24}
                                 className="text-purple-400 opacity-60 sm:w-8 sm:h-8"
                               />
                             </div>
-                            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 animate-pulse"></div>
+                            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full glass-button animate-pulse"></div>
                           </div>
                           <h3 className="text-lg sm:text-xl font-semibold text-gray-300 mb-2">
                             No meetings scheduled
@@ -1007,15 +1007,15 @@ const ChannelPage = () => {
                 </div>
 
                 {/* Right Side - Notes/Tasks */}
-                <div className="relative bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden group/notes flex flex-col transition-all duration-500 hover:scale-[1.02] max-h-[25rem] sm:max-h-[40rem]">
+                <div className="relative glass-dark rounded-2xl sm:rounded-3xl overflow-hidden group/notes flex flex-col transition-all duration-500 hover:scale-[1.02] max-h-[25rem] sm:max-h-[40rem]">
                   {/* Background gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+                  <div className="absolute inset-0 cosmic-bg"></div>
 
                   <div className="relative z-10 p-4 sm:p-6 lg:p-8 flex flex-col h-full">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
                       <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
-                        <div className="p-2 sm:p-3 lg:p-4 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover/notes:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                        <div className="p-2 sm:p-3 lg:p-4 rounded-full glass-button-enhanced group-hover/notes:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
                           <NotebookPen
                             size={18}
                             className="text-purple-400 group-hover/notes:scale-110 transition-all duration-300 sm:w-6 sm:h-6"
@@ -1036,7 +1036,7 @@ const ChannelPage = () => {
                         <button
                           onClick={() => setShowNoteModal(true)}
                           title="Create New Note"
-                          className="p-2 sm:p-3 rounded-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg group/plus cursor-pointer flex-shrink-0"
+                          className="p-2 sm:p-3 rounded-full glass-button-enhanced text-purple-400 hover:text-purple-300 transition-all duration-300 transform hover:scale-110 active:scale-95 group/plus cursor-pointer flex-shrink-0"
                         >
                           <Plus
                             size={16}
@@ -1062,10 +1062,10 @@ const ChannelPage = () => {
                           {notes.map((note) => (
                             <div
                               key={note.note_id}
-                              className={`group/card relative border rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-md ${
+                              className={`group/card relative rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-md ${
                                 note.pinned
-                                  ? `border-purple-500 bg-purple-900/10 hover:bg-purple-700/5 hover:shadow-purple-600`
-                                  : `border-gray-600/50 hover:border-purple-500/50 bg-gray-800/50 hover:bg-gray-700/50`
+                                  ? `glass-effect-pinned hover:border-purple-500/70`
+                                  : `glass-effect hover:border-purple-500/50`
                               }`}
                             >
                               {/* Hover gradient overlay */}
@@ -1160,13 +1160,13 @@ const ChannelPage = () => {
                       ) : (
                         <div className="flex flex-col items-center justify-center py-8 sm:py-12 lg:py-16 text-center px-4">
                           <div className="relative mb-4 sm:mb-6">
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/30">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full glass-button-enhanced flex items-center justify-center">
                               <NotebookPen
                                 size={24}
                                 className="text-purple-400 opacity-60 sm:w-8 sm:h-8"
                               />
                             </div>
-                            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-purple-500/30 to-indigo-500/30 animate-pulse"></div>
+                            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full glass-button animate-pulse"></div>
                           </div>
                           <h3 className="text-lg sm:text-xl font-semibold text-gray-300 mb-2">
                             No notes or tasks yet
@@ -1304,14 +1304,14 @@ const ChannelPage = () => {
           />
 
           {/* Menu */}
-          <div className="fixed sm:absolute top-16 sm:top-1 left-2 right-2 sm:left-auto sm:right-6 sm:w-80 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl z-50 animate-fadeIn overflow-hidden max-h-[calc(100vh-5rem)] sm:max-h-[70vh] transition-all duration-300">
+          <div className="fixed sm:absolute top-16 sm:top-1 left-2 right-2 sm:left-auto sm:right-6 sm:w-80 glass-dark rounded-2xl sm:rounded-3xl z-50 animate-fadeIn overflow-hidden max-h-[calc(100vh-5rem)] sm:max-h-[70vh] transition-all duration-300">
             {/* Background gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-900/50 to-indigo-900/20"></div>
+            <div className="absolute inset-0 cosmic-bg"></div>
 
             {/* Header */}
             <div className="relative z-10 flex items-center justify-between px-4 sm:px-5 py-3 sm:py-5 border-b border-gray-700/50">
               <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                <div className="p-2 sm:p-3 rounded-full bg-purple-500/20 border border-purple-500/30 group-hover:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                <div className="p-2 sm:p-3 rounded-full glass-button-enhanced group-hover:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
                   <Hash size={18} className="text-purple-400 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -1340,13 +1340,13 @@ const ChannelPage = () => {
               ) && (
                 <div className="text-center py-4 sm:py-8">
                   <div className="relative mb-3 sm:mb-4">
-                    <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-gray-500/20 to-gray-600/20 flex items-center justify-center border border-gray-500/30 mx-auto">
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full glass-button flex items-center justify-center mx-auto">
                       <Hash
                         size={20}
                         className="text-gray-400 opacity-60 sm:w-8 sm:h-8"
                       />
                     </div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-gradient-to-br from-gray-500/30 to-gray-600/30 animate-pulse"></div>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 rounded-full glass-button animate-pulse"></div>
                   </div>
                   <h3 className="text-base sm:text-lg font-semibold text-gray-300 mb-1 sm:mb-2">
                     No actions available
@@ -1365,13 +1365,13 @@ const ChannelPage = () => {
                     setShowEditChannelModal(true);
                     setShowChannelMenu(false);
                   }}
-                  className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-purple-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
+                  className="group/card relative glass-effect hover:border-purple-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-purple-500/10"
                 >
                   {/* Hover gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-xl sm:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
                   <div className="relative z-10 flex items-center gap-3 sm:gap-4">
-                    <div className="p-2 sm:p-3 rounded-xl bg-purple-500/20 border border-purple-500/30 group-hover/card:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
+                    <div className="p-2 sm:p-3 rounded-xl glass-button-enhanced group-hover/card:bg-purple-500/30 transition-all duration-300 flex-shrink-0">
                       <Edit2
                         size={18}
                         className="text-purple-400 group-hover/card:text-purple-300 transition-all duration-300 group-hover/card:rotate-12 sm:w-5 sm:h-5"
@@ -1394,7 +1394,7 @@ const ChannelPage = () => {
                 userPermissions?.settings_access) && (
                 <div
                   onClick={handleDeleteChannelClick}
-                  className="group/card relative bg-gray-800/50 hover:bg-gray-700/50 border border-gray-600/50 hover:border-red-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-red-500/10"
+                  className="group/card relative glass-effect hover:border-red-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-5 cursor-pointer transition-all duration-300 transform hover:shadow-lg hover:shadow-red-500/10"
                 >
                   {/* Hover gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-red-600/5 rounded-xl sm:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>

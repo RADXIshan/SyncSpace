@@ -216,26 +216,12 @@ const TeamChat = ({ channelId, channelName }) => {
         const mentionedBy = data.mentionedBy || data.userName || "Someone";
         const channelName = data.channelName || "a channel";
 
-        // Always show toast notification for mentions, but with different styling for current channel
-        if (data.channelId === channelId) {
-          // If in the same channel, show a subtle notification
-          toast.success(`${mentionedBy} mentioned you`, {
-            duration: 3000,
-            icon: "👋",
-            style: {
-              background: "#f3f4f6",
-              color: "#374151",
-            },
-          });
-        } else {
-          // If in a different channel, show a more prominent notification
-          toast.success(`${mentionedBy} mentioned you in #${channelName}`, {
-            duration: 5000,
-            icon: "👋",
-            style: {
-              background: "#3b82f6",
-              color: "white",
-            },
+        console.log(`Processing mention from ${mentionedBy} in channel ${channelName}, current channel: ${channelId}`);
+
+        // Only show toast if we're not currently in this channel to avoid duplicate notifications
+        if (data.channelId !== channelId) {
+          toast(`${mentionedBy} mentioned you in #${channelName}`, {
+            icon: '👋',
           });
         }
       }

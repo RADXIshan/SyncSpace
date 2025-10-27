@@ -225,8 +225,8 @@ const MeetingModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
-      <div className="relative w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
+      <div className="relative w-full max-w-2xl max-h-[98vh] sm:max-h-[95vh] glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 cosmic-bg"></div>
         <div className="relative overflow-y-auto max-h-[98vh] sm:max-h-[95vh] px-4 py-6 sm:px-8 sm:py-10">
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Close Button */}
@@ -240,10 +240,10 @@ const MeetingModal = ({
 
             {/* Header */}
             <div className="text-center mb-6 sm:mb-8">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg">
-                <Video size={24} className="text-white sm:w-8 sm:h-8" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Video size={24} className="text-purple-400 sm:w-8 sm:h-8" />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 gradient-text">
                 {isEditing ? "Edit Meeting" : "Schedule Meeting"}
               </h2>
               <p className="text-gray-300 text-sm sm:text-base">
@@ -266,7 +266,7 @@ const MeetingModal = ({
                   value={formData.title}
                   onChange={handleChange}
                   placeholder="Team Sync, Project Review, etc."
-                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                   required
                 />
               </div>
@@ -282,7 +282,7 @@ const MeetingModal = ({
                   onChange={handleChange}
                   rows="3"
                   placeholder="Brief agenda or key discussion points"
-                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
+                  className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                 ></textarea>
               </div>
 
@@ -291,7 +291,7 @@ const MeetingModal = ({
                 <label className="block text-sm font-semibold text-gray-200 mb-2 sm:mb-3">
                   Date and Time
                 </label>
-                <div className={`relative w-full pl-5 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm hover:shadow-md hover:bg-gray-800/90 flex items-center gap-1.5 ${isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""}`}>
+                <div className={`relative w-full pl-5 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 flex items-center gap-1.5 ${isMeetingStarted ? "opacity-60 cursor-not-allowed" : ""}`}>
                   <Calendar className="text-violet-400 pointer-events-none z-10" size={20} />
                   <DatePicker
                     selected={startDateTime}
@@ -357,12 +357,12 @@ const MeetingModal = ({
                       type="text"
                       value={`${getBaseUrl()}/meeting/${generatedRoomId}`}
                       readOnly
-                      className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm cursor-not-allowed"
+                      className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 cursor-not-allowed"
                     />
                     <button
                       type="button"
                       onClick={handleGenerateRoomId}
-                      className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap"
+                      className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg glass-button-enhanced text-violet-400 hover:text-violet-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 text-sm sm:text-base whitespace-nowrap"
                     >
                       Generate ID
                     </button>
@@ -377,7 +377,7 @@ const MeetingModal = ({
                       }
                       required
                       placeholder="https://meet.google.com/abc-defg-hij"
-                      className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-600/50 bg-gray-800/80 text-white text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200 shadow-sm"
+                      className="w-full px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                     />
                   </div>
                 )}
@@ -395,17 +395,17 @@ const MeetingModal = ({
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"
+                className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg glass-button text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading || !formData.title.trim() || !startDateTime || !formData.meeting_link.trim()}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center shadow-lg hover:shadow-xl ${
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center glass-button-enhanced ${
                   isEditing && hasUnsavedChanges
-                    ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300"
-                    : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
+                    ? "border border-orange-500/30 text-orange-400 hover:text-orange-300"
+                    : "text-violet-400 hover:text-violet-300"
                 }`}
               >
                 {isLoading ? (

@@ -16,6 +16,7 @@ import {
   Search,
   Filter,
   ChevronDown,
+  Settings,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -971,9 +972,9 @@ const OrgSettingsModal = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
-        <div className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] bg-gray-900/80 backdrop-blur-xl border border-white/20 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-indigo-500/10"></div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
+        <div className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+          <div className="absolute inset-0 cosmic-bg"></div>
           <div className="relative overflow-y-auto max-h-[95vh] sm:max-h-[90vh] px-4 py-6 sm:px-8 sm:py-10">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Close Button */}
@@ -987,7 +988,13 @@ const OrgSettingsModal = ({
 
               {/* Header */}
               <div className="text-center mb-6 sm:mb-8 pr-12">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-400">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Settings
+                    size={24}
+                    className="text-purple-400 sm:w-8 sm:h-8"
+                  />
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2 gradient-text">
                   Organization Settings
                 </h2>
                 <p className="text-gray-400 text-xs sm:text-sm">
@@ -1007,8 +1014,8 @@ const OrgSettingsModal = ({
                         onClick={() => handleTabSwitch(tab.id)}
                         className={`flex items-center px-3 py-2 sm:px-4 rounded-lg font-medium text-xs sm:text-sm transition-all cursor-pointer ${
                           activeTab === tab.id
-                            ? "bg-violet-600/30 text-violet-300 border border-violet-500/30"
-                            : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-300"
+                            ? "glass-button-enhanced text-violet-300 border border-violet-500/30"
+                            : "glass-effect text-gray-400 hover:text-gray-300"
                         }`}
                       >
                         <Icon
@@ -1059,7 +1066,7 @@ const OrgSettingsModal = ({
                         value={orgName}
                         onChange={(e) => setOrgName(e.target.value)}
                         placeholder="Enter organization name"
-                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg sm:rounded-xl glass-effect text-white text-sm sm:text-base focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                         required
                       />
                     </div>
@@ -1077,8 +1084,8 @@ const OrgSettingsModal = ({
                               onClick={() => setAccessLevel(value)}
                               className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border transition-all cursor-pointer transform hover:scale-[1.02] active:scale-[0.98] ${
                                 accessLevel === value
-                                  ? "border-violet-500 bg-violet-500/10 shadow-lg shadow-violet-500/20"
-                                  : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
+                                  ? "border-violet-500 glass-button-enhanced shadow-lg shadow-violet-500/20"
+                                  : "glass-effect hover:border-white/20"
                               }`}
                             >
                               <div className="flex items-center mb-2">
@@ -1114,7 +1121,7 @@ const OrgSettingsModal = ({
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         Invite Code
                       </label>
-                      <div className="px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-gray-400">
+                      <div className="px-4 py-3 rounded-xl glass-effect text-gray-400">
                         <span className="font-mono text-lg tracking-widest">
                           {organization?.code || "N/A"}
                         </span>
@@ -1126,7 +1133,7 @@ const OrgSettingsModal = ({
                     </div>
 
                     {/* User Role Info */}
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                    <div className="glass-button-enhanced border border-blue-500/30 rounded-xl p-4">
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
                           <Users size={16} className="text-blue-400" />
@@ -1155,7 +1162,7 @@ const OrgSettingsModal = ({
                       <button
                         type="button"
                         onClick={addChannel}
-                        className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto"
+                        className="flex items-center px-3 py-2 glass-button-enhanced border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto"
                       >
                         <Plus size={14} className="mr-1 sm:w-4 sm:h-4" />
                         Add Channel
@@ -1167,7 +1174,7 @@ const OrgSettingsModal = ({
                         <div
                           key={channel.id || `channel-${index}`}
                           ref={(el) => (channelRefs.current[index] = el)}
-                          className="bg-white/5 border border-white/10 rounded-xl p-4"
+                          className="glass-effect rounded-xl p-4"
                         >
                           <div className="flex justify-between items-start mb-3">
                             <h4 className="text-sm font-medium text-gray-300">
@@ -1195,7 +1202,7 @@ const OrgSettingsModal = ({
                                   updateChannel(index, "name", e.target.value)
                                 }
                                 placeholder="e.g., general, development"
-                                className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                                className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                               />
                             </div>
                             <div>
@@ -1213,7 +1220,7 @@ const OrgSettingsModal = ({
                                   )
                                 }
                                 placeholder="Channel description"
-                                className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                                className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                               />
                             </div>
                           </div>
@@ -1233,7 +1240,7 @@ const OrgSettingsModal = ({
                       <button
                         type="button"
                         onClick={addRole}
-                        className="flex items-center px-3 py-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto"
+                        className="flex items-center px-3 py-2 glass-button-enhanced border border-violet-500/30 rounded-lg transition-all duration-200 text-violet-300 hover:text-violet-200 text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto"
                       >
                         <Plus size={14} className="mr-1 sm:w-4 sm:h-4" />
                         Add Role
@@ -1245,7 +1252,7 @@ const OrgSettingsModal = ({
                         <div
                           key={role.id || `role-${index}`}
                           ref={(el) => (roleRefs.current[index] = el)}
-                          className="bg-white/5 border border-white/10 rounded-xl p-4"
+                          className="glass-effect rounded-xl p-4"
                         >
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-3">
@@ -1286,7 +1293,7 @@ const OrgSettingsModal = ({
                                   updateRole(index, "name", e.target.value)
                                 }
                                 placeholder="e.g., moderator, developer"
-                                className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                                className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                               />
                             </div>
                             <div>
@@ -1415,7 +1422,7 @@ const OrgSettingsModal = ({
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search members by name, email, or role..."
-                            className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border border-white/10 bg-white/5 text-white text-sm sm:text-base placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all"
+                            className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl glass-effect text-white text-sm sm:text-base placeholder-gray-400 focus:ring-2 focus:ring-violet-500 focus:outline-none focus:border-violet-500/50 transition-all duration-200"
                           />
                         </div>
 
@@ -1424,7 +1431,7 @@ const OrgSettingsModal = ({
                           <button
                             type="button"
                             onClick={() => setShowFilters(!showFilters)}
-                            className="flex items-center px-3 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg sm:rounded-xl transition-all duration-200 text-gray-300 hover:text-white text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto"
+                            className="flex items-center px-3 py-2.5 sm:py-3 glass-effect hover:text-white text-xs sm:text-sm font-medium cursor-pointer w-full sm:w-auto transition-all duration-200 text-gray-300"
                           >
                             <Filter
                               size={14}
@@ -1462,7 +1469,7 @@ const OrgSettingsModal = ({
 
                       {/* Filter Options */}
                       {showFilters && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4 glass-effect rounded-lg sm:rounded-xl">
                           {/* Role Filter */}
                           <div>
                             <label className="block text-xs text-gray-400 mb-2">
@@ -1471,7 +1478,7 @@ const OrgSettingsModal = ({
                             <select
                               value={roleFilter}
                               onChange={(e) => setRoleFilter(e.target.value)}
-                              className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
+                              className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none cursor-pointer transition-all duration-200"
                             >
                               <option value="all">All Roles</option>
                               {getUniqueRoles().map((role) => (
@@ -1490,7 +1497,7 @@ const OrgSettingsModal = ({
                             <select
                               value={statusFilter}
                               onChange={(e) => setStatusFilter(e.target.value)}
-                              className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
+                              className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none cursor-pointer transition-all duration-200"
                             >
                               <option value="all">All Status</option>
                               <option value="online">Online</option>
@@ -1506,7 +1513,7 @@ const OrgSettingsModal = ({
                             <select
                               value={dateFilter}
                               onChange={(e) => setDateFilter(e.target.value)}
-                              className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
+                              className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none cursor-pointer transition-all duration-200"
                             >
                               <option value="all">All Time</option>
                               <option value="today">Today</option>
@@ -1524,7 +1531,7 @@ const OrgSettingsModal = ({
                       roleFilter !== "all" ||
                       dateFilter !== "all" ||
                       statusFilter !== "all") && (
-                      <div className="flex flex-wrap items-center gap-2 p-3 bg-violet-500/10 border border-violet-500/20 rounded-lg">
+                      <div className="flex flex-wrap items-center gap-2 p-3 glass-button-enhanced border border-violet-500/30 rounded-lg">
                         <span className="text-xs text-violet-300 font-medium">
                           Active filters:
                         </span>
@@ -1595,7 +1602,7 @@ const OrgSettingsModal = ({
                           getFilteredMembers().map((member) => (
                             <div
                               key={member.id}
-                              className="bg-white/5 border border-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4"
+                              className="glass-effect rounded-lg sm:rounded-xl p-3 sm:p-4"
                             >
                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div className="flex items-center space-x-3">
@@ -1668,7 +1675,7 @@ const OrgSettingsModal = ({
                                     {editingMember === member.id ? (
                                       <div className="flex items-center space-x-2">
                                         <select
-                                          className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm min-w-[100px] focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                                          className="px-3 py-2 glass-effect text-white text-sm min-w-[100px] focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none transition-all duration-200 rounded-lg"
                                           value={tempRole}
                                           onChange={(e) =>
                                             setTempRole(e.target.value)
@@ -1720,7 +1727,7 @@ const OrgSettingsModal = ({
                                             saveMemberRole(member.id);
                                           }}
                                           disabled={memberActionLoading}
-                                          className="text-green-400 hover:text-green-300 text-sm px-3 py-2 border border-green-500/30 bg-green-600/20 hover:bg-green-600/30 rounded-lg font-medium cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                          className="text-green-400 hover:text-green-300 text-sm px-3 py-2 border border-green-500/30 glass-button-enhanced rounded-lg font-medium cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                                         >
                                           {memberActionLoading ? (
                                             <>
@@ -1739,7 +1746,7 @@ const OrgSettingsModal = ({
                                             cancelEditingMember();
                                           }}
                                           disabled={memberActionLoading}
-                                          className="text-gray-300 hover:text-gray-100 text-sm px-3 py-2 border border-white/20 hover:border-white/30 bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                          className="text-gray-300 hover:text-gray-100 text-sm px-3 py-2 glass-button rounded-lg cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                           Cancel
                                         </button>
@@ -1814,7 +1821,7 @@ const OrgSettingsModal = ({
                     </div>
 
                     {/* Transfer Ownership Section */}
-                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6 space-y-4">
+                    <div className="glass-button-enhanced border border-orange-500/30 rounded-xl p-6 space-y-4">
                       <div className="flex items-start space-x-3">
                         <Crown
                           size={20}
@@ -1841,7 +1848,7 @@ const OrgSettingsModal = ({
                                   members.filter((member) => !member.isOwner)
                                     .length === 0
                                 }
-                                className="flex items-center px-4 py-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 text-sm font-medium cursor-pointer shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center px-4 py-2 glass-button-enhanced border border-orange-500/40 rounded-lg transition-all duration-200 text-orange-300 hover:text-orange-200 text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Crown size={16} className="mr-2" />
                                 Transfer Ownership
@@ -1868,7 +1875,7 @@ const OrgSettingsModal = ({
                                       setSelectedNewOwner(e.target.value)
                                     }
                                     disabled={membersLoading}
-                                    className="w-full px-3 py-2 rounded-lg border border-orange-500/30 bg-orange-500/5 text-white text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50"
+                                    className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 focus:outline-none disabled:opacity-50 transition-all duration-200"
                                   >
                                     <option value="">
                                       {membersLoading
@@ -1917,7 +1924,7 @@ const OrgSettingsModal = ({
                                       setTransferConfirmation(e.target.value)
                                     }
                                     placeholder="Type organization name here"
-                                    className="w-full px-3 py-2 rounded-lg border border-orange-500/30 bg-orange-500/5 text-white text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                                    className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500/50 focus:outline-none transition-all duration-200"
                                   />
                                 </div>
                               </div>
@@ -1930,7 +1937,7 @@ const OrgSettingsModal = ({
                                     setSelectedNewOwner("");
                                     setTransferConfirmation("");
                                   }}
-                                  className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 rounded-lg text-gray-300 hover:text-gray-200 text-sm font-medium transition-all duration-200 cursor-pointer"
+                                  className="px-4 py-2 glass-button text-gray-400 hover:text-gray-300 text-sm font-medium transition-all duration-200 cursor-pointer rounded-lg"
                                 >
                                   Cancel
                                 </button>
@@ -1946,7 +1953,7 @@ const OrgSettingsModal = ({
                                     members.filter((member) => !member.isOwner)
                                       .length === 0
                                   }
-                                  className="flex items-center px-4 py-2 bg-orange-600/30 hover:bg-orange-600/40 border border-orange-500/40 rounded-lg text-orange-200 hover:text-orange-100 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                  className="flex items-center px-4 py-2 glass-button-enhanced border border-orange-500/40 rounded-lg text-orange-300 hover:text-orange-200 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                   {loading ? (
                                     <>
@@ -1967,7 +1974,7 @@ const OrgSettingsModal = ({
                       </div>
                     </div>
 
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 space-y-4">
+                    <div className="glass-button-enhanced border border-red-500/30 rounded-xl p-6 space-y-4">
                       <div className="flex items-start space-x-3">
                         <AlertTriangle
                           size={20}
@@ -1988,7 +1995,7 @@ const OrgSettingsModal = ({
                             <button
                               type="button"
                               onClick={() => setShowDeleteConfirm(true)}
-                              className="flex items-center px-4 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-medium cursor-pointer shadow-md hover:shadow-lg"
+                              className="flex items-center px-4 py-2 glass-button-enhanced border border-red-500/40 rounded-lg transition-all duration-200 text-red-300 hover:text-red-200 text-sm font-medium cursor-pointer"
                             >
                               <Trash2 size={16} className="mr-2" />
                               Delete Organization
@@ -2010,7 +2017,7 @@ const OrgSettingsModal = ({
                                     setDeleteConfirmation(e.target.value)
                                   }
                                   placeholder="Type organization name here"
-                                  className="w-full px-3 py-2 rounded-lg border border-red-500/30 bg-red-500/5 text-white text-sm focus:ring-2 focus:ring-red-500 focus:outline-none"
+                                  className="w-full px-3 py-2 rounded-lg glass-effect text-white text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500/50 focus:outline-none transition-all duration-200"
                                 />
                               </div>
 
@@ -2021,7 +2028,7 @@ const OrgSettingsModal = ({
                                     setShowDeleteConfirm(false);
                                     setDeleteConfirmation("");
                                   }}
-                                  className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 rounded-lg text-gray-300 hover:text-gray-200 text-sm font-medium transition-all duration-200 cursor-pointer"
+                                  className="px-4 py-2 glass-button text-gray-400 hover:text-gray-300 text-sm font-medium transition-all duration-200 cursor-pointer rounded-lg"
                                 >
                                   Cancel
                                 </button>
@@ -2032,7 +2039,7 @@ const OrgSettingsModal = ({
                                     deleteConfirmation !== organization?.name ||
                                     loading
                                   }
-                                  className="flex items-center px-4 py-2 bg-red-600/30 hover:bg-red-600/40 border border-red-500/40 rounded-lg text-red-200 hover:text-red-100 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                  className="flex items-center px-4 py-2 glass-button-enhanced border border-red-500/40 rounded-lg text-red-300 hover:text-red-200 text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                   {loading ? (
                                     <>
@@ -2053,7 +2060,7 @@ const OrgSettingsModal = ({
                       </div>
                     </div>
 
-                    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                    <div className="glass-button-enhanced border border-yellow-500/30 rounded-xl p-4">
                       <div className="flex items-start space-x-3">
                         <AlertTriangle
                           size={16}
@@ -2091,17 +2098,17 @@ const OrgSettingsModal = ({
                   type="button"
                   onClick={handleClose}
                   disabled={loading}
-                  className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base shadow-lg hover:shadow-xl"
+                  className="px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg glass-button text-gray-400 hover:text-gray-300 font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 text-sm sm:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!hasUnsavedChanges || loading || !orgName.trim()}
-                  className={`px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold transition-all duration-200 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base justify-center shadow-lg hover:shadow-xl ${
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base justify-center ${
                     hasUnsavedChanges
-                      ? "bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-400 hover:text-orange-300"
-                      : "bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 hover:text-violet-300"
+                      ? "glass-button-enhanced border border-orange-500/30 text-orange-400 hover:text-orange-300"
+                      : "glass-button-enhanced text-violet-400 hover:text-violet-300"
                   }`}
                 >
                   {loading ? (

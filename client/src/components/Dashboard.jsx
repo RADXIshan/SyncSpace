@@ -70,16 +70,21 @@ const Dashboard = ({
   if (error) {
     return (
       <div className="pt-10 sm:pt-0 min-h-screen bg-gradient-to-br from-violet-50 via-indigo-50 to-purple-100 flex flex-col items-center justify-center gap-4 p-4">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-red-500 text-center">
-          Something went wrong
-        </h1>
-        <p className="text-gray-600 text-sm sm:text-base text-center">{error}</p>
-        <button
-          onClick={onJoinOrgClick}
-          className="btn-primary px-6 py-3 text-base sm:text-lg font-semibold rounded-md cursor-pointer shadow-lg"
-        >
-          Try Joining an Organisation
-        </button>
+        <div className="glass rounded-2xl sm:rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-orange-500/5"></div>
+          <div className="relative z-10">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-red-400 mb-4">
+              Something went wrong
+            </h1>
+            <p className="text-white/80 text-sm sm:text-base mb-6">{error}</p>
+            <button
+              onClick={onJoinOrgClick}
+              className="glass-button hover:glass-button-enhanced px-6 py-3 text-base sm:text-lg font-semibold cursor-pointer text-white hover:text-purple-300 transition-all duration-300"
+            >
+              Try Joining an Organisation
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -151,33 +156,36 @@ const Dashboard = ({
           {organization ? (
             <JoinedOrgDash />
           ) : (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-gray-200/50 shadow-2xl p-4 sm:p-6 h-full flex items-center justify-center flex-col gap-4">
-              <h1 className="text-2xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600 text-center px-4">
-                Join and collaborate with your team
-              </h1>
+            <div className="glass rounded-2xl sm:rounded-3xl p-4 sm:p-6 h-full flex items-center justify-center flex-col gap-4 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-indigo-500/5"></div>
+              <div className="relative z-10 flex flex-col items-center gap-4">
+                <h1 className="text-2xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400 text-center px-4">
+                  Join and collaborate with your team
+                </h1>
 
-              <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8 w-full max-w-sm sm:max-w-none sm:flex-row sm:justify-center">
-                <button
-                  onClick={onJoinOrgClick}
-                  className="btn-primary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
-                >
-                  <Users
-                    size={20}
-                    className="inline-block mr-2 text-primary sm:w-6 sm:h-6"
-                  />
-                  Join Organisation
-                </button>
+                <div className="flex flex-col gap-3 sm:gap-4 mt-6 sm:mt-8 w-full max-w-sm sm:max-w-none sm:flex-row sm:justify-center">
+                  <button
+                    onClick={onJoinOrgClick}
+                    className="glass-button hover:glass-button-enhanced font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] text-base sm:text-lg py-3 sm:py-4 text-white hover:text-purple-300"
+                  >
+                    <Users
+                      size={20}
+                      className="inline-block mr-2 sm:w-6 sm:h-6"
+                    />
+                    Join Organisation
+                  </button>
 
-                <button
-                  onClick={onCreateOrgClick}
-                  className="btn-secondary font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] shadow-lg text-base sm:text-lg py-3 sm:py-4"
-                >
-                  <Plus
-                    size={20}
-                    className="inline-block mr-2 text-violet-600 sm:w-6 sm:h-6"
-                  />
-                  Create Organisation
-                </button>
+                  <button
+                    onClick={onCreateOrgClick}
+                    className="glass-button hover:glass-button-enhanced font-semibold transition-all duration-200 cursor-pointer active:scale-95 w-full sm:w-[280px] text-base sm:text-lg py-3 sm:py-4 text-white hover:text-purple-300"
+                  >
+                    <Plus
+                      size={20}
+                      className="inline-block mr-2 sm:w-6 sm:h-6"
+                    />
+                    Create Organisation
+                  </button>
+                </div>
               </div>
             </div>
           )}

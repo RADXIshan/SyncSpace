@@ -1385,7 +1385,7 @@ export const sendInvitations = async (req, res) => {
     // Import the email template
     const { default: generateOrganizationInviteEmail } = await import("../templates/organizationInviteEmail.js");
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: "gmail",
       host: "smtp.gmail.com",
       port: 587,

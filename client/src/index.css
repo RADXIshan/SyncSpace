@@ -466,8 +466,7 @@
   border: 1px solid rgba(168, 85, 247, 0.4);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-    0 0 0 1px rgba(168, 85, 247, 0.1);
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(168, 85, 247, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -479,8 +478,7 @@
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-    0 0 0 1px rgba(168, 85, 247, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(168, 85, 247, 0.2),
     0 0 20px rgba(168, 85, 247, 0.1);
 }
 
@@ -905,7 +903,8 @@ input[type="checkbox"]:disabled:hover {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -930,5 +929,134 @@ input[type="checkbox"]:disabled:hover {
   100% {
     opacity: 0.75;
     transform: scale(1);
+  }
+}
+
+/* Smooth message animations for real-time messaging */
+.message-enter {
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+.message-optimistic {
+  opacity: 0.7;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+.message-uploading {
+  position: relative;
+  overflow: hidden;
+}
+
+.message-uploading::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes messageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Conversation list smooth updates */
+.conversation-item {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.conversation-item:hover {
+  transform: translateX(2px);
+  background: rgba(124, 58, 237, 0.05) !important;
+}
+
+.conversation-new-message {
+  animation: conversationPulse 0.5s ease-out;
+}
+
+@keyframes conversationPulse {
+  0% {
+    background: rgba(124, 58, 237, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    background: rgba(124, 58, 237, 0.15);
+    transform: scale(1.01);
+  }
+  100% {
+    background: transparent;
+    transform: scale(1);
+  }
+}
+
+/* Typing indicator smooth animation */
+.typing-indicator {
+  animation: typingFade 0.3s ease-in-out;
+}
+
+@keyframes typingFade {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* File upload progress animation */
+.file-upload-progress {
+  position: relative;
+  overflow: hidden;
+}
+
+.file-upload-progress::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(124, 58, 237, 0.1),
+    rgba(124, 58, 237, 0.3),
+    rgba(124, 58, 237, 0.1)
+  );
+  animation: uploadProgress 2s infinite;
+  width: var(--progress, 0%);
+  transition: width 0.3s ease;
+}
+
+@keyframes uploadProgress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }

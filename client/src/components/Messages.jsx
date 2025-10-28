@@ -148,11 +148,24 @@ const Messages = () => {
     }
   }, [user?.user_id]);
 
-  // Socket event handlers - Real-time like TeamChat
+  // Socket event handlers - Real-time like TeamChat with optimizations
   useEffect(() => {
     if (!socket || !isConnected || !user?.user_id) {
       return;
     }
+
+    // Debounce function to prevent rapid updates
+    const debounce = (func, wait) => {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    };
 
     // Listen for new direct messages - exactly like TeamChat handles new_message
     const handleNewDirectMessage = (message) => {
@@ -164,7 +177,26 @@ const Messages = () => {
 
       // Update messages if this conversation is currently selected - same as TeamChat
       if (isCurrentConversation) {
-        setMessages((prev) => [...prev, { ...message, isNew: true }]);
+        setMessages((prev) => {
+          // Check if this message already exists (avoid duplicates from optimistic updates)
+          const existingMessage = prev.find(
+            (msg) => msg.message_id === message.message_id ||
+            (msg.isOptimistic && msg.content === message.content && 
+             Math.abs(new Date(msg.created_at) - new Date(message.created_at)) < 5000)
+          );
+          
+          if (existingMessage) {
+            // Replace optimistic message with real message
+            return prev.map((msg) =>
+              msg.message_id === existingMessage.message_id
+                ? { ...message, isNew: true }
+                : msg
+            );
+          } else {
+            // Add new message
+            return [...prev, { ...message, isNew: true }];
+          }
+        });
         scrollToBottom();
 
         // Remove the isNew flag after animation - same as TeamChat
@@ -179,7 +211,7 @@ const Messages = () => {
         }, 1000);
       }
 
-      // Update conversations list locally
+      // Update conversations list locally with smooth animations
       setConversations((prev) => {
         const updated = [...prev];
 
@@ -198,9 +230,9 @@ const Messages = () => {
           (message.file_name ? `📎 ${message.file_name}` : "File");
 
         if (convIndex >= 0) {
-          // Update existing conversation
+          // Update existing conversation smoothly
           const existingConv = updated[convIndex];
-          updated[convIndex] = {
+          const updatedConv = {
             ...existingConv,
             last_message_content: messageContent,
             last_message_time: message.created_at,
@@ -208,10 +240,30 @@ const Messages = () => {
               message.receiver_id === user.user_id && !isCurrentConversation
                 ? existingConv.unread_count + 1
                 : existingConv.unread_count,
+            hasNewMessage: !isCurrentConversation && message.sender_id !== user.user_id, // Flag for animation
           };
-          // Move to top
-          const conversation = updated.splice(convIndex, 1)[0];
-          updated.unshift(conversation);
+          
+          // Only move to top if it's not already at the top (avoid unnecessary re-renders)
+          if (convIndex === 0) {
+            updated[0] = updatedConv;
+          } else {
+            // Move to top smoothly
+            updated.splice(convIndex, 1);
+            updated.unshift(updatedConv);
+          }
+
+          // Remove the new message flag after animation
+          if (updatedConv.hasNewMessage) {
+            setTimeout(() => {
+              setConversations((prevConvs) =>
+                prevConvs.map((conv) =>
+                  conv.other_user_id === otherUserId
+                    ? { ...conv, hasNewMessage: false }
+                    : conv
+                )
+              );
+            }, 500);
+          }
         } else if (message.sender_id !== user.user_id) {
           // Add new conversation if message is from someone else
           const newConversation = {
@@ -222,8 +274,20 @@ const Messages = () => {
             last_message_content: messageContent,
             last_message_time: message.created_at,
             unread_count: isCurrentConversation ? 0 : 1,
+            hasNewMessage: true,
           };
           updated.unshift(newConversation);
+
+          // Remove the new message flag after animation
+          setTimeout(() => {
+            setConversations((prevConvs) =>
+              prevConvs.map((conv) =>
+                conv.other_user_id === message.sender_id
+                  ? { ...conv, hasNewMessage: false }
+                  : conv
+              )
+            );
+          }, 500);
         }
 
         return updated;
@@ -255,8 +319,8 @@ const Messages = () => {
       );
     };
 
-    // Listen for typing indicators - same pattern as TeamChat
-    const handleUserTyping = (data) => {
+    // Listen for typing indicators - same pattern as TeamChat with debouncing
+    const handleUserTyping = debounce((data) => {
       if (
         selectedConversation &&
         data.userId === selectedConversation.other_user_id &&
@@ -265,7 +329,7 @@ const Messages = () => {
         setTypingUsers((prev) => {
           const existing = prev.find((u) => u.userId === data.userId);
           if (!existing) {
-            const newUsers = [
+            return [
               ...prev,
               {
                 userId: data.userId,
@@ -273,23 +337,18 @@ const Messages = () => {
                 timestamp: Date.now(),
               },
             ];
-            return newUsers;
           } else {
             // Update timestamp for existing user
-            const updated = prev.map((u) =>
+            return prev.map((u) =>
               u.userId === data.userId ? { ...u, timestamp: Date.now() } : u
             );
-            return updated;
           }
         });
       }
-    };
+    }, 100);
 
     const handleUserStoppedTyping = (data) => {
-      setTypingUsers((prev) => {
-        const filtered = prev.filter((u) => u.userId !== data.userId);
-        return filtered;
-      });
+      setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
     };
 
     // Listen for reactions - same as TeamChat
@@ -332,16 +391,8 @@ const Messages = () => {
     fetchOrganizationMembers();
   }, [fetchConversations, fetchOrganizationMembers]);
 
-  // Periodic refresh of conversations (every 30 seconds)
-  useEffect(() => {
-    if (!user?.user_id) return;
-
-    const interval = setInterval(() => {
-      fetchConversations(true); // Silent refresh
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [user?.user_id, fetchConversations]);
+  // Remove periodic refresh - rely on real-time updates only
+  // Real-time updates through socket events should handle all conversation updates
 
   // Handle URL parameters for direct user selection
   useEffect(() => {
@@ -565,12 +616,29 @@ const Messages = () => {
     }
   };
 
-  // Send message
+  // Send message with optimistic updates
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && !replyingTo) return;
 
     setSending(true);
+    
+    // Create optimistic message for immediate UI update
+    const optimisticMessage = {
+      message_id: `temp-${Date.now()}`,
+      content: newMessage.trim(),
+      sender_id: user.user_id,
+      sender_name: user.name,
+      sender_photo: user.user_photo,
+      receiver_id: selectedConversation.other_user_id,
+      created_at: new Date().toISOString(),
+      reply_to: replyingTo?.message_id || null,
+      reply_to_sender_name: replyingTo?.sender_name || null,
+      reply_to_content: replyingTo?.content || null,
+      isOptimistic: true,
+      reactions: []
+    };
+
     try {
       const messageData = {
         content: newMessage.trim(),
@@ -589,11 +657,24 @@ const Messages = () => {
         );
         setEditingMessage(null);
       } else {
-        // Send new message - let socket handle the real-time update
-        await axios.post(
+        // Add optimistic message immediately for smooth UX
+        setMessages((prev) => [...prev, optimisticMessage]);
+        scrollToBottom();
+
+        // Send new message - socket will handle the real server response
+        const response = await axios.post(
           `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages`,
           messageData,
           { withCredentials: true }
+        );
+
+        // Replace optimistic message with real message from server
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === optimisticMessage.message_id
+              ? { ...response.data.message, isNew: true }
+              : msg
+          )
         );
       }
 
@@ -607,12 +688,19 @@ const Messages = () => {
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
+      
+      // Remove optimistic message on error
+      if (!editingMessage) {
+        setMessages((prev) =>
+          prev.filter((msg) => msg.message_id !== optimisticMessage.message_id)
+        );
+      }
     } finally {
       setSending(false);
     }
   };
 
-  // Handle file upload
+  // Handle file upload with optimistic updates
   const handleFileUpload = async (files) => {
     if (!selectedConversation) return;
 
@@ -620,6 +708,28 @@ const Messages = () => {
       try {
         const fileName = file.name || "Unknown file";
         const uploadToast = toast.loading(`Uploading ${fileName}...`);
+
+        // Create optimistic file message for immediate UI feedback
+        const optimisticFileMessage = {
+          message_id: `temp-file-${Date.now()}-${Math.random()}`,
+          sender_id: user.user_id,
+          sender_name: user.name,
+          sender_photo: user.user_photo,
+          receiver_id: selectedConversation.other_user_id,
+          created_at: new Date().toISOString(),
+          file_name: fileName,
+          file_url: URL.createObjectURL(file), // Temporary local URL for preview
+          file_type: file.type,
+          file_size: file.size,
+          content: null,
+          isOptimistic: true,
+          isUploading: true,
+          reactions: []
+        };
+
+        // Add optimistic message immediately
+        setMessages((prev) => [...prev, optimisticFileMessage]);
+        scrollToBottom();
 
         const formData = new FormData();
         formData.append("file", file);
@@ -632,8 +742,31 @@ const Messages = () => {
             withCredentials: true,
             headers: { "Content-Type": "multipart/form-data" },
             timeout: 60000,
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total && progressEvent.loaded) {
+                const percentCompleted = Math.round(
+                  (progressEvent.loaded * 100) / progressEvent.total
+                );
+                toast.loading(
+                  `Uploading ${fileName}... ${percentCompleted}%`,
+                  { id: uploadToast }
+                );
+              }
+            },
           }
         );
+
+        // Replace optimistic message with real message from server
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === optimisticFileMessage.message_id
+              ? { ...response.data.message, isNew: true }
+              : msg
+          )
+        );
+
+        // Clean up the temporary URL
+        URL.revokeObjectURL(optimisticFileMessage.file_url);
 
         toast.success(`${fileName} uploaded successfully!`, {
           id: uploadToast,
@@ -642,6 +775,12 @@ const Messages = () => {
         return response.data;
       } catch (error) {
         console.error("Error uploading file:", error);
+        
+        // Remove optimistic message on error
+        setMessages((prev) =>
+          prev.filter((msg) => msg.message_id !== optimisticFileMessage.message_id)
+        );
+        
         toast.error(`Failed to upload ${file.name}`);
         throw error;
       }
@@ -727,13 +866,14 @@ const Messages = () => {
     }
   };
 
-  // Handle message deletion
+  // Handle message deletion with smooth optimistic updates
   const handleDeleteMessage = async (messageId) => {
-    // Show loading toast like TeamChat
-    const deleteToast = toast.loading("Deleting message...");
-
     try {
-      // Optimistically update the message to show as deleted like TeamChat
+      // Store original message for potential revert
+      const originalMessage = messages.find(msg => msg.message_id === messageId);
+      if (!originalMessage) return;
+
+      // Optimistically update the message to show as deleted immediately
       setMessages((prev) =>
         prev.map((msg) =>
           msg.message_id === messageId
@@ -742,10 +882,22 @@ const Messages = () => {
                 isDeleted: true,
                 originalContent: msg.originalContent || msg.content,
                 content: "This message was deleted",
+                isDeleting: true, // Add deleting state for smooth animation
               }
             : msg
         )
       );
+
+      // Remove deleting state after animation
+      setTimeout(() => {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === messageId
+              ? { ...msg, isDeleting: false }
+              : msg
+          )
+        );
+      }, 300);
 
       await axios.delete(
         `${
@@ -754,24 +906,23 @@ const Messages = () => {
         { withCredentials: true }
       );
 
-      toast.success("Message deleted", { id: deleteToast });
+      // Success - no need for toast, the UI already shows the deletion
     } catch (error) {
       console.error("Error deleting message:", error);
 
-      // Revert the optimistic update on error like TeamChat
+      // Revert the optimistic update on error
       setMessages((prev) =>
         prev.map((msg) =>
           msg.message_id === messageId && msg.isDeleted
             ? {
-                ...msg,
-                isDeleted: false,
-                content: msg.originalContent || msg.content,
+                ...originalMessage,
+                isDeleting: false,
               }
             : msg
         )
       );
 
-      toast.error("Failed to delete message", { id: deleteToast });
+      toast.error("Failed to delete message");
     }
   };
 
@@ -1021,11 +1172,15 @@ const Messages = () => {
               {filteredConversations.map((conversation) => (
                 <div
                   key={conversation.other_user_id}
-                  className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`conversation-item flex items-center p-3 rounded-lg cursor-pointer ${
                     selectedConversation?.other_user_id ===
                     conversation.other_user_id
                       ? "bg-purple-100 border border-purple-200"
                       : "hover:bg-gray-100"
+                  } ${
+                    conversation.hasNewMessage
+                      ? "conversation-new-message"
+                      : ""
                   }`}
                   onClick={() => handleSelectConversation(conversation)}
                 >
@@ -1140,12 +1295,16 @@ const Messages = () => {
               {/* Connection Status */}
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-2 h-2 rounded-full ${
-                    isConnected ? "bg-green-500" : "bg-red-500"
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    isConnected 
+                      ? "bg-green-500 shadow-sm shadow-green-500/50" 
+                      : "bg-red-500 shadow-sm shadow-red-500/50 animate-pulse"
                   }`}
                 ></div>
-                <span className="text-xs text-gray-500">
-                  {isConnected ? "Connected" : "Disconnected"}
+                <span className={`text-xs transition-colors duration-300 ${
+                  isConnected ? "text-green-600" : "text-red-600"
+                }`}>
+                  {isConnected ? "Live" : "Reconnecting..."}
                 </span>
               </div>
             </div>
@@ -1182,7 +1341,15 @@ const Messages = () => {
                       showAvatar ? "mt-4" : "mt-1"
                     } ${
                       message.isNew
-                        ? "animate-in slide-in-from-bottom-2 duration-300"
+                        ? "message-enter"
+                        : ""
+                    } ${
+                      message.isOptimistic
+                        ? "message-optimistic"
+                        : ""
+                    } ${
+                      message.isDeleting
+                        ? "message-delete-animation"
                         : ""
                     }`}
                   >
@@ -1319,21 +1486,32 @@ const Messages = () => {
                         >
                           {message.file_url ? (
                             <div
-                              className={`rounded-2xl p-4 inline-block max-w-xs sm:max-w-md shadow-sm ${
+                              className={`rounded-2xl p-4 inline-block max-w-xs sm:max-w-md shadow-sm relative ${
                                 isOwnMessage
                                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md"
                                   : "bg-white border border-gray-200 rounded-bl-md"
-                              }`}
+                              } ${message.isUploading ? "message-uploading opacity-75" : ""}`}
                             >
+                              {/* Upload progress overlay */}
+                              {message.isUploading && (
+                                <div className="absolute inset-0 bg-black bg-opacity-20 rounded-2xl flex items-center justify-center">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-white"></div>
+                                </div>
+                              )}
+                              
                               {message.file_type?.startsWith("image/") ? (
                                 <div className="relative">
                                   <img
                                     src={message.file_url}
                                     alt={message.file_name}
-                                    className="max-w-full h-auto rounded cursor-pointer"
-                                    onClick={() =>
-                                      window.open(message.file_url, "_blank")
-                                    }
+                                    className={`max-w-full h-auto rounded cursor-pointer transition-opacity ${
+                                      message.isUploading ? "opacity-50" : ""
+                                    }`}
+                                    onClick={() => {
+                                      if (!message.isUploading) {
+                                        window.open(message.file_url, "_blank");
+                                      }
+                                    }}
                                   />
                                   {message.file_name && (
                                     <div className="mt-2 text-xs opacity-75">
@@ -1361,27 +1539,34 @@ const Messages = () => {
                                     >
                                       {message.file_name}
                                     </div>
+                                    {message.isUploading && (
+                                      <div className="text-xs opacity-75 mt-1">
+                                        Uploading...
+                                      </div>
+                                    )}
                                   </div>
-                                  <button
-                                    onClick={() =>
-                                      window.open(message.file_url, "_blank")
-                                    }
-                                    className={`p-2 rounded ${
-                                      isOwnMessage
-                                        ? "hover:bg-blue-600"
-                                        : "hover:bg-gray-200"
-                                    }`}
-                                    title="Download file"
-                                  >
-                                    <Download
-                                      size={16}
-                                      className={
-                                        isOwnMessage
-                                          ? "text-white"
-                                          : "text-gray-600"
+                                  {!message.isUploading && (
+                                    <button
+                                      onClick={() =>
+                                        window.open(message.file_url, "_blank")
                                       }
-                                    />
-                                  </button>
+                                      className={`p-2 rounded ${
+                                        isOwnMessage
+                                          ? "hover:bg-blue-600"
+                                          : "hover:bg-gray-200"
+                                      }`}
+                                      title="Download file"
+                                    >
+                                      <Download
+                                        size={16}
+                                        className={
+                                          isOwnMessage
+                                            ? "text-white"
+                                            : "text-gray-600"
+                                        }
+                                      />
+                                    </button>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -1425,7 +1610,7 @@ const Messages = () => {
 
           {/* Typing indicator */}
           {typingUsers.length > 0 && (
-            <div className="px-4 pb-2">
+            <div className="px-4 pb-2 typing-indicator">
               <TypingIndicator users={typingUsers} />
             </div>
           )}

@@ -1399,24 +1399,7 @@ export const sendInvitations = async (req, res) => {
       },
       to: emails,
       subject: `Invitation to Join Organization: ${organizationName} on SyncSpace`,
-      html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #7c3aed;">You're Invited to Join ${organizationName}!</h2>
-            <p>${message}</p>
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin: 0 0 10px 0;">Your Invite Code:</h3>
-              <p style="font-size: 24px; font-weight: bold; color: #7c3aed; margin: 0; letter-spacing: 2px;">${inviteCode}</p>
-            </div>
-            <p>To join the organization:</p>
-            <ol>
-              <li>Go to SyncSpace</li>
-              <li>Click "Join Organization"</li>
-              <li>Enter the invite code above</li>
-            </ol>
-            <p style="color: #666; font-size: 12px;">This invitation was sent from SyncSpace.</p>
-          </div>
-        `,
-      text: `You're invited to join ${organizationName} on SyncSpace!\n\n${message}\n\nInvite Code: ${inviteCode}\n\nTo join:\n1. Go to SyncSpace\n2. Click "Join Organization"\n3. Enter the invite code: ${inviteCode}`,
+      html: generateOrgInviteEmail(user.name, organizationName, inviteCode),
     };
 
     try {

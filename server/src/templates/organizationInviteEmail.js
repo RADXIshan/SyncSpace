@@ -324,7 +324,7 @@ const generateOrganizationInviteEmail = ({
     <div class="container">
         <div class="header">
             <div class="header-content">
-                <div class="logo">TeamSync</div>
+                <div class="logo">SyncSpace</div>
                 <div class="subtitle">Organization Invitation</div>
             </div>
         </div>
@@ -396,7 +396,7 @@ const generateOrganizationInviteEmail = ({
                 <br>
                 Need help? <a href="#" class="footer-link">Contact our support team</a>
                 <br><br>
-                © 2024 TeamSync. All rights reserved.
+                © 2025 SyncSpace. All rights reserved.
             </div>
         </div>
     </div>
@@ -404,4 +404,4 @@ const generateOrganizationInviteEmail = ({
 </html>`;
 };
 
-module.exports = generateOrganizationInviteEmail;
+export default generateOrganizationInviteEmail;

@@ -123,19 +123,7 @@ export const signup = async (req, res) => {
       },
       to: email,
       subject: "Verify Your Email for SyncSpace",
-      html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #7c3aed;">Welcome to SyncSpace, ${name}!</h2>
-            <p>Thank you for signing up. Please verify your email address to complete your registration.</p>
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin: 0 0 10px 0;">Your Verification Code:</h3>
-              <p style="font-size: 32px; font-weight: bold; color: #7c3aed; margin: 0; letter-spacing: 4px; text-align: center;">${otpString}</p>
-            </div>
-            <p>Enter this code in the verification screen to activate your account.</p>
-            <p style="color: #666; font-size: 12px;">This code will expire in 10 minutes. If you didn't create an account, please ignore this email.</p>
-          </div>
-        `,
-      text: `Welcome to SyncSpace, ${name}!\n\nThank you for signing up. Please verify your email address to complete your registration.\n\nYour Verification Code: ${otpString}\n\nEnter this code in the verification screen to activate your account.\n\nThis code will expire in 10 minutes.`,
+      html: generateOtpEmail(name, otpString),
     };
 
     try {
@@ -355,20 +343,7 @@ export const forgotPassword = async (req, res) => {
       },
       to: email,
       subject: "Reset Your SyncSpace Password",
-      html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #7c3aed;">Password Reset Request</h2>
-            <p>You requested to reset your password for your SyncSpace account.</p>
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0 0 15px 0;">Click the button below to reset your password:</p>
-              <a href="${resetLink}" style="display: inline-block; background-color: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
-            </div>
-            <p>Or copy and paste this link in your browser:</p>
-            <p style="word-break: break-all; color: #7c3aed;">${resetLink}</p>
-            <p style="color: #666; font-size: 12px;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
-          </div>
-        `,
-      text: `Password Reset Request\n\nYou requested to reset your password for your SyncSpace account.\n\nClick this link to reset your password: ${resetLink}\n\nIf you didn't request this password reset, please ignore this email.`,
+      html: generateForgotPasswordEmail(user.name, resetLink),
     };
 
     try {
@@ -499,20 +474,7 @@ export const resendOtp = async (req, res) => {
       },
       to: email,
       subject: "Your New Verification Code for SyncSpace",
-      html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #7c3aed;">New Verification Code</h2>
-            <p>Hi ${user.name},</p>
-            <p>You requested a new verification code for your SyncSpace account.</p>
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin: 0 0 10px 0;">Your New Verification Code:</h3>
-              <p style="font-size: 32px; font-weight: bold; color: #7c3aed; margin: 0; letter-spacing: 4px; text-align: center;">${otp}</p>
-            </div>
-            <p>Enter this code in the verification screen to activate your account.</p>
-            <p style="color: #666; font-size: 12px;">This code will expire in 10 minutes. If you didn't request this code, please ignore this email.</p>
-          </div>
-        `,
-      text: `New Verification Code\n\nHi ${user.name},\n\nYou requested a new verification code for your SyncSpace account.\n\nYour New Verification Code: ${otp}\n\nEnter this code in the verification screen to activate your account.\n\nThis code will expire in 10 minutes.`,
+      html: generateOtpEmail(user.name, otp),
     };
 
     try {

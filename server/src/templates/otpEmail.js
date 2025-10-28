@@ -207,7 +207,7 @@ const generateOtpEmail = (otpCode) => {
     <div class="container">
         <div class="header">
             <div class="header-content">
-                <div class="logo">TeamSync</div>
+                <div class="logo">SyncSpace</div>
                 <div class="subtitle">Secure Authentication</div>
             </div>
         </div>
@@ -238,12 +238,11 @@ const generateOtpEmail = (otpCode) => {
                 If you didn't request this code, please ignore this email or 
                 <a href="#" class="footer-link">contact our support team</a>.
                 <br><br>
-                © 2024 TeamSync. All rights reserved.
+                © 2025 SyncSpace. All rights reserved.
             </div>
         </div>
     </div>
 </body>
 </html>`;
 };
-
-module.exports = generateOtpEmail;
+export default generateOtpEmail;

@@ -272,4 +272,4 @@ const generateForgotPasswordEmail = (userName, resetLink) => {
 </html>`;
 };
 
-module.exports = generateForgotPasswordEmail;
+export default generateForgotPasswordEmail;

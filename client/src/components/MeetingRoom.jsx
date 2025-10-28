@@ -669,59 +669,108 @@ const MeetingRoom = () => {
 
   // Toggle video
   const toggleVideo = async () => {
-    if (isScreenSharing) {
-      toast.error("Cannot toggle camera while screen sharing");
-      return;
-    }
-
     const newState = !isVideoEnabled;
     console.log("Toggling video from", isVideoEnabled, "to", newState);
 
     try {
-      if (localStream) {
-        const videoTrack = localStream.getVideoTracks()[0];
-        if (videoTrack) {
-          videoTrack.enabled = newState;
-          setIsVideoEnabled(newState);
-          console.log("Video track", newState ? "enabled" : "disabled");
-          
-          // Force video element refresh when enabling video
-          if (newState && localVideoRef.current) {
-            localVideoRef.current.play().catch(console.error);
+      if (isScreenSharing) {
+        // Handle video toggle during screen sharing
+        if (newState) {
+          // Enable camera during screen sharing
+          try {
+            const newCameraStream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                facingMode: "user",
+              },
+              audio: false,
+            });
+            
+            console.log("Created new camera stream during screen sharing");
+            setCameraStream(newCameraStream);
+            
+            // Ensure video track is enabled
+            const videoTrack = newCameraStream.getVideoTracks()[0];
+            if (videoTrack) {
+              videoTrack.enabled = true;
+              console.log("Camera track enabled during screen sharing");
+            }
+            
+            // Update camera video element
+            if (cameraVideoRef.current) {
+              cameraVideoRef.current.srcObject = newCameraStream;
+              setTimeout(() => {
+                if (cameraVideoRef.current) {
+                  cameraVideoRef.current.play().catch(console.error);
+                }
+              }, 100);
+            }
+            
+            setIsVideoEnabled(true);
+            toast.success("Camera enabled");
+          } catch (error) {
+            console.error("Error enabling camera during screen sharing:", error);
+            toast.error("Failed to enable camera");
+            return;
           }
-        } else if (newState) {
-          const videoConstraints = {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            facingMode: "user",
-          };
-          
-          const videoStream = await navigator.mediaDevices.getUserMedia({
-            video: videoConstraints
-          });
-          
-          const newVideoTrack = videoStream.getVideoTracks()[0];
-          newVideoTrack.enabled = true;
-          
-          localStream.addTrack(newVideoTrack);
-          
-          // Force video element refresh
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = null;
-            setTimeout(() => {
-              if (localVideoRef.current && localStream) {
-                localVideoRef.current.srcObject = localStream;
-                localVideoRef.current.play().catch(console.error);
-              }
-            }, 100);
+        } else {
+          // Disable camera during screen sharing
+          if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            setCameraStream(null);
           }
           
-          peersRef.current.forEach((peerObj) => {
-            peerObj.peer.addTrack(newVideoTrack, localStream);
-          });
-          
-          setIsVideoEnabled(true);
-          console.log("New video track added");
+          setIsVideoEnabled(false);
+          toast.success("Camera disabled");
+        }
+      } else {
+        // Handle normal video toggle (not screen sharing)
+        if (localStream) {
+          const videoTrack = localStream.getVideoTracks()[0];
+          if (videoTrack) {
+            videoTrack.enabled = newState;
+            setIsVideoEnabled(newState);
+            console.log("Video track", newState ? "enabled" : "disabled");
+            
+            // Force video element refresh when enabling video
+            if (newState && localVideoRef.current) {
+              localVideoRef.current.play().catch(console.error);
+            }
+          } else if (newState) {
+            const videoConstraints = {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "user",
+            };
+            
+            const videoStream = await navigator.mediaDevices.getUserMedia({
+              video: videoConstraints
+            });
+            
+            const newVideoTrack = videoStream.getVideoTracks()[0];
+            newVideoTrack.enabled = true;
+            
+            localStream.addTrack(newVideoTrack);
+            
+            // Force video element refresh
+            if (localVideoRef.current) {
+              localVideoRef.current.srcObject = null;
+              setTimeout(() => {
+                if (localVideoRef.current && localStream) {
+                  localVideoRef.current.srcObject = localStream;
+                  localVideoRef.current.play().catch(console.error);
+                }
+              }, 100);
+            }
+            
+            peersRef.current.forEach((peerObj) => {
+              peerObj.peer.addTrack(newVideoTrack, localStream);
+            });
+            
+            setIsVideoEnabled(true);
+            console.log("New video track added");
+          }
         }
       }
 
@@ -894,24 +943,33 @@ const MeetingRoom = () => {
         setCameraStream(null);
       }
 
-      const newCameraStream = await navigator.mediaDevices.getUserMedia({
-        video: isVideoEnabled ? {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user",
-        } : false,
-        audio: false,
-      });
+      // Only create new camera stream if video was enabled
+      let newVideoTrack = null;
+      if (isVideoEnabled) {
+        const newCameraStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user",
+          },
+          audio: false,
+        });
 
-      const newVideoTrack = newCameraStream.getVideoTracks()[0];
+        newVideoTrack = newCameraStream.getVideoTracks()[0];
+        newVideoTrack.enabled = true;
+      }
 
       // Replace track in peer connections
       peersRef.current.forEach((peerObj) => {
         const sender = peerObj.peer
           .getSenders()
           .find((s) => s.track && s.track.kind === "video");
-        if (sender && newVideoTrack) {
-          sender.replaceTrack(newVideoTrack);
+        if (sender) {
+          if (newVideoTrack) {
+            sender.replaceTrack(newVideoTrack);
+          } else {
+            sender.replaceTrack(null);
+          }
         }
       });
 
@@ -924,7 +982,6 @@ const MeetingRoom = () => {
       
       // Add new video track if camera should be enabled
       if (newVideoTrack) {
-        newVideoTrack.enabled = isVideoEnabled;
         localStream.addTrack(newVideoTrack);
       }
 

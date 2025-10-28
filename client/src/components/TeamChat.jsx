@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
+import { useUnread } from "../context/UnreadContext";
 import axios from "axios";
 import {
   Hash,
@@ -54,6 +55,7 @@ import FileUpload from "./FileUpload";
 const TeamChat = ({ channelId, channelName }) => {
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
+  const { markChannelAsRead } = useUnread();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -227,7 +229,7 @@ const TeamChat = ({ channelId, channelName }) => {
         const mentionedBy = data.mentionedBy || data.userName || "Someone";
         const channelName = data.channelName || "a channel";
 
-        console.log(`Processing mention from ${mentionedBy} in channel ${channelName}, current channel: ${channelId}`);
+
 
         // Only show toast if we're not currently in this channel to avoid duplicate notifications
         if (data.channelId !== channelId) {
@@ -254,7 +256,12 @@ const TeamChat = ({ channelId, channelName }) => {
   useEffect(() => {
     fetchMessages();
     fetchChannelMembers();
-  }, [fetchMessages, fetchChannelMembers]);
+    
+    // Mark channel as read when user opens it
+    if (channelId) {
+      markChannelAsRead(channelId);
+    }
+  }, [fetchMessages, fetchChannelMembers, channelId, markChannelAsRead]);
 
   // Ensure members are fetched when channel changes
   useEffect(() => {
@@ -306,6 +313,16 @@ const TeamChat = ({ channelId, channelName }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Update timestamps every 30 seconds for better accuracy
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Force re-render to update timestamps
+      setMessages(prev => [...prev]);
+    }, 30000); // Update every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Cleanup typing timeout on unmount or channel change
   useEffect(() => {
@@ -704,58 +721,40 @@ const TeamChat = ({ channelId, channelName }) => {
     textareaRef.current?.focus();
   };
 
-  // Handle file download - Simplified version
+  // Handle file download
   const handleFileDownload = async (fileUrl, fileName) => {
-    console.log(`[DOWNLOAD] Function called with:`, { fileUrl, fileName });
-    
     if (!fileUrl) {
-      console.log(`[DOWNLOAD] No file URL provided`);
       safeToast.error("File URL is not available");
       return;
     }
 
     const safeFileName = fileName || "download";
-    console.log(`[DOWNLOAD] Starting download for: ${safeFileName}`);
-    
-    // Show loading toast
     const downloadToast = safeToast.loading(`Downloading ${safeFileName}...`);
 
     try {
-      // Simple approach: try direct download first
-      console.log(`[DOWNLOAD] Trying direct download approach`);
-      
       const link = document.createElement("a");
       link.href = fileUrl;
       link.download = safeFileName;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
       
-      // Add to DOM temporarily
       document.body.appendChild(link);
-      
-      // Trigger download
       link.click();
       
-      // Clean up
       setTimeout(() => {
         if (document.body.contains(link)) {
           document.body.removeChild(link);
         }
       }, 100);
 
-      // Show success message
       safeToast.success(`Download started for ${safeFileName}`, {
         id: downloadToast,
       });
       
-      console.log(`[DOWNLOAD] Direct download triggered successfully`);
-      
     } catch (error) {
       console.error("Download error:", error);
       
-      // Fallback: open in new tab
       try {
-        console.log(`[DOWNLOAD] Trying fallback - open in new tab`);
         window.open(fileUrl, '_blank');
         safeToast.success(`Opening ${safeFileName} in new tab`, {
           id: downloadToast,
@@ -920,26 +919,109 @@ const TeamChat = ({ channelId, channelName }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // Format timestamp
+  // Format timestamp with accurate timing and timezone handling
   const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
+    if (!timestamp) return "";
 
-    if (diff < 60000) return "Just now";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (date.toDateString() === now.toDateString()) {
+    // Handle different timestamp formats and ensure proper parsing
+    let date;
+    try {
+      if (typeof timestamp === 'string') {
+        // Handle ISO string formats, ensure UTC parsing if no timezone info
+        if (timestamp.includes('T') && !timestamp.includes('Z') && !timestamp.includes('+') && !timestamp.includes('-', 10)) {
+          // Assume UTC if no timezone specified in ISO format
+          date = new Date(timestamp + 'Z');
+        } else {
+          date = new Date(timestamp);
+        }
+      } else if (typeof timestamp === 'number') {
+        // Handle Unix timestamp (seconds or milliseconds)
+        date = timestamp > 1000000000000 ? new Date(timestamp) : new Date(timestamp * 1000);
+      } else {
+        date = new Date(timestamp);
+      }
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid timestamp:', timestamp);
+        return "Invalid date";
+      }
+    } catch (error) {
+      console.warn('Error parsing timestamp:', timestamp, error);
+      return "Invalid date";
+    }
+
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+
+    // Handle future dates (clock sync issues)
+    if (diff < 0) {
+      const futureDiff = Math.abs(diff);
+      if (futureDiff < 30000) return "Just now"; // Within 30 seconds, assume clock sync issue
+      return "Just now"; // Don't show future times
+    }
+
+    // Less than 30 seconds
+    if (diff < 30000) return "Just now";
+
+    // Less than 1 minute
+    if (diff < 60000) return "Less than a minute ago";
+
+    // Less than 1 hour
+    if (diff < 3600000) {
+      const minutes = Math.floor(diff / 60000);
+      return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    }
+
+    // Same day
+    const isToday = date.toDateString() === now.toDateString();
+    if (isToday) {
       return date.toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
+        hour12: true,
       });
     }
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+
+    // Yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday at ${date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })}`;
+    }
+
+    // Less than 7 days
+    if (diff < 604800000) {
+      const days = Math.floor(diff / 86400000);
+      return `${days} day${days === 1 ? '' : 's'} ago`;
+    }
+
+    // More than 7 days
+    const currentYear = now.getFullYear();
+    const messageYear = date.getFullYear();
+    
+    if (currentYear === messageYear) {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } else {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
   };
 
   // Render message content with mentions
@@ -1206,10 +1288,7 @@ const TeamChat = ({ channelId, channelName }) => {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    console.log(`[DOWNLOAD BUTTON] Image download clicked:`, {
-                                      fileUrl: message.file_url,
-                                      fileName: message.file_name
-                                    });
+
                                     handleFileDownload(
                                       message.file_url,
                                       message.file_name

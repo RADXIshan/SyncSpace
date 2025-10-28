@@ -224,6 +224,39 @@ export const setupSocketHandlers = (io) => {
       });
     });
 
+    // Handle typing indicators for direct messages
+    socket.on('dm_typing_start', (data) => {
+      const targetSocketId = getUserSocketId(data.targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('dm_user_typing', {
+          userId: socket.userId,
+          userName: data.userName || socket.userName,
+          targetUserId: data.targetUserId
+        });
+      }
+    });
+
+    socket.on('dm_typing_stop', (data) => {
+      const targetSocketId = getUserSocketId(data.targetUserId);
+      if (targetSocketId) {
+        io.to(targetSocketId).emit('dm_user_stopped_typing', {
+          userId: socket.userId,
+          targetUserId: data.targetUserId
+        });
+      }
+    });
+
+    // Handle mark as read events
+    socket.on('direct_messages_marked_read', (data) => {
+      // Emit to the user who marked messages as read (for multi-device sync)
+      socket.emit('direct_messages_read', data);
+    });
+
+    socket.on('channel_marked_read', (data) => {
+      // Emit to the user who marked channel as read (for multi-device sync)
+      socket.emit('channel_read', data);
+    });
+
     // Handle message events
     socket.on('send_message', async (data) => {
       try {

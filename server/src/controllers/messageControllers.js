@@ -606,6 +606,63 @@ const checkChannelAccess = async (userId, channelId) => {
   }
 };
 
+// Mark channel as read
+export const markChannelAsRead = async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const userId = req.user.userId;
+
+    // Verify user has access to the channel
+    const hasAccess = await checkChannelAccess(userId, channelId);
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied to this channel" });
+    }
+
+    // Get the latest message in the channel
+    const [latestMessage] = await sql`
+      SELECT message_id, created_at 
+      FROM channel_messages 
+      WHERE channel_id = ${channelId} 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `;
+
+    // Update or insert read status
+    try {
+      await sql`
+        INSERT INTO channel_read_status (user_id, channel_id, last_read_at, last_message_id)
+        VALUES (${userId}, ${channelId}, NOW(), ${latestMessage?.message_id || null})
+        ON CONFLICT (user_id, channel_id)
+        DO UPDATE SET 
+          last_read_at = NOW(),
+          last_message_id = ${latestMessage?.message_id || null}
+      `;
+    } catch (tableError) {
+      // If table doesn't exist, just continue - the feature will work without read tracking
+      console.log('channel_read_status table not found, skipping read status update');
+    }
+
+    // Emit socket event to update unread counts
+    const io = req.app.get("io");
+    if (io) {
+      const { getUserSocketId } = await import('../configs/socket.js');
+      
+      const userSocketId = getUserSocketId(userId);
+      if (userSocketId) {
+        io.to(userSocketId).emit("channel_read", {
+          userId: userId,
+          channelId: channelId
+        });
+      }
+    }
+
+    res.json({ message: "Channel marked as read" });
+  } catch (error) {
+    console.error("Error marking channel as read:", error);
+    res.status(500).json({ message: "Failed to mark channel as read" });
+  }
+};
+
 // Helper function to get channel name
 const getChannelName = async (channelId) => {
   try {

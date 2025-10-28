@@ -18,6 +18,7 @@ import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { useNotifications } from "../context/NotificationContext";
 import { useToast } from "../context/ToastContext";
+import { useUnread } from "../context/UnreadContext";
 import axios from "axios";
 import ConfirmationModal from "./ConfirmationModal";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
@@ -35,6 +36,7 @@ const Sidebar = ({
   const { isConnected } = useSocket();
   const { unreadCount } = useNotifications();
   const { showError, showSuccess } = useToast();
+  const { directMessagesCount, getChannelUnreadCount } = useUnread();
   const navigate = useNavigate();
   const [organization, setOrganization] = useState(null);
   const [loadingOrg, setLoadingOrg] = useState(false);
@@ -52,6 +54,7 @@ const Sidebar = ({
       name: "Messages",
       icon: <MessageCircle size={23} />,
       path: "/home/messages",
+      badge: directMessagesCount > 0 ? directMessagesCount : null,
     },
     {
       name: "Notifications",
@@ -457,34 +460,42 @@ const Sidebar = ({
                 </h3>
               </div>
               <div className="space-y-1 sm:space-y-1">
-                {organization.channels.map((channel) => (
-                  <Link
-                    key={channel.id}
-                    to={`/home/channels/${channel.id}`}
-                    className={`flex items-center px-4 sm:px-4 py-2.5 sm:py-2.5 rounded-lg duration-300 font-medium group ${
-                      isActive(`/home/channels/${channel.id}`)
-                        ? "glass-button-enhanced text-purple-400 shadow-lg"
-                        : "text-white/70 hover:text-white hover:bg-white/5"
-                    }`}
-                    title={channel.description || channel.name}
-                  >
-                    <span
-                      className={`mr-3 sm:mr-3 transition-colors duration-200 flex-shrink-0 ${
+                {organization.channels.map((channel) => {
+                  const channelUnreadCount = getChannelUnreadCount(channel.id);
+                  return (
+                    <Link
+                      key={channel.id}
+                      to={`/home/channels/${channel.id}`}
+                      className={`flex items-center px-4 sm:px-4 py-2.5 sm:py-2.5 rounded-lg duration-300 font-medium group ${
                         isActive(`/home/channels/${channel.id}`)
-                          ? "text-purple-400"
-                          : "text-white/60"
+                          ? "glass-button-enhanced text-purple-400 shadow-lg"
+                          : "text-white/70 hover:text-white hover:bg-white/5"
                       }`}
+                      title={channel.description || channel.name}
                     >
-                      <Hash
-                        size={14}
-                        className="sm:w-[14px] sm:h-[14px] group-hover:scale-110 duration-300"
-                      />
-                    </span>
-                    <span className="text-sm sm:text-sm font-medium truncate">
-                      {channel.name}
-                    </span>
-                  </Link>
-                ))}
+                      <span
+                        className={`mr-3 sm:mr-3 transition-colors duration-200 flex-shrink-0 ${
+                          isActive(`/home/channels/${channel.id}`)
+                            ? "text-purple-400"
+                            : "text-white/60"
+                        }`}
+                      >
+                        <Hash
+                          size={14}
+                          className="sm:w-[14px] sm:h-[14px] group-hover:scale-110 duration-300"
+                        />
+                      </span>
+                      <span className="text-sm sm:text-sm font-medium truncate flex-1">
+                        {channel.name}
+                      </span>
+                      {channelUnreadCount > 0 && (
+                        <span className="ml-2 sm:ml-2 px-2 sm:px-2 py-1 sm:py-1 text-xs sm:text-xs font-bold text-white bg-gradient-to-br from-red-600 to-pink-600 rounded-full min-w-[20px] sm:min-w-[20px] h-5 sm:h-5 flex items-center justify-center shadow-red-600 shadow-[0_0_8px_0] flex-shrink-0">
+                          {channelUnreadCount > 99 ? "99+" : channelUnreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}

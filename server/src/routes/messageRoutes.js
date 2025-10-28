@@ -8,6 +8,7 @@ import {
   uploadFile,
   addReaction,
   getChannelMembers,
+  markChannelAsRead,
 } from "../controllers/messageControllers.js";
 import { authenticateToken } from "../middleware/auth.js";
 
@@ -91,6 +92,9 @@ router.post("/messages/:messageId/reactions", addReaction);
 
 // Channel members (for mentions)
 router.get("/channels/:channelId/members", getChannelMembers);
+
+// Mark channel messages as read
+router.post("/channels/:channelId/read", markChannelAsRead);
 
 // File viewer proxy (for viewing files like PDFs in browser)
 router.get("/files/view", async (req, res) => {

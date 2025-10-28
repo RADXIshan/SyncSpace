@@ -227,7 +227,7 @@ const generateForgotPasswordEmail = (userName, resetLink) => {
     <div class="container">
         <div class="header">
             <div class="header-content">
-                <div class="logo">TeamSync</div>
+                <div class="logo">SyncSpace</div>
                 <div class="subtitle">Password Recovery</div>
             </div>
         </div>
@@ -264,7 +264,7 @@ const generateForgotPasswordEmail = (userName, resetLink) => {
             <div class="footer-text">
                 Need help? <a href="#" class="footer-link">Contact our support team</a>
                 <br><br>
-                © 2024 TeamSync. All rights reserved.
+                © 2025 TeamSync. All rights reserved.
             </div>
         </div>
     </div>

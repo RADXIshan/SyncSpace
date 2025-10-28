@@ -13,6 +13,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { SocketProvider } from "./context/SocketContext";
 import { ToastProvider } from "./context/ToastContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { UnreadProvider } from "./context/UnreadContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import MeetingRoom from "./components/MeetingRoom";
@@ -26,7 +27,8 @@ const App = () => {
         <ErrorBoundary>
           <SocketProvider>
             <NotificationProvider>
-              <div>
+              <UnreadProvider>
+                <div>
                 <Toaster
                   position="top-right"
                   reverseOrder={false}
@@ -134,7 +136,8 @@ const App = () => {
                     }
                   />
                 </Routes>
-              </div>
+                </div>
+              </UnreadProvider>
             </NotificationProvider>
           </SocketProvider>
         </ErrorBoundary>

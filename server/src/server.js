@@ -16,6 +16,7 @@ import meetingRoutes from "./routes/meetingRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
+import directMessageRoutes from "./routes/directMessageRoutes.js";
 import { setupSocketHandlers } from "./configs/socket.js";
 import sql from "./database/db.js";
 import fs from "fs";
@@ -28,10 +29,14 @@ const __dirname = dirname(__filename);
 // Load .env from the server root directory
 dotenv.config({ path: join(__dirname, "../.env") });
 
-// Create uploads directory if it doesn't exist
+// Create uploads directories if they don't exist
 const uploadsDir = path.join(process.cwd(), "uploads", "chat-files");
+const dmUploadsDir = path.join(process.cwd(), "uploads", "direct-messages");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(dmUploadsDir)) {
+  fs.mkdirSync(dmUploadsDir, { recursive: true });
 }
 
 const app = express();
@@ -124,6 +129,7 @@ app.use("/api/meetings", meetingRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api", messageRoutes);
+app.use("/api/direct-messages", directMessageRoutes);
 
 // Debug endpoint for organization issues
 app.get("/debug/org/:org_id", async (req, res) => {
@@ -211,6 +217,129 @@ app.post("/debug/migrate", async (req, res) => {
     res.json({ message: "Migration completed successfully!" });
   } catch (error) {
     console.error("❌ Migration failed:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Check if direct message tables exist
+app.get("/debug/check-dm-tables", async (req, res) => {
+  try {
+    // Check if direct_messages table exists
+    const dmTableExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'direct_messages'
+      );
+    `;
+
+    // Check if channel_read_status table exists
+    const readStatusTableExists = await sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'channel_read_status'
+      );
+    `;
+
+    res.json({
+      direct_messages_table: dmTableExists[0].exists,
+      channel_read_status_table: readStatusTableExists[0].exists,
+      message: "Table status checked"
+    });
+  } catch (error) {
+    console.error("Error checking tables:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Direct Messages Migration endpoint
+app.post("/debug/migrate-dm", async (req, res) => {
+  try {
+    console.log("Running direct messages tables migration...");
+
+    // Define migration SQL inline
+    const migrationSQL = `
+      -- Create direct messages table
+      CREATE TABLE IF NOT EXISTS direct_messages (
+          message_id SERIAL PRIMARY KEY,
+          sender_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+          receiver_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+          content TEXT,
+          file_url TEXT,
+          file_name TEXT,
+          file_type TEXT,
+          file_size BIGINT,
+          reply_to INTEGER REFERENCES direct_messages(message_id) ON DELETE SET NULL,
+          is_read BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Create direct message reactions table
+      CREATE TABLE IF NOT EXISTS direct_message_reactions (
+          reaction_id SERIAL PRIMARY KEY,
+          message_id INTEGER NOT NULL REFERENCES direct_messages(message_id) ON DELETE CASCADE,
+          user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+          emoji VARCHAR(10) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(message_id, user_id, emoji)
+      );
+
+      -- Create indexes for better performance
+      CREATE INDEX IF NOT EXISTS idx_direct_messages_sender_receiver ON direct_messages(sender_id, receiver_id);
+      CREATE INDEX IF NOT EXISTS idx_direct_messages_receiver_sender ON direct_messages(receiver_id, sender_id);
+      CREATE INDEX IF NOT EXISTS idx_direct_messages_created_at ON direct_messages(created_at);
+      CREATE INDEX IF NOT EXISTS idx_direct_messages_is_read ON direct_messages(is_read);
+      CREATE INDEX IF NOT EXISTS idx_direct_message_reactions_message_id ON direct_message_reactions(message_id);
+
+      -- Create trigger function
+      CREATE OR REPLACE FUNCTION update_direct_message_updated_at()
+      RETURNS TRIGGER AS $$
+      BEGIN
+          NEW.updated_at = CURRENT_TIMESTAMP;
+          RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      -- Create trigger
+      DROP TRIGGER IF EXISTS update_direct_message_updated_at ON direct_messages;
+      CREATE TRIGGER update_direct_message_updated_at
+          BEFORE UPDATE ON direct_messages
+          FOR EACH ROW
+          EXECUTE FUNCTION update_direct_message_updated_at();
+
+      -- Create channel read status table
+      CREATE TABLE IF NOT EXISTS channel_read_status (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+          channel_id INTEGER NOT NULL REFERENCES org_channels(channel_id) ON DELETE CASCADE,
+          last_read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          last_message_id INTEGER,
+          UNIQUE(user_id, channel_id)
+      );
+
+      -- Create index for channel read status
+      CREATE INDEX IF NOT EXISTS idx_channel_read_status_user_channel ON channel_read_status(user_id, channel_id);
+    `;
+
+    // Split by semicolon and execute each statement
+    const statements = migrationSQL
+      .split(";")
+      .map((stmt) => stmt.trim())
+      .filter((stmt) => stmt.length > 0);
+
+    for (const statement of statements) {
+      if (statement.trim()) {
+        await sql.unsafe(statement);
+        console.log("✓ Executed DM statement");
+      }
+    }
+
+    console.log("✅ Direct Messages migration completed successfully!");
+    res.json({ message: "Direct Messages migration completed successfully!" });
+  } catch (error) {
+    console.error("❌ Direct Messages migration failed:", error);
     res.status(500).json({ error: error.message });
   }
 });

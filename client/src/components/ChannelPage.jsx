@@ -755,14 +755,14 @@ const ChannelPage = () => {
           {/* Only show menu button if user has permissions for any menu items */}
           {(userPermissions?.manage_channels ||
             userPermissions?.settings_access) && (
-            <div className="relative pr-2 sm:pr-6 cursor-pointer">
+            <div className="relative pr-2 sm:pr-6 cursor-pointer z-10">
               <button
                 onClick={() => setShowChannelMenu(true)}
-                className="p-1.5 sm:p-2.5 rounded-full hover:bg-violet-200 transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2.5 rounded-full hover:bg-violet-200 transition-all duration-300 cursor-pointer"
               >
                 <MoreVertical
                   size={18}
-                  className="text-gray-700 group-hover:text-violet-700 transition-all duration-300 sm:w-5 sm:h-5"
+                  className="text-gray-700 group-hover:text-violet-700 transition-all duration-300 sm:w-5 sm:h-5 cursor-pointer z-10"
                 />
               </button>
 

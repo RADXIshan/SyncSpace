@@ -121,7 +121,7 @@ const InviteModal = ({ organization, onClose }) => {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex-1 flex items-center justify-center px-2 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all ${
+                  className={`flex-1 flex items-center justify-center px-2 sm:px-4 py-2 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all cursor-pointer ${
                     activeTab === tab.id
                       ? "glass-button-enhanced text-violet-300 border border-violet-500/30"
                       : "glass-effect text-gray-400 hover:text-gray-300"
@@ -159,7 +159,7 @@ const InviteModal = ({ organization, onClose }) => {
                     </div>
                     <button
                       onClick={handleCopyCode}
-                      className={`flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 w-full sm:w-auto border ${
+                      className={`flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 w-full sm:w-auto border cursor-pointer ${
                         copied
                           ? "bg-green-500/10 text-green-300 border-green-500/30 hover:bg-green-500/15"
                           : "bg-violet-500/10 text-violet-300 border-violet-500/30 hover:bg-violet-500/15"

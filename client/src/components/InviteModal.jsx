@@ -53,6 +53,10 @@ const InviteModal = ({ organization, onClose }) => {
     try {
       toastId = toast.loading("Sending invitation...");
 
+      // Add timeout to the request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
+
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/invite`,
         {
@@ -61,20 +65,34 @@ const InviteModal = ({ organization, onClose }) => {
           organizationName: organization.name,
           inviteCode: organization.code,
         },
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          signal: controller.signal,
+          timeout: 45000
+        }
       );
 
+      clearTimeout(timeoutId);
       toast.success("Invitation sent successfully!", { id: toastId });
       onClose();
     } catch (err) {
       console.error("Error sending invitation:", err);
-      toast.error(
-        err.response?.data?.message ||
+      
+      let errorMessage;
+      if (err.code === 'ECONNABORTED' || err.name === 'AbortError') {
+        errorMessage = "Request timeout. The email service might be slow. Please try again.";
+      } else if (err.response?.status === 408) {
+        errorMessage = "Server timeout. Please try again in a moment.";
+      } else if (err.response?.status === 504) {
+        errorMessage = "Gateway timeout. Please try again.";
+      } else {
+        errorMessage = err.response?.data?.message ||
           err.response?.data?.error ||
           err.message ||
-          "Failed to send invitation",
-        { id: toastId }
-      );
+          "Failed to send invitation";
+      }
+      
+      toast.error(errorMessage, { id: toastId });
     } finally {
       setLoading(false);
     }

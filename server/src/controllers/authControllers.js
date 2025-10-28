@@ -4,6 +4,8 @@ import sql from "../database/db.js";
 import { v2 as cloudinary } from "cloudinary";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import generateOtpEmail from "../templates/otpEmail.js";
+import generateForgotPasswordEmail from "../templates/forgotPasswordEmail.js";
 
 dotenv.config();
 
@@ -100,11 +102,19 @@ export const signup = async (req, res) => {
         user: process.env.EMAIL,
         pass: process.env.APP_PASSWORD,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 5000,    // 5 seconds
+      socketTimeout: 10000,     // 10 seconds
     });
 
-    // Verify transporter configuration
+    // Verify transporter configuration with timeout
     try {
-      await transporter.verify();
+      await Promise.race([
+        transporter.verify(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email verification timeout')), 10000)
+        )
+      ]);
       console.log("Email transporter verified successfully for signup");
     } catch (verifyError) {
       console.error(
@@ -128,7 +138,12 @@ export const signup = async (req, res) => {
 
     try {
       console.log("Sending signup verification email to:", email);
-      const result = await transporter.sendMail(mailOptions);
+      const result = await Promise.race([
+        transporter.sendMail(mailOptions),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email sending timeout')), 25000)
+        )
+      ]);
       console.log("Signup email sent successfully:", result.messageId);
 
       res.status(201).json({
@@ -286,7 +301,7 @@ export const forgotPassword = async (req, res) => {
 
   try {
     const [user] = await Promise.race([
-      sql`SELECT user_id FROM users WHERE email = ${email}`,
+      sql`SELECT user_id, name FROM users WHERE email = ${email}`,
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Database timeout")), 5000)
       ),
@@ -318,11 +333,19 @@ export const forgotPassword = async (req, res) => {
         user: process.env.EMAIL,
         pass: process.env.APP_PASSWORD,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 5000,    // 5 seconds
+      socketTimeout: 10000,     // 10 seconds
     });
 
-    // Verify transporter configuration
+    // Verify transporter configuration with timeout
     try {
-      await transporter.verify();
+      await Promise.race([
+        transporter.verify(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email verification timeout')), 10000)
+        )
+      ]);
       console.log(
         "Email transporter verified successfully for forgot password"
       );
@@ -348,7 +371,12 @@ export const forgotPassword = async (req, res) => {
 
     try {
       console.log("Sending password reset email to:", email);
-      const result = await transporter.sendMail(mailOptions);
+      const result = await Promise.race([
+        transporter.sendMail(mailOptions),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email sending timeout')), 25000)
+        )
+      ]);
       console.log("Password reset email sent successfully:", result.messageId);
       res
         .status(200)
@@ -451,11 +479,19 @@ export const resendOtp = async (req, res) => {
         user: process.env.EMAIL,
         pass: process.env.APP_PASSWORD,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 5000,    // 5 seconds
+      socketTimeout: 10000,     // 10 seconds
     });
 
-    // Verify transporter configuration
+    // Verify transporter configuration with timeout
     try {
-      await transporter.verify();
+      await Promise.race([
+        transporter.verify(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email verification timeout')), 10000)
+        )
+      ]);
       console.log("Email transporter verified successfully for resend OTP");
     } catch (verifyError) {
       console.error(
@@ -479,7 +515,12 @@ export const resendOtp = async (req, res) => {
 
     try {
       console.log("Sending resend OTP email to:", email);
-      const result = await transporter.sendMail(mailOptions);
+      const result = await Promise.race([
+        transporter.sendMail(mailOptions),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email sending timeout')), 25000)
+        )
+      ]);
       console.log("Resend OTP email sent successfully:", result.messageId);
       res.status(200).json({ success: true, message: "OTP sent successfully" });
     } catch (emailError) {

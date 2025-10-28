@@ -79,23 +79,26 @@ const Messages = () => {
   }, []);
 
   // Fetch conversations
-  const fetchConversations = useCallback(async () => {
-    if (!user?.user_id) return;
+  const fetchConversations = useCallback(
+    async (silent = false) => {
+      if (!user?.user_id) return;
 
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/api/direct-messages/conversations`,
-        { withCredentials: true }
-      );
-      setConversations(response.data.conversations || []);
-    } catch (error) {
-      console.error("Error fetching conversations:", error);
-      toast.error("Failed to load conversations");
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.user_id]);
+      try {
+        if (!silent) setLoading(true);
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/direct-messages/conversations`,
+          { withCredentials: true }
+        );
+        setConversations(response.data.conversations || []);
+      } catch (error) {
+        console.error("Error fetching conversations:", error);
+        if (!silent) toast.error("Failed to load conversations");
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [user?.user_id]
+  );
 
   // Fetch messages for selected conversation
   const fetchMessages = useCallback(
@@ -114,6 +117,9 @@ const Messages = () => {
 
         // Mark messages as read using the unread context
         markDirectMessagesAsRead(otherUserId);
+
+        // Scroll to bottom after messages load
+        setTimeout(scrollToBottom, 100);
       } catch (error) {
         console.error("Error fetching messages:", error);
         toast.error("Failed to load messages");
@@ -121,7 +127,7 @@ const Messages = () => {
         setMessagesLoading(false);
       }
     },
-    [user?.user_id]
+    [user?.user_id, markDirectMessagesAsRead, scrollToBottom]
   );
 
   // Fetch organization members for new conversations
@@ -150,14 +156,28 @@ const Messages = () => {
 
     // Listen for new direct messages
     const handleNewDirectMessage = (message) => {
-      // Update messages if this conversation is currently selected
-      if (
+      // Determine if this message is for the current conversation
+      const isCurrentConversation =
         selectedConversation &&
         (message.sender_id === selectedConversation.other_user_id ||
-          message.receiver_id === selectedConversation.other_user_id)
-      ) {
-        setMessages((prev) => [...prev, { ...message, isNew: true }]);
-        scrollToBottom();
+          message.receiver_id === selectedConversation.other_user_id);
+
+      // Update messages if this conversation is currently selected
+      if (isCurrentConversation) {
+        // Only add if not already in messages (avoid duplicates)
+        setMessages((prev) => {
+          const exists = prev.some(
+            (msg) => msg.message_id === message.message_id
+          );
+          if (exists) {
+            return prev;
+          }
+
+          const newMessages = [...prev, { ...message, isNew: true }];
+          // Scroll to bottom after state update
+          setTimeout(scrollToBottom, 50);
+          return newMessages;
+        });
 
         // Remove the isNew flag after animation
         setTimeout(() => {
@@ -171,27 +191,35 @@ const Messages = () => {
         }, 1000);
       }
 
-      // Update conversations list locally instead of fetching
+      // Update conversations list locally
       setConversations((prev) => {
         const updated = [...prev];
+
+        // Determine which user this conversation is with
+        const otherUserId =
+          message.sender_id === user.user_id
+            ? message.receiver_id
+            : message.sender_id;
+
         const convIndex = updated.findIndex(
-          (conv) =>
-            conv.other_user_id === message.sender_id ||
-            conv.other_user_id === message.receiver_id
+          (conv) => conv.other_user_id === otherUserId
         );
+
+        const messageContent =
+          message.content ||
+          (message.file_name ? `📎 ${message.file_name}` : "File");
 
         if (convIndex >= 0) {
           // Update existing conversation
+          const existingConv = updated[convIndex];
           updated[convIndex] = {
-            ...updated[convIndex],
-            last_message_content:
-              message.content ||
-              (message.file_name ? `📎 ${message.file_name}` : "File"),
+            ...existingConv,
+            last_message_content: messageContent,
             last_message_time: message.created_at,
             unread_count:
-              message.receiver_id === user.user_id
-                ? updated[convIndex].unread_count + 1
-                : updated[convIndex].unread_count,
+              message.receiver_id === user.user_id && !isCurrentConversation
+                ? existingConv.unread_count + 1
+                : existingConv.unread_count,
           };
           // Move to top
           const conversation = updated.splice(convIndex, 1)[0];
@@ -203,11 +231,9 @@ const Messages = () => {
             other_user_name: message.sender_name,
             other_user_photo: message.sender_photo,
             other_user_email: "", // We don't have this from the message
-            last_message_content:
-              message.content ||
-              (message.file_name ? `📎 ${message.file_name}` : "File"),
+            last_message_content: messageContent,
             last_message_time: message.created_at,
-            unread_count: 1,
+            unread_count: isCurrentConversation ? 0 : 1,
           };
           updated.unshift(newConversation);
         }
@@ -303,7 +329,6 @@ const Messages = () => {
     user?.user_id,
     selectedConversation,
     scrollToBottom,
-    fetchConversations,
   ]);
 
   // Initialize data
@@ -312,18 +337,41 @@ const Messages = () => {
     fetchOrganizationMembers();
   }, [fetchConversations, fetchOrganizationMembers]);
 
+  // Periodic refresh of conversations (every 30 seconds)
+  useEffect(() => {
+    if (!user?.user_id) return;
+
+    const interval = setInterval(() => {
+      fetchConversations(true); // Silent refresh
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user?.user_id, fetchConversations]);
+
   // Handle URL parameters for direct user selection
   useEffect(() => {
     const userParam = searchParams.get("user");
-    if (userParam && conversations.length > 0) {
+    if (
+      userParam &&
+      (conversations.length > 0 || organizationMembers.length > 0)
+    ) {
+      const userId = parseInt(userParam);
       const conversation = conversations.find(
-        (conv) => conv.other_user_id === parseInt(userParam)
+        (conv) => conv.other_user_id === userId
       );
+
       if (conversation) {
         handleSelectConversation(conversation);
+      } else if (organizationMembers.length > 0) {
+        // If conversation doesn't exist but we have a user param,
+        // try to find the user in organization members and create a conversation
+        const member = organizationMembers.find((m) => m.user_id === userId);
+        if (member) {
+          handleStartNewConversation(member);
+        }
       }
     }
-  }, [searchParams, conversations]);
+  }, [searchParams, conversations, organizationMembers]);
 
   // Filter conversations based on search query
   useEffect(() => {
@@ -431,6 +479,11 @@ const Messages = () => {
 
     // Update URL
     setSearchParams({ user: conversation.other_user_id.toString() });
+
+    // On mobile, hide sidebar to show chat
+    if (isMobile) {
+      setSidebarVisible(false);
+    }
   };
 
   // Handle starting new conversation
@@ -452,8 +505,21 @@ const Messages = () => {
         last_message_time: null,
         unread_count: 0,
       };
+
+      // Add to conversations list immediately
+      setConversations((prev) => [newConversation, ...prev]);
+
+      // Select the conversation
       setSelectedConversation(newConversation);
       setMessages([]);
+
+      // Update URL
+      setSearchParams({ user: member.user_id.toString() });
+
+      // On mobile, hide sidebar to show chat
+      if (isMobile) {
+        setSidebarVisible(false);
+      }
     }
 
     setShowNewConversation(false);
@@ -512,7 +578,7 @@ const Messages = () => {
   // Send message
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation) return;
+    if (!newMessage.trim() || !selectedConversation || sending) return;
 
     setSending(true);
     try {
@@ -524,7 +590,7 @@ const Messages = () => {
 
       if (editingMessage) {
         // Update existing message
-        await axios.put(
+        const response = await axios.put(
           `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages/${
             editingMessage.message_id
           }`,
@@ -532,13 +598,75 @@ const Messages = () => {
           { withCredentials: true }
         );
         setEditingMessage(null);
+
+        // Update the message in the local state immediately
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === editingMessage.message_id
+              ? {
+                  ...msg,
+                  content: newMessage.trim(),
+                  updated_at: new Date().toISOString(),
+                }
+              : msg
+          )
+        );
       } else {
         // Send new message
-        await axios.post(
+        const response = await axios.post(
           `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages`,
           messageData,
           { withCredentials: true }
         );
+
+        // Add message to local state immediately for better UX
+        const newMessageObj = {
+          ...response.data.message,
+          isNew: true,
+        };
+        setMessages((prev) => [...prev, newMessageObj]);
+
+        // Update conversations list to show this conversation at the top
+        setConversations((prev) => {
+          const updated = [...prev];
+          const convIndex = updated.findIndex(
+            (conv) => conv.other_user_id === selectedConversation.other_user_id
+          );
+
+          const conversationUpdate = {
+            other_user_id: selectedConversation.other_user_id,
+            other_user_name: selectedConversation.other_user_name,
+            other_user_photo: selectedConversation.other_user_photo,
+            other_user_email: selectedConversation.other_user_email,
+            last_message_content: newMessage.trim(),
+            last_message_time:
+              response.data.message.created_at || new Date().toISOString(),
+            unread_count: 0,
+          };
+
+          if (convIndex >= 0) {
+            // Update existing conversation and move to top
+            updated[convIndex] = conversationUpdate;
+            const conversation = updated.splice(convIndex, 1)[0];
+            updated.unshift(conversation);
+          } else {
+            // Add new conversation at the top
+            updated.unshift(conversationUpdate);
+          }
+
+          return updated;
+        });
+
+        // Remove the isNew flag after animation
+        setTimeout(() => {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.message_id === newMessageObj.message_id
+                ? { ...msg, isNew: false }
+                : msg
+            )
+          );
+        }, 1000);
       }
 
       setNewMessage("");
@@ -548,6 +676,14 @@ const Messages = () => {
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
+
+      // Scroll to bottom after sending
+      setTimeout(scrollToBottom, 100);
+
+      // Focus back on the input
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 50);
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
@@ -961,13 +1097,25 @@ const Messages = () => {
                     ?.toUpperCase() || "U"
                 )}
               </div>
-              <div className="ml-3">
+              <div className="ml-3 flex-1">
                 <h2 className="font-semibold text-gray-900">
                   {selectedConversation.other_user_name}
                 </h2>
                 <p className="text-sm text-gray-500">
                   {selectedConversation.other_user_email}
                 </p>
+              </div>
+
+              {/* Connection Status */}
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    isConnected ? "bg-green-500" : "bg-red-500"
+                  }`}
+                ></div>
+                <span className="text-xs text-gray-500">
+                  {isConnected ? "Connected" : "Disconnected"}
+                </span>
               </div>
             </div>
           </div>
@@ -1310,7 +1458,12 @@ const Messages = () => {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
-                      sendMessage(e);
+                      const syntheticEvent = {
+                        preventDefault: () => {},
+                        target: e.target,
+                        currentTarget: e.currentTarget,
+                      };
+                      sendMessage(syntheticEvent);
                     }
                   }}
                   placeholder={`Message ${selectedConversation.other_user_name}...`}
@@ -1353,6 +1506,10 @@ const Messages = () => {
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || sending}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      sendMessage(e);
+                    }}
                     className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer ${
                       newMessage.trim() && !sending
                         ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105"

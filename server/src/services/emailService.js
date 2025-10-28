@@ -5,12 +5,18 @@ import { generatePasswordResetEmail } from "../templates/resetPassword.js";
 class EmailService {
   // Create transporter with Gmail SMTP
   createTransporter() {
-    return nodemailer.createTransport({
+    return nodemailer.createTransporter({
       service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
       auth: {
         user: process.env.EMAIL,
-        pass: process.env.MAIL_PASSWORD,
+        pass: process.env.MAIL_PASSWORD || process.env.APP_PASSWORD,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 5000,    // 5 seconds
+      socketTimeout: 10000,     // 10 seconds
     });
   }
 
@@ -19,7 +25,12 @@ class EmailService {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const transporter = this.createTransporter();
-        const info = await transporter.sendMail(message);
+        const info = await Promise.race([
+          transporter.sendMail(message),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Email sending timeout')), 25000)
+          )
+        ]);
         
         // Close the transporter
         transporter.close();

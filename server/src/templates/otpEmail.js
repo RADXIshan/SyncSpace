@@ -1,4 +1,4 @@
-const generateOtpEmail = (otpCode) => {
+const generateOtpEmail = (name, otpCode) => {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -216,6 +216,7 @@ const generateOtpEmail = (otpCode) => {
             <div class="greeting">Verify Your Identity</div>
             
             <div class="message">
+                Hi ${name || 'there'},<br><br>
                 We've received a request to verify your account. Please use the OTP code below to complete your authentication.
             </div>
             

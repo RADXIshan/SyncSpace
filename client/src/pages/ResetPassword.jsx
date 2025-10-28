@@ -20,7 +20,11 @@ const ResetPassword = () => {
     confirmPassword: true,
   });
 
-  const validatePassword = (val) => val.length < 6;
+  const validatePassword = (val) => {
+    // Backend regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return !passwordRegex.test(val);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,11 +46,39 @@ const ResetPassword = () => {
     let toastId;
     try {
       toastId = toast.loading("Resetting password...");
-      await axios.post(`${import.meta.env.VITE_BASE_URL}/api/auth/reset-password/${email}`, { password: formData.password });
+      
+      // Add timeout to the request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/auth/reset-password/${email}`, 
+        { password: formData.password }, 
+        { 
+          withCredentials: true,
+          signal: controller.signal,
+          timeout: 30000
+        }
+      );
+      
+      clearTimeout(timeoutId);
       toast.success("Password reset successful! Please login with your new password.", { id: toastId });
       navigate("/login");
     } catch (err) {
-      toast.error(err.response?.data?.error || err.response?.data?.message || err.message, { id: toastId });
+      let errorMessage = "Failed to reset password";
+      
+      if (err.code === 'ECONNABORTED' || err.name === 'AbortError') {
+        errorMessage = "Request timeout. Please check your connection and try again.";
+      } else if (err.response?.status === 504) {
+        errorMessage = "Server timeout. Please try again in a moment.";
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      toast.error(errorMessage, { id: toastId });
+      console.error("Reset password error:", err);
     } finally {
       setLoading(false);
     }
@@ -128,7 +160,9 @@ const ResetPassword = () => {
               </button>
             </div>
             {errors.password && formData.password && (
-              <p className="mt-2 text-sm text-red-400">Password must be at least 6 characters</p>
+              <p className="mt-2 text-sm text-red-400">
+                Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)
+              </p>
             )}
           </div>
 

@@ -1304,7 +1304,7 @@ export const sendInvitations = async (req, res) => {
     console.log("Member found:", member);
 
     const [org] = await sql`
-      SELECT created_by, access_level
+      SELECT created_by, access_level, org_name
       FROM organisations
       WHERE org_id = ${org_id}
       LIMIT 1
@@ -1359,6 +1359,18 @@ export const sendInvitations = async (req, res) => {
       }
     }
 
+    // Get inviter information
+    const [inviter] = await sql`
+      SELECT name, email
+      FROM users
+      WHERE user_id = ${userId}
+      LIMIT 1
+    `;
+
+    if (!inviter) {
+      return res.status(404).json({ message: "Inviter not found" });
+    }
+
     // Validate environment variables
     if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
       console.error("Missing email configuration:", {
@@ -1370,7 +1382,10 @@ export const sendInvitations = async (req, res) => {
       });
     }
 
-    const transporter = nodemailer.createTransport({
+    // Import the email template
+    const { default: generateOrganizationInviteEmail } = await import("../templates/organizationInviteEmail.js");
+
+    const transporter = nodemailer.createTransporter({
       service: "gmail",
       host: "smtp.gmail.com",
       port: 587,
@@ -1379,11 +1394,19 @@ export const sendInvitations = async (req, res) => {
         user: process.env.EMAIL,
         pass: process.env.APP_PASSWORD,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 5000,    // 5 seconds
+      socketTimeout: 10000,     // 10 seconds
     });
 
-    // Verify transporter configuration
+    // Verify transporter configuration with timeout
     try {
-      await transporter.verify();
+      await Promise.race([
+        transporter.verify(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email verification timeout')), 10000)
+        )
+      ]);
       console.log("Email transporter verified successfully");
     } catch (verifyError) {
       console.error("Email transporter verification failed:", verifyError);
@@ -1392,19 +1415,44 @@ export const sendInvitations = async (req, res) => {
       });
     }
 
+    // Create invite link (assuming you have a frontend route for joining)
+    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/join-org?code=${inviteCode}`;
+
+    // Get organization member count for team size
+    const memberCount = await sql`
+      SELECT COUNT(*) as count
+      FROM org_members
+      WHERE org_id = ${org_id}
+    `;
+
     const mailOptions = {
       from: {
         name: "SyncSpace",
         address: process.env.EMAIL,
       },
       to: emails,
-      subject: `Invitation to Join Organization: ${organizationName} on SyncSpace`,
-      html: generateOrgInviteEmail(user.name, organizationName, inviteCode),
+      subject: `Invitation to Join Organization: ${organizationName || org.org_name} on SyncSpace`,
+      html: generateOrganizationInviteEmail({
+        inviteeName: "Team Member", // Generic since we're sending to multiple emails
+        inviterName: inviter.name,
+        orgName: organizationName || org.org_name,
+        role: "Member", // Default role for new members
+        teamSize: memberCount[0]?.count || 1,
+        industry: "Technology", // Default industry
+        inviterRole: member.role,
+        inviterEmail: inviter.email,
+        inviteLink: inviteLink
+      }),
     };
 
     try {
       console.log("Sending email to:", emails);
-      const result = await transporter.sendMail(mailOptions);
+      const result = await Promise.race([
+        transporter.sendMail(mailOptions),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Email sending timeout')), 25000)
+        )
+      ]);
       console.log("Email sent successfully:", result.messageId);
       res
         .status(200)

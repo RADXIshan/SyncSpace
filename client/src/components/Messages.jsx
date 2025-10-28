@@ -148,13 +148,13 @@ const Messages = () => {
     }
   }, [user?.user_id]);
 
-  // Socket event handlers
+  // Socket event handlers - Real-time like TeamChat
   useEffect(() => {
     if (!socket || !isConnected || !user?.user_id) {
       return;
     }
 
-    // Listen for new direct messages
+    // Listen for new direct messages - exactly like TeamChat handles new_message
     const handleNewDirectMessage = (message) => {
       // Determine if this message is for the current conversation
       const isCurrentConversation =
@@ -162,24 +162,12 @@ const Messages = () => {
         (message.sender_id === selectedConversation.other_user_id ||
           message.receiver_id === selectedConversation.other_user_id);
 
-      // Update messages if this conversation is currently selected
+      // Update messages if this conversation is currently selected - same as TeamChat
       if (isCurrentConversation) {
-        // Only add if not already in messages (avoid duplicates)
-        setMessages((prev) => {
-          const exists = prev.some(
-            (msg) => msg.message_id === message.message_id
-          );
-          if (exists) {
-            return prev;
-          }
+        setMessages((prev) => [...prev, { ...message, isNew: true }]);
+        scrollToBottom();
 
-          const newMessages = [...prev, { ...message, isNew: true }];
-          // Scroll to bottom after state update
-          setTimeout(scrollToBottom, 50);
-          return newMessages;
-        });
-
-        // Remove the isNew flag after animation
+        // Remove the isNew flag after animation - same as TeamChat
         setTimeout(() => {
           setMessages((prev) =>
             prev.map((msg) =>
@@ -242,7 +230,7 @@ const Messages = () => {
       });
     };
 
-    // Listen for message updates
+    // Listen for message updates - same as TeamChat
     const handleDirectMessageUpdate = (updatedMessage) => {
       setMessages((prev) =>
         prev.map((msg) =>
@@ -251,7 +239,7 @@ const Messages = () => {
       );
     };
 
-    // Listen for message deletions
+    // Listen for message deletions - same as TeamChat
     const handleDirectMessageDelete = (messageId) => {
       setMessages((prev) =>
         prev.map((msg) =>
@@ -267,16 +255,17 @@ const Messages = () => {
       );
     };
 
-    // Listen for typing indicators
+    // Listen for typing indicators - same pattern as TeamChat
     const handleUserTyping = (data) => {
       if (
         selectedConversation &&
-        data.userId === selectedConversation.other_user_id
+        data.userId === selectedConversation.other_user_id &&
+        data.userId !== user.user_id
       ) {
         setTypingUsers((prev) => {
           const existing = prev.find((u) => u.userId === data.userId);
           if (!existing) {
-            return [
+            const newUsers = [
               ...prev,
               {
                 userId: data.userId,
@@ -284,20 +273,26 @@ const Messages = () => {
                 timestamp: Date.now(),
               },
             ];
+            return newUsers;
           } else {
-            return prev.map((u) =>
+            // Update timestamp for existing user
+            const updated = prev.map((u) =>
               u.userId === data.userId ? { ...u, timestamp: Date.now() } : u
             );
+            return updated;
           }
         });
       }
     };
 
     const handleUserStoppedTyping = (data) => {
-      setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
+      setTypingUsers((prev) => {
+        const filtered = prev.filter((u) => u.userId !== data.userId);
+        return filtered;
+      });
     };
 
-    // Listen for reactions
+    // Listen for reactions - same as TeamChat
     const handleReactionUpdate = (data) => {
       setMessages((prev) =>
         prev.map((msg) =>
@@ -391,12 +386,10 @@ const Messages = () => {
     }
   }, [conversations, searchQuery]);
 
-  // Auto-scroll on new messages
+  // Auto-scroll on new messages - same as TeamChat
   useEffect(() => {
-    if (selectedConversation) {
-      scrollToBottom();
-    }
-  }, [messages, selectedConversation, scrollToBottom]);
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   // Cleanup typing timeout
   useEffect(() => {
@@ -458,18 +451,15 @@ const Messages = () => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [sidebarVisible, isMobile]);
 
-  // Update timestamps every 30 seconds for better accuracy
+  // Update timestamps every 30 seconds for better accuracy - same as TeamChat
   useEffect(() => {
     const interval = setInterval(() => {
       // Force re-render to update timestamps
-      setConversations((prev) => [...prev]);
-      if (messages.length > 0) {
-        setMessages((prev) => [...prev]);
-      }
+      setMessages((prev) => [...prev]);
     }, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
-  }, [messages.length]);
+  }, []);
 
   // Handle conversation selection
   const handleSelectConversation = (conversation) => {
@@ -578,7 +568,7 @@ const Messages = () => {
   // Send message
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation || sending) return;
+    if (!newMessage.trim() && !replyingTo) return;
 
     setSending(true);
     try {
@@ -590,7 +580,7 @@ const Messages = () => {
 
       if (editingMessage) {
         // Update existing message
-        const response = await axios.put(
+        await axios.put(
           `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages/${
             editingMessage.message_id
           }`,
@@ -598,75 +588,13 @@ const Messages = () => {
           { withCredentials: true }
         );
         setEditingMessage(null);
-
-        // Update the message in the local state immediately
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.message_id === editingMessage.message_id
-              ? {
-                  ...msg,
-                  content: newMessage.trim(),
-                  updated_at: new Date().toISOString(),
-                }
-              : msg
-          )
-        );
       } else {
-        // Send new message
-        const response = await axios.post(
+        // Send new message - let socket handle the real-time update
+        await axios.post(
           `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages`,
           messageData,
           { withCredentials: true }
         );
-
-        // Add message to local state immediately for better UX
-        const newMessageObj = {
-          ...response.data.message,
-          isNew: true,
-        };
-        setMessages((prev) => [...prev, newMessageObj]);
-
-        // Update conversations list to show this conversation at the top
-        setConversations((prev) => {
-          const updated = [...prev];
-          const convIndex = updated.findIndex(
-            (conv) => conv.other_user_id === selectedConversation.other_user_id
-          );
-
-          const conversationUpdate = {
-            other_user_id: selectedConversation.other_user_id,
-            other_user_name: selectedConversation.other_user_name,
-            other_user_photo: selectedConversation.other_user_photo,
-            other_user_email: selectedConversation.other_user_email,
-            last_message_content: newMessage.trim(),
-            last_message_time:
-              response.data.message.created_at || new Date().toISOString(),
-            unread_count: 0,
-          };
-
-          if (convIndex >= 0) {
-            // Update existing conversation and move to top
-            updated[convIndex] = conversationUpdate;
-            const conversation = updated.splice(convIndex, 1)[0];
-            updated.unshift(conversation);
-          } else {
-            // Add new conversation at the top
-            updated.unshift(conversationUpdate);
-          }
-
-          return updated;
-        });
-
-        // Remove the isNew flag after animation
-        setTimeout(() => {
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.message_id === newMessageObj.message_id
-                ? { ...msg, isNew: false }
-                : msg
-            )
-          );
-        }, 1000);
       }
 
       setNewMessage("");
@@ -676,14 +604,6 @@ const Messages = () => {
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
-
-      // Scroll to bottom after sending
-      setTimeout(scrollToBottom, 100);
-
-      // Focus back on the input
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 50);
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
@@ -737,7 +657,45 @@ const Messages = () => {
 
   // Handle message reactions
   const handleReaction = async (messageId, emoji) => {
+    // Optimistic update - update UI immediately like TeamChat
+    const currentMessage = messages.find((msg) => msg.message_id === messageId);
+    if (!currentMessage) return;
+
+    const existingReactions = currentMessage.reactions || [];
+    const existingReaction = existingReactions.find(
+      (r) => r.emoji === emoji && r.user_id === user.user_id
+    );
+
+    let optimisticReactions;
+    if (existingReaction) {
+      // Remove reaction optimistically
+      optimisticReactions = existingReactions.filter(
+        (r) => !(r.emoji === emoji && r.user_id === user.user_id)
+      );
+    } else {
+      // Add reaction optimistically
+      optimisticReactions = [
+        ...existingReactions,
+        {
+          emoji,
+          user_id: user.user_id,
+          user_name: user.name,
+          created_at: new Date().toISOString(),
+        },
+      ];
+    }
+
+    // Update UI immediately
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.message_id === messageId
+          ? { ...msg, reactions: optimisticReactions }
+          : msg
+      )
+    );
+
     try {
+      // Send to server
       const response = await axios.post(
         `${
           import.meta.env.VITE_BASE_URL
@@ -746,6 +704,7 @@ const Messages = () => {
         { withCredentials: true }
       );
 
+      // Update with server response (in case of conflicts)
       setMessages((prev) =>
         prev.map((msg) =>
           msg.message_id === messageId
@@ -756,22 +715,63 @@ const Messages = () => {
     } catch (error) {
       console.error("Error adding reaction:", error);
       toast.error("Failed to add reaction");
+
+      // Revert optimistic update on error
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === messageId
+            ? { ...msg, reactions: existingReactions }
+            : msg
+        )
+      );
     }
   };
 
   // Handle message deletion
   const handleDeleteMessage = async (messageId) => {
+    // Show loading toast like TeamChat
+    const deleteToast = toast.loading("Deleting message...");
+
     try {
+      // Optimistically update the message to show as deleted like TeamChat
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === messageId
+            ? {
+                ...msg,
+                isDeleted: true,
+                originalContent: msg.originalContent || msg.content,
+                content: "This message was deleted",
+              }
+            : msg
+        )
+      );
+
       await axios.delete(
         `${
           import.meta.env.VITE_BASE_URL
         }/api/direct-messages/messages/${messageId}`,
         { withCredentials: true }
       );
-      toast.success("Message deleted");
+
+      toast.success("Message deleted", { id: deleteToast });
     } catch (error) {
       console.error("Error deleting message:", error);
-      toast.error("Failed to delete message");
+
+      // Revert the optimistic update on error like TeamChat
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === messageId && msg.isDeleted
+            ? {
+                ...msg,
+                isDeleted: false,
+                content: msg.originalContent || msg.content,
+              }
+            : msg
+        )
+      );
+
+      toast.error("Failed to delete message", { id: deleteToast });
     }
   };
 
@@ -793,6 +793,32 @@ const Messages = () => {
     setNewMessage((prev) => prev + emoji);
     setShowEmojiPicker(false);
     textareaRef.current?.focus();
+  };
+
+  // Handle drag and drop for the entire chat area - like TeamChat
+  const handleChatDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  };
+
+  const handleChatDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only hide drag overlay if we're leaving the main container
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOver(false);
+    }
+  };
+
+  const handleChatDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileUpload(Array.from(e.dataTransfer.files));
+    }
   };
 
   // Format timestamp with accurate timing and timezone handling
@@ -1052,7 +1078,12 @@ const Messages = () => {
 
       {/* Chat Area */}
       {selectedConversation ? (
-        <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out">
+        <div
+          className="flex-1 flex flex-col transition-all duration-300 ease-in-out relative"
+          onDragOver={handleChatDragOver}
+          onDragLeave={handleChatDragLeave}
+          onDrop={handleChatDrop}
+        >
           {/* Chat Header */}
           <div className="bg-white border-b border-gray-200 p-4 flex items-center">
             {/* Sidebar Toggle Button */}
@@ -1493,14 +1524,34 @@ const Messages = () => {
                       )}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowFileUpload(true)}
-                      className="p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-colors cursor-pointer"
-                      title="Attach files"
-                    >
-                      <Paperclip size={18} className="cursor-pointer" />
-                    </button>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowFileUpload(true)}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }}
+                        className="p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-colors cursor-pointer"
+                        title="Attach files - Click to browse, right-click for quick upload, or drag & drop files anywhere"
+                      >
+                        <Paperclip size={18} className="cursor-pointer" />
+                      </button>
+
+                      {/* Quick file input for single file uploads - like TeamChat */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files?.length) {
+                            handleFileUpload(Array.from(e.target.files));
+                            e.target.value = ""; // Reset input
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
 
                   <button
@@ -1651,6 +1702,21 @@ const Messages = () => {
                   ))}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drag and Drop Overlay - like TeamChat */}
+      {dragOver && selectedConversation && (
+        <div className="absolute inset-0 bg-purple-500/10 backdrop-blur-sm border-2 border-dashed border-purple-400 rounded-lg flex items-center justify-center z-40">
+          <div className="text-center p-8">
+            <div className="text-6xl mb-4">📁</div>
+            <h3 className="text-xl font-semibold text-purple-700 mb-2">
+              Drop files here
+            </h3>
+            <p className="text-purple-600">
+              Release to upload files to {selectedConversation.other_user_name}
+            </p>
           </div>
         </div>
       )}

@@ -1,39 +1,47 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
-import emailService from "../services/emailService.js";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 import { createNotificationForOrg } from "./notificationControllers.js";
-import { 
-  syncMeetingEventsForUser, 
-  syncMeetingEventsForOrg, 
-  createMeetingEventsForNewUser 
+import {
+  syncMeetingEventsForUser,
+  syncMeetingEventsForOrg,
+  createMeetingEventsForNewUser,
 } from "./eventControllers.js";
+
+dotenv.config();
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
   const authToken =
-    req.cookies.jwt || req.body.token || req.headers.authorization?.split(" ")[1];
+    req.cookies.jwt ||
+    req.body.token ||
+    req.headers.authorization?.split(" ")[1];
   if (!authToken) throw new Error("No token provided");
 
   try {
     const decoded = jwt.verify(authToken, process.env.JWT_SECRET_KEY);
-    
+
     // Log token structure for debugging
     if (!decoded.userId) {
       console.error("Token missing userId:", decoded);
       throw new Error("Invalid token structure - missing userId");
     }
-    
+
     // Check for missing fields and suggest token refresh
     if (!decoded.email || !decoded.name) {
-      console.warn(`Token for user ${decoded.userId} missing optional fields:`, {
-        hasEmail: !!decoded.email,
-        hasName: !!decoded.name
-      });
-      
+      console.warn(
+        `Token for user ${decoded.userId} missing optional fields:`,
+        {
+          hasEmail: !!decoded.email,
+          hasName: !!decoded.name,
+        }
+      );
+
       // For now, just warn but don't fail - the client should handle token refresh
       // In the future, we could force a token refresh here
     }
-    
+
     return decoded.userId;
   } catch (error) {
     console.error("Token verification failed:", error.message);
@@ -49,15 +57,23 @@ export const createOrganization = async (req, res) => {
     const { name, accessLevel, channels, org_code, roles } = req.body;
 
     // --- Validation ---
-    if (!name?.trim()) return res.status(400).json({ message: "Organization name is required" });
-    if (!accessLevel?.trim()) return res.status(400).json({ message: "Access level is required" });
-    if (!channels?.length) return res.status(400).json({ message: "At least one channel is required" });
-    if (!org_code?.trim()) return res.status(400).json({ message: "Organization code is required" });
+    if (!name?.trim())
+      return res.status(400).json({ message: "Organization name is required" });
+    if (!accessLevel?.trim())
+      return res.status(400).json({ message: "Access level is required" });
+    if (!channels?.length)
+      return res
+        .status(400)
+        .json({ message: "At least one channel is required" });
+    if (!org_code?.trim())
+      return res.status(400).json({ message: "Organization code is required" });
 
     // --- Create organization ---
     const [newOrg] = await sql`
       INSERT INTO organisations (org_name, channels, access_level, org_code, created_by)
-      VALUES (${name.trim()}, ${channels}, ${accessLevel || "invite-only"}, ${org_code.trim()}, ${userId})
+      VALUES (${name.trim()}, ${channels}, ${
+      accessLevel || "invite-only"
+    }, ${org_code.trim()}, ${userId})
       RETURNING org_id, org_name, access_level, org_code, created_by
     `;
 
@@ -82,7 +98,9 @@ export const createOrganization = async (req, res) => {
 
           await sql`
             INSERT INTO org_channels (org_id, channel_name, channel_description)
-            VALUES (${newOrg.org_id}, ${channel.name.trim()}, ${channel.description || ""})
+            VALUES (${newOrg.org_id}, ${channel.name.trim()}, ${
+            channel.description || ""
+          })
           `;
         }
       }
@@ -94,14 +112,15 @@ export const createOrganization = async (req, res) => {
       for (const role of roles) {
         if (role.name?.trim()) {
           const roleName = role.name.trim().toLowerCase();
-          
+
           // Prevent creating Owner role
-          if (roleName === 'owner') {
+          if (roleName === "owner") {
             return res.status(400).json({
-              message: "The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.",
+              message:
+                "The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.",
             });
           }
-          
+
           if (roleNames.has(roleName)) {
             return res.status(400).json({
               message: `Duplicate role name: ${role.name.trim()}`,
@@ -128,7 +147,13 @@ export const createOrganization = async (req, res) => {
               ${role.permissions?.noticeboard_access || false},
               ${role.permissions?.roles_access || false},
               ${role.permissions?.invite_access || false},
-              ${Array.isArray(role.accessible_teams) ? role.accessible_teams : (Array.isArray(role.accessibleChannels) ? role.accessibleChannels : [])},
+              ${
+                Array.isArray(role.accessible_teams)
+                  ? role.accessible_teams
+                  : Array.isArray(role.accessibleChannels)
+                  ? role.accessibleChannels
+                  : []
+              },
               ${userId}
             )
           `;
@@ -155,11 +180,16 @@ export const createOrganization = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating organization:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     if (error.code === "23505") {
-      return res.status(400).json({ message: "Organization with this name already exists" });
+      return res
+        .status(400)
+        .json({ message: "Organization with this name already exists" });
     }
     res.status(500).json({ message: "Internal server error" });
   }
@@ -170,8 +200,6 @@ export const getOrganization = async (req, res) => {
   try {
     const userId = verifyToken(req);
     const org_id = req.params.org_id;
-
-    console.log(`[getOrganization] User ${userId} requesting org ${org_id}`);
 
     // Validate org_id parameter
     if (!org_id || isNaN(org_id)) {
@@ -186,8 +214,6 @@ export const getOrganization = async (req, res) => {
       WHERE org_id = ${org_id}
       LIMIT 1
     `;
-
-    console.log(`[getOrganization] Found ${org.length} organizations for ID ${org_id}`);
 
     if (org.length === 0) {
       return res.status(404).json({ message: "Organization not found" });
@@ -219,8 +245,16 @@ export const getOrganization = async (req, res) => {
 
     // Users with manage_channels or settings_access permissions should see all channels
     // Only filter channels if user is not owner and doesn't have manage_channels or settings_access permissions
-    if (!isOwner && !hasManageChannels && !hasSettingsAccess && Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
-      channels = channels.filter(ch => accessibleTeams.includes(ch.channel_name));
+    if (
+      !isOwner &&
+      !hasManageChannels &&
+      !hasSettingsAccess &&
+      Array.isArray(accessibleTeams) &&
+      accessibleTeams.length > 0
+    ) {
+      channels = channels.filter((ch) =>
+        accessibleTeams.includes(ch.channel_name)
+      );
     }
 
     // Get organization roles
@@ -242,12 +276,12 @@ export const getOrganization = async (req, res) => {
         code: organization.org_code,
         createdBy: organization.created_by,
         createdAt: organization.created_at,
-        channels: channels.map(ch => ({
+        channels: channels.map((ch) => ({
           id: ch.channel_id,
           name: ch.channel_name,
           description: ch.channel_description,
         })),
-        roles: roles.map(role => ({
+        roles: roles.map((role) => ({
           id: role.role_id,
           name: role.role_name,
           permissions: {
@@ -260,19 +294,24 @@ export const getOrganization = async (req, res) => {
             roles_access: role.roles_access,
             invite_access: role.invite_access,
           },
-          accessible_teams: Array.isArray(role.accessible_teams) ? role.accessible_teams : [],
+          accessible_teams: Array.isArray(role.accessible_teams)
+            ? role.accessible_teams
+            : [],
         })),
       },
     });
   } catch (error) {
     console.error("[getOrganization] Error retrieving organization:", error);
     console.error("[getOrganization] Error stack:", error.stack);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Internal server error",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -311,7 +350,9 @@ export const joinOrganization = async (req, res) => {
     `;
 
     if (existingMember.length > 0) {
-      return res.status(400).json({ message: "You are already a member of this organization" });
+      return res
+        .status(400)
+        .json({ message: "You are already a member of this organization" });
     }
 
     // Check if user is already in another organization
@@ -323,7 +364,12 @@ export const joinOrganization = async (req, res) => {
     `;
 
     if (currentUser?.org_id) {
-      return res.status(400).json({ message: "You are already a member of another organization. Please leave your current organization first." });
+      return res
+        .status(400)
+        .json({
+          message:
+            "You are already a member of another organization. Please leave your current organization first.",
+        });
     }
 
     // Anyone with the correct organization code can join
@@ -349,7 +395,12 @@ export const joinOrganization = async (req, res) => {
     const defaultRole = defaultRoles[0];
 
     if (!defaultRole) {
-      return res.status(500).json({ message: "No roles found in organization. Please contact the administrator." });
+      return res
+        .status(500)
+        .json({
+          message:
+            "No roles found in organization. Please contact the administrator.",
+        });
     }
 
     // Add user to organization members
@@ -376,46 +427,56 @@ export const joinOrganization = async (req, res) => {
     try {
       await createNotificationForOrg(
         organization.org_id,
-        'member_joined',
-        'New Member Joined',
+        "member_joined",
+        "New Member Joined",
         `${newMember.name} has joined your organization`,
         {
           excludeUserId: userId,
           relatedId: userId,
-          relatedType: 'user',
-          link: '/members'
+          relatedType: "user",
+          link: "/members",
         }
       );
 
       // Emit socket event for real-time notification (exclude the new member)
-      const io = req.app.get('io');
+      const io = req.app.get("io");
       if (io) {
-        const orgRoom = io.sockets.adapter.rooms.get(`org_${organization.org_id}`);
+        const orgRoom = io.sockets.adapter.rooms.get(
+          `org_${organization.org_id}`
+        );
         if (orgRoom) {
-          orgRoom.forEach(socketId => {
+          orgRoom.forEach((socketId) => {
             const socket = io.sockets.sockets.get(socketId);
             if (socket && socket.userId !== userId) {
-              socket.emit('member_joined', {
+              socket.emit("member_joined", {
                 userId: userId,
                 userName: newMember.name,
                 userEmail: newMember.email,
-                userPhoto: newMember.user_photo
+                userPhoto: newMember.user_photo,
               });
             }
           });
         }
       }
     } catch (notificationError) {
-      console.error('Failed to create member joined notifications:', notificationError);
+      console.error(
+        "Failed to create member joined notifications:",
+        notificationError
+      );
       // Don't fail the join if notifications fail
     }
 
     // Create meeting events for the new member
     try {
       await createMeetingEventsForNewUser(userId, organization.org_id);
-      console.log(`Created meeting events for new member ${userId} in org ${organization.org_id}`);
+      console.log(
+        `Created meeting events for new member ${userId} in org ${organization.org_id}`
+      );
     } catch (eventError) {
-      console.error('Failed to create meeting events for new member:', eventError);
+      console.error(
+        "Failed to create meeting events for new member:",
+        eventError
+      );
       // Don't fail the join if event creation fails
     }
 
@@ -430,7 +491,10 @@ export const joinOrganization = async (req, res) => {
     });
   } catch (error) {
     console.error("Error joining organization:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -451,7 +515,9 @@ export const leaveOrganization = async (req, res) => {
     `;
 
     if (!currentUser?.org_id) {
-      return res.status(400).json({ message: "You are not a member of any organization" });
+      return res
+        .status(400)
+        .json({ message: "You are not a member of any organization" });
     }
 
     // Check if user is the owner/admin of the organization
@@ -463,7 +529,12 @@ export const leaveOrganization = async (req, res) => {
     `;
 
     if (org?.created_by === userId) {
-      return res.status(400).json({ message: "Organization owner cannot leave. Please transfer ownership or delete the organization." });
+      return res
+        .status(400)
+        .json({
+          message:
+            "Organization owner cannot leave. Please transfer ownership or delete the organization.",
+        });
     }
 
     // Remove user from org_members
@@ -484,7 +555,10 @@ export const leaveOrganization = async (req, res) => {
     });
   } catch (error) {
     console.error("Error leaving organization:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -496,8 +570,6 @@ export const getUserRole = async (req, res) => {
   try {
     const userId = verifyToken(req);
     const org_id = req.params.org_id;
-
-    console.log(`[getUserRole] User ${userId} requesting role for org ${org_id}`);
 
     // Validate org_id parameter
     if (!org_id || isNaN(org_id)) {
@@ -515,10 +587,10 @@ export const getUserRole = async (req, res) => {
       LIMIT 1
     `;
 
-    console.log(`[getUserRole] Found member:`, member ? 'Yes' : 'No');
-
     if (!member) {
-      return res.status(404).json({ message: "User is not a member of this organization" });
+      return res
+        .status(404)
+        .json({ message: "User is not a member of this organization" });
     }
 
     // Check if user is organization owner (has full access)
@@ -550,12 +622,15 @@ export const getUserRole = async (req, res) => {
   } catch (error) {
     console.error("[getUserRole] Error retrieving user role:", error);
     console.error("[getUserRole] Error stack:", error.stack);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Internal server error",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -584,7 +659,9 @@ export const updateOrganization = async (req, res) => {
     `;
 
     if (!member) {
-      return res.status(403).json({ message: "You are not a member of this organization" });
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this organization" });
     }
 
     const isOwner = org?.created_by === userId;
@@ -599,27 +676,32 @@ export const updateOrganization = async (req, res) => {
 
     // Permission checks
     if (updatingBasicSettings && !hasSettingsAccess) {
-      return res.status(403).json({ 
-        message: "You need 'Settings Access' permission to update organization settings" 
+      return res.status(403).json({
+        message:
+          "You need 'Settings Access' permission to update organization settings",
       });
     }
 
     if (updatingRoles && !hasSettingsAccess && !hasRolesAccess) {
-      return res.status(403).json({ 
-        message: "You need 'Settings Access' or 'Roles Access' permission to update roles" 
+      return res.status(403).json({
+        message:
+          "You need 'Settings Access' or 'Roles Access' permission to update roles",
       });
     }
 
     if (updatingChannels && !hasChannelAccess && !hasSettingsAccess) {
-      return res.status(403).json({ 
-        message: "You need 'Manage Channels' or 'Settings Access' permission to update channels" 
+      return res.status(403).json({
+        message:
+          "You need 'Manage Channels' or 'Settings Access' permission to update channels",
       });
     }
 
     // Validate input only for fields being updated
     if (updatingBasicSettings) {
       if (name && !name.trim()) {
-        return res.status(400).json({ message: "Organization name is required" });
+        return res
+          .status(400)
+          .json({ message: "Organization name is required" });
       }
       if (accessLevel && !accessLevel.trim()) {
         return res.status(400).json({ message: "Access level is required" });
@@ -671,12 +753,12 @@ export const updateOrganization = async (req, res) => {
 
       // Create maps for easier lookup
       const existingChannelMap = new Map();
-      existingChannels.forEach(ch => {
+      existingChannels.forEach((ch) => {
         existingChannelMap.set(ch.channel_name.toLowerCase(), ch);
       });
 
       const newChannelMap = new Map();
-      channels.forEach(ch => {
+      channels.forEach((ch) => {
         if (ch.name?.trim()) {
           newChannelMap.set(ch.name.trim().toLowerCase(), ch);
         }
@@ -691,7 +773,10 @@ export const updateOrganization = async (req, res) => {
 
           if (existingChannel) {
             // Update existing channel if description changed
-            if (existingChannel.channel_description !== (channel.description || "")) {
+            if (
+              existingChannel.channel_description !==
+              (channel.description || "")
+            ) {
               await sql`
                 UPDATE org_channels
                 SET channel_description = ${channel.description || ""}
@@ -725,20 +810,21 @@ export const updateOrganization = async (req, res) => {
     if (updatingRoles && (hasSettingsAccess || hasRolesAccess)) {
       // Delete existing roles
       await sql`DELETE FROM org_roles WHERE org_id = ${org_id}`;
-      
+
       // Add updated roles
       const roleNames = new Set();
       for (const role of roles) {
         if (role.name?.trim()) {
           const roleName = role.name.trim().toLowerCase();
-          
+
           // Prevent creating Owner role
-          if (roleName === 'owner') {
+          if (roleName === "owner") {
             return res.status(400).json({
-              message: "The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.",
+              message:
+                "The 'Owner' role is reserved and cannot be created manually. It is automatically assigned to the organization owner.",
             });
           }
-          
+
           if (roleNames.has(roleName)) {
             return res.status(400).json({
               message: `Duplicate role name: ${role.name.trim()}`,
@@ -765,7 +851,13 @@ export const updateOrganization = async (req, res) => {
               ${role.permissions?.noticeboard_access || false},
               ${role.permissions?.roles_access || false},
               ${role.permissions?.invite_access || false},
-              ${Array.isArray(role.accessible_teams) ? role.accessible_teams : (Array.isArray(role.accessibleChannels) ? role.accessibleChannels : [])},
+              ${
+                Array.isArray(role.accessible_teams)
+                  ? role.accessible_teams
+                  : Array.isArray(role.accessibleChannels)
+                  ? role.accessibleChannels
+                  : []
+              },
               ${userId}
             )
           `;
@@ -775,9 +867,14 @@ export const updateOrganization = async (req, res) => {
       // Sync meeting events for all users after role permissions change
       try {
         await syncMeetingEventsForOrg(org_id);
-        console.log(`Synced meeting events for org ${org_id} after role permissions update`);
+        console.log(
+          `Synced meeting events for org ${org_id} after role permissions update`
+        );
       } catch (eventError) {
-        console.error('Failed to sync meeting events after role update:', eventError);
+        console.error(
+          "Failed to sync meeting events after role update:",
+          eventError
+        );
         // Don't fail the role update if event sync fails
       }
     }
@@ -793,7 +890,10 @@ export const updateOrganization = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating organization:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -823,7 +923,9 @@ export const getOrganizationMembers = async (req, res) => {
     `;
 
     if (!member) {
-      return res.status(403).json({ message: "You are not a member of this organization" });
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this organization" });
     }
 
     const isOwner = org?.created_by === userId;
@@ -847,7 +949,7 @@ export const getOrganizationMembers = async (req, res) => {
 
     res.status(200).json({
       message: "Organization members retrieved successfully",
-      members: members.map(memberItem => ({
+      members: members.map((memberItem) => ({
         id: memberItem.user_id, // Use user_id as the member identifier
         userId: memberItem.user_id,
         name: memberItem.name,
@@ -855,14 +957,19 @@ export const getOrganizationMembers = async (req, res) => {
         userPhoto: memberItem.user_photo,
         role: memberItem.role,
         joinedAt: memberItem.joined_at,
-        accessible_teams: Array.isArray(memberItem.accessible_teams) ? memberItem.accessible_teams : [],
-        isOwner: memberItem.user_id === org?.created_by
+        accessible_teams: Array.isArray(memberItem.accessible_teams)
+          ? memberItem.accessible_teams
+          : [],
+        isOwner: memberItem.user_id === org?.created_by,
       })),
-      canManage: isOwner || member.manage_users
+      canManage: isOwner || member.manage_users,
     });
   } catch (error) {
     console.error("Error retrieving organization members:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -899,14 +1006,18 @@ export const updateMemberRole = async (req, res) => {
     `;
 
     if (!currentMember) {
-      return res.status(403).json({ message: "You are not a member of this organization" });
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this organization" });
     }
 
     const isOwner = org?.created_by === userId;
     const canManageUsers = isOwner || currentMember.manage_users;
 
     if (!canManageUsers) {
-      return res.status(403).json({ message: "You don't have permission to manage users" });
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to manage users" });
     }
 
     // Get target member details
@@ -923,12 +1034,19 @@ export const updateMemberRole = async (req, res) => {
 
     // Prevent changing owner's role
     if (targetMember.user_id === org?.created_by) {
-      return res.status(400).json({ message: "Cannot change the role of organization owner" });
+      return res
+        .status(400)
+        .json({ message: "Cannot change the role of organization owner" });
     }
 
     // Prevent assigning the Owner role to anyone
-    if (role.trim() === 'Owner') {
-      return res.status(400).json({ message: "The Owner role cannot be assigned. It is reserved for the organization owner." });
+    if (role.trim() === "Owner") {
+      return res
+        .status(400)
+        .json({
+          message:
+            "The Owner role cannot be assigned. It is reserved for the organization owner.",
+        });
     }
 
     // Check if the role exists in the organization
@@ -940,7 +1058,11 @@ export const updateMemberRole = async (req, res) => {
     `;
 
     if (!roleExists) {
-      return res.status(400).json({ message: "Invalid role. Role does not exist in this organization" });
+      return res
+        .status(400)
+        .json({
+          message: "Invalid role. Role does not exist in this organization",
+        });
     }
 
     // Update member role
@@ -953,18 +1075,26 @@ export const updateMemberRole = async (req, res) => {
     // Sync meeting events for the user whose role was changed
     try {
       await syncMeetingEventsForUser(member_id, org_id);
-      console.log(`Synced meeting events for user ${member_id} after role change to ${role.trim()}`);
+      console.log(
+        `Synced meeting events for user ${member_id} after role change to ${role.trim()}`
+      );
     } catch (eventError) {
-      console.error('Failed to sync meeting events after role change:', eventError);
+      console.error(
+        "Failed to sync meeting events after role change:",
+        eventError
+      );
       // Don't fail the role update if event sync fails
     }
 
     res.status(200).json({
-      message: "Member role updated successfully"
+      message: "Member role updated successfully",
     });
   } catch (error) {
     console.error("Error updating member role:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -995,14 +1125,18 @@ export const removeMember = async (req, res) => {
     `;
 
     if (!currentMember) {
-      return res.status(403).json({ message: "You are not a member of this organization" });
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this organization" });
     }
 
     const isOwner = org?.created_by === userId;
     const canManageUsers = isOwner || currentMember.manage_users;
 
     if (!canManageUsers) {
-      return res.status(403).json({ message: "You don't have permission to manage users" });
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to manage users" });
     }
 
     // Get target member details
@@ -1019,7 +1153,9 @@ export const removeMember = async (req, res) => {
 
     // Prevent removing organization owner
     if (targetMember.user_id === org?.created_by) {
-      return res.status(400).json({ message: "Cannot remove organization owner" });
+      return res
+        .status(400)
+        .json({ message: "Cannot remove organization owner" });
     }
 
     // Clean up meeting events before removing member
@@ -1028,9 +1164,11 @@ export const removeMember = async (req, res) => {
         DELETE FROM events 
         WHERE user_id = ${member_id} AND org_id = ${org_id} AND is_meeting_event = true
       `;
-      console.log(`Cleaned up meeting events for user ${member_id} leaving org ${org_id}`);
+      console.log(
+        `Cleaned up meeting events for user ${member_id} leaving org ${org_id}`
+      );
     } catch (eventError) {
-      console.error('Failed to clean up meeting events:', eventError);
+      console.error("Failed to clean up meeting events:", eventError);
       // Continue with member removal even if cleanup fails
     }
 
@@ -1048,11 +1186,14 @@ export const removeMember = async (req, res) => {
     `;
 
     res.status(200).json({
-      message: "Member removed successfully"
+      message: "Member removed successfully",
     });
   } catch (error) {
     console.error("Error removing member:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -1079,31 +1220,38 @@ export const deleteOrganization = async (req, res) => {
 
     // Only organization owner can delete the organization
     if (org.created_by !== userId) {
-      return res.status(403).json({ message: "Only the organization owner can delete the organization" });
+      return res
+        .status(403)
+        .json({
+          message: "Only the organization owner can delete the organization",
+        });
     }
 
     // Delete all related data sequentially
     // Delete organization roles
     await sql`DELETE FROM org_roles WHERE org_id = ${org_id}`;
-    
+
     // Delete organization channels
     await sql`DELETE FROM org_channels WHERE org_id = ${org_id}`;
-    
+
     // Update all users' org_id to NULL
     await sql`UPDATE users SET org_id = NULL WHERE org_id = ${org_id}`;
-    
+
     // Delete organization members
     await sql`DELETE FROM org_members WHERE org_id = ${org_id}`;
-    
+
     // Finally, delete the organization itself
     await sql`DELETE FROM organisations WHERE org_id = ${org_id}`;
 
     res.status(200).json({
-      message: `Organization "${org.org_name}" has been successfully deleted`
+      message: `Organization "${org.org_name}" has been successfully deleted`,
     });
   } catch (error) {
     console.error("Error deleting organization:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -1113,13 +1261,26 @@ export const deleteOrganization = async (req, res) => {
 // Send Email Invitations
 export const sendInvitations = async (req, res) => {
   try {
+    console.log("sendInvitations called with org_id:", req.params.org_id);
+    console.log("Request body:", req.body);
+
     const userId = verifyToken(req);
+    console.log("User ID from token:", userId);
+
     const org_id = req.params.org_id;
     const { emails, message, organizationName, inviteCode } = req.body;
 
+    // Validate org_id parameter
+    if (!org_id || isNaN(org_id)) {
+      console.error(`Invalid org_id: ${org_id}`);
+      return res.status(400).json({ message: "Invalid organization ID" });
+    }
+
     // Validate input
     if (!emails || !Array.isArray(emails) || emails.length === 0) {
-      return res.status(400).json({ message: "At least one email address is required" });
+      return res
+        .status(400)
+        .json({ message: "At least one email address is required" });
     }
 
     if (!message?.trim()) {
@@ -1127,6 +1288,12 @@ export const sendInvitations = async (req, res) => {
     }
 
     // Check if user has permission to send invites
+    console.log(
+      "Checking user permissions for org_id:",
+      org_id,
+      "user_id:",
+      userId
+    );
     const [member] = await sql`
       SELECT om.role, r.invite_access
       FROM org_members om
@@ -1134,6 +1301,7 @@ export const sendInvitations = async (req, res) => {
       WHERE om.org_id = ${org_id} AND om.user_id = ${userId}
       LIMIT 1
     `;
+    console.log("Member found:", member);
 
     const [org] = await sql`
       SELECT created_by, access_level
@@ -1141,36 +1309,42 @@ export const sendInvitations = async (req, res) => {
       WHERE org_id = ${org_id}
       LIMIT 1
     `;
+    console.log("Organization found:", org);
 
     if (!member) {
-      return res.status(403).json({ message: "You are not a member of this organization" });
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this organization" });
     }
 
     const isOwner = org?.created_by === userId;
-    
+
     // Check access level permissions based on organization settings
     const hasInviteAccess = member.invite_access === true; // Handle null/undefined values
-    
-    if (org?.access_level === 'public') {
+
+    if (org?.access_level === "public") {
       // Public: Anyone can join directly using the code, no invitation needed
       // But members can still send invitations if they have invite_access
-      if (!isOwner && member.role !== 'admin' && !hasInviteAccess) {
-        return res.status(403).json({ 
-          message: "You don't have permission to send invitations. Please ask an admin or get 'Invite Access' permission." 
+      if (!isOwner && member.role !== "admin" && !hasInviteAccess) {
+        return res.status(403).json({
+          message:
+            "You don't have permission to send invitations. Please ask an admin or get 'Invite Access' permission.",
         });
       }
-    } else if (org?.access_level === 'invite-only') {
+    } else if (org?.access_level === "invite-only") {
       // Invite-only: Only permitted members can invite
-      if (!isOwner && member.role !== 'admin' && !hasInviteAccess) {
-        return res.status(403).json({ 
-          message: "You don't have permission to send invitations. Please ask an admin or get 'Invite Access' permission." 
+      if (!isOwner && member.role !== "admin" && !hasInviteAccess) {
+        return res.status(403).json({
+          message:
+            "You don't have permission to send invitations. Please ask an admin or get 'Invite Access' permission.",
         });
       }
-    } else if (org?.access_level === 'admin-only') {
+    } else if (org?.access_level === "admin-only") {
       // Admin-only: Only owner or admins can invite
-      if (!isOwner && member.role !== 'admin') {
-        return res.status(403).json({ 
-          message: "Only the organization owner or admins can send invitations in this organization." 
+      if (!isOwner && member.role !== "admin") {
+        return res.status(403).json({
+          message:
+            "Only the organization owner or admins can send invitations in this organization.",
         });
       }
     }
@@ -1179,38 +1353,102 @@ export const sendInvitations = async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     for (const email of emails) {
       if (!emailRegex.test(email.trim())) {
-        return res.status(400).json({ message: `Invalid email format: ${email}` });
+        return res
+          .status(400)
+          .json({ message: `Invalid email format: ${email}` });
       }
     }
 
-    // Send response immediately
-    res.status(200).json({ "message": "Invitations sent successfully" });
+    // Validate environment variables
+    if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
+      console.error("Missing email configuration:", {
+        hasEmail: !!process.env.EMAIL,
+        hasAppPassword: !!process.env.APP_PASSWORD,
+      });
+      return res.status(500).json({
+        message: "Email service not configured properly",
+      });
+    }
 
-    // Send emails asynchronously
-    setImmediate(async () => {
-      const inviteLink = `${process.env.CLIENT_URL}/join-organization?code=${inviteCode}`;
-      
-      for (const email of emails) {
-        try {
-          await Promise.race([
-            emailService.sendTeamInviteEmail(email, "Team Member", organizationName, inviteLink),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Email timeout')), 30000)
-            )
-          ]);
-          
-          console.log(`✅ Team invitation sent successfully to ${email}`);
-        } catch (emailError) {
-          console.error(`❌ Failed to send team invitation to ${email}:`, emailError);
-        }
-      }
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.APP_PASSWORD,
+      },
     });
+
+    // Verify transporter configuration
+    try {
+      await transporter.verify();
+      console.log("Email transporter verified successfully");
+    } catch (verifyError) {
+      console.error("Email transporter verification failed:", verifyError);
+      return res.status(500).json({
+        message: "Email service configuration error",
+      });
+    }
+
+    const mailOptions = {
+      from: {
+        name: "SyncSpace",
+        address: process.env.EMAIL,
+      },
+      to: emails,
+      subject: `Invitation to Join Organization: ${organizationName} on SyncSpace`,
+      html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #7c3aed;">You're Invited to Join ${organizationName}!</h2>
+            <p>${message}</p>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin: 0 0 10px 0;">Your Invite Code:</h3>
+              <p style="font-size: 24px; font-weight: bold; color: #7c3aed; margin: 0; letter-spacing: 2px;">${inviteCode}</p>
+            </div>
+            <p>To join the organization:</p>
+            <ol>
+              <li>Go to SyncSpace</li>
+              <li>Click "Join Organization"</li>
+              <li>Enter the invite code above</li>
+            </ol>
+            <p style="color: #666; font-size: 12px;">This invitation was sent from SyncSpace.</p>
+          </div>
+        `,
+      text: `You're invited to join ${organizationName} on SyncSpace!\n\n${message}\n\nInvite Code: ${inviteCode}\n\nTo join:\n1. Go to SyncSpace\n2. Click "Join Organization"\n3. Enter the invite code: ${inviteCode}`,
+    };
+
+    try {
+      console.log("Sending email to:", emails);
+      const result = await transporter.sendMail(mailOptions);
+      console.log("Email sent successfully:", result.messageId);
+      res
+        .status(200)
+        .json({ success: true, message: "Invitations sent successfully" });
+    } catch (emailError) {
+      console.error("Failed to send email:", emailError);
+      res.status(500).json({
+        message: "Failed to send invitations",
+        error:
+          process.env.NODE_ENV === "development"
+            ? emailError.message
+            : undefined,
+      });
+    }
   } catch (error) {
     console.error("Error sending invitations:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    console.error("Error stack:", error.stack);
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
-    res.status(500).json({ message: "Failed to send invitations" });
+    res.status(500).json({
+      message: "Failed to send invitations",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 
@@ -1230,7 +1468,9 @@ export const getChannel = async (req, res) => {
     `;
 
     if (!member) {
-      return res.status(403).json({ message: "You are not a member of this organization" });
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this organization" });
     }
 
     // Get channel details
@@ -1269,10 +1509,17 @@ export const getChannel = async (req, res) => {
       const hasSettingsAccess = memberWithRole?.settings_access || false;
 
       // Users with manage_channels or settings_access permissions can access all channels
-      if (!hasManageChannels && !hasSettingsAccess && Array.isArray(accessibleTeams) && accessibleTeams.length > 0) {
+      if (
+        !hasManageChannels &&
+        !hasSettingsAccess &&
+        Array.isArray(accessibleTeams) &&
+        accessibleTeams.length > 0
+      ) {
         const canAccess = accessibleTeams.includes(channel.channel_name);
         if (!canAccess) {
-          return res.status(403).json({ message: "You don't have access to this channel" });
+          return res
+            .status(403)
+            .json({ message: "You don't have access to this channel" });
         }
       }
     }
@@ -1288,7 +1535,10 @@ export const getChannel = async (req, res) => {
     });
   } catch (error) {
     console.error("Error retrieving channel:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -1319,7 +1569,11 @@ export const transferOwnership = async (req, res) => {
     }
 
     if (organization.created_by !== userId) {
-      return res.status(403).json({ message: "Only the organization owner can transfer ownership" });
+      return res
+        .status(403)
+        .json({
+          message: "Only the organization owner can transfer ownership",
+        });
     }
 
     // Check if new owner is a member of the organization
@@ -1332,7 +1586,9 @@ export const transferOwnership = async (req, res) => {
     `;
 
     if (!newOwner) {
-      return res.status(400).json({ message: "New owner must be a member of the organization" });
+      return res
+        .status(400)
+        .json({ message: "New owner must be a member of the organization" });
     }
 
     // Update organization owner
@@ -1376,7 +1632,10 @@ export const transferOwnership = async (req, res) => {
     });
   } catch (error) {
     console.error("Error transferring ownership:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -1418,7 +1677,9 @@ export const updateChannel = async (req, res) => {
       `;
 
       if (!member || (!member.manage_channels && !member.settings_access)) {
-        return res.status(403).json({ message: "You don't have permission to update channels" });
+        return res
+          .status(403)
+          .json({ message: "You don't have permission to update channels" });
       }
     }
 
@@ -1443,13 +1704,17 @@ export const updateChannel = async (req, res) => {
     `;
 
     if (conflictingChannel) {
-      return res.status(400).json({ message: "A channel with this name already exists" });
+      return res
+        .status(400)
+        .json({ message: "A channel with this name already exists" });
     }
 
     // Update the channel
     const [updatedChannel] = await sql`
       UPDATE org_channels
-      SET channel_name = ${name.trim()}, channel_description = ${description?.trim() || null}
+      SET channel_name = ${name.trim()}, channel_description = ${
+      description?.trim() || null
+    }
       WHERE channel_id = ${channel_id} AND org_id = ${org_id}
       RETURNING channel_id, channel_name, channel_description
     `;
@@ -1457,9 +1722,14 @@ export const updateChannel = async (req, res) => {
     // Sync meeting events in case channel name changed (affects accessible_teams matching)
     try {
       await syncMeetingEventsForOrg(org_id);
-      console.log(`Synced meeting events for org ${org_id} after channel update`);
+      console.log(
+        `Synced meeting events for org ${org_id} after channel update`
+      );
     } catch (eventError) {
-      console.error('Failed to sync meeting events after channel update:', eventError);
+      console.error(
+        "Failed to sync meeting events after channel update:",
+        eventError
+      );
       // Don't fail the channel update if event sync fails
     }
 
@@ -1473,7 +1743,10 @@ export const updateChannel = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating channel:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });
@@ -1510,7 +1783,9 @@ export const deleteChannel = async (req, res) => {
       `;
 
       if (!member || (!member.manage_channels && !member.settings_access)) {
-        return res.status(403).json({ message: "You don't have permission to delete channels" });
+        return res
+          .status(403)
+          .json({ message: "You don't have permission to delete channels" });
       }
     }
 
@@ -1537,7 +1812,10 @@ export const deleteChannel = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting channel:", error);
-    if (error.message === "No token provided" || error.message === "Invalid token") {
+    if (
+      error.message === "No token provided" ||
+      error.message === "Invalid token"
+    ) {
       return res.status(401).json({ message: error.message });
     }
     res.status(500).json({ message: "Internal server error" });

@@ -2,7 +2,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sql from "../database/db.js";
 import { v2 as cloudinary } from "cloudinary";
-import emailService from "../services/emailService.js";
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
@@ -61,6 +64,7 @@ export const signup = async (req, res) => {
         userId: newUser.user_id,
         name: newUser.name,
         email: newUser.email,
+        photo: null, // New users don't have photos initially
       },
       process.env.JWT_SECRET_KEY,
       {
@@ -76,37 +80,90 @@ export const signup = async (req, res) => {
       path: "/",
     });
 
-    // Send response immediately to avoid timeout
-    res.status(201).json({
-      message: "User created successfully. Please verify your email.",
-      user: {
-        user_id: newUser.user_id,
-        name: newUser.name,
-        email: newUser.email,
+    // Validate environment variables
+    if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
+      console.error("Missing email configuration for signup:", {
+        hasEmail: !!process.env.EMAIL,
+        hasAppPassword: !!process.env.APP_PASSWORD,
+      });
+      return res.status(500).json({
+        message: "Email service not configured properly",
+      });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.APP_PASSWORD,
       },
-      token,
-      requiresVerification: true,
     });
 
-    // Send email asynchronously to avoid blocking the response
-    setImmediate(async () => {
-      try {
-        // Send email with timeout
-        await Promise.race([
-          emailService.sendVerificationEmail(email, name, otp),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Email timeout")), 30000)
-          ),
-        ]);
+    // Verify transporter configuration
+    try {
+      await transporter.verify();
+      console.log("Email transporter verified successfully for signup");
+    } catch (verifyError) {
+      console.error(
+        "Email transporter verification failed for signup:",
+        verifyError
+      );
+      return res.status(500).json({
+        message: "Email service configuration error",
+      });
+    }
 
-        console.log(`✅ Verification email sent successfully to ${email}`);
-      } catch (emailError) {
-        console.error(
-          `❌ Failed to send verification email to ${email}:`,
-          emailError
-        );
-      }
-    });
+    const mailOptions = {
+      from: {
+        name: "SyncSpace",
+        address: process.env.EMAIL,
+      },
+      to: email,
+      subject: "Verify Your Email for SyncSpace",
+      html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #7c3aed;">Welcome to SyncSpace, ${name}!</h2>
+            <p>Thank you for signing up. Please verify your email address to complete your registration.</p>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin: 0 0 10px 0;">Your Verification Code:</h3>
+              <p style="font-size: 32px; font-weight: bold; color: #7c3aed; margin: 0; letter-spacing: 4px; text-align: center;">${otpString}</p>
+            </div>
+            <p>Enter this code in the verification screen to activate your account.</p>
+            <p style="color: #666; font-size: 12px;">This code will expire in 10 minutes. If you didn't create an account, please ignore this email.</p>
+          </div>
+        `,
+      text: `Welcome to SyncSpace, ${name}!\n\nThank you for signing up. Please verify your email address to complete your registration.\n\nYour Verification Code: ${otpString}\n\nEnter this code in the verification screen to activate your account.\n\nThis code will expire in 10 minutes.`,
+    };
+
+    try {
+      console.log("Sending signup verification email to:", email);
+      const result = await transporter.sendMail(mailOptions);
+      console.log("Signup email sent successfully:", result.messageId);
+
+      res.status(201).json({
+        success: true,
+        message: "User created successfully. Please verify your email.",
+        user: {
+          user_id: newUser.user_id,
+          name: newUser.name,
+          email: newUser.email,
+        },
+        token,
+        requiresVerification: true,
+      });
+    } catch (emailError) {
+      console.error("Failed to send signup email:", emailError);
+      res.status(500).json({
+        message: "Failed to send verification email",
+        error:
+          process.env.NODE_ENV === "development"
+            ? emailError.message
+            : undefined,
+      });
+    }
   } catch (error) {
     console.error("Error creating user:", error);
 
@@ -161,6 +218,7 @@ export const login = async (req, res) => {
         userId: user.user_id,
         email: user.email,
         name: user.name,
+        photo: user.user_photo,
       },
       process.env.JWT_SECRET_KEY,
       {
@@ -241,46 +299,108 @@ export const forgotPassword = async (req, res) => {
   try {
     const [user] = await Promise.race([
       sql`SELECT user_id FROM users WHERE email = ${email}`,
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database timeout')), 5000)
-      )
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database timeout")), 5000)
+      ),
     ]);
-    
+
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
 
     const resetLink = process.env.CLIENT_URL + `/reset-password/${email}`;
 
-    // Send response immediately
-    res.json({ message: `Password reset link sent to ${email}` });
-
-    // Send email asynchronously
-    setImmediate(async () => {
-      try {
-        await Promise.race([
-          emailService.sendPasswordResetEmail(email, resetLink),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Email timeout')), 30000)
-          )
-        ]);
-        
-        console.log(`✅ Password reset email sent successfully to ${email}`);
-      } catch (emailError) {
-        console.error(`❌ Failed to send password reset email to ${email}:`, emailError);
-      }
-    });
-
-  } catch (error) {
-    console.error("Error in forgot password:", error);
-    
-    if (error.message === 'Database timeout') {
-      return res.status(504).json({ 
-        message: "Request timeout. Please try again.",
-        error: "TIMEOUT"
+    // Validate environment variables
+    if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
+      console.error("Missing email configuration for forgot password:", {
+        hasEmail: !!process.env.EMAIL,
+        hasAppPassword: !!process.env.APP_PASSWORD,
+      });
+      return res.status(500).json({
+        message: "Email service not configured properly",
       });
     }
-    
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.APP_PASSWORD,
+      },
+    });
+
+    // Verify transporter configuration
+    try {
+      await transporter.verify();
+      console.log(
+        "Email transporter verified successfully for forgot password"
+      );
+    } catch (verifyError) {
+      console.error(
+        "Email transporter verification failed for forgot password:",
+        verifyError
+      );
+      return res.status(500).json({
+        message: "Email service configuration error",
+      });
+    }
+
+    const mailOptions = {
+      from: {
+        name: "SyncSpace",
+        address: process.env.EMAIL,
+      },
+      to: email,
+      subject: "Reset Your SyncSpace Password",
+      html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #7c3aed;">Password Reset Request</h2>
+            <p>You requested to reset your password for your SyncSpace account.</p>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 15px 0;">Click the button below to reset your password:</p>
+              <a href="${resetLink}" style="display: inline-block; background-color: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
+            </div>
+            <p>Or copy and paste this link in your browser:</p>
+            <p style="word-break: break-all; color: #7c3aed;">${resetLink}</p>
+            <p style="color: #666; font-size: 12px;">If you didn't request this password reset, please ignore this email. Your password will remain unchanged.</p>
+          </div>
+        `,
+      text: `Password Reset Request\n\nYou requested to reset your password for your SyncSpace account.\n\nClick this link to reset your password: ${resetLink}\n\nIf you didn't request this password reset, please ignore this email.`,
+    };
+
+    try {
+      console.log("Sending password reset email to:", email);
+      const result = await transporter.sendMail(mailOptions);
+      console.log("Password reset email sent successfully:", result.messageId);
+      res
+        .status(200)
+        .json({
+          success: true,
+          message: `Password reset link sent to ${email}`,
+        });
+    } catch (emailError) {
+      console.error("Failed to send password reset email:", emailError);
+      res.status(500).json({
+        message: "Failed to send reset link",
+        error:
+          process.env.NODE_ENV === "development"
+            ? emailError.message
+            : undefined,
+      });
+    }
+  } catch (error) {
+    console.error("Error in forgot password:", error);
+
+    if (error.message === "Database timeout") {
+      return res.status(504).json({
+        message: "Request timeout. Please try again.",
+        error: "TIMEOUT",
+      });
+    }
+
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -336,24 +456,80 @@ export const resendOtp = async (req, res) => {
       ),
     ]);
 
-    // Send response immediately
-    res.json({ message: `OTP sent to ${email}` });
+    // Validate environment variables
+    if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
+      console.error("Missing email configuration for resend OTP:", {
+        hasEmail: !!process.env.EMAIL,
+        hasAppPassword: !!process.env.APP_PASSWORD,
+      });
+      return res.status(500).json({
+        message: "Email service not configured properly",
+      });
+    }
 
-    // Send email asynchronously
-    setImmediate(async () => {
-      try {
-        await Promise.race([
-          emailService.sendOtpResendEmail(email, user.name || email, otp),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Email timeout")), 30000)
-          ),
-        ]);
-
-        console.log(`✅ OTP resent successfully to ${email}`);
-      } catch (emailError) {
-        console.error(`❌ Failed to resend OTP to ${email}:`, emailError);
-      }
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.APP_PASSWORD,
+      },
     });
+
+    // Verify transporter configuration
+    try {
+      await transporter.verify();
+      console.log("Email transporter verified successfully for resend OTP");
+    } catch (verifyError) {
+      console.error(
+        "Email transporter verification failed for resend OTP:",
+        verifyError
+      );
+      return res.status(500).json({
+        message: "Email service configuration error",
+      });
+    }
+
+    const mailOptions = {
+      from: {
+        name: "SyncSpace",
+        address: process.env.EMAIL,
+      },
+      to: email,
+      subject: "Your New Verification Code for SyncSpace",
+      html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #7c3aed;">New Verification Code</h2>
+            <p>Hi ${user.name},</p>
+            <p>You requested a new verification code for your SyncSpace account.</p>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin: 0 0 10px 0;">Your New Verification Code:</h3>
+              <p style="font-size: 32px; font-weight: bold; color: #7c3aed; margin: 0; letter-spacing: 4px; text-align: center;">${otp}</p>
+            </div>
+            <p>Enter this code in the verification screen to activate your account.</p>
+            <p style="color: #666; font-size: 12px;">This code will expire in 10 minutes. If you didn't request this code, please ignore this email.</p>
+          </div>
+        `,
+      text: `New Verification Code\n\nHi ${user.name},\n\nYou requested a new verification code for your SyncSpace account.\n\nYour New Verification Code: ${otp}\n\nEnter this code in the verification screen to activate your account.\n\nThis code will expire in 10 minutes.`,
+    };
+
+    try {
+      console.log("Sending resend OTP email to:", email);
+      const result = await transporter.sendMail(mailOptions);
+      console.log("Resend OTP email sent successfully:", result.messageId);
+      res.status(200).json({ success: true, message: "OTP sent successfully" });
+    } catch (emailError) {
+      console.error("Failed to send resend OTP email:", emailError);
+      res.status(500).json({
+        message: "Failed to send OTP",
+        error:
+          process.env.NODE_ENV === "development"
+            ? emailError.message
+            : undefined,
+      });
+    }
   } catch (error) {
     console.error("Error resending OTP:", error);
 
@@ -455,9 +631,46 @@ export const updateProfile = async (req, res) => {
     )} WHERE user_id = $1`;
     await sql.query(query, [userId, ...values]);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Profile updated successfully" });
+    // Get updated user data and create new JWT token
+    const [updatedUser] = await sql`
+      SELECT user_id, name, email, user_photo
+      FROM users
+      WHERE user_id = ${userId}
+    `;
+
+    const newToken = jwt.sign(
+      {
+        userId: updatedUser.user_id,
+        email: updatedUser.email,
+        name: updatedUser.name,
+        photo: updatedUser.user_photo,
+      },
+      process.env.JWT_SECRET_KEY,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    // Set new cookie
+    res.cookie("jwt", newToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+      path: "/",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      token: newToken,
+      user: {
+        user_id: updatedUser.user_id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        photo: updatedUser.user_photo,
+      },
+    });
   } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -591,6 +804,7 @@ export const refreshToken = async (req, res) => {
         userId: user.user_id,
         email: user.email,
         name: user.name,
+        photo: user.user_photo,
       },
       process.env.JWT_SECRET_KEY,
       {
@@ -620,6 +834,44 @@ export const refreshToken = async (req, res) => {
     });
   } catch (error) {
     console.error("Error refreshing token:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getUserPhoto = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Verify the requesting user is authenticated
+    const authToken =
+      req.cookies.jwt || req.headers.authorization?.split(" ")[1];
+
+    if (!authToken) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    try {
+      jwt.verify(authToken, process.env.JWT_SECRET_KEY);
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    // Get user photo from database
+    const [user] = await sql`
+      SELECT user_photo
+      FROM users
+      WHERE user_id = ${userId}
+    `;
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      photo: user.user_photo,
+    });
+  } catch (error) {
+    console.error("Error fetching user photo:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

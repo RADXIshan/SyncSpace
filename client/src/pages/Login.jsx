@@ -168,9 +168,9 @@ const Login = () => {
             <LogIn className="w-4 h-4 text-purple-400" />
             Welcome Back
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3.5">
             Sign In to
-            <span className="block gradient-text-purple">SyncSpace</span>
+            <span className="block gradient-text-purple pb-1">SyncSpace</span>
           </h1>
           <p className="text-lg text-white/80 leading-relaxed">
             Access your collaborative workspace and continue where you left off

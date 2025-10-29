@@ -1162,3 +1162,442 @@ input[type="checkbox"]:disabled:hover {
     transform: scale(1);
   }
 }
+/* WhatsApp-like Real-time Messaging Enhancements */
+
+/* Instant message status indicators */
+.message-status-sending {
+  opacity: 0.7;
+  position: relative;
+}
+
+.message-status-sending::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -20px;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #6b7280;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.message-status-sent {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.message-status-failed {
+  opacity: 0.6;
+  position: relative;
+}
+
+.message-status-failed::after {
+  content: "⚠️";
+  position: absolute;
+  top: 50%;
+  right: -20px;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #ef4444;
+}
+
+/* Instant message bubble animations */
+.message-bubble-enter {
+  animation: bubbleSlideIn 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.message-bubble-optimistic {
+  opacity: 0.8;
+  transform: scale(0.98);
+  transition: all 0.2s ease;
+}
+
+.message-bubble-failed {
+  opacity: 0.6;
+  border-left: 3px solid #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+@keyframes bubbleSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Faster typing indicator */
+.typing-indicator-fast {
+  animation: typingFadeIn 0.15s ease-out;
+}
+
+@keyframes typingFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Instant scroll behavior */
+.messages-container {
+  scroll-behavior: auto; /* Override smooth for instant scrolling */
+}
+
+/* WhatsApp-like conversation list updates */
+.conversation-instant-update {
+  animation: conversationUpdate 0.3s ease-out;
+}
+
+@keyframes conversationUpdate {
+  0% {
+    background: rgba(124, 58, 237, 0.08);
+    transform: scale(1);
+  }
+  50% {
+    background: rgba(124, 58, 237, 0.12);
+    transform: scale(1.005);
+  }
+  100% {
+    background: transparent;
+    transform: scale(1);
+  }
+}
+
+/* File upload instant feedback */
+.file-upload-instant {
+  position: relative;
+  overflow: hidden;
+}
+
+.file-upload-instant::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
+  animation: uploadShimmer 1s infinite;
+}
+
+@keyframes uploadShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Instant connection status indicator */
+.connection-status-live {
+  animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Message input instant feedback */
+.message-input-active {
+  border-color: #8b5cf6 !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+  transition: all 0.1s ease !important;
+}
+
+/* Instant emoji reactions */
+.reaction-instant {
+  animation: reactionPop 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes reactionPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Optimistic message styling */
+.message-optimistic-text {
+  position: relative;
+}
+
+.message-optimistic-text::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #6b7280, transparent);
+  animation: optimisticShimmer 1.5s infinite;
+}
+
+@keyframes optimisticShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Instant message deletion */
+.message-delete-instant {
+  animation: deleteSlideOut 0.3s ease-in-out forwards;
+}
+
+@keyframes deleteSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 100px;
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateX(5px) scale(0.98);
+  }
+  100% {
+    opacity: 0.6;
+    transform: translateX(0) scale(1);
+    max-height: 100px;
+  }
+}
+
+/* Faster hover transitions for better responsiveness */
+.hover-instant {
+  transition: all 0.1s ease !important;
+}
+
+.hover-instant:hover {
+  transform: translateY(-1px) scale(1.01);
+}
+
+/* Instant sidebar toggle */
+.sidebar-instant-toggle {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* Message read status (WhatsApp-like double check) */
+.message-read-status {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.message-read-status.read {
+  color: #3b82f6;
+}
+
+.message-read-status.unread {
+  color: #9ca3af;
+}
+
+/* Instant notification badge */
+.notification-badge-instant {
+  animation: badgePulse 0.3s ease-out;
+}
+
+@keyframes badgePulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Smooth message container scrolling */
+.messages-smooth-scroll {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+.messages-smooth-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-smooth-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages-smooth-scroll::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+}
+
+.messages-smooth-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Instant loading states */
+.loading-instant {
+  animation: loadingPulse 1s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Message timestamp hover effect */
+.message-timestamp {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message-group:hover .message-timestamp {
+  opacity: 0.7;
+}
+
+/* Instant message actions */
+.message-actions-instant {
+  opacity: 0;
+  transform: translateY(2px);
+  transition: all 0.15s ease;
+}
+
+.message-group:hover .message-actions-instant {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Connection status smooth transitions */
+.connection-indicator {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.connection-indicator.connected {
+  color: #10b981;
+  text-shadow: 0 0 4px rgba(16, 185, 129, 0.3);
+}
+
+.connection-indicator.disconnected {
+  color: #ef4444;
+  animation: disconnectedPulse 1s infinite;
+}
+
+@keyframes disconnectedPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Instant drag and drop feedback */
+.drag-over-instant {
+  background: rgba(124, 58, 237, 0.1) !important;
+  border: 2px dashed #8b5cf6 !important;
+  animation: dragPulse 1s infinite;
+}
+
+@keyframes dragPulse {
+  0%, 100% {
+    background: rgba(124, 58, 237, 0.1);
+  }
+  50% {
+    background: rgba(124, 58, 237, 0.15);
+  }
+}
+
+/* Utility classes for instant feedback */
+.instant-feedback {
+  transition: all 0.1s ease !important;
+}
+
+.instant-scale:hover {
+  transform: scale(1.02);
+}
+
+.instant-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Message bubble status indicators */
+.message-bubble-status {
+  position: relative;
+}
+
+.message-bubble-status::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  width: 16px;
+  height: 12px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.message-bubble-status.sending::after {
+  content: "⏳";
+  font-size: 10px;
+  animation: spin 1s linear infinite;
+}
+
+.message-bubble-status.sent::after {
+  content: "✓";
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.message-bubble-status.delivered::after {
+  content: "✓✓";
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.message-bubble-status.read::after {
+  content: "✓✓";
+  color: #3b82f6;
+  font-size: 12px;
+}
+
+.message-bubble-status.failed::after {
+  content: "⚠️";
+  font-size: 10px;
+  color: #ef4444;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

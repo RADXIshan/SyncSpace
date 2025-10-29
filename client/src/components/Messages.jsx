@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { useUnread } from "../context/UnreadContext";
@@ -39,7 +39,6 @@ const Messages = () => {
 
   // State for conversations list
   const [conversations, setConversations] = useState([]);
-  const [filteredConversations, setFilteredConversations] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -80,9 +79,17 @@ const Messages = () => {
   const fileInputRef = useRef(null);
   const emojiPickerRef = useRef(null);
 
-  // Scroll to bottom
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Optimized scroll to bottom for WhatsApp-like experience
+  const scrollToBottom = useCallback((instant = false) => {
+    if (messagesEndRef.current) {
+      if (instant) {
+        // Instant scroll for real-time messages
+        messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+      } else {
+        // Smooth scroll for user actions
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   }, []);
 
   // Fetch conversations
@@ -155,13 +162,13 @@ const Messages = () => {
     }
   }, [user?.user_id]);
 
-  // Socket event handlers - Real-time like TeamChat with optimizations
+  // Socket event handlers - Optimized for WhatsApp-like real-time experience
   useEffect(() => {
     if (!socket || !isConnected || !user?.user_id) {
       return;
     }
 
-    // Debounce function to prevent rapid updates
+    // Debounce function to prevent rapid updates - reduced wait time for faster response
     const debounce = (func, wait) => {
       let timeout;
       return function executedFunction(...args) {
@@ -174,7 +181,7 @@ const Messages = () => {
       };
     };
 
-    // Listen for new direct messages - exactly like TeamChat handles new_message
+    // Listen for new direct messages - Optimized for instant WhatsApp-like updates
     const handleNewDirectMessage = (message) => {
       // Determine if this message is for the current conversation
       const isCurrentConversation =
@@ -182,7 +189,7 @@ const Messages = () => {
         (message.sender_id === selectedConversation.other_user_id ||
           message.receiver_id === selectedConversation.other_user_id);
 
-      // Update messages if this conversation is currently selected - same as TeamChat
+      // Update messages if this conversation is currently selected - instant update
       if (isCurrentConversation) {
         setMessages((prev) => {
           // Check if this message already exists (avoid duplicates from optimistic updates)
@@ -191,26 +198,32 @@ const Messages = () => {
               msg.message_id === message.message_id ||
               (msg.isOptimistic &&
                 msg.content === message.content &&
+                msg.sender_id === message.sender_id &&
+                msg.receiver_id === message.receiver_id &&
                 Math.abs(
                   new Date(msg.created_at) - new Date(message.created_at)
-                ) < 5000)
+                ) < 10000) // Increased time window and added more matching criteria
           );
 
           if (existingMessage) {
-            // Replace optimistic message with real message
+            // Replace optimistic message with real message instantly
             return prev.map((msg) =>
               msg.message_id === existingMessage.message_id
-                ? { ...message, isNew: true }
+                ? { ...message, isNew: true, isOptimistic: false }
                 : msg
             );
           } else {
-            // Add new message
+            // Add new message instantly
             return [...prev, { ...message, isNew: true }];
           }
         });
-        scrollToBottom();
 
-        // Remove the isNew flag after animation - same as TeamChat
+        // Immediate instant scroll for real-time feel
+        requestAnimationFrame(() => {
+          scrollToBottom(true); // Instant scroll for new messages
+        });
+
+        // Remove the isNew flag after shorter animation for faster feel
         setTimeout(() => {
           setMessages((prev) =>
             prev.map((msg) =>
@@ -219,7 +232,7 @@ const Messages = () => {
                 : msg
             )
           );
-        }, 1000);
+        }, 500); // Reduced from 1000ms to 500ms
       }
 
       // Update conversations list locally with smooth animations
@@ -331,7 +344,7 @@ const Messages = () => {
       );
     };
 
-    // Listen for typing indicators - same pattern as TeamChat with debouncing
+    // Listen for typing indicators - Optimized for instant WhatsApp-like response
     const handleUserTyping = debounce((data) => {
       if (
         selectedConversation &&
@@ -357,7 +370,7 @@ const Messages = () => {
           }
         });
       }
-    }, 100);
+    }, 50); // Reduced from 100ms to 50ms for faster typing indicator response
 
     const handleUserStoppedTyping = (data) => {
       setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
@@ -442,7 +455,7 @@ const Messages = () => {
     socket,
     isConnected,
     user?.user_id,
-    selectedConversation,
+    selectedConversation?.other_user_id, // Only depend on the ID, not the entire object
     scrollToBottom,
   ]);
 
@@ -455,12 +468,13 @@ const Messages = () => {
   // Remove periodic refresh - rely on real-time updates only
   // Real-time updates through socket events should handle all conversation updates
 
-  // Handle URL parameters for direct user selection
+  // Handle URL parameters for direct user selection - optimized to prevent unnecessary re-renders
   useEffect(() => {
     const userParam = searchParams.get("user");
     if (
       userParam &&
-      (conversations.length > 0 || organizationMembers.length > 0)
+      (conversations.length > 0 || organizationMembers.length > 0) &&
+      !selectedConversation // Only run if no conversation is selected
     ) {
       const userId = parseInt(userParam);
       const conversation = conversations.find(
@@ -478,14 +492,19 @@ const Messages = () => {
         }
       }
     }
-  }, [searchParams, conversations, organizationMembers]);
+  }, [
+    searchParams.get("user"),
+    conversations.length,
+    organizationMembers.length,
+    selectedConversation,
+  ]); // Optimized dependencies
 
-  // Filter conversations based on search query
-  useEffect(() => {
+  // Filter conversations based on search query - optimized with useMemo
+  const filteredConversations = useMemo(() => {
     if (!searchQuery.trim()) {
-      setFilteredConversations(conversations);
+      return conversations;
     } else {
-      const filtered = conversations.filter(
+      return conversations.filter(
         (conv) =>
           conv.other_user_name
             ?.toLowerCase()
@@ -494,14 +513,27 @@ const Messages = () => {
             ?.toLowerCase()
             .includes(searchQuery.toLowerCase())
       );
-      setFilteredConversations(filtered);
     }
   }, [conversations, searchQuery]);
 
-  // Auto-scroll on new messages - same as TeamChat
+  // Auto-scroll on new messages - Optimized to prevent unnecessary scrolling
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    // Only scroll if there are messages and the last message is new or from current user
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      const shouldScroll =
+        lastMessage.isNew ||
+        lastMessage.sender_id === user.user_id ||
+        lastMessage.isOptimistic;
+
+      if (shouldScroll) {
+        // Use requestAnimationFrame for smoother scrolling
+        requestAnimationFrame(() => {
+          scrollToBottom(true); // Instant scroll for better performance
+        });
+      }
+    }
+  }, [messages.length, user.user_id, scrollToBottom]); // Only depend on messages length, not entire array
 
   // Cleanup typing timeout
   useEffect(() => {
@@ -571,15 +603,18 @@ const Messages = () => {
     };
   }, [sidebarVisible, isMobile, showDeleteModal]);
 
-  // Update timestamps every 30 seconds for better accuracy - same as TeamChat
+  // Update timestamps every 30 seconds for better accuracy - optimized to avoid unnecessary re-renders
   useEffect(() => {
     const interval = setInterval(() => {
-      // Force re-render to update timestamps
-      setMessages((prev) => [...prev]);
+      // Only update if there are messages and user is actively viewing
+      if (messages.length > 0 && document.visibilityState === "visible") {
+        // Force re-render to update timestamps only when needed
+        setMessages((prev) => [...prev]);
+      }
     }, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [messages.length]); // Only depend on messages length, not the entire messages array
 
   // Handle conversation selection
   const handleSelectConversation = (conversation) => {
@@ -669,7 +704,7 @@ const Messages = () => {
 
       typingTimeoutRef.current = setTimeout(() => {
         handleTypingStop();
-      }, 2000);
+      }, 1500); // Optimized to 1.5 seconds for faster WhatsApp-like response
     } else {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
@@ -685,34 +720,47 @@ const Messages = () => {
     }
   };
 
-  // Send message with optimistic updates
+  // Send message with instant optimistic updates - WhatsApp-like experience
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && !replyingTo) return;
+
+    const messageContent = newMessage.trim();
+    const currentReplyingTo = replyingTo;
+
+    // Clear input immediately for instant feel
+    setNewMessage("");
+    setReplyingTo(null);
+    handleTypingStop();
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
 
     setSending(true);
 
     // Create optimistic message for immediate UI update
     const optimisticMessage = {
-      message_id: `temp-${Date.now()}`,
-      content: newMessage.trim(),
+      message_id: `temp-${Date.now()}-${Math.random()}`,
+      content: messageContent,
       sender_id: user.user_id,
       sender_name: user.name,
       sender_photo: user.user_photo,
       receiver_id: selectedConversation.other_user_id,
       created_at: new Date().toISOString(),
-      reply_to: replyingTo?.message_id || null,
-      reply_to_sender_name: replyingTo?.sender_name || null,
-      reply_to_content: replyingTo?.content || null,
+      reply_to: currentReplyingTo?.message_id || null,
+      reply_to_sender_name: currentReplyingTo?.sender_name || null,
+      reply_to_content: currentReplyingTo?.content || null,
       isOptimistic: true,
       reactions: [],
+      status: "sending", // Add sending status
     };
 
     try {
       const messageData = {
-        content: newMessage.trim(),
+        content: messageContent,
         receiver_id: selectedConversation.other_user_id,
-        reply_to: replyingTo?.message_id || null,
+        reply_to: currentReplyingTo?.message_id || null,
       };
 
       if (editingMessage) {
@@ -721,14 +769,18 @@ const Messages = () => {
           `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages/${
             editingMessage.message_id
           }`,
-          { content: newMessage.trim() },
+          { content: messageContent },
           { withCredentials: true }
         );
         setEditingMessage(null);
       } else {
-        // Add optimistic message immediately for smooth UX
+        // Add optimistic message immediately for instant WhatsApp-like feel
         setMessages((prev) => [...prev, optimisticMessage]);
-        scrollToBottom();
+
+        // Immediate smooth scroll
+        requestAnimationFrame(() => {
+          scrollToBottom();
+        });
 
         // Send new message - socket will handle the real server response
         const response = await axios.post(
@@ -738,30 +790,32 @@ const Messages = () => {
         );
 
         // Replace optimistic message with real message from server
+        // The socket event will also try to add this message, so we need to handle that
         setMessages((prev) =>
           prev.map((msg) =>
             msg.message_id === optimisticMessage.message_id
-              ? { ...response.data.message, isNew: true }
+              ? {
+                  ...response.data.message,
+                  isNew: true,
+                  status: "sent",
+                  isOptimistic: false,
+                }
               : msg
           )
         );
-      }
-
-      setNewMessage("");
-      setReplyingTo(null);
-      handleTypingStop();
-
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
       }
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
 
-      // Remove optimistic message on error
+      // Mark optimistic message as failed instead of removing it
       if (!editingMessage) {
         setMessages((prev) =>
-          prev.filter((msg) => msg.message_id !== optimisticMessage.message_id)
+          prev.map((msg) =>
+            msg.message_id === optimisticMessage.message_id
+              ? { ...msg, status: "failed", isOptimistic: false }
+              : msg
+          )
         );
       }
     } finally {
@@ -769,7 +823,7 @@ const Messages = () => {
     }
   };
 
-  // Handle file upload with optimistic updates
+  // Handle file upload with instant optimistic updates - WhatsApp-like file sharing
   const handleFileUpload = async (files) => {
     if (!selectedConversation) return;
 
@@ -793,12 +847,17 @@ const Messages = () => {
           content: null,
           isOptimistic: true,
           isUploading: true,
+          status: "uploading",
           reactions: [],
         };
 
-        // Add optimistic message immediately
+        // Add optimistic message immediately for instant feedback
         setMessages((prev) => [...prev, optimisticFileMessage]);
-        scrollToBottom();
+
+        // Immediate instant scroll for file uploads
+        requestAnimationFrame(() => {
+          scrollToBottom(true); // Instant scroll for file messages
+        });
 
         const formData = new FormData();
         formData.append("file", file);
@@ -828,7 +887,7 @@ const Messages = () => {
         setMessages((prev) =>
           prev.map((msg) =>
             msg.message_id === optimisticFileMessage.message_id
-              ? { ...response.data.message, isNew: true }
+              ? { ...response.data.message, isNew: true, status: "sent" }
               : msg
           )
         );
@@ -844,12 +903,22 @@ const Messages = () => {
       } catch (error) {
         console.error("Error uploading file:", error);
 
-        // Remove optimistic message on error
+        // Mark optimistic message as failed instead of removing it
         setMessages((prev) =>
-          prev.filter(
-            (msg) => msg.message_id !== optimisticFileMessage.message_id
+          prev.map((msg) =>
+            msg.message_id === optimisticFileMessage.message_id
+              ? {
+                  ...msg,
+                  status: "failed",
+                  isUploading: false,
+                  isOptimistic: false,
+                }
+              : msg
           )
         );
+
+        // Clean up the temporary URL on error
+        URL.revokeObjectURL(optimisticFileMessage.file_url);
 
         toast.error(`Failed to upload ${file.name}`);
         throw error;
@@ -1395,7 +1464,7 @@ const Messages = () => {
             {/* Sidebar Toggle Button */}
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
-              className="hidden md:flex mr-3 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="hidden md:flex mr-3 p-2 hover:bg-gray-100 rounded-lg transition-all cursor-pointer"
               title={
                 sidebarVisible
                   ? "Hide conversations (Ctrl+B)"
@@ -1442,48 +1511,11 @@ const Messages = () => {
                   {selectedConversation.other_user_email}
                 </p>
               </div>
-
-              {/* Connection Status and Actions */}
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      isConnected
-                        ? "bg-green-500 shadow-sm shadow-green-500/50"
-                        : "bg-red-500 shadow-sm shadow-red-500/50 animate-pulse"
-                    }`}
-                  ></div>
-                  <span
-                    className={`text-xs transition-colors duration-300 ${
-                      isConnected ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {isConnected ? "Live" : "Reconnecting..."}
-                  </span>
-                </div>
-
-                {/* Conversation Actions */}
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setConversationToDelete(selectedConversation);
-                      setShowDeleteModal(true);
-                    }}
-                    className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
-                    title="Delete conversation"
-                  >
-                    <Trash2
-                      size={18}
-                      className="text-gray-500 group-hover:text-red-600"
-                    />
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 messages-smooth-scroll">
             {messagesLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-purple-600"></div>
@@ -1511,9 +1543,15 @@ const Messages = () => {
                     key={message.message_id}
                     className={`group transition-all duration-200 hover:bg-gray-100/50 rounded-lg p-2 -m-2 ${
                       showAvatar ? "mt-4" : "mt-1"
-                    } ${message.isNew ? "message-enter" : ""} ${
-                      message.isOptimistic ? "message-optimistic" : ""
-                    } ${message.isDeleting ? "message-delete-animation" : ""}`}
+                    } ${
+                      message.isNew
+                        ? "animate-in slide-in-from-bottom-2 duration-300"
+                        : ""
+                    } ${message.isOptimistic ? "opacity-80" : ""} ${
+                      message.isDeleting
+                        ? "animate-out slide-out-to-right-2 duration-300"
+                        : ""
+                    } ${message.status === "failed" ? "opacity-60" : ""}`}
                   >
                     <div
                       className={`flex gap-2 ${
@@ -1648,13 +1686,18 @@ const Messages = () => {
                         >
                           {message.file_url ? (
                             <div
-                              className={`rounded-2xl p-4 inline-block max-w-xs sm:max-w-md shadow-sm relative ${
+                              className={`rounded-2xl p-4 inline-block max-w-xs sm:max-w-md shadow-sm relative transition-all duration-200 ${
                                 isOwnMessage
                                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md"
                                   : "bg-white border border-gray-200 rounded-bl-md"
                               } ${
-                                message.isUploading
-                                  ? "message-uploading opacity-75"
+                                message.isUploading ||
+                                message.status === "uploading"
+                                  ? "opacity-75 animate-pulse"
+                                  : ""
+                              } ${
+                                message.status === "failed"
+                                  ? "opacity-60 border-red-200"
                                   : ""
                               }`}
                             >
@@ -1738,15 +1781,44 @@ const Messages = () => {
                             </div>
                           ) : (
                             <div
-                              className={`text-sm leading-relaxed break-words p-4 rounded-2xl shadow-sm inline-block max-w-xs sm:max-w-md ${
+                              className={`text-sm leading-relaxed break-words p-4 rounded-2xl shadow-sm inline-block max-w-xs sm:max-w-md transition-all duration-200 relative ${
                                 message.isDeleted
                                   ? "bg-gray-100 text-gray-500 italic"
                                   : isOwnMessage
                                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md"
                                   : "bg-white text-gray-800 rounded-bl-md border border-gray-200"
+                              } ${
+                                message.isOptimistic ||
+                                message.status === "sending"
+                                  ? "opacity-80"
+                                  : ""
+                              } ${
+                                message.status === "failed"
+                                  ? "opacity-60 border-red-200 bg-red-50"
+                                  : ""
                               }`}
                             >
                               {message.content}
+
+                              {/* Status indicators for own messages */}
+                              {isOwnMessage && !message.isDeleted && (
+                                <div className="absolute -bottom-1 -right-1">
+                                  {message.status === "sending" ||
+                                  message.isOptimistic ? (
+                                    <div className="w-3 h-3 bg-gray-300 rounded-full animate-pulse"></div>
+                                  ) : message.status === "failed" ? (
+                                    <div
+                                      className="w-3 h-3 bg-red-400 rounded-full"
+                                      title="Failed to send"
+                                    ></div>
+                                  ) : (
+                                    <CheckCheck
+                                      size={14}
+                                      className="text-blue-200"
+                                    />
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
 

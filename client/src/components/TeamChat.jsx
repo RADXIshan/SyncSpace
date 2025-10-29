@@ -80,9 +80,17 @@ const TeamChat = ({ channelId, channelName }) => {
   const emojiPickerRef = useRef(null);
   const mentionsRef = useRef(null);
 
-  // Scroll to bottom
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Optimized scroll to bottom for WhatsApp-like experience
+  const scrollToBottom = useCallback((instant = false) => {
+    if (messagesEndRef.current) {
+      if (instant) {
+        // Instant scroll for real-time messages
+        messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+      } else {
+        // Smooth scroll for user actions
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }
   }, []);
 
   // Fetch messages
@@ -130,12 +138,16 @@ const TeamChat = ({ channelId, channelName }) => {
     // Join channel room
     socket.emit("join_channel", channelId);
 
-    // Listen for new messages
+    // Listen for new messages - Optimized for instant WhatsApp-like updates
     const handleNewMessage = (message) => {
       setMessages((prev) => [...prev, { ...message, isNew: true }]);
-      scrollToBottom();
+      
+      // Immediate instant scroll for real-time messages
+      requestAnimationFrame(() => {
+        scrollToBottom(true); // Instant scroll for new messages
+      });
 
-      // Remove the isNew flag after animation
+      // Remove the isNew flag after shorter animation for faster feel
       setTimeout(() => {
         setMessages((prev) =>
           prev.map((msg) =>
@@ -144,7 +156,7 @@ const TeamChat = ({ channelId, channelName }) => {
               : msg
           )
         );
-      }, 1000);
+      }, 500); // Reduced from 1000ms to 500ms
     };
 
     // Listen for message updates
@@ -309,20 +321,34 @@ const TeamChat = ({ channelId, channelName }) => {
     }
   }, [showMentions]);
 
-  // Auto-scroll on new messages
+  // Auto-scroll on new messages - Optimized to prevent unnecessary scrolling
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    // Only scroll if there are messages and the last message is new or from current user
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      const shouldScroll = lastMessage.isNew || lastMessage.user_id === user.user_id;
+      
+      if (shouldScroll) {
+        // Use requestAnimationFrame for smoother scrolling
+        requestAnimationFrame(() => {
+          scrollToBottom(true); // Instant scroll for better performance
+        });
+      }
+    }
+  }, [messages.length, user.user_id, scrollToBottom]); // Only depend on messages length, not entire array
 
-  // Update timestamps every 30 seconds for better accuracy
+  // Update timestamps every 30 seconds for better accuracy - optimized to avoid unnecessary re-renders
   useEffect(() => {
     const interval = setInterval(() => {
-      // Force re-render to update timestamps
-      setMessages(prev => [...prev]);
+      // Only update if there are messages and user is actively viewing
+      if (messages.length > 0 && document.visibilityState === 'visible') {
+        // Force re-render to update timestamps only when needed
+        setMessages(prev => [...prev]);
+      }
     }, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [messages.length]); // Only depend on messages length, not the entire messages array
 
   // Cleanup typing timeout on unmount or channel change
   useEffect(() => {
@@ -400,10 +426,10 @@ const TeamChat = ({ channelId, channelName }) => {
         clearTimeout(typingTimeoutRef.current);
       }
 
-      // Set new timeout for stopping typing indicator
+      // Set new timeout for stopping typing indicator - WhatsApp-like timing
       typingTimeoutRef.current = setTimeout(() => {
         handleTypingStop();
-      }, 2000); // Increased to 2 seconds for better UX
+      }, 1500); // Optimized to 1.5 seconds for faster response
     } else {
       // If input is empty, stop typing immediately
       if (typingTimeoutRef.current) {
@@ -420,18 +446,31 @@ const TeamChat = ({ channelId, channelName }) => {
     }
   };
 
-  // Send message
+  // Send message - Optimized for instant WhatsApp-like experience
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && !replyingTo) return;
 
+    const messageContent = newMessage.trim();
+    const currentReplyingTo = replyingTo;
+    
+    // Clear input immediately for instant feel
+    setNewMessage("");
+    setReplyingTo(null);
+    setShowMentions(false);
+    handleTypingStop();
+    
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+
     setSending(true);
     try {
       const messageData = {
-        content: newMessage.trim(),
+        content: messageContent,
         channel_id: channelId,
-        reply_to: replyingTo?.message_id || null,
-        mentions: extractMentions(newMessage),
+        reply_to: currentReplyingTo?.message_id || null,
+        mentions: extractMentions(messageContent),
       };
 
       if (editingMessage) {
@@ -440,26 +479,17 @@ const TeamChat = ({ channelId, channelName }) => {
           `${import.meta.env.VITE_BASE_URL}/api/messages/${
             editingMessage.message_id
           }`,
-          { content: newMessage.trim() },
+          { content: messageContent },
           { withCredentials: true }
         );
         setEditingMessage(null);
       } else {
-        // Send new message
+        // Send new message - socket will handle real-time updates
         await axios.post(
           `${import.meta.env.VITE_BASE_URL}/api/messages`,
           messageData,
           { withCredentials: true }
         );
-      }
-
-      setNewMessage("");
-      setReplyingTo(null);
-      setShowMentions(false);
-      handleTypingStop();
-
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -1086,7 +1116,7 @@ const TeamChat = ({ channelId, channelName }) => {
       onDrop={handleChatDrop}
     >
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 messages-smooth-scroll">
         {/* Welcome Message */}
         <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border border-purple-200 rounded-2xl p-8 text-center shadow-sm">
           <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-purple-300 shadow-lg">

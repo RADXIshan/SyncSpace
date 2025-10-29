@@ -181,11 +181,8 @@ export const sendDirectMessage = async (req, res) => {
         io.to(receiverSocketId).emit("new_direct_message", messageWithUsers);
       }
 
-      // Send to sender (for multi-device sync)
-      const senderSocketId = getUserSocketId(senderId);
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("new_direct_message", messageWithUsers);
-      }
+      // Don't send back to sender to avoid duplicates with optimistic updates
+      // The sender already has the optimistic message and will get the real response via HTTP
     }
 
     // Create notification for receiver
@@ -430,10 +427,8 @@ export const uploadDirectMessageFile = async (req, res) => {
         io.to(receiverSocketId).emit("new_direct_message", messageWithUsers);
       }
 
-      const senderSocketId = getUserSocketId(senderId);
-      if (senderSocketId) {
-        io.to(senderSocketId).emit("new_direct_message", messageWithUsers);
-      }
+      // Don't send back to sender to avoid duplicates with optimistic updates
+      // The sender already has the optimistic message and will get the real response via HTTP
     }
 
     res.status(201).json({ message: messageWithUsers });

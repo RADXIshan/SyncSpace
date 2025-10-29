@@ -212,9 +212,9 @@ const Signup = () => {
             <UserPlus className="w-4 h-4 text-purple-400" />
             Join the Revolution
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3.5">
             Create Your
-            <span className="block gradient-text-purple">SyncSpace</span>
+            <span className="block gradient-text-purple pb-1">SyncSpace</span>
           </h1>
           <p className="text-lg text-white/80 leading-relaxed">
             Start collaborating with your team in minutes. Join thousands of teams already using SyncSpace.

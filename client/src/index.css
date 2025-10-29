@@ -1060,3 +1060,105 @@ input[type="checkbox"]:disabled:hover {
     transform: translateX(100%);
   }
 }
+
+/* Delete conversation modal animations */
+.modal-enter {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-exit {
+  animation: modalSlideOut 0.2s ease-in;
+}
+
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalSlideOut {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+}
+
+/* Conversation actions dropdown */
+.dropdown-enter {
+  animation: dropdownSlideIn 0.2s ease-out;
+}
+
+@keyframes dropdownSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Conversation deletion animation */
+.conversation-deleting {
+  animation: conversationDelete 0.5s ease-in-out forwards;
+}
+
+@keyframes conversationDelete {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 80px;
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateX(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-100%) scale(0.9);
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+/* Enhanced hover effects for conversation actions */
+.conversation-actions-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.conversation-actions-hover:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+/* Clear chat history success animation */
+.chat-cleared {
+  animation: chatClearPulse 0.6s ease-out;
+}
+
+@keyframes chatClearPulse {
+  0% {
+    background: rgba(59, 130, 246, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    background: rgba(59, 130, 246, 0.2);
+    transform: scale(1.02);
+  }
+  100% {
+    background: transparent;
+    transform: scale(1);
+  }
+}

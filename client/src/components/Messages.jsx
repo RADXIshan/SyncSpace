@@ -23,6 +23,7 @@ import {
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import EmojiPicker from "./EmojiPicker";
@@ -65,6 +66,12 @@ const Messages = () => {
   // State for sidebar visibility
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  // State for conversation actions
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -180,11 +187,15 @@ const Messages = () => {
         setMessages((prev) => {
           // Check if this message already exists (avoid duplicates from optimistic updates)
           const existingMessage = prev.find(
-            (msg) => msg.message_id === message.message_id ||
-            (msg.isOptimistic && msg.content === message.content && 
-             Math.abs(new Date(msg.created_at) - new Date(message.created_at)) < 5000)
+            (msg) =>
+              msg.message_id === message.message_id ||
+              (msg.isOptimistic &&
+                msg.content === message.content &&
+                Math.abs(
+                  new Date(msg.created_at) - new Date(message.created_at)
+                ) < 5000)
           );
-          
+
           if (existingMessage) {
             // Replace optimistic message with real message
             return prev.map((msg) =>
@@ -240,9 +251,10 @@ const Messages = () => {
               message.receiver_id === user.user_id && !isCurrentConversation
                 ? existingConv.unread_count + 1
                 : existingConv.unread_count,
-            hasNewMessage: !isCurrentConversation && message.sender_id !== user.user_id, // Flag for animation
+            hasNewMessage:
+              !isCurrentConversation && message.sender_id !== user.user_id, // Flag for animation
           };
-          
+
           // Only move to top if it's not already at the top (avoid unnecessary re-renders)
           if (convIndex === 0) {
             updated[0] = updatedConv;
@@ -362,12 +374,59 @@ const Messages = () => {
       );
     };
 
+    // Listen for conversation deletions
+    const handleConversationDeleted = (data) => {
+      // Remove the conversation from the list
+      setConversations((prev) =>
+        prev.filter((conv) => conv.other_user_id !== data.otherUserId)
+      );
+
+      // If the deleted conversation is currently selected, clear it
+      if (selectedConversation?.other_user_id === data.otherUserId) {
+        setSelectedConversation(null);
+        setMessages([]);
+        setSearchParams({});
+      }
+
+      // Show toast notification
+      if (data.deletedBy === user.user_id) {
+        toast.success("Conversation deleted successfully");
+      } else {
+        // Find the user who deleted the conversation
+        const deletedByUser = conversations.find(
+          (conv) => conv.other_user_id === data.deletedBy
+        );
+        toast.info(
+          `Conversation with ${
+            deletedByUser?.other_user_name || "someone"
+          } was deleted`
+        );
+      }
+    };
+
+    // Listen for chat history cleared
+    const handleChatHistoryCleared = (data) => {
+      // Clear messages if this is the currently selected conversation
+      if (selectedConversation?.other_user_id === data.otherUserId) {
+        setMessages([]);
+        setSelectedConversation(null);
+        setSearchParams({});
+      }
+
+      // Remove conversation from sidebar for this user (they can start a new one)
+      setConversations((prev) =>
+        prev.filter((conv) => conv.other_user_id !== data.otherUserId)
+      );
+    };
+
     socket.on("new_direct_message", handleNewDirectMessage);
     socket.on("direct_message_updated", handleDirectMessageUpdate);
     socket.on("direct_message_deleted", handleDirectMessageDelete);
     socket.on("dm_user_typing", handleUserTyping);
     socket.on("dm_user_stopped_typing", handleUserStoppedTyping);
     socket.on("direct_message_reaction_updated", handleReactionUpdate);
+    socket.on("conversation_deleted", handleConversationDeleted);
+    socket.on("chat_history_cleared", handleChatHistoryCleared);
 
     return () => {
       socket.off("new_direct_message", handleNewDirectMessage);
@@ -376,6 +435,8 @@ const Messages = () => {
       socket.off("dm_user_typing", handleUserTyping);
       socket.off("dm_user_stopped_typing", handleUserStoppedTyping);
       socket.off("direct_message_reaction_updated", handleReactionUpdate);
+      socket.off("conversation_deleted", handleConversationDeleted);
+      socket.off("chat_history_cleared", handleChatHistoryCleared);
     };
   }, [
     socket,
@@ -484,7 +545,7 @@ const Messages = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, [selectedConversation]);
 
-  // Keyboard shortcuts for sidebar toggle
+  // Keyboard shortcuts for sidebar toggle and close dropdowns
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Ctrl/Cmd + B to toggle sidebar (desktop only)
@@ -492,15 +553,23 @@ const Messages = () => {
         e.preventDefault();
         setSidebarVisible((prev) => !prev);
       }
-      // Escape to show sidebar if hidden
-      if (e.key === "Escape" && !sidebarVisible && !isMobile) {
-        setSidebarVisible(true);
+      // Escape to show sidebar if hidden or close modals
+      if (e.key === "Escape") {
+        if (showDeleteModal) {
+          setShowDeleteModal(false);
+          setConversationToDelete(null);
+          setDeleteConfirmText("");
+        } else if (!sidebarVisible && !isMobile) {
+          setSidebarVisible(true);
+        }
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [sidebarVisible, isMobile]);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [sidebarVisible, isMobile, showDeleteModal]);
 
   // Update timestamps every 30 seconds for better accuracy - same as TeamChat
   useEffect(() => {
@@ -622,7 +691,7 @@ const Messages = () => {
     if (!newMessage.trim() && !replyingTo) return;
 
     setSending(true);
-    
+
     // Create optimistic message for immediate UI update
     const optimisticMessage = {
       message_id: `temp-${Date.now()}`,
@@ -636,7 +705,7 @@ const Messages = () => {
       reply_to_sender_name: replyingTo?.sender_name || null,
       reply_to_content: replyingTo?.content || null,
       isOptimistic: true,
-      reactions: []
+      reactions: [],
     };
 
     try {
@@ -688,7 +757,7 @@ const Messages = () => {
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
-      
+
       // Remove optimistic message on error
       if (!editingMessage) {
         setMessages((prev) =>
@@ -724,7 +793,7 @@ const Messages = () => {
           content: null,
           isOptimistic: true,
           isUploading: true,
-          reactions: []
+          reactions: [],
         };
 
         // Add optimistic message immediately
@@ -747,10 +816,9 @@ const Messages = () => {
                 const percentCompleted = Math.round(
                   (progressEvent.loaded * 100) / progressEvent.total
                 );
-                toast.loading(
-                  `Uploading ${fileName}... ${percentCompleted}%`,
-                  { id: uploadToast }
-                );
+                toast.loading(`Uploading ${fileName}... ${percentCompleted}%`, {
+                  id: uploadToast,
+                });
               }
             },
           }
@@ -775,12 +843,14 @@ const Messages = () => {
         return response.data;
       } catch (error) {
         console.error("Error uploading file:", error);
-        
+
         // Remove optimistic message on error
         setMessages((prev) =>
-          prev.filter((msg) => msg.message_id !== optimisticFileMessage.message_id)
+          prev.filter(
+            (msg) => msg.message_id !== optimisticFileMessage.message_id
+          )
         );
-        
+
         toast.error(`Failed to upload ${file.name}`);
         throw error;
       }
@@ -870,7 +940,9 @@ const Messages = () => {
   const handleDeleteMessage = async (messageId) => {
     try {
       // Store original message for potential revert
-      const originalMessage = messages.find(msg => msg.message_id === messageId);
+      const originalMessage = messages.find(
+        (msg) => msg.message_id === messageId
+      );
       if (!originalMessage) return;
 
       // Optimistically update the message to show as deleted immediately
@@ -892,9 +964,7 @@ const Messages = () => {
       setTimeout(() => {
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.message_id === messageId
-              ? { ...msg, isDeleting: false }
-              : msg
+            msg.message_id === messageId ? { ...msg, isDeleting: false } : msg
           )
         );
       }, 300);
@@ -944,6 +1014,71 @@ const Messages = () => {
     setNewMessage((prev) => prev + emoji);
     setShowEmojiPicker(false);
     textareaRef.current?.focus();
+  };
+
+  // Handle delete conversation
+  const handleDeleteConversation = async (conversation) => {
+    if (deleteConfirmText !== conversation.other_user_name) {
+      toast.error("Please type the user's name to confirm deletion");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_BASE_URL}/api/direct-messages/conversations/${
+          conversation.other_user_id
+        }`,
+        { withCredentials: true }
+      );
+
+      // The socket event will handle UI updates
+      setShowDeleteModal(false);
+      setConversationToDelete(null);
+      setDeleteConfirmText("");
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      toast.error("Failed to delete conversation");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Handle clear chat history
+  const handleClearChatHistory = async (conversation) => {
+    setIsClearing(true);
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/direct-messages/conversations/${
+          conversation.other_user_id
+        }/clear`,
+        {},
+        { withCredentials: true }
+      );
+
+      // Clear messages locally for this user
+      if (selectedConversation?.other_user_id === conversation.other_user_id) {
+        setMessages([]);
+        setSelectedConversation(null);
+        setSearchParams({});
+      }
+
+      // Remove conversation from sidebar for this user (they can start a new one)
+      setConversations((prev) =>
+        prev.filter((conv) => conv.other_user_id !== conversation.other_user_id)
+      );
+
+      setShowClearModal(false);
+      setConversationToClear(null);
+      toast.success(
+        "Chat history cleared - you can start a new conversation anytime"
+      );
+    } catch (error) {
+      console.error("Error clearing chat history:", error);
+      toast.error("Failed to clear chat history");
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   // Handle drag and drop for the entire chat area - like TeamChat
@@ -1172,15 +1307,13 @@ const Messages = () => {
               {filteredConversations.map((conversation) => (
                 <div
                   key={conversation.other_user_id}
-                  className={`conversation-item flex items-center p-3 rounded-lg cursor-pointer ${
+                  className={`conversation-item flex items-center p-3 rounded-lg cursor-pointer group relative ${
                     selectedConversation?.other_user_id ===
                     conversation.other_user_id
                       ? "bg-purple-100 border border-purple-200"
                       : "hover:bg-gray-100"
                   } ${
-                    conversation.hasNewMessage
-                      ? "conversation-new-message"
-                      : ""
+                    conversation.hasNewMessage ? "conversation-new-message" : ""
                   }`}
                   onClick={() => handleSelectConversation(conversation)}
                 >
@@ -1223,6 +1356,24 @@ const Messages = () => {
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Conversation Actions */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConversationToDelete(conversation);
+                        setShowDeleteModal(true);
+                      }}
+                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete conversation"
+                    >
+                      <Trash2
+                        size={16}
+                        className="text-gray-400 hover:text-red-600"
+                      />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1292,20 +1443,41 @@ const Messages = () => {
                 </p>
               </div>
 
-              {/* Connection Status */}
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    isConnected 
-                      ? "bg-green-500 shadow-sm shadow-green-500/50" 
-                      : "bg-red-500 shadow-sm shadow-red-500/50 animate-pulse"
-                  }`}
-                ></div>
-                <span className={`text-xs transition-colors duration-300 ${
-                  isConnected ? "text-green-600" : "text-red-600"
-                }`}>
-                  {isConnected ? "Live" : "Reconnecting..."}
-                </span>
+              {/* Connection Status and Actions */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      isConnected
+                        ? "bg-green-500 shadow-sm shadow-green-500/50"
+                        : "bg-red-500 shadow-sm shadow-red-500/50 animate-pulse"
+                    }`}
+                  ></div>
+                  <span
+                    className={`text-xs transition-colors duration-300 ${
+                      isConnected ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {isConnected ? "Live" : "Reconnecting..."}
+                  </span>
+                </div>
+
+                {/* Conversation Actions */}
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      setConversationToDelete(selectedConversation);
+                      setShowDeleteModal(true);
+                    }}
+                    className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
+                    title="Delete conversation"
+                  >
+                    <Trash2
+                      size={18}
+                      className="text-gray-500 group-hover:text-red-600"
+                    />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1339,19 +1511,9 @@ const Messages = () => {
                     key={message.message_id}
                     className={`group transition-all duration-200 hover:bg-gray-100/50 rounded-lg p-2 -m-2 ${
                       showAvatar ? "mt-4" : "mt-1"
-                    } ${
-                      message.isNew
-                        ? "message-enter"
-                        : ""
-                    } ${
-                      message.isOptimistic
-                        ? "message-optimistic"
-                        : ""
-                    } ${
-                      message.isDeleting
-                        ? "message-delete-animation"
-                        : ""
-                    }`}
+                    } ${message.isNew ? "message-enter" : ""} ${
+                      message.isOptimistic ? "message-optimistic" : ""
+                    } ${message.isDeleting ? "message-delete-animation" : ""}`}
                   >
                     <div
                       className={`flex gap-2 ${
@@ -1490,7 +1652,11 @@ const Messages = () => {
                                 isOwnMessage
                                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md"
                                   : "bg-white border border-gray-200 rounded-bl-md"
-                              } ${message.isUploading ? "message-uploading opacity-75" : ""}`}
+                              } ${
+                                message.isUploading
+                                  ? "message-uploading opacity-75"
+                                  : ""
+                              }`}
                             >
                               {/* Upload progress overlay */}
                               {message.isUploading && (
@@ -1498,7 +1664,7 @@ const Messages = () => {
                                   <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-white"></div>
                                 </div>
                               )}
-                              
+
                               {message.file_type?.startsWith("image/") ? (
                                 <div className="relative">
                                   <img
@@ -1914,6 +2080,90 @@ const Messages = () => {
           maxFiles={5}
           maxSize={10 * 1024 * 1024}
         />
+      )}
+
+      {/* Delete Conversation Modal */}
+      {showDeleteModal && conversationToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle size={24} className="text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Delete Conversation
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    This action cannot be undone
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-gray-700 mb-4">
+                  Are you sure you want to delete your entire conversation with{" "}
+                  <span className="font-semibold">
+                    {conversationToDelete.other_user_name}
+                  </span>
+                  ? This will permanently remove all messages, files, and
+                  reactions from this conversation for both users.
+                </p>
+
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-red-800 mb-2">
+                    To confirm deletion, please type{" "}
+                    <span className="font-mono font-semibold bg-red-100 px-1 rounded">
+                      {conversationToDelete.other_user_name}
+                    </span>{" "}
+                    below:
+                  </p>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder={conversationToDelete.other_user_name}
+                    className="w-full px-3 py-2 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    disabled={isDeleting}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setConversationToDelete(null);
+                    setDeleteConfirmText("");
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteConversation(conversationToDelete)}
+                  disabled={
+                    deleteConfirmText !==
+                      conversationToDelete.other_user_name || isDeleting
+                  }
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                    deleteConfirmText ===
+                      conversationToDelete.other_user_name && !isDeleting
+                      ? "bg-red-600 hover:bg-red-700 text-white"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  {isDeleting && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
+                  )}
+                  {isDeleting ? "Deleting..." : "Delete Conversation"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -11,6 +11,7 @@ import {
   getOrganizationMembers,
   markMessagesAsRead,
   getUnreadCounts,
+  deleteConversation,
 } from "../controllers/directMessageControllers.js";
 import { authenticateToken } from "../middleware/auth.js";
 
@@ -62,6 +63,7 @@ router.post("/messages", sendDirectMessage);
 router.put("/messages/:messageId", updateDirectMessage);
 router.delete("/messages/:messageId", deleteDirectMessage);
 router.post("/messages/:conversationId/read", markMessagesAsRead);
+router.delete("/conversations/:otherUserId", deleteConversation);
 
 // File upload with error handling
 router.post(

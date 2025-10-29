@@ -729,6 +729,93 @@ const checkDirectMessageAccess = async (userId1, userId2) => {
   }
 };
 
+// Delete entire conversation between two users
+export const deleteConversation = async (req, res) => {
+  try {
+    const { otherUserId } = req.params;
+    const userId = req.user.userId;
+
+    console.log("Delete conversation request:", {
+      otherUserId,
+      userId,
+      params: req.params,
+      url: req.url
+    });
+
+    // Convert otherUserId to integer to ensure proper type matching
+    const otherUserIdInt = parseInt(otherUserId);
+    if (isNaN(otherUserIdInt)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    // Verify users can message each other
+    const hasAccess = await checkDirectMessageAccess(userId, otherUserIdInt);
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied to this conversation" });
+    }
+
+    // Get all messages in the conversation before deletion
+    const messages = await sql`
+      SELECT message_id FROM direct_messages 
+      WHERE (sender_id = ${userId} AND receiver_id = ${otherUserIdInt}) 
+         OR (sender_id = ${otherUserIdInt} AND receiver_id = ${userId})
+    `;
+
+    console.log("Found messages to delete:", messages.length);
+
+    if (messages.length === 0) {
+      return res.status(404).json({ message: "No conversation found" });
+    }
+
+    const messageIds = messages.map(msg => msg.message_id);
+
+    // Delete all reactions for messages in this conversation
+    await sql`
+      DELETE FROM direct_message_reactions 
+      WHERE message_id = ANY(${messageIds})
+    `;
+
+    // Delete all messages in the conversation
+    await sql`
+      DELETE FROM direct_messages 
+      WHERE (sender_id = ${userId} AND receiver_id = ${otherUserIdInt}) 
+         OR (sender_id = ${otherUserIdInt} AND receiver_id = ${userId})
+    `;
+
+    // Emit conversation deletion to both users
+    const io = req.app.get("io");
+    if (io) {
+      const { getUserSocketId } = await import('../configs/socket.js');
+      
+      const otherUserSocketId = getUserSocketId(otherUserIdInt);
+      if (otherUserSocketId) {
+        io.to(otherUserSocketId).emit("conversation_deleted", {
+          deletedBy: userId,
+          otherUserId: userId
+        });
+      }
+
+      const userSocketId = getUserSocketId(userId);
+      if (userSocketId) {
+        io.to(userSocketId).emit("conversation_deleted", {
+          deletedBy: userId,
+          otherUserId: otherUserIdInt
+        });
+      }
+    }
+
+    res.json({ 
+      message: "Conversation deleted successfully",
+      deletedMessages: messages.length
+    });
+  } catch (error) {
+    console.error("Error deleting conversation:", error);
+    res.status(500).json({ message: "Failed to delete conversation" });
+  }
+};
+
+
+
 // Helper function to check channel access (copied from messageControllers.js)
 const checkChannelAccess = async (userId, channelId) => {
   try {

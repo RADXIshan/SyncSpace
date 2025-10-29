@@ -180,7 +180,7 @@ const Notifications = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setFilter("all")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 filter === "all"
                   ? "bg-violet-100/80 text-violet-700 border border-violet-300/50"
                   : "bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80"
@@ -190,7 +190,7 @@ const Notifications = () => {
             </button>
             <button
               onClick={() => setFilter("unread")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 filter === "unread"
                   ? "bg-violet-100/80 text-violet-700 border border-violet-300/50"
                   : "bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80"
@@ -200,7 +200,7 @@ const Notifications = () => {
             </button>
             <button
               onClick={() => setFilter("mentions")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 filter === "mentions"
                   ? "bg-violet-100/80 text-violet-700 border border-violet-300/50"
                   : "bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80"
@@ -211,7 +211,7 @@ const Notifications = () => {
             </button>
             <button
               onClick={() => setFilter("meetings")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 filter === "meetings"
                   ? "bg-violet-100/80 text-violet-700 border border-violet-300/50"
                   : "bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80"
@@ -222,7 +222,7 @@ const Notifications = () => {
             </button>
             <button
               onClick={() => setFilter("members")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 filter === "members"
                   ? "bg-violet-100/80 text-violet-700 border border-violet-300/50"
                   : "bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80"
@@ -233,7 +233,7 @@ const Notifications = () => {
             </button>
             <button
               onClick={() => setFilter("system")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 filter === "system"
                   ? "bg-violet-100/80 text-violet-700 border border-violet-300/50"
                   : "bg-white/60 text-gray-600 border border-gray-300/50 hover:bg-gray-50/80"
@@ -257,7 +257,7 @@ const Notifications = () => {
               <button
                 onClick={handleDeleteAllNotifications}
                 disabled={deletingAll}
-                className="px-4 py-2 bg-red-100/80 text-red-700 border border-red-300/50 rounded-lg text-sm font-medium hover:bg-red-200/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 bg-red-100/80 text-red-700 border border-red-300/50 rounded-lg text-sm font-medium hover:bg-red-200/60 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
               >
                 {deletingAll ? (
                   <>

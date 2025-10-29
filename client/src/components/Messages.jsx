@@ -30,6 +30,7 @@ import EmojiPicker from "./EmojiPicker";
 import MessageReactions from "./MessageReactions";
 import TypingIndicator from "./TypingIndicator";
 import FileUpload from "./FileUpload";
+import ConfirmationModal from "./ConfirmationModal";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -69,7 +70,6 @@ const Messages = () => {
   // State for conversation actions
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [conversationToDelete, setConversationToDelete] = useState(null);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Refs
@@ -590,7 +590,9 @@ const Messages = () => {
         if (showDeleteModal) {
           setShowDeleteModal(false);
           setConversationToDelete(null);
-          setDeleteConfirmText("");
+        } else if (showNewConversation) {
+          setShowNewConversation(false);
+          setMemberSearchQuery("");
         } else if (!sidebarVisible && !isMobile) {
           setSidebarVisible(true);
         }
@@ -1086,17 +1088,14 @@ const Messages = () => {
   };
 
   // Handle delete conversation
-  const handleDeleteConversation = async (conversation) => {
-    if (deleteConfirmText !== conversation.other_user_name) {
-      toast.error("Please type the user's name to confirm deletion");
-      return;
-    }
+  const handleDeleteConversation = async () => {
+    if (!conversationToDelete) return;
 
     setIsDeleting(true);
     try {
       await axios.delete(
         `${import.meta.env.VITE_BASE_URL}/api/direct-messages/conversations/${
-          conversation.other_user_id
+          conversationToDelete.other_user_id
         }`,
         { withCredentials: true }
       );
@@ -1104,7 +1103,6 @@ const Messages = () => {
       // The socket event will handle UI updates
       setShowDeleteModal(false);
       setConversationToDelete(null);
-      setDeleteConfirmText("");
     } catch (error) {
       console.error("Error deleting conversation:", error);
       toast.error("Failed to delete conversation");
@@ -2053,28 +2051,38 @@ const Messages = () => {
 
       {/* New Conversation Modal */}
       {showNewConversation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-3 sm:p-4 transition-all duration-300">
+          <div className="relative w-full max-w-sm sm:max-w-md glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform mx-auto">
+            <div className="absolute inset-0 cosmic-bg"></div>
+            <div className="relative p-4 sm:p-6">
+              {/* Close Button */}
+              <button
+                onClick={() => {
+                  setShowNewConversation(false);
+                  setMemberSearchQuery("");
+                }}
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-all cursor-pointer active:scale-95 p-1.5 sm:p-2 rounded-full hover:bg-gray-800/80 hover:rotate-90 transform duration-300"
+              >
+                <X size={18} className="sm:w-5 sm:h-5" />
+              </button>
+
+              {/* Header */}
+              <div className="text-center mb-4 sm:mb-6">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 glass-button-enhanced rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <MessageCircle size={20} className="text-purple-400 sm:w-6 sm:h-6" />
+                </div>
+                <h2 className="text-lg sm:text-xl font-bold mb-2 text-white">
                   New Conversation
                 </h2>
-                <button
-                  onClick={() => {
-                    setShowNewConversation(false);
-                    setMemberSearchQuery("");
-                  }}
-                  className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                >
-                  <X size={20} className="cursor-pointer" />
-                </button>
+                <p className="text-gray-300 text-sm">
+                  Start a conversation with a team member
+                </p>
               </div>
 
               {/* Search members */}
               <div className="relative mb-4">
                 <Search
-                  size={18}
+                  size={16}
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                 />
                 <input
@@ -2082,7 +2090,7 @@ const Messages = () => {
                   placeholder="Search members..."
                   value={memberSearchQuery}
                   onChange={(e) => setMemberSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl glass-effect text-white text-sm focus:ring-2 focus:ring-violet-500 focus:border-violet-500/50 focus:outline-none placeholder-gray-400 transition-all duration-200"
                 />
               </div>
 
@@ -2101,7 +2109,7 @@ const Messages = () => {
                   .map((member) => (
                     <div
                       key={member.user_id}
-                      className="flex items-center p-3 hover:bg-gray-100 rounded-lg cursor-pointer"
+                      className="flex items-center p-3 hover:bg-gray-800/50 rounded-xl cursor-pointer transition-all duration-200 glass-button"
                       onClick={() => handleStartNewConversation(member)}
                     >
                       <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
@@ -2116,13 +2124,29 @@ const Messages = () => {
                         )}
                       </div>
                       <div className="ml-3">
-                        <h3 className="font-medium text-gray-900">
+                        <h3 className="font-medium text-white text-sm">
                           {member.name}
                         </h3>
-                        <p className="text-sm text-gray-500">{member.email}</p>
+                        <p className="text-xs text-gray-400">{member.email}</p>
                       </div>
                     </div>
                   ))}
+                {organizationMembers.filter(
+                  (member) =>
+                    member.name
+                      .toLowerCase()
+                      .includes(memberSearchQuery.toLowerCase()) ||
+                    member.email
+                      .toLowerCase()
+                      .includes(memberSearchQuery.toLowerCase())
+                ).length === 0 && (
+                  <div className="text-center py-8">
+                    <MessageCircle size={32} className="mx-auto mb-3 text-gray-500" />
+                    <p className="text-gray-400 text-sm">
+                      {memberSearchQuery ? "No members found" : "No members available"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

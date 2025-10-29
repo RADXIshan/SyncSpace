@@ -1111,42 +1111,7 @@ const Messages = () => {
     }
   };
 
-  // Handle clear chat history
-  const handleClearChatHistory = async (conversation) => {
-    setIsClearing(true);
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/direct-messages/conversations/${
-          conversation.other_user_id
-        }/clear`,
-        {},
-        { withCredentials: true }
-      );
 
-      // Clear messages locally for this user
-      if (selectedConversation?.other_user_id === conversation.other_user_id) {
-        setMessages([]);
-        setSelectedConversation(null);
-        setSearchParams({});
-      }
-
-      // Remove conversation from sidebar for this user (they can start a new one)
-      setConversations((prev) =>
-        prev.filter((conv) => conv.other_user_id !== conversation.other_user_id)
-      );
-
-      setShowClearModal(false);
-      setConversationToClear(null);
-      toast.success(
-        "Chat history cleared - you can start a new conversation anytime"
-      );
-    } catch (error) {
-      console.error("Error clearing chat history:", error);
-      toast.error("Failed to clear chat history");
-    } finally {
-      setIsClearing(false);
-    }
-  };
 
   // Handle drag and drop for the entire chat area - like TeamChat
   const handleChatDragOver = (e) => {
@@ -2179,88 +2144,24 @@ const Messages = () => {
       )}
 
       {/* Delete Conversation Modal */}
-      {showDeleteModal && conversationToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <AlertTriangle size={24} className="text-red-600" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Delete Conversation
-                  </h2>
-                  <p className="text-sm text-gray-600">
-                    This action cannot be undone
-                  </p>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-gray-700 mb-4">
-                  Are you sure you want to delete your entire conversation with{" "}
-                  <span className="font-semibold">
-                    {conversationToDelete.other_user_name}
-                  </span>
-                  ? This will permanently remove all messages, files, and
-                  reactions from this conversation for both users.
-                </p>
-
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-red-800 mb-2">
-                    To confirm deletion, please type{" "}
-                    <span className="font-mono font-semibold bg-red-100 px-1 rounded">
-                      {conversationToDelete.other_user_name}
-                    </span>{" "}
-                    below:
-                  </p>
-                  <input
-                    type="text"
-                    value={deleteConfirmText}
-                    onChange={(e) => setDeleteConfirmText(e.target.value)}
-                    placeholder={conversationToDelete.other_user_name}
-                    className="w-full px-3 py-2 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    disabled={isDeleting}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setConversationToDelete(null);
-                    setDeleteConfirmText("");
-                  }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDeleteConversation(conversationToDelete)}
-                  disabled={
-                    deleteConfirmText !==
-                      conversationToDelete.other_user_name || isDeleting
-                  }
-                  className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                    deleteConfirmText ===
-                      conversationToDelete.other_user_name && !isDeleting
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
-                >
-                  {isDeleting && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
-                  )}
-                  {isDeleting ? "Deleting..." : "Delete Conversation"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setConversationToDelete(null);
+        }}
+        onConfirm={handleDeleteConversation}
+        title="Delete Conversation"
+        message={
+          conversationToDelete
+            ? `Are you sure you want to delete your entire conversation with ${conversationToDelete.other_user_name}? This will permanently remove all messages, files, and reactions from this conversation for both users.`
+            : ""
+        }
+        confirmText="Delete Conversation"
+        cancelText="Cancel"
+        type="danger"
+        loading={isDeleting}
+      />
     </div>
   );
 };

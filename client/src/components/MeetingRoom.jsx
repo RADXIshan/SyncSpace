@@ -14,6 +14,7 @@ import {
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
 import MeetingSettings from "./MeetingSettings";
+import MeetingChat from "./MeetingChat";
 
 const MeetingRoom = () => {
   const { roomId } = useParams();
@@ -32,6 +33,7 @@ const MeetingRoom = () => {
   const [screenSharingUser, setScreenSharingUser] = useState(null);
   const [savedSettings, setSavedSettings] = useState({ videoEnabled: true, audioEnabled: true });
   const [cameraStream, setCameraStream] = useState(null);
+  const [showChat, setShowChat] = useState(false);
 
   // Load settings from URL params on component mount
   useEffect(() => {
@@ -1566,6 +1568,13 @@ const MeetingRoom = () => {
         onClose={() => setShowSettings(false)}
         localStream={localStream}
         onSettingsChange={(settings) => setSavedSettings(settings)}
+      />
+
+      <MeetingChat
+        roomId={roomId}
+        isVisible={showChat}
+        onToggle={() => setShowChat(!showChat)}
+        participantCount={totalParticipants}
       />
     </div>
   );

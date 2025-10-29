@@ -307,6 +307,31 @@ export const setupSocketHandlers = (io) => {
       socket.leave(`channel_${channelId}`);
     });
 
+    // Handle joining/leaving meeting chat rooms
+    socket.on('join_meeting_chat', (roomId) => {
+      socket.join(`meeting_${roomId}`);
+    });
+
+    socket.on('leave_meeting_chat', (roomId) => {
+      socket.leave(`meeting_${roomId}`);
+    });
+
+    // Handle typing indicators for meeting chat
+    socket.on('meeting_typing_start', (data) => {
+      socket.to(`meeting_${data.roomId}`).emit('meeting_user_typing', {
+        userId: socket.userId,
+        roomId: data.roomId,
+        userName: data.userName || socket.userName
+      });
+    });
+
+    socket.on('meeting_typing_stop', (data) => {
+      socket.to(`meeting_${data.roomId}`).emit('meeting_user_stopped_typing', {
+        userId: socket.userId,
+        roomId: data.roomId
+      });
+    });
+
     // WebRTC Video Call Handlers - Clean and Simple
     socket.on('join-room', async (roomID) => {
       console.log(`🚪 User ${socket.id} (${socket.userName}) joining room ${roomID}`);

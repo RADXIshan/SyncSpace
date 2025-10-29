@@ -879,16 +879,23 @@ input[type="checkbox"]:disabled:hover {
   opacity: 0.75;
   position: relative;
   transition: all 0.3s ease;
+  padding-right: 32px !important; /* Add extra padding for the trash icon */
+  min-height: 40px; /* Ensure minimum height for better layout */
 }
 
 .message-deleted::before {
   content: "🗑️";
   position: absolute;
-  left: -8px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 12px;
-  opacity: 0.6;
+  font-size: 16px;
+  opacity: 0.8;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .message-deleted:hover {
@@ -1305,7 +1312,8 @@ input[type="checkbox"]:disabled:hover {
 }
 
 @keyframes livePulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -1466,7 +1474,8 @@ input[type="checkbox"]:disabled:hover {
 }
 
 @keyframes loadingPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.4;
   }
   50% {
@@ -1512,7 +1521,8 @@ input[type="checkbox"]:disabled:hover {
 }
 
 @keyframes disconnectedPulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -1528,7 +1538,8 @@ input[type="checkbox"]:disabled:hover {
 }
 
 @keyframes dragPulse {
-  0%, 100% {
+  0%,
+  100% {
     background: rgba(124, 58, 237, 0.1);
   }
   50% {
@@ -1598,6 +1609,10 @@ input[type="checkbox"]:disabled:hover {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
-import { generateOtpEmail } from "../templates/emailTemplate.js";
-import { generatePasswordResetEmail } from "../templates/resetPassword.js";
+import generateOtpEmail from "../templates/otpEmail.js";
+import generateForgotPasswordEmail from "../templates/forgotPasswordEmail.js";
 
 class EmailService {
   // Create transporter with Gmail SMTP
@@ -80,12 +80,12 @@ class EmailService {
   }
 
   // Send password reset email
-  async sendPasswordResetEmail(email, resetLink) {
+  async sendPasswordResetEmail(email, name, resetLink) {
     const message = {
       from: `SyncSpace Security <${process.env.EMAIL}>`,
       to: email,
       subject: "Password Reset Request - Secure Link Inside",
-      html: generatePasswordResetEmail(resetLink),
+      html: generateForgotPasswordEmail(name, resetLink),
     };
 
     return await this.sendEmail(message);

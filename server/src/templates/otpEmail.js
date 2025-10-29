@@ -1,249 +1,81 @@
 const generateOtpEmail = (name, otpCode) => {
   return `<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>Your OTP Code</title>
-    <style>
-        @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
-        
-        * {
-            font-family: "Montserrat", sans-serif;
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  </head>
+  <body style="margin:0;padding:0;background-color:#0f0d2a;width:100%;-webkit-text-size-adjust:none;">
+    <center style="width:100%;background-color:#0f0d2a;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#0f0d2a;margin:0 auto;padding:0;width:100%;">
+        <tr>
+          <td align="center" style="padding:20px;">
+            <!-- Main container -->
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width:600px;background-color:#12102d;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+              
+              <!-- HEADER -->
+              <tr>
+                <td align="center" style="background:linear-gradient(135deg,#8b5cf6 0%,#3b82f6 100%);padding:40px 20px;">
+                  <h1 style="margin:0;font-size:26px;line-height:1.2;font-weight:800;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3);">SyncSpace</h1>
+                  <p style="margin:10px 0 0;font-size:15px;color:rgba(255,255,255,0.9);">Secure Verification</p>
+                </td>
+              </tr>
 
-        body {
-            background: linear-gradient(
-                135deg,
-                #0f0d2a 0%,
-                #1a1654 25%,
-                #0f1a3a 50%,
-                #0f1629 75%,
-                #0f0d2a 100%
-            );
-            min-height: 100vh;
-            padding: 20px;
-            color: white;
-        }
+              <!-- CONTENT -->
+              <tr>
+                <td style="padding:35px 25px 40px 25px;text-align:center;background-color:#12102d;">
+                  <h2 style="font-size:20px;font-weight:700;margin:0 0 18px;color:#c084fc;">Verify Your Identity</h2>
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.01);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 
-                        0 2px 8px rgba(0, 0, 0, 0.15),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-                        inset 0 -1px 0 rgba(255, 255, 255, 0.03);
-            overflow: hidden;
-            position: relative;
-        }
+                  <p style="font-size:15px;line-height:1.6;color:rgba(255,255,255,0.85);margin:0 0 28px;">
+                    Hi ${name || "there"},<br /><br />
+                    Please use the OTP below to complete your authentication.
+                  </p>
 
-        .header {
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-        }
+                  <!-- OTP BOX -->
+                  <table role="presentation" width="100%" style="margin:20px 0;background-color:rgba(255,255,255,0.05);border-radius:16px;border:1px solid rgba(255,255,255,0.15);">
+                    <tr>
+                      <td align="center" style="padding:26px 16px;">
+                        <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.6);margin-bottom:10px;">
+                          Your OTP Code
+                        </div>
+                        <div style="font-size:32px;font-weight:800;letter-spacing:8px;color:#c084fc;text-shadow:0 2px 4px rgba(0,0,0,0.4);">
+                          ${otpCode}
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
 
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-        }
+                  <!-- EXPIRY -->
+                  <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;margin:20px 0;color:#fca5a5;font-size:13px;font-weight:500;">
+                    ⏰ This code will expire in 10 minutes.
+                  </div>
 
-        .header-content {
-            position: relative;
-            z-index: 2;
-        }
+                  <!-- SECURITY NOTICE -->
+                  <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:10px;padding:14px;color:#c084fc;font-size:13px;line-height:1.5;margin-bottom:10px;">
+                    🔒 <strong>Security Tip:</strong> Never share this code. Our team will never ask for it.
+                  </div>
+                </td>
+              </tr>
 
-        .logo {
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+              <!-- FOOTER -->
+              <tr>
+                <td align="center" style="background-color:#0d0b26;padding:25px;border-top:1px solid rgba(255,255,255,0.1);">
+                  <p style="margin:0;font-size:13px;line-height:1.6;color:rgba(255,255,255,0.65);">
+                    If you didn’t request this, ignore this email or
+                    <a href="#" style="color:#8b5cf6;text-decoration:none;font-weight:600;">contact support</a>.<br /><br />
+                    © 2025 SyncSpace. All rights reserved.
+                  </p>
+                </td>
+              </tr>
 
-        .subtitle {
-            font-size: 16px;
-            opacity: 0.9;
-            font-weight: 500;
-        }
-
-        .content {
-            padding: 40px 30px;
-            text-align: center;
-        }
-
-        .greeting {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .message {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .otp-container {
-            background: rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            padding: 30px;
-            margin: 30px 0;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.25);
-        }
-
-        .otp-label {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: rgba(255, 255, 255, 0.7);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .otp-code {
-            font-size: 36px;
-            font-weight: 800;
-            letter-spacing: 8px;
-            color: #ffffff;
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .expiry-notice {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            color: #fca5a5;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .security-notice {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            color: #93c5fd;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .footer {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 30px;
-            text-align: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .footer-text {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.5;
-        }
-
-        .footer-link {
-            color: #a855f7;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .footer-link:hover {
-            color: #7c3aed;
-        }
-
-        @media (max-width: 640px) {
-            .container {
-                margin: 10px;
-                border-radius: 16px;
-            }
-            
-            .header, .content, .footer {
-                padding: 20px;
-            }
-            
-            .otp-code {
-                font-size: 28px;
-                letter-spacing: 4px;
-            }
-            
-            .greeting {
-                font-size: 20px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="header-content">
-                <div class="logo">SyncSpace</div>
-                <div class="subtitle">Secure Authentication</div>
-            </div>
-        </div>
-        
-        <div class="content">
-            <div class="greeting">Verify Your Identity</div>
-            
-            <div class="message">
-                Hi ${name || 'there'},<br><br>
-                We've received a request to verify your account. Please use the OTP code below to complete your authentication.
-            </div>
-            
-            <div class="otp-container">
-                <div class="otp-label">Your OTP Code</div>
-                <div class="otp-code">${otpCode}</div>
-            </div>
-            
-            <div class="expiry-notice">
-                ⏰ This code will expire in 10 minutes for your security.
-            </div>
-            
-            <div class="security-notice">
-                🔒 <strong>Security Notice:</strong> Never share this code with anyone. Our team will never ask for your OTP code via email, phone, or any other method.
-            </div>
-        </div>
-        
-        <div class="footer">
-            <div class="footer-text">
-                If you didn't request this code, please ignore this email or 
-                <a href="#" class="footer-link">contact our support team</a>.
-                <br><br>
-                © 2025 SyncSpace. All rights reserved.
-            </div>
-        </div>
-    </div>
-</body>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </center>
+  </body>
 </html>`;
 };
+
 export default generateOtpEmail;

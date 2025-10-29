@@ -1436,11 +1436,8 @@ export const sendInvitations = async (req, res) => {
         inviteeName: "Team Member", // Generic since we're sending to multiple emails
         inviterName: inviter.name,
         orgName: organizationName || org.org_name,
-        role: "Member", // Default role for new members
-        teamSize: memberCount[0]?.count || 1,
-        industry: "Technology", // Default industry
+        inviteCode: inviteCode,
         inviterRole: member.role,
-        inviterEmail: inviter.email,
         inviteLink: inviteLink
       }),
     };

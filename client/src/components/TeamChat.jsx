@@ -141,7 +141,7 @@ const TeamChat = ({ channelId, channelName }) => {
     // Listen for new messages - Optimized for instant WhatsApp-like updates
     const handleNewMessage = (message) => {
       setMessages((prev) => [...prev, { ...message, isNew: true }]);
-      
+
       // Immediate instant scroll for real-time messages
       requestAnimationFrame(() => {
         scrollToBottom(true); // Instant scroll for new messages
@@ -173,11 +173,11 @@ const TeamChat = ({ channelId, channelName }) => {
       setMessages((prev) =>
         prev.map((msg) =>
           msg.message_id === messageId
-            ? { 
-                ...msg, 
-                isDeleted: true, 
+            ? {
+                ...msg,
+                isDeleted: true,
                 originalContent: msg.originalContent || msg.content,
-                content: "This message was deleted" 
+                content: "This message was deleted",
               }
             : msg
         )
@@ -241,12 +241,10 @@ const TeamChat = ({ channelId, channelName }) => {
         const mentionedBy = data.mentionedBy || data.userName || "Someone";
         const channelName = data.channelName || "a channel";
 
-
-
         // Only show toast if we're not currently in this channel to avoid duplicate notifications
         if (data.channelId !== channelId) {
           toast(`${mentionedBy} mentioned you in #${channelName}`, {
-            icon: '👋',
+            icon: "👋",
           });
         }
       }
@@ -268,7 +266,7 @@ const TeamChat = ({ channelId, channelName }) => {
   useEffect(() => {
     fetchMessages();
     fetchChannelMembers();
-    
+
     // Mark channel as read when user opens it
     if (channelId) {
       markChannelAsRead(channelId);
@@ -326,8 +324,9 @@ const TeamChat = ({ channelId, channelName }) => {
     // Only scroll if there are messages and the last message is new or from current user
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      const shouldScroll = lastMessage.isNew || lastMessage.user_id === user.user_id;
-      
+      const shouldScroll =
+        lastMessage.isNew || lastMessage.user_id === user.user_id;
+
       if (shouldScroll) {
         // Use requestAnimationFrame for smoother scrolling
         requestAnimationFrame(() => {
@@ -341,9 +340,9 @@ const TeamChat = ({ channelId, channelName }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       // Only update if there are messages and user is actively viewing
-      if (messages.length > 0 && document.visibilityState === 'visible') {
+      if (messages.length > 0 && document.visibilityState === "visible") {
         // Force re-render to update timestamps only when needed
-        setMessages(prev => [...prev]);
+        setMessages((prev) => [...prev]);
       }
     }, 30000); // Update every 30 seconds
 
@@ -453,13 +452,13 @@ const TeamChat = ({ channelId, channelName }) => {
 
     const messageContent = newMessage.trim();
     const currentReplyingTo = replyingTo;
-    
+
     // Clear input immediately for instant feel
     setNewMessage("");
     setReplyingTo(null);
     setShowMentions(false);
     handleTypingStop();
-    
+
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -576,9 +575,11 @@ const TeamChat = ({ channelId, channelName }) => {
                 const percentCompleted = Math.round(
                   (progressEvent.loaded * 100) / progressEvent.total
                 );
-                const uploadedMB = (progressEvent.loaded / 1024 / 1024).toFixed(1);
+                const uploadedMB = (progressEvent.loaded / 1024 / 1024).toFixed(
+                  1
+                );
                 const totalMB = (progressEvent.total / 1024 / 1024).toFixed(1);
-                
+
                 safeToast.loading(
                   `Uploading ${fileName}... ${percentCompleted}% (${uploadedMB}/${totalMB} MB)`,
                   {
@@ -700,17 +701,17 @@ const TeamChat = ({ channelId, channelName }) => {
   const handleDeleteMessage = async (messageId) => {
     // Show loading toast
     const deleteToast = safeToast.loading("Deleting message...");
-    
+
     try {
       // Optimistically update the message to show as deleted
       setMessages((prev) =>
         prev.map((msg) =>
           msg.message_id === messageId
-            ? { 
-                ...msg, 
-                isDeleted: true, 
+            ? {
+                ...msg,
+                isDeleted: true,
                 originalContent: msg.originalContent || msg.content,
-                content: "This message was deleted" 
+                content: "This message was deleted",
               }
             : msg
         )
@@ -724,16 +725,20 @@ const TeamChat = ({ channelId, channelName }) => {
       safeToast.success("Message deleted", { id: deleteToast });
     } catch (error) {
       console.error("Error deleting message:", error);
-      
+
       // Revert the optimistic update on error
       setMessages((prev) =>
         prev.map((msg) =>
           msg.message_id === messageId && msg.isDeleted
-            ? { ...msg, isDeleted: false, content: msg.originalContent || msg.content }
+            ? {
+                ...msg,
+                isDeleted: false,
+                content: msg.originalContent || msg.content,
+              }
             : msg
         )
       );
-      
+
       safeToast.error("Failed to delete message", { id: deleteToast });
     }
   };
@@ -767,10 +772,10 @@ const TeamChat = ({ channelId, channelName }) => {
       link.download = safeFileName;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      
+
       document.body.appendChild(link);
       link.click();
-      
+
       setTimeout(() => {
         if (document.body.contains(link)) {
           document.body.removeChild(link);
@@ -780,12 +785,11 @@ const TeamChat = ({ channelId, channelName }) => {
       safeToast.success(`Download started for ${safeFileName}`, {
         id: downloadToast,
       });
-      
     } catch (error) {
       console.error("Download error:", error);
-      
+
       try {
-        window.open(fileUrl, '_blank');
+        window.open(fileUrl, "_blank");
         safeToast.success(`Opening ${safeFileName} in new tab`, {
           id: downloadToast,
         });
@@ -818,15 +822,33 @@ const TeamChat = ({ channelId, channelName }) => {
       const extension = fileName.split(".").pop()?.toLowerCase();
       const viewableExtensions = [
         // Documents
-        "pdf", 
+        "pdf",
         // Text files
-        "txt", "md", "json", "xml", "csv", "html", "htm", "css",
+        "txt",
+        "md",
+        "json",
+        "xml",
+        "csv",
+        "html",
+        "htm",
+        "css",
         // Images (browser can display)
-        "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg",
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "bmp",
+        "webp",
+        "svg",
         // Videos (browser can play)
-        "mp4", "webm", "ogg",
+        "mp4",
+        "webm",
+        "ogg",
         // Audio (browser can play)
-        "mp3", "wav", "ogg", "m4a"
+        "mp3",
+        "wav",
+        "ogg",
+        "m4a",
       ];
       return viewableExtensions.includes(extension);
     }
@@ -841,10 +863,14 @@ const TeamChat = ({ channelId, channelName }) => {
     if (fileType?.startsWith("video/")) return "🎬";
     if (fileType?.startsWith("audio/")) return "🎵";
     if (fileType?.includes("pdf")) return "📄";
-    if (fileType?.includes("document") || fileType?.includes("word")) return "📝";
-    if (fileType?.includes("spreadsheet") || fileType?.includes("excel")) return "📊";
-    if (fileType?.includes("presentation") || fileType?.includes("powerpoint")) return "📽️";
-    if (fileType?.includes("zip") || fileType?.includes("compressed")) return "🗜️";
+    if (fileType?.includes("document") || fileType?.includes("word"))
+      return "📝";
+    if (fileType?.includes("spreadsheet") || fileType?.includes("excel"))
+      return "📊";
+    if (fileType?.includes("presentation") || fileType?.includes("powerpoint"))
+      return "📽️";
+    if (fileType?.includes("zip") || fileType?.includes("compressed"))
+      return "🗜️";
 
     // Fallback to file extension (expanded)
     if (fileName) {
@@ -865,7 +891,7 @@ const TeamChat = ({ channelId, channelName }) => {
         case "pptx":
         case "odp":
           return "📽️";
-        
+
         // Audio
         case "mp3":
         case "wav":
@@ -875,7 +901,7 @@ const TeamChat = ({ channelId, channelName }) => {
         case "flac":
         case "wma":
           return "🎵";
-        
+
         // Video
         case "mp4":
         case "avi":
@@ -886,7 +912,7 @@ const TeamChat = ({ channelId, channelName }) => {
         case "mkv":
         case "m4v":
           return "🎬";
-        
+
         // Images
         case "jpg":
         case "jpeg":
@@ -899,7 +925,7 @@ const TeamChat = ({ channelId, channelName }) => {
         case "tiff":
         case "tif":
           return "🖼️";
-        
+
         // Archives
         case "zip":
         case "rar":
@@ -908,7 +934,7 @@ const TeamChat = ({ channelId, channelName }) => {
         case "gz":
         case "bz2":
           return "🗜️";
-        
+
         // Text files
         case "txt":
         case "rtf":
@@ -922,7 +948,7 @@ const TeamChat = ({ channelId, channelName }) => {
         case "htm":
         case "css":
           return "💻";
-        
+
         // Design files
         case "psd":
         case "ai":
@@ -930,7 +956,7 @@ const TeamChat = ({ channelId, channelName }) => {
         case "sketch":
         case "fig":
           return "🎨";
-        
+
         default:
           return "📎";
       }
@@ -956,28 +982,36 @@ const TeamChat = ({ channelId, channelName }) => {
     // Handle different timestamp formats and ensure proper parsing
     let date;
     try {
-      if (typeof timestamp === 'string') {
+      if (typeof timestamp === "string") {
         // Handle ISO string formats, ensure UTC parsing if no timezone info
-        if (timestamp.includes('T') && !timestamp.includes('Z') && !timestamp.includes('+') && !timestamp.includes('-', 10)) {
+        if (
+          timestamp.includes("T") &&
+          !timestamp.includes("Z") &&
+          !timestamp.includes("+") &&
+          !timestamp.includes("-", 10)
+        ) {
           // Assume UTC if no timezone specified in ISO format
-          date = new Date(timestamp + 'Z');
+          date = new Date(timestamp + "Z");
         } else {
           date = new Date(timestamp);
         }
-      } else if (typeof timestamp === 'number') {
+      } else if (typeof timestamp === "number") {
         // Handle Unix timestamp (seconds or milliseconds)
-        date = timestamp > 1000000000000 ? new Date(timestamp) : new Date(timestamp * 1000);
+        date =
+          timestamp > 1000000000000
+            ? new Date(timestamp)
+            : new Date(timestamp * 1000);
       } else {
         date = new Date(timestamp);
       }
 
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        console.warn('Invalid timestamp:', timestamp);
+        console.warn("Invalid timestamp:", timestamp);
         return "Invalid date";
       }
     } catch (error) {
-      console.warn('Error parsing timestamp:', timestamp, error);
+      console.warn("Error parsing timestamp:", timestamp, error);
       return "Invalid date";
     }
 
@@ -1000,7 +1034,7 @@ const TeamChat = ({ channelId, channelName }) => {
     // Less than 1 hour
     if (diff < 3600000) {
       const minutes = Math.floor(diff / 60000);
-      return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+      return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
     }
 
     // Same day
@@ -1027,13 +1061,13 @@ const TeamChat = ({ channelId, channelName }) => {
     // Less than 7 days
     if (diff < 604800000) {
       const days = Math.floor(diff / 86400000);
-      return `${days} day${days === 1 ? '' : 's'} ago`;
+      return `${days} day${days === 1 ? "" : "s"} ago`;
     }
 
     // More than 7 days
     const currentYear = now.getFullYear();
     const messageYear = date.getFullYear();
-    
+
     if (currentYear === messageYear) {
       return date.toLocaleDateString("en-US", {
         month: "short",
@@ -1201,60 +1235,64 @@ const TeamChat = ({ channelId, channelName }) => {
                       {/* Message actions in header */}
                       {!message.isDeleted && (
                         <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
-                          <div className="bg-white border border-gray-200 rounded-full shadow-lg flex">
+                          <div className="bg-white border border-gray-200 rounded-lg shadow-lg flex items-center gap-1 p-1">
                             <button
                               onClick={() =>
                                 handleReaction(message.message_id, "👍")
                               }
-                              className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                              className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                               title="Like"
                             >
-                              <ThumbsUp size={12} />
+                              <ThumbsUp size={14} />
                             </button>
                             <button
                               onClick={() =>
                                 handleReaction(message.message_id, "❤️")
                               }
-                              className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+                              className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
                               title="Love"
                             >
-                              <Heart size={12} />
+                              <Heart size={14} />
                             </button>
                             <button
                               onClick={() => handleReply(message)}
-                              className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                              className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                               title="Reply"
                             >
-                              <Reply size={12} />
+                              <Reply size={14} />
                             </button>
-                          {isOwnMessage && !message.isDeleted && (
-                            <>
-                              <button
-                                onClick={() => handleEditMessage(message)}
-                                className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                                title="Edit"
-                              >
-                                <Edit2 size={12} />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  // Store original content before deletion for potential recovery
-                                  setMessages((prev) =>
-                                    prev.map((msg) =>
-                                      msg.message_id === message.message_id
-                                        ? { ...msg, originalContent: msg.content }
-                                        : msg
-                                    )
-                                  );
-                                  handleDeleteMessage(message.message_id);
-                                }}
-                                className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
-                                title="Delete"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            </>
-                          )}
+                            {isOwnMessage && !message.isDeleted && (
+                              <>
+                                <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                                <button
+                                  onClick={() => handleEditMessage(message)}
+                                  className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                                  title="Edit"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    // Store original content before deletion for potential recovery
+                                    setMessages((prev) =>
+                                      prev.map((msg) =>
+                                        msg.message_id === message.message_id
+                                          ? {
+                                              ...msg,
+                                              originalContent: msg.content,
+                                            }
+                                          : msg
+                                      )
+                                    );
+                                    handleDeleteMessage(message.message_id);
+                                  }}
+                                  className="p-2 hover:bg-red-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
@@ -1573,7 +1611,9 @@ const TeamChat = ({ channelId, channelName }) => {
                               : "bg-white text-gray-800 rounded-bl-md border border-gray-200 hover:shadow-md hover:border-gray-300"
                           }`}
                           dangerouslySetInnerHTML={{
-                            __html: message.isDeleted ? message.content : renderMessageContent(message.content),
+                            __html: message.isDeleted
+                              ? message.content
+                              : renderMessageContent(message.content),
                           }}
                         />
                       )}

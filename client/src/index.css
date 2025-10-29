@@ -881,15 +881,7 @@ input[type="checkbox"]:disabled:hover {
   transition: all 0.3s ease;
 }
 
-.message-deleted::before {
-  content: "🗑️";
-  position: absolute;
-  left: -8px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  opacity: 0.6;
-}
+
 
 .message-deleted:hover {
   opacity: 0.9;

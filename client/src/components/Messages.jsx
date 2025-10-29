@@ -1610,43 +1610,44 @@ const Messages = () => {
 
                             {/* Message actions - Hidden on mobile, shown on hover on desktop */}
                             {!message.isDeleted && (
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
-                                <div className="bg-white border border-gray-200 rounded-full shadow-lg flex">
+                              <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 hidden sm:block">
+                                <div className="bg-white border border-gray-200 rounded-lg shadow-lg flex items-center gap-1 p-1">
                                   <button
                                     onClick={() =>
                                       handleReaction(message.message_id, "👍")
                                     }
-                                    className="p-1 sm:p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors touch-manipulation"
+                                    className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                                     title="Like"
                                   >
-                                    <ThumbsUp size={10} className="sm:w-3 sm:h-3" />
+                                    <ThumbsUp size={14} />
                                   </button>
                                   <button
                                     onClick={() =>
                                       handleReaction(message.message_id, "❤️")
                                     }
-                                    className="p-1 sm:p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-red-600 transition-colors touch-manipulation"
+                                    className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
                                     title="Love"
                                   >
-                                    <Heart size={10} className="sm:w-3 sm:h-3" />
+                                    <Heart size={14} />
                                   </button>
                                   <button
                                     onClick={() => handleReply(message)}
-                                    className="p-1 sm:p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors touch-manipulation"
+                                    className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                                     title="Reply"
                                   >
-                                    <Reply size={10} className="sm:w-3 sm:h-3" />
+                                    <Reply size={14} />
                                   </button>
                                   {isOwnMessage && (
                                     <>
+                                      <div className="w-px h-6 bg-gray-200 mx-1"></div>
                                       <button
                                         onClick={() =>
                                           handleEditMessage(message)
                                         }
-                                        className="p-1 sm:p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors touch-manipulation"
+                                        className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
                                         title="Edit"
                                       >
-                                        <Edit2 size={10} className="sm:w-3 sm:h-3" />
+                                        <Edit2 size={14} />
                                       </button>
                                       <button
                                         onClick={() =>
@@ -1654,10 +1655,10 @@ const Messages = () => {
                                             message.message_id
                                           )
                                         }
-                                        className="p-1 sm:p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors touch-manipulation"
+                                        className="p-2 hover:bg-red-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
                                         title="Delete"
                                       >
-                                        <Trash2 size={10} className="sm:w-3 sm:h-3" />
+                                        <Trash2 size={14} />
                                       </button>
                                     </>
                                   )}

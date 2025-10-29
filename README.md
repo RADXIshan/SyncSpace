@@ -13,7 +13,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-blue.svg)](https://neon.tech/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.12-38B2AC.svg)](https://tailwindcss.com/)
 
-**🚀 [Live Demo](https://syncspace-client.vercel.app) | 📖 [Documentation](#-table-of-contents) | 🛠 [Setup Guide](#-installation)**
+**🚀 <a href="https://syncspace-client.vercel.app" target="_blank">Live Demo</a> | 📖 [Documentation](#-table-of-contents) | 🛠 [Setup Guide](#-installation)**
 
 </div>
 
@@ -130,9 +130,10 @@ SyncSpace is a comprehensive team collaboration platform that combines real-time
 
 ## 🌐 Live Demo
 
-**🚀 [Try SyncSpace Live](https://syncspace-client.vercel.app)**
+**🚀 <a href="https://syncspace-client.vercel.app" target="_blank">Try SyncSpace Live</a>**
 
 ### Deployment Information
+
 - **Frontend**: Deployed on [Vercel](https://vercel.com)
   - URL: `https://syncspace-client.vercel.app`
   - Auto-deployment from main branch

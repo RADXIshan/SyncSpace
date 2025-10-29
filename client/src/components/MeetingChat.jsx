@@ -502,23 +502,114 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
 
 
 
-  // Format timestamp
+  // Format timestamp with accurate timing and timezone handling
   const formatTime = (timestamp) => {
     if (!timestamp) return "";
 
+    // Handle different timestamp formats and ensure proper parsing
+    let date;
     try {
-      const date = new Date(timestamp);
-      if (isNaN(date.getTime())) return "";
+      if (typeof timestamp === "string") {
+        // Handle ISO string formats, ensure UTC parsing if no timezone info
+        if (
+          timestamp.includes("T") &&
+          !timestamp.includes("Z") &&
+          !timestamp.includes("+") &&
+          !timestamp.includes("-", 10)
+        ) {
+          // Assume UTC if no timezone specified in ISO format
+          date = new Date(timestamp + "Z");
+        } else {
+          date = new Date(timestamp);
+        }
+      } else if (typeof timestamp === "number") {
+        // Handle Unix timestamp (seconds or milliseconds)
+        date =
+          timestamp > 1000000000000
+            ? new Date(timestamp)
+            : new Date(timestamp * 1000);
+      } else {
+        date = new Date(timestamp);
+      }
 
-      const now = new Date();
-      const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-
-      if (diffInMinutes < 1) return "now";
-      if (diffInMinutes < 60) return `${diffInMinutes}m`;
-      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
-      return date.toLocaleDateString();
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
     } catch (error) {
-      return "";
+      return "Invalid date";
+    }
+
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+
+    // Handle future dates (clock sync issues)
+    if (diff < 0) {
+      const futureDiff = Math.abs(diff);
+      if (futureDiff < 30000) return "Just now"; // Within 30 seconds, assume clock sync issue
+      return "Just now"; // Don't show future times
+    }
+
+    // Less than 30 seconds
+    if (diff < 30000) return "Just now";
+
+    // Less than 1 minute
+    if (diff < 60000) return "Less than a minute ago";
+
+    // Less than 1 hour
+    if (diff < 3600000) {
+      const minutes = Math.floor(diff / 60000);
+      return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+    }
+
+    // Same day
+    const isToday = date.toDateString() === now.toDateString();
+    if (isToday) {
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    }
+
+    // Yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday at ${date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })}`;
+    }
+
+    // Less than 7 days
+    if (diff < 604800000) {
+      const days = Math.floor(diff / 86400000);
+      return `${days} day${days === 1 ? "" : "s"} ago`;
+    }
+
+    // More than 7 days
+    const currentYear = now.getFullYear();
+    const messageYear = date.getFullYear();
+
+    if (currentYear === messageYear) {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } else {
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
     }
   };
 
@@ -789,14 +880,21 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
                 }
               }}
             />
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="absolute right-3 bottom-3 p-1 hover:bg-white/10 rounded-lg transition-colors text-white/60 hover:text-white cursor-pointer"
-              title="Add emoji"
-            >
-              <Smile size={18} />
-            </button>
+            <div className="absolute right-3 bottom-3" ref={emojiPickerRef}>
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="p-1 hover:bg-white/10 rounded-lg transition-colors text-white/60 hover:text-white cursor-pointer"
+                title="Add emoji"
+              >
+                <Smile size={18} />
+              </button>
+              {showEmojiPicker && (
+                <div className="absolute bottom-full right-0 mb-2 z-50">
+                  <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+                </div>
+              )}
+            </div>
           </div>
           <button
             type="submit"
@@ -812,12 +910,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
           </button>
         </form>
 
-        {/* Emoji picker */}
-        {showEmojiPicker && (
-          <div ref={emojiPickerRef} className="absolute bottom-full right-4 mb-2">
-            <EmojiPicker onEmojiSelect={handleEmojiSelect} />
-          </div>
-        )}
+
 
       </div>
     </div>

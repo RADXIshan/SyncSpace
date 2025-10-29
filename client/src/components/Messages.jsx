@@ -72,6 +72,9 @@ const Messages = () => {
   const [conversationToDelete, setConversationToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // State for navigation control
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+
   // Refs
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -474,7 +477,8 @@ const Messages = () => {
     if (
       userParam &&
       (conversations.length > 0 || organizationMembers.length > 0) &&
-      !selectedConversation // Only run if no conversation is selected
+      !selectedConversation && // Only run if no conversation is selected
+      !isNavigatingBack // Don't auto-select when navigating back
     ) {
       const userId = parseInt(userParam);
       const conversation = conversations.find(
@@ -497,6 +501,7 @@ const Messages = () => {
     conversations.length,
     organizationMembers.length,
     selectedConversation,
+    isNavigatingBack,
   ]); // Optimized dependencies
 
   // Filter conversations based on search query - optimized with useMemo
@@ -565,17 +570,28 @@ const Messages = () => {
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
+      const wasMobile = isMobile;
       setIsMobile(mobile);
-      // On mobile, hide sidebar when conversation is selected
-      if (mobile && selectedConversation) {
-        setSidebarVisible(false);
+      
+      // On mobile, hide sidebar when conversation is selected, show when no conversation
+      if (mobile) {
+        if (selectedConversation) {
+          setSidebarVisible(false);
+        } else {
+          setSidebarVisible(true);
+        }
+      }
+      
+      // On desktop, always show sidebar
+      if (!mobile) {
+        setSidebarVisible(true);
       }
     };
 
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
-  }, [selectedConversation]);
+  }, [selectedConversation, isMobile]);
 
   // Keyboard shortcuts for sidebar toggle and close dropdowns
   useEffect(() => {
@@ -1276,41 +1292,46 @@ const Messages = () => {
     <div className="h-screen flex bg-gray-50 relative overflow-hidden">
       {/* Conversations Sidebar */}
       <div
-        className={`${
-          selectedConversation && isMobile ? "hidden" : "flex"
-        } flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-out transform ${
-          !sidebarVisible
-            ? "w-0 min-w-0 -translate-x-full opacity-0 pointer-events-none"
-            : "w-full md:w-80 translate-x-0 opacity-100 pointer-events-auto"
-        } ${
-          selectedConversation && !isMobile ? "hidden md:flex" : ""
-        } overflow-hidden shadow-lg`}
+        className={`
+          ${isMobile 
+            ? (selectedConversation ? "hidden" : "flex") 
+            : (sidebarVisible ? "flex" : "hidden")
+          } 
+          flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-out
+          ${isMobile 
+            ? "w-full" 
+            : sidebarVisible 
+              ? "w-80 lg:w-96 xl:w-80" 
+              : "w-0"
+          }
+          overflow-hidden shadow-lg
+        `}
       >
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+        <div className="p-3 sm:p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between mt-2 sm:mt-0 mb-4">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 pl-14 sm:pl-0">Messages</h1>
             <button
               onClick={() => setShowNewConversation(true)}
-              className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              title="New conversation cursor-pointer"
+              className="p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors touch-manipulation"
+              title="New conversation"
             >
-              <Plus size={18} className="cursor-pointer" />
+              <Plus size={16} className="sm:w-[18px] sm:h-[18px]" />
             </button>
           </div>
 
           {/* Search */}
           <div className="relative">
             <Search
-              size={18}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 sm:w-[18px] sm:h-[18px]"
             />
             <input
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 touch-manipulation"
             />
           </div>
         </div>
@@ -1318,8 +1339,8 @@ const Messages = () => {
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
           {filteredConversations.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageCircle size={40} className="mx-auto mb-4 text-gray-400" />
+            <div className="text-center py-6 sm:py-8 px-4">
+              <MessageCircle size={32} className="mx-auto mb-3 sm:mb-4 text-gray-400 sm:w-10 sm:h-10" />
               <p className="text-gray-600 text-sm">
                 {searchQuery
                   ? "No conversations found"
@@ -1328,22 +1349,22 @@ const Messages = () => {
               {!searchQuery && (
                 <button
                   onClick={() => setShowNewConversation(true)}
-                  className="mt-2 text-purple-600 hover:text-purple-700 text-sm font-medium"
+                  className="mt-2 text-purple-600 hover:text-purple-700 text-sm font-medium touch-manipulation"
                 >
                   Start a conversation
                 </button>
               )}
             </div>
           ) : (
-            <div className="space-y-1 p-2">
+            <div className="space-y-1 p-1 sm:p-2">
               {filteredConversations.map((conversation) => (
                 <div
                   key={conversation.other_user_id}
-                  className={`conversation-item flex items-center p-3 rounded-lg cursor-pointer group relative ${
+                  className={`conversation-item flex items-center p-2.5 sm:p-3 rounded-lg cursor-pointer group relative touch-manipulation ${
                     selectedConversation?.other_user_id ===
                     conversation.other_user_id
                       ? "bg-purple-100 border border-purple-200"
-                      : "hover:bg-gray-100"
+                      : "hover:bg-gray-100 active:bg-gray-200"
                   } ${
                     conversation.hasNewMessage ? "conversation-new-message" : ""
                   }`}
@@ -1351,7 +1372,7 @@ const Messages = () => {
                 >
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
                       {conversation.other_user_photo ? (
                         <img
                           src={conversation.other_user_photo}
@@ -1359,51 +1380,53 @@ const Messages = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        conversation.other_user_name
-                          ?.charAt(0)
-                          ?.toUpperCase() || "U"
+                        <span className="text-sm sm:text-base">
+                          {conversation.other_user_name
+                            ?.charAt(0)
+                            ?.toUpperCase() || "U"}
+                        </span>
                       )}
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 ml-3 min-w-0">
+                  <div className="flex-1 ml-2.5 sm:ml-3 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900 truncate">
+                      <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
                         {conversation.other_user_name}
                       </h3>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                         {formatTime(conversation.last_message_time)}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-600 truncate flex-1">
+                      <p className="text-xs sm:text-sm text-gray-600 truncate flex-1 pr-2">
                         {conversation.last_message_content || "No messages yet"}
                       </p>
 
                       {conversation.unread_count > 0 && (
-                        <div className="ml-2 flex items-center justify-center w-5 h-5 bg-purple-600 text-white text-xs font-bold rounded-full">
-                          {conversation.unread_count}
+                        <div className="ml-2 flex items-center justify-center min-w-[18px] h-[18px] sm:min-w-[20px] sm:h-5 bg-purple-600 text-white text-xs font-bold rounded-full px-1">
+                          {conversation.unread_count > 99 ? "99+" : conversation.unread_count}
                         </div>
                       )}
                     </div>
                   </div>
 
                   {/* Conversation Actions */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setConversationToDelete(conversation);
                         setShowDeleteModal(true);
                       }}
-                      className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 hover:bg-red-50 rounded-lg transition-colors touch-manipulation"
                       title="Delete conversation"
                     >
                       <Trash2
-                        size={16}
-                        className="text-gray-400 hover:text-red-600"
+                        size={14}
+                        className="text-gray-400 hover:text-red-600 sm:w-4 sm:h-4"
                       />
                     </button>
                   </div>
@@ -1417,17 +1440,21 @@ const Messages = () => {
       {/* Chat Area */}
       {selectedConversation ? (
         <div
-          className="flex-1 flex flex-col transition-all duration-300 ease-in-out relative"
+          className={`
+            ${isMobile ? "w-full" : "flex-1"} 
+            flex flex-col transition-all duration-300 ease-in-out relative
+          `}
           onDragOver={handleChatDragOver}
           onDragLeave={handleChatDragLeave}
           onDrop={handleChatDrop}
         >
+
           {/* Chat Header */}
-          <div className="bg-white border-b border-gray-200 p-4 flex items-center">
+          <div className="bg-white border-b border-gray-200 p-4 sm:p-4 pl-17 sm:pl-0 flex items-center">
             {/* Sidebar Toggle Button */}
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
-              className="hidden md:flex mr-3 p-2 hover:bg-gray-100 rounded-lg transition-all cursor-pointer"
+              className="hidden md:flex mr-2 sm:mr-3 p-2 hover:bg-gray-100 rounded-lg transition-all touch-manipulation"
               title={
                 sidebarVisible
                   ? "Hide conversations (Ctrl+B)"
@@ -1435,25 +1462,14 @@ const Messages = () => {
               }
             >
               {sidebarVisible ? (
-                <PanelLeftClose size={20} className="text-gray-600" />
+                <PanelLeftClose size={18} className="text-gray-600 sm:w-5 sm:h-5" />
               ) : (
-                <PanelLeftOpen size={20} className="text-gray-600" />
+                <PanelLeftOpen size={18} className="text-gray-600 sm:w-5 sm:h-5" />
               )}
             </button>
 
-            {/* Mobile Back Button */}
-            <button
-              onClick={() => {
-                setSelectedConversation(null);
-                setSearchParams({});
-              }}
-              className="md:hidden mr-3 p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <ArrowLeft size={20} />
-            </button>
-
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
+            <div className="flex items-center flex-1 min-w-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden flex-shrink-0">
                 {selectedConversation.other_user_photo ? (
                   <img
                     src={selectedConversation.other_user_photo}
@@ -1461,35 +1477,57 @@ const Messages = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  selectedConversation.other_user_name
-                    ?.charAt(0)
-                    ?.toUpperCase() || "U"
+                  <span className="text-sm sm:text-base">
+                    {selectedConversation.other_user_name
+                      ?.charAt(0)
+                      ?.toUpperCase() || "U"}
+                  </span>
                 )}
               </div>
-              <div className="ml-3 flex-1">
-                <h2 className="font-semibold text-gray-900">
+              <div className="ml-2 sm:ml-3 flex-1 min-w-0">
+                <h2 className="font-semibold text-gray-900 text-base truncate">
                   {selectedConversation.other_user_name}
                 </h2>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 truncate">
                   {selectedConversation.other_user_email}
                 </p>
               </div>
             </div>
+
+            {/* Mobile Back Button - Moved to right side */}
+            <button
+              onClick={() => {
+                setIsNavigatingBack(true);
+                setSelectedConversation(null);
+                setMessages([]);
+                // Explicitly remove the user parameter from URL
+                const newSearchParams = new URLSearchParams(searchParams);
+                newSearchParams.delete('user');
+                setSearchParams(newSearchParams);
+                // Reset the navigation flag after a short delay
+                setTimeout(() => setIsNavigatingBack(false), 100);
+                // The useEffect will handle showing the sidebar on mobile
+              }}
+              className="md:hidden ml-2 sm:ml-3 p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg touch-manipulation"
+              title="Back to conversations"
+            >
+              <ArrowLeft size={18} className="sm:w-5 sm:h-5" />
+            </button>
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 messages-smooth-scroll">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3 bg-gray-50 messages-smooth-scroll">
             {messagesLoading ? (
               <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-t-2 border-purple-600"></div>
               </div>
             ) : messages.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="text-center py-6 sm:py-8 px-4">
                 <MessageCircle
-                  size={40}
-                  className="mx-auto mb-4 text-gray-400"
+                  size={32}
+                  className="mx-auto mb-3 sm:mb-4 text-gray-400 sm:w-10 sm:h-10"
                 />
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm sm:text-base">
                   Start a conversation with{" "}
                   {selectedConversation.other_user_name}
                 </p>
@@ -1504,8 +1542,8 @@ const Messages = () => {
                 return (
                   <div
                     key={message.message_id}
-                    className={`group transition-all duration-200 hover:bg-gray-100/50 rounded-lg p-2 -m-2 ${
-                      showAvatar ? "mt-4" : "mt-1"
+                    className={`group transition-all duration-200 hover:bg-gray-100/50 rounded-lg p-1 sm:p-2 -m-1 sm:-m-2 ${
+                      showAvatar ? "mt-3 sm:mt-4" : "mt-0.5 sm:mt-1"
                     } ${
                       message.isNew
                         ? "animate-in slide-in-from-bottom-2 duration-300"
@@ -1517,13 +1555,13 @@ const Messages = () => {
                     } ${message.status === "failed" ? "opacity-60" : ""}`}
                   >
                     <div
-                      className={`flex gap-2 ${
+                      className={`flex gap-1.5 sm:gap-2 ${
                         isOwnMessage ? "flex-row-reverse" : ""
                       }`}
                     >
                       {/* Avatar */}
                       {showAvatar ? (
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm overflow-hidden flex-shrink-0">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm overflow-hidden flex-shrink-0">
                           {isOwnMessage ? (
                             user.user_photo ? (
                               <img
@@ -1532,7 +1570,9 @@ const Messages = () => {
                                 className="w-full h-full object-cover"
                               />
                             ) : (
-                              user.name?.charAt(0)?.toUpperCase() || "U"
+                              <span className="text-xs sm:text-sm">
+                                {user.name?.charAt(0)?.toUpperCase() || "U"}
+                              </span>
                             )
                           ) : selectedConversation.other_user_photo ? (
                             <img
@@ -1541,13 +1581,15 @@ const Messages = () => {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            selectedConversation.other_user_name
-                              ?.charAt(0)
-                              ?.toUpperCase() || "U"
+                            <span className="text-xs sm:text-sm">
+                              {selectedConversation.other_user_name
+                                ?.charAt(0)
+                                ?.toUpperCase() || "U"}
+                            </span>
                           )}
                         </div>
                       ) : (
-                        <div className="w-8 flex-shrink-0"></div>
+                        <div className="w-6 sm:w-8 flex-shrink-0"></div>
                       )}
 
                       <div
@@ -1558,7 +1600,7 @@ const Messages = () => {
                         {/* Header with actions */}
                         {showAvatar && (
                           <div
-                            className={`flex items-center gap-2 mb-1 ${
+                            className={`flex items-center gap-1.5 sm:gap-2 mb-1 ${
                               isOwnMessage ? "flex-row-reverse" : ""
                             }`}
                           >
@@ -1566,34 +1608,34 @@ const Messages = () => {
                               {formatTime(message.created_at)}
                             </span>
 
-                            {/* Message actions */}
+                            {/* Message actions - Hidden on mobile, shown on hover on desktop */}
                             {!message.isDeleted && (
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
                                 <div className="bg-white border border-gray-200 rounded-full shadow-lg flex">
                                   <button
                                     onClick={() =>
                                       handleReaction(message.message_id, "👍")
                                     }
-                                    className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                                    className="p-1 sm:p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors touch-manipulation"
                                     title="Like"
                                   >
-                                    <ThumbsUp size={12} />
+                                    <ThumbsUp size={10} className="sm:w-3 sm:h-3" />
                                   </button>
                                   <button
                                     onClick={() =>
                                       handleReaction(message.message_id, "❤️")
                                     }
-                                    className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-red-600 transition-colors"
+                                    className="p-1 sm:p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-red-600 transition-colors touch-manipulation"
                                     title="Love"
                                   >
-                                    <Heart size={12} />
+                                    <Heart size={10} className="sm:w-3 sm:h-3" />
                                   </button>
                                   <button
                                     onClick={() => handleReply(message)}
-                                    className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                                    className="p-1 sm:p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors touch-manipulation"
                                     title="Reply"
                                   >
-                                    <Reply size={12} />
+                                    <Reply size={10} className="sm:w-3 sm:h-3" />
                                   </button>
                                   {isOwnMessage && (
                                     <>
@@ -1601,10 +1643,10 @@ const Messages = () => {
                                         onClick={() =>
                                           handleEditMessage(message)
                                         }
-                                        className="p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors"
+                                        className="p-1 sm:p-1.5 hover:bg-blue-50 rounded-full text-gray-500 hover:text-blue-600 transition-colors touch-manipulation"
                                         title="Edit"
                                       >
-                                        <Edit2 size={12} />
+                                        <Edit2 size={10} className="sm:w-3 sm:h-3" />
                                       </button>
                                       <button
                                         onClick={() =>
@@ -1612,10 +1654,10 @@ const Messages = () => {
                                             message.message_id
                                           )
                                         }
-                                        className="p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors"
+                                        className="p-1 sm:p-1.5 hover:bg-red-50 rounded-full text-gray-500 hover:text-red-600 transition-colors touch-manipulation"
                                         title="Delete"
                                       >
-                                        <Trash2 size={12} />
+                                        <Trash2 size={10} className="sm:w-3 sm:h-3" />
                                       </button>
                                     </>
                                   )}
@@ -1628,14 +1670,14 @@ const Messages = () => {
                         {/* Reply indicator */}
                         {message.reply_to && (
                           <div
-                            className={`bg-gray-100 border-l-4 border-gray-300 pl-3 py-2 mb-2 rounded-r ${
+                            className={`bg-gray-100 border-l-4 border-gray-300 pl-2 sm:pl-3 py-1.5 sm:py-2 mb-1.5 sm:mb-2 rounded-r ${
                               isOwnMessage ? "bg-blue-50 border-blue-300" : ""
                             }`}
                           >
-                            <div className="text-xs text-gray-600 mb-1">
+                            <div className="text-xs text-gray-600 mb-0.5 sm:mb-1">
                               Replying to {message.reply_to_sender_name}
                             </div>
-                            <div className="text-sm text-gray-800 truncate">
+                            <div className="text-xs sm:text-sm text-gray-800 truncate">
                               {message.reply_to_content}
                             </div>
                           </div>
@@ -1649,7 +1691,7 @@ const Messages = () => {
                         >
                           {message.file_url ? (
                             <div
-                              className={`rounded-2xl p-4 inline-block max-w-xs sm:max-w-md shadow-sm relative transition-all duration-200 ${
+                              className={`rounded-2xl p-2.5 sm:p-4 inline-block max-w-[280px] sm:max-w-xs md:max-w-md shadow-sm relative transition-all duration-200 ${
                                 isOwnMessage
                                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md"
                                   : "bg-white border border-gray-200 rounded-bl-md"
@@ -1692,18 +1734,18 @@ const Messages = () => {
                                   )}
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 sm:gap-3">
                                   <File
-                                    size={24}
-                                    className={
+                                    size={20}
+                                    className={`${
                                       isOwnMessage
                                         ? "text-white"
                                         : "text-gray-600"
-                                    }
+                                    } sm:w-6 sm:h-6`}
                                   />
                                   <div className="flex-1 min-w-0">
                                     <div
-                                      className={`text-sm font-medium truncate ${
+                                      className={`text-xs sm:text-sm font-medium truncate ${
                                         isOwnMessage
                                           ? "text-white"
                                           : "text-gray-900"
@@ -1712,7 +1754,7 @@ const Messages = () => {
                                       {message.file_name}
                                     </div>
                                     {message.isUploading && (
-                                      <div className="text-xs opacity-75 mt-1">
+                                      <div className="text-xs opacity-75 mt-0.5 sm:mt-1">
                                         Uploading...
                                       </div>
                                     )}
@@ -1722,20 +1764,20 @@ const Messages = () => {
                                       onClick={() =>
                                         window.open(message.file_url, "_blank")
                                       }
-                                      className={`p-2 rounded ${
+                                      className={`p-1.5 sm:p-2 rounded touch-manipulation ${
                                         isOwnMessage
-                                          ? "hover:bg-blue-600"
-                                          : "hover:bg-gray-200"
+                                          ? "hover:bg-blue-600 active:bg-blue-700"
+                                          : "hover:bg-gray-200 active:bg-gray-300"
                                       }`}
                                       title="Download file"
                                     >
                                       <Download
-                                        size={16}
-                                        className={
+                                        size={14}
+                                        className={`${
                                           isOwnMessage
                                             ? "text-white"
                                             : "text-gray-600"
-                                        }
+                                        } sm:w-4 sm:h-4`}
                                       />
                                     </button>
                                   )}
@@ -1744,7 +1786,7 @@ const Messages = () => {
                             </div>
                           ) : (
                             <div
-                              className={`text-sm leading-relaxed break-words p-4 rounded-2xl shadow-sm inline-block max-w-xs sm:max-w-md transition-all duration-200 relative ${
+                              className={`text-sm leading-relaxed break-words p-2.5 sm:p-4 rounded-2xl shadow-sm inline-block max-w-[280px] sm:max-w-xs md:max-w-md transition-all duration-200 relative ${
                                 message.isDeleted
                                   ? "bg-gray-100 text-gray-500 italic"
                                   : isOwnMessage
@@ -1811,31 +1853,31 @@ const Messages = () => {
 
           {/* Typing indicator */}
           {typingUsers.length > 0 && (
-            <div className="px-4 pb-2 typing-indicator">
+            <div className="px-2 sm:px-4 pb-1 sm:pb-2 typing-indicator">
               <TypingIndicator users={typingUsers} />
             </div>
           )}
 
           {/* Reply indicator */}
           {replyingTo && (
-            <div className="bg-blue-50 border-t border-blue-200 p-4">
+            <div className="bg-blue-50 border-t border-blue-200 p-2 sm:p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Reply size={16} className="text-blue-600" />
-                  <div>
-                    <span className="text-sm font-semibold text-blue-800">
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                  <Reply size={14} className="text-blue-600 flex-shrink-0 sm:w-4 sm:h-4" />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs sm:text-sm font-semibold text-blue-800 block">
                       Replying to {replyingTo.sender_name}
                     </span>
-                    <div className="text-sm text-gray-700 truncate max-w-xs">
+                    <div className="text-xs sm:text-sm text-gray-700 truncate">
                       {replyingTo.content}
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setReplyingTo(null)}
-                  className="p-2 hover:bg-blue-100 rounded-full"
+                  className="p-1.5 sm:p-2 hover:bg-blue-100 active:bg-blue-200 rounded-full touch-manipulation flex-shrink-0"
                 >
-                  <X size={16} className="text-blue-600" />
+                  <X size={14} className="text-blue-600 sm:w-4 sm:h-4" />
                 </button>
               </div>
             </div>
@@ -1843,11 +1885,11 @@ const Messages = () => {
 
           {/* Edit indicator */}
           {editingMessage && (
-            <div className="bg-amber-50 border-t border-amber-200 p-4">
+            <div className="bg-amber-50 border-t border-amber-200 p-2 sm:p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Edit2 size={16} className="text-amber-600" />
-                  <span className="text-sm font-semibold text-amber-800">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Edit2 size={14} className="text-amber-600 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm font-semibold text-amber-800">
                     Editing message
                   </span>
                 </div>
@@ -1856,18 +1898,18 @@ const Messages = () => {
                     setEditingMessage(null);
                     setNewMessage("");
                   }}
-                  className="p-2 hover:bg-amber-100 rounded-full"
+                  className="p-1.5 sm:p-2 hover:bg-amber-100 active:bg-amber-200 rounded-full touch-manipulation"
                 >
-                  <X size={16} className="text-amber-600" />
+                  <X size={14} className="text-amber-600 sm:w-4 sm:h-4" />
                 </button>
               </div>
             </div>
           )}
 
           {/* Message Input */}
-          <div className="border-t border-gray-200 bg-white p-4">
+          <div className="border-t border-gray-200 bg-white p-2 sm:p-4">
             <form onSubmit={sendMessage} className="relative">
-              <div className="bg-white border-2 border-gray-200 rounded-2xl focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-100 transition-all duration-200">
+              <div className="bg-white border-2 border-gray-200 rounded-2xl focus-within:border-purple-500 focus-within:ring-2 sm:focus-within:ring-4 focus-within:ring-purple-100 transition-all duration-200">
                 <textarea
                   ref={textareaRef}
                   value={newMessage}
@@ -1884,27 +1926,26 @@ const Messages = () => {
                     }
                   }}
                   placeholder={`Message ${selectedConversation.other_user_name}...`}
-                  className="w-full bg-transparent text-gray-900 placeholder-gray-400 px-6 py-4 pr-24 resize-none outline-none max-h-[120px] leading-relaxed"
+                  className="w-full bg-transparent text-gray-900 placeholder-gray-400 px-3 sm:px-6 py-3 sm:py-4 pr-16 sm:pr-24 resize-none outline-none max-h-[100px] sm:max-h-[120px] leading-relaxed text-sm sm:text-base"
                   rows="1"
                   disabled={sending}
                 />
 
-                <div className="flex items-center justify-between px-4 pb-4">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between px-2 sm:px-4 pb-2 sm:pb-4">
+                  <div className="flex items-center gap-1.5 sm:gap-3">
                     <div className="relative" ref={emojiPickerRef}>
                       <button
                         type="button"
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className="p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-colors cursor-pointer"
+                        className="p-1.5 sm:p-2 hover:bg-purple-100 active:bg-purple-200 rounded-xl text-gray-600 hover:text-purple-600 transition-colors touch-manipulation"
                         title="Add emoji"
                       >
-                        <Smile size={18} className="cursor-pointer" />
+                        <Smile size={16} className="sm:w-[18px] sm:h-[18px]" />
                       </button>
                       {showEmojiPicker && (
-                        <div className="absolute bottom-full left-0 mb-2 z-50 cursor-pointer">
+                        <div className="absolute bottom-full left-0 mb-2 z-50">
                           <EmojiPicker
                             onEmojiSelect={handleEmojiSelect}
-                            className="cursor-pointer"
                           />
                         </div>
                       )}
@@ -1918,13 +1959,13 @@ const Messages = () => {
                           e.preventDefault();
                           fileInputRef.current?.click();
                         }}
-                        className="p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-colors cursor-pointer"
-                        title="Attach files - Click to browse, right-click for quick upload, or drag & drop files anywhere"
+                        className="p-1.5 sm:p-2 hover:bg-purple-100 active:bg-purple-200 rounded-xl text-gray-600 hover:text-purple-600 transition-colors touch-manipulation"
+                        title="Attach files"
                       >
-                        <Paperclip size={18} className="cursor-pointer" />
+                        <Paperclip size={16} className="sm:w-[18px] sm:h-[18px]" />
                       </button>
 
-                      {/* Quick file input for single file uploads - like TeamChat */}
+                      {/* Quick file input for single file uploads */}
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -1947,32 +1988,34 @@ const Messages = () => {
                       e.preventDefault();
                       sendMessage(e);
                     }}
-                    className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer ${
+                    className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 touch-manipulation ${
                       newMessage.trim() && !sending
-                        ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105"
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 active:from-purple-800 active:to-blue-800 text-white shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     {sending ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-t-2 border-white"></div>
                     ) : (
-                      <Send size={14} />
+                      <Send size={12} className="sm:w-[14px] sm:h-[14px]" />
                     )}
-                    {editingMessage ? "Update" : "Send"}
+                    <span className="hidden sm:inline">
+                      {editingMessage ? "Update" : "Send"}
+                    </span>
                   </button>
                 </div>
               </div>
             </form>
           </div>
         </div>
-      ) : (
-        <div className="hidden md:flex flex-1 flex-col bg-gray-50 transition-all duration-300 ease-in-out">
+      ) : !isMobile ? (
+        <div className="flex-1 flex flex-col bg-gray-50 transition-all duration-300 ease-in-out">
           {/* Empty State Header with Sidebar Toggle */}
-          <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
+          <div className="bg-white border-b border-gray-200 p-3 sm:p-4 flex items-center justify-between">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Messages</h2>
             <button
               onClick={() => setSidebarVisible(!sidebarVisible)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-all cursor-pointer"
+              className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-all touch-manipulation"
               title={
                 sidebarVisible
                   ? "Hide conversations (Ctrl+B)"
@@ -1980,23 +2023,23 @@ const Messages = () => {
               }
             >
               {sidebarVisible ? (
-                <PanelLeftClose size={20} className="text-gray-600" />
+                <PanelLeftClose size={18} className="text-gray-600 sm:w-5 sm:h-5" />
               ) : (
-                <PanelLeftOpen size={20} className="text-gray-600" />
+                <PanelLeftOpen size={18} className="text-gray-600 sm:w-5 sm:h-5" />
               )}
             </button>
           </div>
 
           {/* Empty State Content */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <MessageCircle size={64} className="mx-auto mb-4 text-gray-400" />
-              <h2 className="text-xl font-semibold text-gray-700 mb-2">
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div className="text-center max-w-sm">
+              <MessageCircle size={48} className="mx-auto mb-3 sm:mb-4 text-gray-400 sm:w-16 sm:h-16" />
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-2">
                 {sidebarVisible
                   ? "Select a conversation"
                   : "No conversation selected"}
               </h2>
-              <p className="text-gray-500 mb-4">
+              <p className="text-sm sm:text-base text-gray-500 mb-4">
                 {sidebarVisible
                   ? "Choose a conversation from the sidebar to start messaging"
                   : "Open the sidebar to see your conversations"}
@@ -2004,7 +2047,7 @@ const Messages = () => {
               {!sidebarVisible && (
                 <button
                   onClick={() => setSidebarVisible(true)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:bg-purple-800 transition-colors touch-manipulation"
                 >
                   Show Conversations
                 </button>
@@ -2012,7 +2055,7 @@ const Messages = () => {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* New Conversation Modal */}
       {showNewConversation && (
@@ -2074,7 +2117,7 @@ const Messages = () => {
                   .map((member) => (
                     <div
                       key={member.user_id}
-                      className="flex items-center p-3 hover:bg-gray-800/50 rounded-xl cursor-pointer transition-all duration-200 glass-button"
+                      className="flex items-center p-3 hover:bg-gray-800/50 rounded-xl cursor-pointer transition-all duration-200 glass"
                       onClick={() => handleStartNewConversation(member)}
                     >
                       <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">

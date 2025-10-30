@@ -133,6 +133,11 @@ const Sidebar = ({
       setShowLeaveOrgConfirm(false);
       await checkAuth(); // Refresh user data
       navigate("/home/dashboard");
+      
+      // Refresh the page to update the dashboard
+      setTimeout(() => {
+        window.location.reload();
+      }, 500); // Small delay to allow navigation to complete gracefully
     } catch (err) {
       console.error("Error leaving organization:", err);
       showError(

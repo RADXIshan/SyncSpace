@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Users } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 

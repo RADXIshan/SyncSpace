@@ -22,7 +22,8 @@ const ResetPassword = () => {
 
   const validatePassword = (val) => {
     // Backend regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return !passwordRegex.test(val);
   };
 
@@ -32,7 +33,12 @@ const ResetPassword = () => {
 
     if (name === "password") {
       const invalid = validatePassword(value);
-      setErrors((prev) => ({ ...prev, password: invalid, confirmPassword: prev.confirmPassword || value !== formData.confirmPassword }));
+      setErrors((prev) => ({
+        ...prev,
+        password: invalid,
+        confirmPassword:
+          prev.confirmPassword || value !== formData.confirmPassword,
+      }));
     } else if (name === "confirmPassword") {
       const mismatch = value !== formData.password;
       setErrors((prev) => ({ ...prev, confirmPassword: mismatch }));
@@ -46,29 +52,33 @@ const ResetPassword = () => {
     let toastId;
     try {
       toastId = toast.loading("Resetting password...");
-      
+
       // Add timeout to the request
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
+
       await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/auth/reset-password/${email}`, 
-        { password: formData.password }, 
-        { 
+        `${import.meta.env.VITE_BASE_URL}/api/auth/reset-password/${email}`,
+        { password: formData.password },
+        {
           withCredentials: true,
           signal: controller.signal,
-          timeout: 30000
+          timeout: 30000,
         }
       );
-      
+
       clearTimeout(timeoutId);
-      toast.success("Password reset successful! Please login with your new password.", { id: toastId });
+      toast.success(
+        "Password reset successful! Please login with your new password.",
+        { id: toastId }
+      );
       navigate("/login");
     } catch (err) {
       let errorMessage = "Failed to reset password";
-      
-      if (err.code === 'ECONNABORTED' || err.name === 'AbortError') {
-        errorMessage = "Request timeout. Please check your connection and try again.";
+
+      if (err.code === "ECONNABORTED" || err.name === "AbortError") {
+        errorMessage =
+          "Request timeout. Please check your connection and try again.";
       } else if (err.response?.status === 504) {
         errorMessage = "Server timeout. Please try again in a moment.";
       } else if (err.response?.data?.error) {
@@ -76,7 +86,7 @@ const ResetPassword = () => {
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       }
-      
+
       toast.error(errorMessage, { id: toastId });
       console.error("Reset password error:", err);
     } finally {
@@ -100,7 +110,7 @@ const ResetPassword = () => {
             {/* Brand */}
             <div
               className="flex items-center gap-3 cursor-pointer group"
-              onClick={() => window.location.href = "/"}
+              onClick={() => (window.location.href = "/")}
             >
               <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <img
@@ -133,10 +143,16 @@ const ResetPassword = () => {
           </p>
         </div>
 
-        <form className="glass rounded-3xl p-8 space-y-6" onSubmit={handleSubmit}>
+        <form
+          className="glass rounded-3xl p-8 space-y-6"
+          onSubmit={handleSubmit}
+        >
           {/* Password Field */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-white/90 mb-2"
+            >
               New Password
             </label>
             <div className="relative">
@@ -146,7 +162,9 @@ const ResetPassword = () => {
                 name="password"
                 placeholder="Enter new password"
                 className={`w-full px-4 py-3 glass-dark rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200 pr-12 ${
-                  errors.password && formData.password ? "border-red-500/50 focus:border-red-500 focus:ring-red-500" : ""
+                  errors.password && formData.password
+                    ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
+                    : ""
                 }`}
                 value={formData.password}
                 onChange={handleChange}
@@ -161,14 +179,19 @@ const ResetPassword = () => {
             </div>
             {errors.password && formData.password && (
               <p className="mt-2 text-sm text-red-400">
-                Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)
+                Password must be at least 8 characters long and contain at least
+                one uppercase letter, one lowercase letter, one number, and one
+                special character (@$!%*?&)
               </p>
             )}
           </div>
 
           {/* Confirm Password Field */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/90 mb-2">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-white/90 mb-2"
+            >
               Confirm Password
             </label>
             <div className="relative">
@@ -178,7 +201,9 @@ const ResetPassword = () => {
                 name="confirmPassword"
                 placeholder="Confirm new password"
                 className={`w-full px-4 py-3 glass-dark rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500/50 transition-all duration-200 pr-12 ${
-                  errors.confirmPassword && formData.confirmPassword ? "border-red-500/50 focus:border-red-500 focus:ring-red-500" : ""
+                  errors.confirmPassword && formData.confirmPassword
+                    ? "border-red-500/50 focus:border-red-500 focus:ring-red-500"
+                    : ""
                 }`}
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -192,16 +217,20 @@ const ResetPassword = () => {
               </button>
             </div>
             {errors.confirmPassword && formData.confirmPassword && (
-              <p className="mt-2 text-sm text-red-400">Passwords do not match</p>
+              <p className="mt-2 text-sm text-red-400">
+                Passwords do not match
+              </p>
             )}
           </div>
 
           <button
             type="submit"
-            className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full glass-button px-6 py-4 text-white font-semibold rounded-xl flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed cursor-pointerg"
             disabled={loading || Object.values(errors).some(Boolean)}
           >
-            {loading ? "Resetting..." : (
+            {loading ? (
+              "Resetting..."
+            ) : (
               <>
                 Reset Password
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

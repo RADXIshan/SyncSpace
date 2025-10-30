@@ -7,6 +7,7 @@ import Messages from '../components/Messages'
 import Notifications from '../components/Notifications'
 import Settings from '../components/Settings'
 import ChannelPage from '../components/ChannelPage'
+import MeetingReportsPage from './MeetingReportsPage'
 import JoinOrgModal from '../components/JoinOrgModal'
 import CreateOrgModal from '../components/CreateOrgModal'
 import OrgSettingsModal from '../components/OrgSettingsModal'
@@ -73,6 +74,7 @@ const Home = () => {
           <Route path="/messages" element={<Messages />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/channels/:channelId" element={<ChannelPage />} />
+          <Route path="/channels/:channelId/reports" element={<MeetingReportsPage />} />
           <Route path="*" element={<Navigate to="/home/dashboard" replace />} />
         </Routes>
         {showSettings && <Settings onClose={() => setShowSettings(false)} />}

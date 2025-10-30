@@ -20,6 +20,7 @@ import {
   X,
   NotebookPen,
   Video,
+  FileText,
 } from "lucide-react";
 import { toast as hotToast } from "react-hot-toast";
 import { useToast } from "../context/ToastContext";
@@ -32,6 +33,7 @@ import MeetingModal from "./MeetingModal";
 import OnlineStatus from "./OnlineStatus";
 import OnlineCounter from "./OnlineCounter";
 import TeamChat from "./TeamChat";
+import MeetingReports from "./MeetingReports";
 
 const ChannelPage = () => {
   const { channelId } = useParams();
@@ -727,6 +729,7 @@ const ChannelPage = () => {
     { id: "home", label: "Home", icon: Home },
     { id: "chats", label: "Team Chats", icon: MessageSquare },
     { id: "members", label: "Members", icon: Users },
+    ...(userPermissions?.meeting_access ? [{ id: "reports", label: "Meeting Reports", icon: FileText }] : []),
   ];
 
   return (
@@ -1339,6 +1342,18 @@ const ChannelPage = () => {
         {/* CHATS TAB */}
         {activeTab === "chats" && (
           <TeamChat channelId={channelId} channelName={channel.name} />
+        )}
+
+        {/* MEETING REPORTS TAB */}
+        {activeTab === "reports" && userPermissions?.meeting_access && (
+          <div className="h-full overflow-y-auto p-3 sm:p-6 bg-slate-50">
+            <MeetingReports
+              channelId={channelId}
+              channelName={channel.name}
+              orgId={user?.org_id}
+              showAll={false}
+            />
+          </div>
         )}
 
         {activeTab === "members" && (

@@ -2,6 +2,7 @@ import { Calendar, Video, Clock } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 import NoticeBoard from "./NoticeBoard";
+
 import { useAuth } from "../context/AuthContext";
 
 const JoinedOrgDash = () => {
@@ -124,7 +125,7 @@ const JoinedOrgDash = () => {
 
   return (
     <>
-      {/* Dashboard Grid - Side by side layout */}
+      {/* Dashboard Grid - Two column layout */}
       <main className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 h-full">
         {/* Meetings - Left side */}
         <section className="relative glass-dark rounded-2xl sm:rounded-3xl overflow-hidden group/meetings flex flex-col transition-all duration-500 hover:scale-[1.02]">
@@ -249,6 +250,8 @@ const JoinedOrgDash = () => {
             </div>
           </div>
         </section>
+
+
 
         {/* Notice Board - Right side */}
         <NoticeBoard orgId={user?.org_id} className="col-span-1" />

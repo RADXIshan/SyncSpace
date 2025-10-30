@@ -578,42 +578,6 @@ router.get("/test/file/:filename", async (req, res) => {
   }
 });
 
-// Debug endpoint to list uploaded files
-router.get("/debug/files", async (req, res) => {
-  try {
-    const path = await import("path");
-    const fs = await import("fs");
-    
-    const uploadsDir = path.join(process.cwd(), "uploads", "chat-files");
-    
-    if (!fs.existsSync(uploadsDir)) {
-      return res.json({ 
-        message: "Uploads directory does not exist",
-        path: uploadsDir,
-        files: []
-      });
-    }
-    
-    const files = fs.readdirSync(uploadsDir);
-    const fileDetails = files.map(file => {
-      const filePath = path.join(uploadsDir, file);
-      const stats = fs.statSync(filePath);
-      return {
-        name: file,
-        size: stats.size,
-        created: stats.birthtime,
-        modified: stats.mtime
-      };
-    });
-    
-    res.json({
-      uploadsDir,
-      totalFiles: files.length,
-      files: fileDetails
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+
 
 export default router;

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
+import { createReportFromStoredData } from "../utils/meetingReports";
 import MeetingSettings from "./MeetingSettings";
 import MeetingChat from "./MeetingChat";
 
@@ -69,6 +70,32 @@ const MeetingRoom = () => {
       { urls: "stun:stun3.l.google.com:19302" },
       { urls: "stun:stun4.l.google.com:19302" },
     ],
+  };
+
+  // Helper function to update stored participants
+  const updateStoredParticipants = () => {
+    const storedData = localStorage.getItem(`meeting_${roomId}`);
+    if (storedData) {
+      const meetingData = JSON.parse(storedData);
+      const allParticipants = [
+        {
+          id: user.user_id,
+          name: user.name,
+          email: user.email,
+          photo: user.photo,
+          joinedAt: meetingData.startedAt // Meeting creator joined at start
+        },
+        ...peersRef.current.map(peer => ({
+          id: peer.userId,
+          name: peer.userName,
+          email: peer.userEmail,
+          photo: null,
+          joinedAt: new Date().toISOString() // Current time for peers
+        }))
+      ];
+      meetingData.participants = allParticipants;
+      localStorage.setItem(`meeting_${roomId}`, JSON.stringify(meetingData));
+    }
   };
 
   // Initialize socket connection
@@ -354,6 +381,9 @@ const MeetingRoom = () => {
 
       console.log(`Added ${peersRef.current.length} peers for existing users`);
       setPeers([...peersRef.current]);
+      
+      // Update stored participants with existing users
+      updateStoredParticipants();
     });
 
     socket.on("user-joined", (payload) => {
@@ -443,6 +473,9 @@ const MeetingRoom = () => {
       const filteredPeers = peersRef.current.filter((p) => p.peerID !== id);
       peersRef.current = filteredPeers;
       setPeers(filteredPeers);
+      
+      // Update stored participants when someone leaves
+      updateStoredParticipants();
     });
 
     socket.on("user-video-toggle", (data) => {
@@ -1017,7 +1050,7 @@ const MeetingRoom = () => {
   };
 
   // Leave meeting
-  const leaveMeeting = () => {
+  const leaveMeeting = async () => {
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
     }
@@ -1029,6 +1062,18 @@ const MeetingRoom = () => {
     if (socket) {
       socket.emit("leave-room", roomId);
       socket.disconnect();
+    }
+
+    // Create meeting report when leaving
+    try {
+      // Update participants one final time before creating report
+      updateStoredParticipants();
+      
+      await createReportFromStoredData(roomId);
+      console.log('Meeting report created successfully');
+    } catch (error) {
+      console.error('Error creating meeting report:', error);
+      // Don't show error to user as this is a background operation
     }
 
     toast.success("Left meeting");

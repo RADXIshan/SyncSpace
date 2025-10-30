@@ -593,6 +593,23 @@ const MeetingPrep = () => {
         } else {
           // If it's an internal meeting room, navigate to it with settings
           const roomId = meetingInfo.meeting_link.split("/meeting/")[1];
+          
+          // Store meeting data for report creation later
+          const meetingData = {
+            title: meetingInfo.title,
+            channelId: meetingInfo.channel_id,
+            orgId: meetingInfo.org_id,
+            startedAt: new Date().toISOString(),
+            participants: [
+              {
+                id: user.user_id,
+                name: user.name,
+                email: user.email
+              }
+            ]
+          };
+          localStorage.setItem(`meeting_${roomId}`, JSON.stringify(meetingData));
+          
           const params = new URLSearchParams({
             email: email,
             video: isVideoEnabled.toString(),

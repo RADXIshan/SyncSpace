@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
-import { createReportFromStoredData } from "../utils/meetingReports";
+// Meeting reports are now handled server-side
 import MeetingSettings from "./MeetingSettings";
 import MeetingChat from "./MeetingChat";
 
@@ -75,14 +75,14 @@ const MeetingRoom = () => {
   // Helper function to update stored participants
   const updateStoredParticipants = () => {
     const storedData = localStorage.getItem(`meeting_${roomId}`);
-    if (storedData) {
+    if (storedData && currentUser) {
       const meetingData = JSON.parse(storedData);
       const allParticipants = [
         {
-          id: user.user_id,
-          name: user.name,
-          email: user.email,
-          photo: user.photo,
+          id: currentUser.id,
+          name: currentUser.name,
+          email: currentUser.email,
+          photo: null,
           joinedAt: meetingData.startedAt // Meeting creator joined at start
         },
         ...peersRef.current.map(peer => ({
@@ -141,7 +141,22 @@ const MeetingRoom = () => {
         setIsConnected(false);
       });
 
+      // Handle browser tab close/refresh to clean up data
+      const handleBeforeUnload = async (event) => {
+        try {
+          // Just clean up localStorage - report will be created server-side when last person leaves
+          localStorage.removeItem(`meeting_${roomId}`);
+          console.log('Cleaned up meeting data on page unload');
+        } catch (error) {
+          console.error('Error cleaning up meeting data on page unload:', error);
+        }
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+
       return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        
         if (localStream) {
           localStream.getTracks().forEach((track) => track.stop());
         }
@@ -353,6 +368,11 @@ const MeetingRoom = () => {
 
     socket.emit("join-room", roomId);
 
+    // Periodic check to update participants and ensure meeting data is preserved
+    const participantUpdateInterval = setInterval(() => {
+      updateStoredParticipants();
+    }, 60000); // Update every minute
+
     socket.on("existing-users", (users) => {
       console.log("Existing users:", users);
 
@@ -530,7 +550,77 @@ const MeetingRoom = () => {
       console.log("🍞 Meeting start toast displayed");
     });
 
+    socket.on("meeting_ended_notification", (data) => {
+      console.log("🔔 MeetingRoom received meeting_ended_notification:", data);
+      console.log("🔔 Socket ID:", socket.id, "Room ID:", roomId);
+      
+      if (data.reportGenerated) {
+        toast.success(`${data.message} - Report generated`, {
+          duration: 8000,
+          icon: "📊",
+          style: {
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            color: '#166534',
+          },
+        });
+      } else {
+        toast.success(data.message, {
+          duration: 6000,
+          icon: "👋",
+          style: {
+            background: '#fef3c7',
+            border: '1px solid #fcd34d',
+            color: '#92400e',
+          },
+        });
+      }
+      console.log("🍞 Meeting end toast displayed");
+    });
+
+    // Debug: Log socket connection status
+    console.log("🔌 MeetingRoom socket setup:", {
+      socketId: socket.id,
+      connected: socket.connected,
+      roomId: roomId
+    });
+    
+    // Add a test function to the window for this specific meeting room
+    if (typeof window !== 'undefined') {
+      window.testMeetingRoomNotification = (testData = {}) => {
+        const defaultData = {
+          meetingId: roomId,
+          channelName: 'test-channel',
+          message: 'Test meeting notification for this room',
+          reportGenerated: true
+        };
+        
+        const data = { ...defaultData, ...testData };
+        console.log('🧪 Testing MeetingRoom notification handler with:', data);
+        
+        // Manually call the handler
+        try {
+          // This should trigger the toast
+          if (data.reportGenerated) {
+            toast.success(`${data.message} - Report generated`, {
+              duration: 8000,
+              icon: "📊",
+              style: {
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                color: '#166534',
+              },
+            });
+          }
+          console.log('✅ Test notification displayed successfully');
+        } catch (error) {
+          console.error('❌ Error displaying test notification:', error);
+        }
+      };
+    }
+
     return () => {
+      clearInterval(participantUpdateInterval);
       socket.off("existing-users");
       socket.off("user-joined");
       socket.off("receiving-answer");
@@ -540,6 +630,7 @@ const MeetingRoom = () => {
       socket.off("user-started-screen-share");
       socket.off("user-stopped-screen-share");
       socket.off("meeting_started_notification");
+      socket.off("meeting_ended_notification");
     };
   }, [socket, localStream, roomId]);
 
@@ -1064,16 +1155,13 @@ const MeetingRoom = () => {
       socket.disconnect();
     }
 
-    // Create meeting report when leaving
+    // Clean up meeting data when leaving (report will be created server-side)
     try {
-      // Update participants one final time before creating report
-      updateStoredParticipants();
-      
-      await createReportFromStoredData(roomId);
-      console.log('Meeting report created successfully');
+      // Clean up stored data
+      localStorage.removeItem(`meeting_${roomId}`);
+      console.log('Cleaned up meeting data from localStorage');
     } catch (error) {
-      console.error('Error creating meeting report:', error);
-      // Don't show error to user as this is a background operation
+      console.error('Error cleaning up meeting data:', error);
     }
 
     toast.success("Left meeting");

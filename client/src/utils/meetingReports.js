@@ -106,8 +106,27 @@ export const createReportFromStoredData = async (roomId) => {
     }
 
     const meetingData = JSON.parse(storedData);
+    
+    // Validate required fields
+    if (!meetingData.channelId || !meetingData.orgId || !meetingData.startedAt) {
+      console.error('Missing required meeting data:', meetingData);
+      throw new Error('Invalid meeting data - missing required fields');
+    }
+    
+    // Check minimum duration (30 seconds)
+    const startTime = new Date(meetingData.startedAt);
+    const now = new Date();
+    const durationSeconds = Math.round((now - startTime) / 1000);
+    
+    if (durationSeconds < 30) {
+      console.log(`Meeting too short (${durationSeconds}s), skipping report creation`);
+      localStorage.removeItem(`meeting_${roomId}`);
+      return null;
+    }
+    
     const reportData = formatMeetingDataForReport(meetingData, roomId);
     
+    console.log('Creating meeting report with data:', reportData);
     const result = await createMeetingReport(reportData);
     
     // Clean up stored data after successful report creation
@@ -116,6 +135,13 @@ export const createReportFromStoredData = async (roomId) => {
     return result;
   } catch (error) {
     console.error("Error creating report from stored data:", error);
+    
+    // If it's a duplicate report error, clean up localStorage anyway
+    if (error.response?.status === 400 && error.response?.data?.message?.includes('already exists')) {
+      console.log('Report already exists, cleaning up localStorage');
+      localStorage.removeItem(`meeting_${roomId}`);
+    }
+    
     throw error;
   }
 };

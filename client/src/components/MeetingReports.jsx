@@ -447,7 +447,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
           <button
             onClick={exportReports}
             disabled={exportLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
             title="Export comprehensive reports with all details including participants, chat messages, and summaries"
           >
             {exportLoading ? (
@@ -518,7 +518,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
           {searchTerm && (
             <button
               onClick={() => setSearchTerm("")}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer"
             >
               Clear Search
             </button>
@@ -639,7 +639,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                 <div className="flex items-center gap-2 ml-4">
                   <button
                     onClick={() => fetchReportDetails(report.id)}
-                    className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                    className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
                     title="View details"
                   >
                     <Eye size={18} />
@@ -649,7 +649,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                     <button
                       onClick={() => showDeleteConfirmation(report)}
                       disabled={deleteLoading && reportToDelete?.id === report.id}
-                      className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       title="Delete report"
                     >
                       {deleteLoading && reportToDelete?.id === report.id ? (
@@ -670,7 +670,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
               <button
                 onClick={loadMore}
                 disabled={loading}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 {loading ? "Loading..." : "Load More"}
               </button>
@@ -704,7 +704,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                   <button
                     onClick={() => showDeleteConfirmation(selectedReport)}
                     disabled={deleteLoading}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     title="Delete report"
                   >
                     {deleteLoading ? (
@@ -716,7 +716,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                 )}
                 <button
                   onClick={() => setShowReportModal(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                   title="Close modal"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -808,7 +808,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                   {canModifyReport(selectedReport) && (
                     <button
                       onClick={() => setEditingSummary(!editingSummary)}
-                      className="flex items-center gap-2 px-3 py-1 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-3 py-1 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
                     >
                       <Edit size={16} />
                       <span>{editingSummary ? "Cancel" : "Edit"}</span>
@@ -827,7 +827,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                     <div className="flex gap-2">
                       <button
                         onClick={updateSummary}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer"
                       >
                         Save Summary
                       </button>
@@ -836,7 +836,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                           setEditingSummary(false);
                           setSummaryText(selectedReport.summary || "");
                         }}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>

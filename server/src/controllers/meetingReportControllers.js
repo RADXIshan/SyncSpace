@@ -59,16 +59,33 @@ export const createMeetingReport = async (req, res) => {
       summary 
     } = req.body;
 
+    console.log(`Creating meeting report for room ${room_id} by user ${userId}`);
+    console.log('Report data:', { room_id, meeting_title, channel_id, org_id, started_at, ended_at, duration_minutes });
+
     // Validate required fields
     if (!room_id || !meeting_title || !channel_id || !org_id || !started_at || !ended_at) {
+      console.error('Missing required fields:', { room_id, meeting_title, channel_id, org_id, started_at, ended_at });
       return res.status(400).json({ 
         message: "Missing required fields: room_id, meeting_title, channel_id, org_id, started_at, ended_at" 
+      });
+    }
+
+    // Validate duration (minimum 30 seconds)
+    const startTime = new Date(started_at);
+    const endTime = new Date(ended_at);
+    const actualDurationSeconds = Math.round((endTime - startTime) / 1000);
+    
+    if (actualDurationSeconds < 30) {
+      console.log(`Meeting too short (${actualDurationSeconds}s), rejecting report creation`);
+      return res.status(400).json({ 
+        message: "Meeting too short - minimum 30 seconds required for report creation" 
       });
     }
 
     // Check if user has meeting access
     const hasAccess = await checkMeetingAccess(userId, org_id);
     if (!hasAccess) {
+      console.error(`User ${userId} denied access to org ${org_id}`);
       return res.status(403).json({ message: "Access denied - meeting_access permission required" });
     }
 
@@ -78,6 +95,7 @@ export const createMeetingReport = async (req, res) => {
     `;
 
     if (existingReport) {
+      console.log(`Report already exists for room ${room_id}`);
       return res.status(400).json({ message: "Meeting report already exists for this room" });
     }
 
@@ -93,6 +111,8 @@ export const createMeetingReport = async (req, res) => {
       ORDER BY m.created_at ASC
     `;
 
+    console.log(`Found ${messages.length} messages for meeting ${room_id}`);
+
     // Create the meeting report
     const [report] = await sql`
       INSERT INTO meeting_reports (
@@ -107,6 +127,8 @@ export const createMeetingReport = async (req, res) => {
       )
       RETURNING *
     `;
+
+    console.log(`Successfully created meeting report ${report.report_id} for room ${room_id}`);
 
     res.status(201).json({
       message: "Meeting report created successfully",
@@ -128,10 +150,21 @@ export const createMeetingReport = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating meeting report:", error);
+    console.error("Error stack:", error.stack);
+    
     if (["No token provided", "Invalid token"].includes(error.message)) {
       return res.status(401).json({ message: error.message });
     }
-    res.status(500).json({ message: "Failed to create meeting report" });
+    
+    // Check for database constraint errors
+    if (error.code === '23505') { // PostgreSQL unique constraint violation
+      return res.status(400).json({ message: "Meeting report already exists for this room" });
+    }
+    
+    res.status(500).json({ 
+      message: "Failed to create meeting report",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 

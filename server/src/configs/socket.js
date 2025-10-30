@@ -164,7 +164,7 @@ export const setupSocketHandlers = (io) => {
     });
 
     // Handle disconnection
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       const userId = socket.userId;
       const user = onlineUsers.get(userId);
       
@@ -197,13 +197,37 @@ export const setupSocketHandlers = (io) => {
         // Update meeting participants on disconnect
         if (activeMeetings.has(socket.currentRoom)) {
           const meeting = activeMeetings.get(socket.currentRoom);
+          
+          console.log(`👋 User ${socket.userName} (${socket.userId}) disconnecting from meeting ${socket.currentRoom}`);
+          console.log(`📊 Before disconnect - Participants: ${meeting.participants.size}, Details: ${meeting.participantDetails ? meeting.participantDetails.size : 0}`);
+          
+          // Update participant left time in history
+          if (meeting.allParticipants && meeting.allParticipants.has(socket.userId)) {
+            const participant = meeting.allParticipants.get(socket.userId);
+            participant.leftAt = new Date();
+            meeting.allParticipants.set(socket.userId, participant);
+          }
+          
+          // Check if this will be the last participant BEFORE removing them
+          const willBeEmpty = meeting.participants.size === 1 && meeting.participants.has(socket.userId);
+          
+          if (willBeEmpty && !meeting.isEnding) {
+            console.log(`Meeting ${socket.currentRoom} will be empty after disconnect - last participant leaving`);
+            console.log(`👥 All participants who were in meeting:`, Array.from(meeting.allParticipants.values()).map(p => `${p.name} (${p.id})`));
+            meeting.isEnding = true; // Prevent duplicate calls
+            // Handle meeting end BEFORE removing the participant so we have the data
+            await handleMeetingEnd(socket.currentRoom, io);
+          }
+          
+          // Now remove the participant from active lists
           meeting.participants.delete(socket.userId);
           
-          // Check if meeting is now empty
-          if (meeting.participants.size === 0) {
-            console.log(`Meeting ${socket.currentRoom} is now empty after disconnect, starting deletion timer`);
-            startMeetingDeletionTimer(socket.currentRoom);
+          // Remove from participant details
+          if (meeting.participantDetails) {
+            meeting.participantDetails.delete(socket.userId);
           }
+          
+          console.log(`📊 After disconnect - Participants: ${meeting.participants.size}, Details: ${meeting.participantDetails ? meeting.participantDetails.size : 0}`);
         }
       }
     });
@@ -362,9 +386,24 @@ export const setupSocketHandlers = (io) => {
         // First user joining - this is the meeting starter
         activeMeetings.set(roomID, {
           startedBy: socket.userId,
+          startedByName: socket.userName,
           startedAt: new Date(),
           participants: new Set([socket.userId]),
-          roomId: roomID
+          participantDetails: new Map([[socket.userId, {
+            id: socket.userId,
+            name: socket.userName,
+            email: socket.userEmail,
+            joinedAt: new Date()
+          }]]),
+          allParticipants: new Map([[socket.userId, {
+            id: socket.userId,
+            name: socket.userName,
+            email: socket.userEmail,
+            joinedAt: new Date(),
+            leftAt: null
+          }]]),
+          roomId: roomID,
+          isEnding: false
         });
         
         // Send meeting start notifications to channel members
@@ -374,10 +413,41 @@ export const setupSocketHandlers = (io) => {
           console.error(`💥 Error sending meeting start notifications for room ${roomID}:`, error);
         }
       } else {
-        console.log(`👥 User joining existing meeting ${roomID}`);
+        console.log(`👥 User ${socket.userName} (${socket.userId}) joining existing meeting ${roomID}`);
         // Add participant to existing meeting
         const meeting = activeMeetings.get(roomID);
+        
+        // Log before adding
+        console.log(`📊 Before adding - Participants: ${meeting.participants.size}, Details: ${meeting.participantDetails ? meeting.participantDetails.size : 0}`);
+        
         meeting.participants.add(socket.userId);
+        
+        // Store participant details
+        if (!meeting.participantDetails) {
+          meeting.participantDetails = new Map();
+        }
+        meeting.participantDetails.set(socket.userId, {
+          id: socket.userId,
+          name: socket.userName,
+          email: socket.userEmail,
+          joinedAt: new Date()
+        });
+        
+        // Store in all participants history (never removed)
+        if (!meeting.allParticipants) {
+          meeting.allParticipants = new Map();
+        }
+        meeting.allParticipants.set(socket.userId, {
+          id: socket.userId,
+          name: socket.userName,
+          email: socket.userEmail,
+          joinedAt: new Date(),
+          leftAt: null
+        });
+        
+        // Log after adding
+        console.log(`📊 After adding - Participants: ${meeting.participants.size}, Details: ${meeting.participantDetails.size}`);
+        console.log(`👥 All participants now:`, Array.from(meeting.participantDetails.values()).map(p => `${p.name} (${p.id})`));
         
         // Clear deletion timer if it exists
         if (meetingDeletionTimers.has(roomID)) {
@@ -425,7 +495,7 @@ export const setupSocketHandlers = (io) => {
       });
     });
 
-    socket.on('leave-room', (roomID) => {
+    socket.on('leave-room', async (roomID) => {
       console.log(`User ${socket.id} leaving room ${roomID}`);
       socket.leave(roomID);
       socket.to(roomID).emit('user-left', socket.id);
@@ -433,13 +503,37 @@ export const setupSocketHandlers = (io) => {
       // Update meeting participants
       if (activeMeetings.has(roomID)) {
         const meeting = activeMeetings.get(roomID);
+        
+        console.log(`👋 User ${socket.userName} (${socket.userId}) leaving meeting ${roomID}`);
+        console.log(`📊 Before leave - Participants: ${meeting.participants.size}, Details: ${meeting.participantDetails ? meeting.participantDetails.size : 0}`);
+        
+        // Update participant left time in history
+        if (meeting.allParticipants && meeting.allParticipants.has(socket.userId)) {
+          const participant = meeting.allParticipants.get(socket.userId);
+          participant.leftAt = new Date();
+          meeting.allParticipants.set(socket.userId, participant);
+        }
+        
+        // Check if this will be the last participant BEFORE removing them
+        const willBeEmpty = meeting.participants.size === 1 && meeting.participants.has(socket.userId);
+        
+        if (willBeEmpty && !meeting.isEnding) {
+          console.log(`Meeting ${roomID} will be empty after leave - last participant leaving`);
+          console.log(`👥 All participants who were in meeting:`, Array.from(meeting.allParticipants.values()).map(p => `${p.name} (${p.id})`));
+          meeting.isEnding = true; // Prevent duplicate calls
+          // Handle meeting end BEFORE removing the participant so we have the data
+          await handleMeetingEnd(roomID, io);
+        }
+        
+        // Now remove the participant from active lists
         meeting.participants.delete(socket.userId);
         
-        // Check if meeting is now empty
-        if (meeting.participants.size === 0) {
-          console.log(`Meeting ${roomID} is now empty, starting deletion timer`);
-          startMeetingDeletionTimer(roomID);
+        // Remove from participant details
+        if (meeting.participantDetails) {
+          meeting.participantDetails.delete(socket.userId);
         }
+        
+        console.log(`📊 After leave - Participants: ${meeting.participants.size}, Details: ${meeting.participantDetails ? meeting.participantDetails.size : 0}`);
       }
     });
 
@@ -657,6 +751,325 @@ const startMeetingDeletionTimer = (roomID) => {
   }, 10 * 60 * 1000); // 10 minutes
   
   meetingDeletionTimers.set(roomID, timer);
+};
+
+const handleMeetingEnd = async (roomID, io) => {
+  try {
+    console.log(`🏁 Meeting ${roomID} ended - last participant left`);
+    
+    const sql = (await import('../database/db.js')).default;
+    
+    // Get meeting details from database
+    const [meeting] = await sql`
+      SELECT m.*, c.channel_name, c.org_id 
+      FROM org_meetings m
+      JOIN org_channels c ON m.channel_id = c.channel_id
+      WHERE m.meeting_link LIKE ${`%/meeting/${roomID}`}
+    `;
+    
+    console.log(`🔍 Database query result for meeting ${roomID}:`, meeting ? 'Found' : 'Not found');
+    if (meeting) {
+      console.log(`📋 Meeting details: ${meeting.meeting_title} in #${meeting.channel_name} (org: ${meeting.org_id})`);
+    }
+    
+    if (!meeting) {
+      console.log(`❌ Meeting ${roomID} not found in database - cannot create report`);
+      console.log(`🔍 This might be a custom room or the meeting was already deleted`);
+      return;
+    }
+    
+    // Check if meeting lasted at least 30 seconds
+    const meetingData = activeMeetings.get(roomID);
+    console.log(`📊 Meeting data from activeMeetings:`, meetingData ? 'Found' : 'Not found');
+    
+    if (meetingData) {
+      const startTime = meetingData.startedAt;
+      const endTime = new Date();
+      const durationSeconds = Math.round((endTime - startTime) / 1000);
+      
+      console.log(`📊 Meeting duration: ${durationSeconds} seconds (started: ${startTime.toISOString()}, ended: ${endTime.toISOString()})`);
+      console.log(`👥 Participants in meeting: ${meetingData.participants.size}`);
+      console.log(`👥 Participant details: ${meetingData.participantDetails ? meetingData.participantDetails.size : 0}`);
+      
+      // Log all participant details for debugging
+      if (meetingData.participantDetails) {
+        console.log(`👥 Participant details:`, Array.from(meetingData.participantDetails.entries()).map(([id, details]) => 
+          `${details.name || details.email} (${id})`));
+      }
+      
+      if (durationSeconds >= 30) {
+        console.log(`✅ Meeting duration sufficient (≥30s), creating report...`);
+        
+        // Check if report already exists
+        const sql = (await import('../database/db.js')).default;
+        const [existingReport] = await sql`
+          SELECT report_id FROM meeting_reports WHERE room_id = ${roomID}
+        `;
+        
+        if (existingReport) {
+          console.log(`📋 Meeting report already exists for room ${roomID} (ID: ${existingReport.report_id}), skipping creation`);
+          return;
+        }
+        
+        // Create a deep copy of meeting data to preserve it
+        const meetingDataCopy = {
+          ...meetingData,
+          participants: new Set(meetingData.participants),
+          participantDetails: meetingData.participantDetails ? 
+            new Map(meetingData.participantDetails) : new Map(),
+          allParticipants: meetingData.allParticipants ?
+            new Map(meetingData.allParticipants) : new Map()
+        };
+        
+        // Create meeting report
+        try {
+          const report = await createMeetingReportFromServer(roomID, meeting, meetingDataCopy, startTime, endTime);
+          if (report) {
+            console.log(`✅ Meeting report created successfully for ${roomID} (ID: ${report.report_id})`);
+            
+            // Send meeting ended notifications to channel members
+            console.log(`📢 Sending notifications for meeting end...`);
+            await sendMeetingEndNotifications(roomID, meeting, io);
+          } else {
+            console.log(`⚠️ Meeting report creation returned null (might already exist)`);
+          }
+          
+        } catch (error) {
+          console.error(`❌ Error creating meeting report for ${roomID}:`, error);
+          console.error(`❌ Error stack:`, error.stack);
+        }
+      } else {
+        console.log(`⏱️ Meeting too short (${durationSeconds}s < 30s), skipping report creation`);
+      }
+    } else {
+      console.log(`❌ No meeting data found in activeMeetings for ${roomID}`);
+    }
+    
+    // Start deletion timer
+    console.log(`⏰ Starting deletion timer for meeting ${roomID}`);
+    startMeetingDeletionTimer(roomID);
+    
+  } catch (error) {
+    console.error(`💥 Error handling meeting end for ${roomID}:`, error);
+    console.error(`💥 Error stack:`, error.stack);
+  }
+};
+
+const createMeetingReportFromServer = async (roomID, meeting, meetingData, startTime, endTime) => {
+  try {
+    const sql = (await import('../database/db.js')).default;
+    
+    console.log(`🔍 Creating report for room: "${roomID}"`);
+    console.log(`📊 Meeting data participants:`, {
+      participantsSet: Array.from(meetingData.participants),
+      participantDetailsSize: meetingData.participantDetails ? meetingData.participantDetails.size : 0,
+      participantDetailsKeys: meetingData.participantDetails ? Array.from(meetingData.participantDetails.keys()) : []
+    });
+    
+    // Get meeting messages - try multiple room ID formats
+    let messages = await sql`
+      SELECT 
+        m.*,
+        u.name as user_name,
+        u.user_photo
+      FROM meeting_messages m
+      JOIN users u ON m.user_id = u.user_id
+      WHERE m.room_id = ${roomID}
+      ORDER BY m.created_at ASC
+    `;
+    
+    console.log(`💬 Found ${messages.length} messages for room_id: "${roomID}"`);
+    
+    // If no messages found, try alternative room ID formats
+    if (messages.length === 0) {
+      console.log(`🔍 No messages found for "${roomID}", trying alternative formats...`);
+      
+      // Try with meeting/ prefix
+      const altRoomId1 = `meeting/${roomID}`;
+      const messages1 = await sql`
+        SELECT COUNT(*) as count FROM meeting_messages WHERE room_id = ${altRoomId1}
+      `;
+      console.log(`🔍 Messages with "meeting/${roomID}": ${messages1[0].count}`);
+      
+      // Try without any prefix if roomID has one
+      if (roomID.includes('/')) {
+        const altRoomId2 = roomID.split('/').pop();
+        const messages2 = await sql`
+          SELECT COUNT(*) as count FROM meeting_messages WHERE room_id = ${altRoomId2}
+        `;
+        console.log(`🔍 Messages with "${altRoomId2}": ${messages2[0].count}`);
+      }
+      
+      // Get all room_ids to see what's actually in the database
+      const allRoomIds = await sql`
+        SELECT DISTINCT room_id FROM meeting_messages 
+        ORDER BY created_at DESC 
+        LIMIT 10
+      `;
+      console.log(`🔍 Recent room_ids in database:`, allRoomIds.map(r => r.room_id));
+    }
+    
+    // Use complete participant history (allParticipants) which includes everyone who was ever in the meeting
+    let participants = [];
+    
+    if (meetingData.allParticipants && meetingData.allParticipants.size > 0) {
+      // Use complete participant history
+      participants = Array.from(meetingData.allParticipants.values()).map(p => ({
+        id: p.id,
+        name: p.name || 'Unknown User',
+        email: p.email || 'unknown@email.com',
+        photo: null,
+        joinedAt: p.joinedAt ? p.joinedAt.toISOString() : startTime.toISOString(),
+        leftAt: p.leftAt ? p.leftAt.toISOString() : endTime.toISOString()
+      }));
+      console.log(`👥 Using complete participant history for ${participants.length} participants:`, 
+        participants.map(p => `${p.name} (${p.id})`));
+    } else if (meetingData.participantDetails && meetingData.participantDetails.size > 0) {
+      // Fallback to current participant details
+      participants = Array.from(meetingData.participantDetails.values()).map(p => ({
+        id: p.id,
+        name: p.name || 'Unknown User',
+        email: p.email || 'unknown@email.com',
+        photo: null,
+        joinedAt: p.joinedAt ? p.joinedAt.toISOString() : startTime.toISOString()
+      }));
+      console.log(`👥 Using current participant details for ${participants.length} participants:`, 
+        participants.map(p => `${p.name} (${p.id})`));
+    } else {
+      console.log(`⚠️ No participant data found, falling back to database lookup`);
+      // Fallback to database lookup
+      const participantIds = Array.from(meetingData.participants);
+      console.log(`🔍 Participant IDs from Set:`, participantIds);
+      
+      if (participantIds.length > 0) {
+        participants = await sql`
+          SELECT user_id as id, name, email, user_photo as photo
+          FROM users 
+          WHERE user_id = ANY(${participantIds})
+        `;
+        
+        participants = participants.map(p => ({
+          ...p,
+          joinedAt: startTime.toISOString()
+        }));
+        console.log(`👥 Fetched ${participants.length} participants from database:`, 
+          participants.map(p => `${p.name} (${p.id})`));
+      }
+    }
+    
+    if (participants.length === 0) {
+      console.log(`⚠️ No participants found! This shouldn't happen.`);
+      console.log(`🔍 Meeting data debug:`, {
+        startedBy: meetingData.startedBy,
+        startedByName: meetingData.startedByName,
+        participantsSetSize: meetingData.participants.size,
+        participantDetailsSize: meetingData.participantDetails ? meetingData.participantDetails.size : 0,
+        allParticipantsSize: meetingData.allParticipants ? meetingData.allParticipants.size : 0
+      });
+    }
+    
+    const durationMinutes = Math.round((endTime - startTime) / (1000 * 60));
+    
+    // Create the meeting report
+    const [report] = await sql`
+      INSERT INTO meeting_reports (
+        room_id, meeting_title, channel_id, org_id, created_by,
+        started_at, ended_at, participants, duration_minutes,
+        message_count, summary, messages_data
+      )
+      VALUES (
+        ${roomID}, ${meeting.meeting_title || `Meeting ${roomID}`}, ${meeting.channel_id}, ${meeting.org_id}, ${meetingData.startedBy},
+        ${startTime.toISOString()}, ${endTime.toISOString()}, ${JSON.stringify(participants)}, ${Math.max(durationMinutes, 0)},
+        ${messages.length}, '', ${JSON.stringify(messages)}
+      )
+      RETURNING *
+    `;
+    
+    console.log(`📋 Created meeting report ${report.report_id} for room ${roomID}`);
+    return report;
+    
+  } catch (error) {
+    // Check if report already exists
+    if (error.code === '23505') {
+      console.log(`📋 Meeting report already exists for room ${roomID}`);
+      return null;
+    }
+    throw error;
+  }
+};
+
+const sendMeetingEndNotifications = async (roomID, meeting, io) => {
+  try {
+    console.log(`🔔 Sending meeting ended notifications for room ${roomID}`);
+    console.log(`📋 Meeting details:`, {
+      channel_id: meeting.channel_id,
+      channel_name: meeting.channel_name,
+      org_id: meeting.org_id,
+      meeting_title: meeting.meeting_title
+    });
+    
+    // Get all users with access to this channel
+    const channelUsers = await getOnlineUsersWithChannelAccess(meeting.org_id, meeting.channel_id);
+    console.log(`👥 Found ${channelUsers.length} users with channel access:`, channelUsers.map(u => `${u.name || u.email} (${u.id}) - Socket: ${u.socketId || 'offline'}`));
+    
+    if (channelUsers.length === 0) {
+      console.log(`⚠️ No users found with channel access for org ${meeting.org_id}, channel ${meeting.channel_id}`);
+      return;
+    }
+    
+    // Also broadcast to the organization room as a fallback
+    const notificationData = {
+      meetingId: roomID,
+      channelName: meeting.channel_name,
+      message: `Meeting in #${meeting.channel_name} has ended`,
+      reportGenerated: true
+    };
+    
+    console.log(`📢 Broadcasting to org room: org_${meeting.org_id}`);
+    io.to(`org_${meeting.org_id}`).emit('meeting_ended_notification', notificationData);
+    
+    // Create notification for each user with meeting access
+    for (const user of channelUsers) {
+      try {
+        console.log(`📝 Processing notification for user ${user.name || user.email} (${user.id})`);
+        
+        const { createNotification } = await import('../controllers/notificationControllers.js');
+        
+        const notificationResult = await createNotification(
+          user.id,
+          meeting.org_id,
+          'meeting_ended',
+          'Meeting Ended',
+          `Meeting in #${meeting.channel_name} has ended and a report has been generated`,
+          {
+            relatedId: meeting.channel_id,
+            relatedType: 'channel',
+            link: `/home/meeting-reports`
+          }
+        );
+        
+        console.log(`✅ Database notification created for user ${user.id}:`, notificationResult ? 'Success' : 'Failed');
+        
+        // Send real-time notification if user is online (individual socket)
+        if (user.socketId) {
+          console.log(`🚀 Emitting meeting_ended_notification to individual socket ${user.socketId}:`, notificationData);
+          io.to(user.socketId).emit('meeting_ended_notification', notificationData);
+          console.log(`📡 Sent meeting ended notification to ${user.name || user.email} (${user.socketId})`);
+        } else {
+          console.log(`⚠️ User ${user.name || user.email} is offline (no socketId)`);
+        }
+      } catch (error) {
+        console.error(`❌ Error sending notification to user ${user.id}:`, error);
+        console.error(`❌ Error stack:`, error.stack);
+      }
+    }
+    
+    console.log(`🎉 Completed sending meeting ended notifications to ${channelUsers.length} users`);
+    
+  } catch (error) {
+    console.error('💥 Error sending meeting ended notifications:', error);
+    console.error('💥 Error stack:', error.stack);
+  }
 };
 
 const sendMeetingStartNotifications = async (roomID, startedByUserId, startedByUserName, io) => {

@@ -89,7 +89,7 @@ const MeetingReportsPage = () => {
           </p>
           <button
             onClick={() => navigate("/home/dashboard")}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer"
           >
             Go to Dashboard
           </button>
@@ -105,7 +105,7 @@ const MeetingReportsPage = () => {
         <div className="mb-6">
           <button
             onClick={() => navigate(`/home/channels/${channelId}`)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors cursor-pointer"
           >
             <ArrowLeft size={20} />
             <span>Back to Channel</span>

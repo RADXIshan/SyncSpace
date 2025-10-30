@@ -161,7 +161,7 @@ const MeetingReportsOverview = () => {
                           {report.title}
                         </h3>
                       </div>
-                      <Eye size={14} className="text-gray-400 group-hover/card:text-purple-300 transition-colors duration-300 flex-shrink-0" />
+                      <Eye size={14} className="text-gray-400 group-hover/card:text-purple-300 transition-colors duration-300 flex-shrink-0 cursor-pointer" />
                     </div>
 
                     {/* Tags */}

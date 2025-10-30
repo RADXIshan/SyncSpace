@@ -325,6 +325,19 @@ export const NotificationProvider = ({ children }) => {
       console.log("✅ Meeting started notification added to context");
     };
 
+    // Listen for meeting ended notifications
+    const handleMeetingEnded = (data) => {
+      console.log("🔔 NotificationContext received meeting_ended_notification:", data);
+      addNotification({
+        type: "meeting",
+        title: "Meeting Ended",
+        message: data.reportGenerated ? `${data.message} - Report generated` : data.message,
+        priority: "medium",
+        actionUrl: data.reportGenerated ? "/home/meeting-reports" : "/home/dashboard",
+      });
+      console.log("✅ Meeting ended notification added to context");
+    };
+
     // Listen for organization updates
     const handleOrgUpdate = (data) => {
       addNotification({
@@ -370,6 +383,7 @@ export const NotificationProvider = ({ children }) => {
     socket.on("new_message", handleNewMessage);
     socket.on("meeting_updated", handleMeetingUpdate);
     socket.on("meeting_started_notification", handleMeetingStarted);
+    socket.on("meeting_ended_notification", handleMeetingEnded);
     socket.on("organization_updated", handleOrgUpdate);
 
     return () => {
@@ -385,6 +399,7 @@ export const NotificationProvider = ({ children }) => {
       socket.off("new_message", handleNewMessage);
       socket.off("meeting_updated", handleMeetingUpdate);
       socket.off("meeting_started_notification", handleMeetingStarted);
+      socket.off("meeting_ended_notification", handleMeetingEnded);
       socket.off("organization_updated", handleOrgUpdate);
     };
   }, [socket, user, addNotification]);

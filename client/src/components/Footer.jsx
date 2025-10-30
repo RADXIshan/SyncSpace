@@ -61,14 +61,17 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { icon: Twitter, href: "https://twitter.com/futuresync", label: "Twitter" },
-    { icon: Github, href: "https://github.com/futuresync", label: "GitHub" },
+    {
+      icon: Github,
+      href: "https://github.com/RADXIshan/SyncSpace",
+      label: "GitHub",
+    },
     {
       icon: Linkedin,
-      href: "https://linkedin.com/company/futuresync",
+      href: "https://www.linkedin.com/in/ishanroy-radx/",
       label: "LinkedIn",
     },
-    { icon: Mail, href: "mailto:future@syncspace.com", label: "Email" },
+    { icon: Mail, href: "mailto:ishanroy3118107@gmail.com", label: "Email" },
   ];
 
   const scrollToSection = (href) => {
@@ -124,7 +127,7 @@ const Footer = () => {
                   <Brain className="w-7 h-7 text-white" />
                 </div>
                 <span className="text-3xl font-bold gradient-text-purple">
-                  FutureSync
+                  SyncSpace
                 </span>
               </div>
               <p className="text-white/70 mb-8 max-w-sm text-lg">
@@ -136,15 +139,15 @@ const Footer = () => {
               <div className="space-y-4 mb-8">
                 <div className="flex items-center gap-3 text-white/60">
                   <MapPin className="w-5 h-5" />
-                  <span>Silicon Valley & Beyond</span>
+                  <span>Kolkata, India</span>
                 </div>
                 <div className="flex items-center gap-3 text-white/60">
                   <Phone className="w-5 h-5" />
-                  <span>+91 9120839281</span>
+                  <span>+91 9007195462</span>
                 </div>
                 <div className="flex items-center gap-3 text-white/60">
                   <Mail className="w-5 h-5" />
-                  <span>collab@syncspace.com</span>
+                  <span>ishanroy3118107@gmail.com</span>
                 </div>
               </div>
 
@@ -194,7 +197,7 @@ const Footer = () => {
         <div className="glass rounded-3xl p-6">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-white/60">
-              © {new Date().getFullYear()} FutureSync. Shaping tomorrow, today.
+              © {new Date().getFullYear()} SyncSpace. Built by Ishan Roy.
             </p>
             <div className="flex gap-8 text-sm">
               <button

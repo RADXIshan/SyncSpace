@@ -63,6 +63,12 @@ export const SocketProvider = ({ children }) => {
         // Connection event handlers
         newSocket.on('connect', () => {
           setIsConnected(true);
+          setSocket(newSocket);
+          
+          // Make socket available globally for debugging
+          if (typeof window !== 'undefined') {
+            window.socket = newSocket;
+          }
           
           // Send user online status
           newSocket.emit('user_online', {

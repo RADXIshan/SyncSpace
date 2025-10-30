@@ -39,6 +39,7 @@ SyncSpace is a comprehensive team collaboration platform that combines real-time
 ### Key Highlights
 
 - **Advanced Video Conferencing**: HD video meetings with screen sharing, meeting prep, and real-time chat
+- **Smart Meeting Reports**: Automatic report generation with participant tracking and chat archival
 - **Multi-Channel Communication**: Team chat, direct messages, and meeting-specific chat rooms
 - **Smart Notifications**: Comprehensive notification system with filtering and real-time updates
 - **Organization Management**: Multi-organization support with role-based access and member management
@@ -84,6 +85,12 @@ SyncSpace is a comprehensive team collaboration platform that combines real-time
 - **Real-time Participants**: Live participant list and management
 - **Meeting Chat**: Integrated chat during video calls
 - **Connection Status**: Real-time connection monitoring
+- **Smart Meeting Reports**: 
+  - Automatic report generation for meetings lasting 30+ seconds
+  - Participant tracking and duration recording
+  - Meeting chat message archival
+  - Export capabilities for meeting data
+  - Report management and overview dashboard
 
 ### 🏢 Organization Management
 
@@ -139,6 +146,30 @@ SyncSpace is a comprehensive team collaboration platform that combines real-time
 - **Bulk Actions**: Mark all as read, delete all notifications
 - **Priority Levels**: High, medium, low priority notifications
 - **Notification History**: Complete notification timeline and management
+
+### 📊 Meeting Reports & Analytics
+
+- **Automatic Report Generation**: 
+  - Reports created automatically for meetings lasting 30+ seconds
+  - Participant tracking with join/leave timestamps
+  - Meeting duration and engagement metrics
+- **Comprehensive Data Collection**:
+  - Chat message archival during meetings
+  - Participant list with roles and details
+  - Meeting metadata (title, channel, organization)
+- **Report Management**:
+  - View, edit, and delete meeting reports
+  - Export reports to CSV format
+  - Search and filter reports by date, channel, or participants
+- **Analytics Dashboard**:
+  - Meeting frequency and duration statistics
+  - Participant engagement metrics
+  - Channel-wise meeting analytics
+- **Smart Features**:
+  - Browser close protection (reports created even if tab is closed)
+  - Duplicate prevention system
+  - Debugging utilities for troubleshooting
+  - Minimum duration validation (30-second threshold)
 
 ## 🛠 Tech Stack
 
@@ -409,6 +440,15 @@ npm start
 - `DELETE /api/meetings/:id` - Delete meeting
 - `POST /api/meetings/:id/join` - Join meeting room
 
+### Meeting Reports
+
+- `GET /api/meeting-reports/channel/:channelId` - Get meeting reports for a channel
+- `GET /api/meeting-reports/organization/:orgId` - Get meeting reports for an organization
+- `GET /api/meeting-reports/:reportId` - Get detailed meeting report
+- `POST /api/meeting-reports` - Create meeting report (auto-generated)
+- `PUT /api/meeting-reports/:reportId` - Update meeting report summary
+- `DELETE /api/meeting-reports/:reportId` - Delete meeting report
+
 ### Meeting Chat
 
 - `GET /api/meeting-chat/:roomId` - Get meeting chat messages
@@ -476,6 +516,8 @@ syncspace/
 │   │   │   ├── MeetingRoom.jsx      # Video conferencing interface
 │   │   │   ├── MeetingChat.jsx      # Meeting-specific chat
 │   │   │   ├── MeetingSettings.jsx  # Meeting configuration panel
+│   │   │   ├── MeetingReports.jsx   # Meeting reports management
+│   │   │   ├── MeetingReportsOverview.jsx # Reports dashboard
 │   │   │   ├── Messages.jsx         # Message display component
 │   │   │   ├── MessageReactions.jsx # Message reaction system
 │   │   │   ├── NoticeBoard.jsx      # Organization announcements
@@ -505,6 +547,8 @@ syncspace/
 │   │   ├── utils/                   # Utility Functions
 │   │   │   ├── axiosConfig.js       # HTTP client configuration
 │   │   │   ├── gsapAnimations.js    # Animation utilities
+│   │   │   ├── meetingReports.js    # Meeting report utilities
+│   │   │   ├── meetingDebug.js      # Meeting debugging tools
 │   │   │   ├── roleColors.js        # User role styling
 │   │   │   ├── scrollUtils.js       # Scroll behavior utilities
 │   │   │   └── tokenUtils.js        # JWT token management
@@ -529,6 +573,7 @@ syncspace/
 │   │   │   ├── eventControllers.js  # Calendar events
 │   │   │   ├── meetingControllers.js # Meeting management
 │   │   │   ├── meetingChatControllers.js # Meeting chat
+│   │   │   ├── meetingReportControllers.js # Meeting reports
 │   │   │   ├── messageControllers.js # Channel messaging
 │   │   │   ├── noteController.js    # Notes management
 │   │   │   ├── noticeControllers.js # Notice board
@@ -544,6 +589,7 @@ syncspace/
 │   │   │   ├── eventRoutes.js       # Calendar event API
 │   │   │   ├── meetingRoutes.js     # Meeting API
 │   │   │   ├── meetingChatRoutes.js # Meeting chat API
+│   │   │   ├── meetingReportRoutes.js # Meeting reports API
 │   │   │   ├── messageRoutes.js     # Channel message API
 │   │   │   ├── noteRoutes.js        # Notes API
 │   │   │   ├── noticeRoutes.js      # Notice board API

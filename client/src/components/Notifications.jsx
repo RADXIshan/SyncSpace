@@ -14,8 +14,6 @@ import {
 } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 
-
-
 const Notifications = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState("all"); // all, unread, mentions, system
@@ -444,8 +442,6 @@ const Notifications = () => {
           </div>
         </div>
       </div>
-
-
     </div>
   );
 };

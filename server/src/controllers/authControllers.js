@@ -2,10 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sql from "../database/db.js";
 import { v2 as cloudinary } from "cloudinary";
-import nodemailer from "nodemailer";
+import emailService from "../services/emailService.js";
 import dotenv from "dotenv";
-import generateOtpEmail from "../templates/otpEmail.js";
-import generateForgotPasswordEmail from "../templates/forgotPasswordEmail.js";
 
 dotenv.config();
 
@@ -82,69 +80,10 @@ export const signup = async (req, res) => {
       path: "/",
     });
 
-    // Validate environment variables
-    if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
-      console.error("Missing email configuration for signup:", {
-        hasEmail: !!process.env.EMAIL,
-        hasAppPassword: !!process.env.APP_PASSWORD,
-      });
-      return res.status(500).json({
-        message: "Email service not configured properly",
-      });
-    }
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.APP_PASSWORD,
-      },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 5000,    // 5 seconds
-      socketTimeout: 10000,     // 10 seconds
-    });
-
-    // Verify transporter configuration with timeout
-    try {
-      await Promise.race([
-        transporter.verify(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email verification timeout')), 10000)
-        )
-      ]);
-      console.log("Email transporter verified successfully for signup");
-    } catch (verifyError) {
-      console.error(
-        "Email transporter verification failed for signup:",
-        verifyError
-      );
-      return res.status(500).json({
-        message: "Email service configuration error",
-      });
-    }
-
-    const mailOptions = {
-      from: {
-        name: "SyncSpace",
-        address: process.env.EMAIL,
-      },
-      to: email,
-      subject: "Verify Your Email for SyncSpace",
-      html: generateOtpEmail(name, otpString),
-    };
-
     try {
       console.log("Sending signup verification email to:", email);
-      const result = await Promise.race([
-        transporter.sendMail(mailOptions),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email sending timeout')), 25000)
-        )
-      ]);
-      console.log("Signup email sent successfully:", result.messageId);
+      await emailService.sendVerificationEmail(email, name, otpString);
+      console.log("Signup email sent successfully");
 
       res.status(201).json({
         success: true,
@@ -313,71 +252,10 @@ export const forgotPassword = async (req, res) => {
 
     const resetLink = process.env.CLIENT_URL + `/reset-password/${email}`;
 
-    // Validate environment variables
-    if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
-      console.error("Missing email configuration for forgot password:", {
-        hasEmail: !!process.env.EMAIL,
-        hasAppPassword: !!process.env.APP_PASSWORD,
-      });
-      return res.status(500).json({
-        message: "Email service not configured properly",
-      });
-    }
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.APP_PASSWORD,
-      },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 5000,    // 5 seconds
-      socketTimeout: 10000,     // 10 seconds
-    });
-
-    // Verify transporter configuration with timeout
-    try {
-      await Promise.race([
-        transporter.verify(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email verification timeout')), 10000)
-        )
-      ]);
-      console.log(
-        "Email transporter verified successfully for forgot password"
-      );
-    } catch (verifyError) {
-      console.error(
-        "Email transporter verification failed for forgot password:",
-        verifyError
-      );
-      return res.status(500).json({
-        message: "Email service configuration error",
-      });
-    }
-
-    const mailOptions = {
-      from: {
-        name: "SyncSpace",
-        address: process.env.EMAIL,
-      },
-      to: email,
-      subject: "Reset Your SyncSpace Password",
-      html: generateForgotPasswordEmail(user.name, resetLink),
-    };
-
     try {
       console.log("Sending password reset email to:", email);
-      const result = await Promise.race([
-        transporter.sendMail(mailOptions),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email sending timeout')), 25000)
-        )
-      ]);
-      console.log("Password reset email sent successfully:", result.messageId);
+      await emailService.sendPasswordResetEmail(email, user.name, resetLink);
+      console.log("Password reset email sent successfully");
       res
         .status(200)
         .json({
@@ -459,69 +337,10 @@ export const resendOtp = async (req, res) => {
       ),
     ]);
 
-    // Validate environment variables
-    if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
-      console.error("Missing email configuration for resend OTP:", {
-        hasEmail: !!process.env.EMAIL,
-        hasAppPassword: !!process.env.APP_PASSWORD,
-      });
-      return res.status(500).json({
-        message: "Email service not configured properly",
-      });
-    }
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.APP_PASSWORD,
-      },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 5000,    // 5 seconds
-      socketTimeout: 10000,     // 10 seconds
-    });
-
-    // Verify transporter configuration with timeout
-    try {
-      await Promise.race([
-        transporter.verify(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email verification timeout')), 10000)
-        )
-      ]);
-      console.log("Email transporter verified successfully for resend OTP");
-    } catch (verifyError) {
-      console.error(
-        "Email transporter verification failed for resend OTP:",
-        verifyError
-      );
-      return res.status(500).json({
-        message: "Email service configuration error",
-      });
-    }
-
-    const mailOptions = {
-      from: {
-        name: "SyncSpace",
-        address: process.env.EMAIL,
-      },
-      to: email,
-      subject: "Your New Verification Code for SyncSpace",
-      html: generateOtpEmail(user.name, otp),
-    };
-
     try {
       console.log("Sending resend OTP email to:", email);
-      const result = await Promise.race([
-        transporter.sendMail(mailOptions),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Email sending timeout')), 25000)
-        )
-      ]);
-      console.log("Resend OTP email sent successfully:", result.messageId);
+      await emailService.sendOtpResendEmail(email, user.name, otp);
+      console.log("Resend OTP email sent successfully");
       res.status(200).json({ success: true, message: "OTP sent successfully" });
     } catch (emailError) {
       console.error("Failed to send resend OTP email:", emailError);

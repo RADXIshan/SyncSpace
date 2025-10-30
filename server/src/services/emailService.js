@@ -5,35 +5,58 @@ import generateForgotPasswordEmail from "../templates/forgotPasswordEmail.js";
 class EmailService {
   // Create transporter with Gmail SMTP
   createTransporter() {
-    return nodemailer.createTransporter({
+    const config = {
       service: "gmail",
       host: "smtp.gmail.com",
       port: 587,
       secure: false,
       auth: {
         user: process.env.EMAIL,
-        pass: process.env.MAIL_PASSWORD || process.env.APP_PASSWORD,
+        pass: process.env.APP_PASSWORD,
       },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 5000,    // 5 seconds
-      socketTimeout: 10000,     // 10 seconds
-    });
+      tls: {
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
+      },
+      connectionTimeout: 60000, // 60 seconds
+      greetingTimeout: 30000,   // 30 seconds
+      socketTimeout: 60000,     // 60 seconds
+      debug: process.env.NODE_ENV === 'development',
+      logger: process.env.NODE_ENV === 'development'
+    };
+
+    // Additional production settings
+    if (process.env.NODE_ENV === 'production') {
+      config.pool = true;
+      config.maxConnections = 5;
+      config.maxMessages = 100;
+      config.rateLimit = 14; // messages per second
+    }
+
+    return nodemailer.createTransport(config);
   }
 
   // Send email with retry logic
   async sendEmail(message, maxRetries = 3) {
+    // Validate environment variables
+    if (!process.env.EMAIL || !process.env.APP_PASSWORD) {
+      throw new Error("Email service not configured properly - missing EMAIL or APP_PASSWORD");
+    }
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      let transporter;
       try {
-        const transporter = this.createTransporter();
+        transporter = this.createTransporter();
+        
+        // Verify connection before sending
+        await transporter.verify();
+        
         const info = await Promise.race([
           transporter.sendMail(message),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Email sending timeout')), 25000)
+            setTimeout(() => reject(new Error('Email sending timeout')), 30000)
           )
         ]);
-        
-        // Close the transporter
-        transporter.close();
         
         console.log(`✅ Email sent successfully via Gmail SMTP (attempt ${attempt})`);
         console.log("Message ID: %s", info.messageId);
@@ -41,6 +64,16 @@ class EmailService {
         return info;
       } catch (error) {
         console.log(`❌ Gmail SMTP attempt ${attempt} failed: ${error.message}`);
+        
+        // Handle specific Gmail errors
+        if (error.code === 'EAUTH' || error.responseCode === 535) {
+          console.error("❌ Gmail authentication failed - check APP_PASSWORD");
+          throw new Error("Gmail authentication failed. Please check your app password.");
+        }
+        
+        if (error.code === 'ECONNECTION' || error.code === 'ETIMEDOUT') {
+          console.error("❌ Gmail connection failed");
+        }
         
         if (attempt === maxRetries) {
           console.log("❌ All email attempts failed");
@@ -51,6 +84,11 @@ class EmailService {
         const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
         console.log(`⏳ Retrying in ${delay/1000} seconds...`);
         await new Promise(resolve => setTimeout(resolve, delay));
+      } finally {
+        // Always close the transporter
+        if (transporter) {
+          transporter.close();
+        }
       }
     }
   }

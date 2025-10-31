@@ -36,6 +36,19 @@
 
 SyncSpace is a comprehensive team collaboration platform that combines real-time messaging, video conferencing, project management, and organizational tools in one seamless application. Built with cutting-edge web technologies, it provides teams with everything they need to stay connected and productive.
 
+## 🆕 Recent Updates
+
+### Latest Features & Improvements
+
+- **Enhanced Meeting Reports System**: Server-side report generation with improved reliability and performance
+- **Advanced Analytics Dashboard**: Comprehensive meeting analytics with participant engagement metrics
+- **Improved Video Conferencing**: Better connection handling and meeting preparation workflow
+- **Role-Based Permissions**: Granular access control for meeting reports and organization management
+- **Pagination Support**: Efficient handling of large datasets in meeting reports and notifications
+- **Debug & Development Tools**: Built-in debugging utilities for troubleshooting and system monitoring
+- **Export Functionality**: CSV export capabilities for meeting reports and analytics data
+- **Enhanced UI/UX**: Improved responsive design and accessibility features
+
 ### Key Highlights
 
 - **Advanced Video Conferencing**: HD video meetings with screen sharing, meeting prep, and real-time chat
@@ -47,6 +60,8 @@ SyncSpace is a comprehensive team collaboration platform that combines real-time
 - **Real-time Features**: Live typing indicators, online status, and instant message reactions
 - **Modern Architecture**: Built with React 19, Vite 7, and latest web standards
 - **Secure & Scalable**: JWT authentication, email verification, and cloud-ready infrastructure
+- **Performance Optimized**: Server-side rendering, efficient pagination, and optimized database queries
+- **Cloud-Native**: Serverless deployment with automatic scaling and global CDN
 
 ## ✨ Features
 
@@ -153,23 +168,28 @@ SyncSpace is a comprehensive team collaboration platform that combines real-time
   - Reports created automatically for meetings lasting 30+ seconds
   - Participant tracking with join/leave timestamps
   - Meeting duration and engagement metrics
+  - Server-side report creation for reliability
 - **Comprehensive Data Collection**:
   - Chat message archival during meetings
   - Participant list with roles and details
   - Meeting metadata (title, channel, organization)
+  - Real-time participant activity tracking
 - **Report Management**:
   - View, edit, and delete meeting reports
   - Export reports to CSV format
   - Search and filter reports by date, channel, or participants
+  - Role-based permissions for report access
 - **Analytics Dashboard**:
   - Meeting frequency and duration statistics
   - Participant engagement metrics
   - Channel-wise meeting analytics
+  - Organization-wide meeting insights
 - **Smart Features**:
   - Browser close protection (reports created even if tab is closed)
   - Duplicate prevention system
   - Debugging utilities for troubleshooting
   - Minimum duration validation (30-second threshold)
+  - Pagination for large report datasets
 
 ## 🛠 Tech Stack
 
@@ -194,14 +214,15 @@ SyncSpace is a comprehensive team collaboration platform that combines real-time
 - **Express.js 4.19.2** - Fast, unopinionated web framework
 - **Socket.IO 4.8.1** - Real-time bidirectional event-based communication
 - **PostgreSQL with Neon** - Serverless PostgreSQL database
-- **@neondatabase/serverless 1.0.1** - Neon database driver
+- **@neondatabase/serverless 1.0.1** - Neon database driver optimized for serverless
 - **JWT (jsonwebtoken 9.0.2)** - Secure authentication tokens
 - **Bcrypt 6.0.0** - Password hashing and security
 - **Nodemailer 7.0.6** - Email sending functionality
-- **Cloudinary 2.8.0** - Cloud-based media management
+- **Cloudinary 2.8.0** - Cloud-based media management and optimization
 - **Multer 2.0.2** - Multipart/form-data file upload handling
 - **Cookie Parser 1.4.7** - Cookie parsing middleware
 - **CORS 2.8.5** - Cross-origin resource sharing
+- **Axios 1.12.2** - HTTP client for server-side requests
 
 ### Development & Deployment
 
@@ -389,6 +410,42 @@ npm start
 - **Notice Board**: Create important announcements for your organization
 - **Notes System**: Collaborate on team notes and documentation
 - **Smart Notifications**: Stay updated with categorized and filterable notifications
+- **Meeting Reports**: Automatic generation and management of meeting analytics and reports
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Meeting Reports Not Generating
+- Ensure meetings last at least 30 seconds for automatic report creation
+- Check browser console for any JavaScript errors
+- Verify WebSocket connection is stable
+- Use debug endpoints (`/api/debug/reports`) to troubleshoot
+
+#### Video/Audio Issues
+- Grant camera and microphone permissions in your browser
+- Test devices on the meeting preparation page
+- Check if other applications are using your camera/microphone
+- Ensure you're using a supported browser (Chrome, Firefox, Safari, Edge)
+
+#### Connection Problems
+- Verify your internet connection is stable
+- Check if firewall or corporate network is blocking WebSocket connections
+- Try refreshing the page or clearing browser cache
+- Contact your network administrator if issues persist
+
+#### Email Verification Issues
+- Check spam/junk folder for verification emails
+- Ensure email address is entered correctly
+- Try requesting a new verification code
+- Contact support if emails are not being received
+
+### Debug Tools
+
+The application includes built-in debugging tools accessible via:
+- `/api/debug/reports` - Meeting reports system status
+- Browser developer console for client-side debugging
+- Network tab to monitor API requests and WebSocket connections
 
 ## 📚 API Documentation
 
@@ -442,12 +499,19 @@ npm start
 
 ### Meeting Reports
 
-- `GET /api/meeting-reports/channel/:channelId` - Get meeting reports for a channel
+- `GET /api/meeting-reports/channel/:channelId` - Get meeting reports for a channel with pagination
 - `GET /api/meeting-reports/organization/:orgId` - Get meeting reports for an organization
-- `GET /api/meeting-reports/:reportId` - Get detailed meeting report
-- `POST /api/meeting-reports` - Create meeting report (auto-generated)
+- `GET /api/meeting-reports/:reportId` - Get detailed meeting report with participants and chat
+- `POST /api/meeting-reports` - Create meeting report (auto-generated server-side)
 - `PUT /api/meeting-reports/:reportId` - Update meeting report summary
-- `DELETE /api/meeting-reports/:reportId` - Delete meeting report
+- `DELETE /api/meeting-reports/:reportId` - Delete meeting report (role-based permissions)
+- `GET /api/meeting-reports/export/:reportId` - Export meeting report as CSV
+
+### Debug & Development
+
+- `GET /api/debug/reports` - Debug meeting reports system
+- `POST /api/debug/cleanup` - Clean up duplicate or invalid reports
+- `GET /api/debug/meeting-reports/:channelId` - Debug channel-specific meeting reports
 
 ### Meeting Chat
 
@@ -516,8 +580,8 @@ syncspace/
 │   │   │   ├── MeetingRoom.jsx      # Video conferencing interface
 │   │   │   ├── MeetingChat.jsx      # Meeting-specific chat
 │   │   │   ├── MeetingSettings.jsx  # Meeting configuration panel
-│   │   │   ├── MeetingReports.jsx   # Meeting reports management
-│   │   │   ├── MeetingReportsOverview.jsx # Reports dashboard
+│   │   │   ├── MeetingReports.jsx   # Meeting reports management with pagination
+│   │   │   ├── MeetingReportsOverview.jsx # Reports dashboard and analytics
 │   │   │   ├── Messages.jsx         # Message display component
 │   │   │   ├── MessageReactions.jsx # Message reaction system
 │   │   │   ├── NoticeBoard.jsx      # Organization announcements
@@ -547,8 +611,8 @@ syncspace/
 │   │   ├── utils/                   # Utility Functions
 │   │   │   ├── axiosConfig.js       # HTTP client configuration
 │   │   │   ├── gsapAnimations.js    # Animation utilities
-│   │   │   ├── meetingReports.js    # Meeting report utilities
-│   │   │   ├── meetingDebug.js      # Meeting debugging tools
+│   │   │   ├── meetingReports.js    # Meeting report utilities and analytics
+│   │   │   ├── meetingDebug.js      # Meeting debugging and troubleshooting tools
 │   │   │   ├── roleColors.js        # User role styling
 │   │   │   ├── scrollUtils.js       # Scroll behavior utilities
 │   │   │   └── tokenUtils.js        # JWT token management
@@ -573,7 +637,7 @@ syncspace/
 │   │   │   ├── eventControllers.js  # Calendar events
 │   │   │   ├── meetingControllers.js # Meeting management
 │   │   │   ├── meetingChatControllers.js # Meeting chat
-│   │   │   ├── meetingReportControllers.js # Meeting reports
+│   │   │   ├── meetingReportControllers.js # Meeting reports with analytics
 │   │   │   ├── messageControllers.js # Channel messaging
 │   │   │   ├── noteController.js    # Notes management
 │   │   │   ├── noticeControllers.js # Notice board
@@ -590,6 +654,7 @@ syncspace/
 │   │   │   ├── meetingRoutes.js     # Meeting API
 │   │   │   ├── meetingChatRoutes.js # Meeting chat API
 │   │   │   ├── meetingReportRoutes.js # Meeting reports API
+│   │   │   ├── debugRoutes.js       # Debug and development endpoints
 │   │   │   ├── messageRoutes.js     # Channel message API
 │   │   │   ├── noteRoutes.js        # Notes API
 │   │   │   ├── noticeRoutes.js      # Notice board API
@@ -649,11 +714,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **React Team** for the amazing framework
-- **Socket.IO** for real-time communication
-- **Tailwind CSS** for the utility-first CSS framework
-- **Neon** for serverless PostgreSQL
-- **Cloudinary** for media management
-- **Vercel** for seamless deployment
+- **React Team** for the amazing framework and React 19 improvements
+- **Socket.IO** for reliable real-time communication
+- **Tailwind CSS** for the utility-first CSS framework and v4 features
+- **Vite Team** for the lightning-fast build tool
+- **Neon** for serverless PostgreSQL with excellent performance
+- **Cloudinary** for comprehensive media management and optimization
+- **Vercel** for seamless deployment and serverless functions
+- **GSAP** for professional-grade animations
+- **FullCalendar** for the robust calendar component
+- **Open Source Community** for the incredible ecosystem of tools and libraries
 
 ---

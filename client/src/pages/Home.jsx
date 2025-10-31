@@ -28,7 +28,7 @@ const Home = () => {
     setOrgSettingsData({ organization, userRole, userPermissions });
     setShowOrgSettings(true);
   };
-  const [orgUpdateToggle, setOrgUpdateToggle] = useState(false);
+  const [, setOrgUpdateToggle] = useState(false);
 
   const handleInvite = (organization) => {
     setInviteOrganization(organization);

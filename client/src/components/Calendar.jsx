@@ -18,10 +18,8 @@ const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState(null); // State to store selected date for new event
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
   // Fetch events function
-  const fetchEvents = async (showToast = true) => {
+  const fetchEvents = useCallback(async (showToast = true) => {
     if (!user?.user_id) return;
     
     setLoading(true);
@@ -97,29 +95,17 @@ const Calendar = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.user_id, user?.org_id]);
 
   // Memoized version for use in effects
-  const getEvents = useCallback(() => fetchEvents(true), [user?.user_id]);
-  const refreshEvents = useCallback(() => fetchEvents(false), [user?.user_id]);
-
-  // Check if screen is mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const refreshEvents = useCallback(() => fetchEvents(false), [fetchEvents]);
 
   // Fetch events on initial load / user change
   useEffect(() => {
     if (user?.user_id) {
       fetchEvents(true);
     }
-  }, [user?.user_id]);
+  }, [user?.user_id, fetchEvents]);
 
   if (loading) {
     return (
@@ -151,7 +137,7 @@ const Calendar = () => {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       }
     )
-      .then((_) => {
+      .then(() => {
         toast.success("Event added successfully", { id: toastId });
         setShowEventInputForm(false); 
         refreshEvents();

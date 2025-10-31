@@ -1,15 +1,12 @@
 import {
   ArrowRight,
   Mail,
-  Twitter,
   Github,
   Linkedin,
-  Sparkles,
   MapPin,
   Phone,
   Rocket,
   Brain,
-  Infinity,
 } from "lucide-react";
 
 const Footer = () => {

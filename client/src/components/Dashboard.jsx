@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Bell, Users, Plus, MessageCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -17,7 +17,7 @@ const Dashboard = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchOrg = async () => {
+  const fetchOrg = useCallback(async () => {
     if (!user?.org_id) {
       setOrganization(null);
       setLoading(false);
@@ -47,14 +47,14 @@ const Dashboard = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.org_id]);
   useEffect(() => {
     const init = async () => {
       await checkAuth(); // ensures user data is fresh and includes org_id
       await fetchOrg();
     };
     init();
-  }, []);
+  }, [checkAuth, fetchOrg]);
 
   if (loading) {
     return (

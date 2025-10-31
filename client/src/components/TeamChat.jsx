@@ -70,7 +70,7 @@ const TeamChat = ({ channelId, channelName }) => {
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const [channelMembers, setChannelMembers] = useState([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
-  const [activeToasts, setActiveToasts] = useState(new Set());
+
   const [dragOver, setDragOver] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -552,12 +552,13 @@ const TeamChat = ({ channelId, channelName }) => {
   // Handle file upload
   const handleFileUpload = async (files) => {
     const uploadPromises = files.map(async (file) => {
-      try {
-        // Ensure file has a name
-        const fileName = file.name || "Unknown file";
+      // Ensure file has a name
+      const fileName = file.name || "Unknown file";
 
-        // Show upload progress toast
-        const uploadToast = safeToast.loading(`Uploading ${fileName}...`);
+      // Show upload progress toast
+      const uploadToast = safeToast.loading(`Uploading ${fileName}...`);
+
+      try {
 
         const formData = new FormData();
         formData.append("file", file);

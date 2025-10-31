@@ -42,7 +42,7 @@ export const generateRoleHash = (role) => {
 };
 
 // Function to get unique color assignment for roles
-export const getRoleStyle = (role, allRoles = []) => {
+export const getRoleStyle = (role) => {
   if (!role) return { background: 'bg-gray-500/20', border: 'border-gray-400', text: 'text-gray-300' };
   
   const normalizedRole = role.toLowerCase();

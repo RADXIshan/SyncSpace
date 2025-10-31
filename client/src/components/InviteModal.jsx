@@ -19,7 +19,7 @@ const InviteModal = ({ organization, onClose }) => {
       setCopied(true);
       toast.success(`Invite code ${organization.code} copied to clipboard!`);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       // Fallback for browsers that don't support clipboard API
       const textArea = document.createElement('textarea');
       textArea.value = organization.code;
@@ -57,7 +57,7 @@ const InviteModal = ({ organization, onClose }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
 
-      const response = await axios.post(
+      await axios.post(
         `${import.meta.env.VITE_BASE_URL}/api/orgs/${organization.id}/invite`,
         {
           emails: [email.trim()],

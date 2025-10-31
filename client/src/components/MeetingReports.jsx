@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import {
@@ -48,7 +48,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
     const isOrgOwner = organizationData?.createdBy === user.user_id;
     
     // Debug logging (can be removed in production)
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log('Permission check:', {
         userId: user.user_id,
         reportCreator: report.createdBy.id,
@@ -63,7 +63,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
   };
 
   // Fetch organization data
-  const fetchOrganizationData = async () => {
+  const fetchOrganizationData = useCallback(async () => {
     if (!orgId) return;
     
     try {
@@ -75,10 +75,10 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
     } catch (error) {
       console.error("Error fetching organization data:", error);
     }
-  };
+  }, [orgId]);
 
   // Fetch meeting reports
-  const fetchReports = async (offset = 0) => {
+  const fetchReports = useCallback(async (offset = 0) => {
     try {
       setLoading(true);
       const baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
@@ -126,7 +126,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showAll, orgId, channelId, pagination.limit]);
 
   // Fetch single report details
   const fetchReportDetails = async (reportId) => {

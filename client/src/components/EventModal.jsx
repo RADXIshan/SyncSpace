@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Calendar } from "lucide-react";
 import { toast } from "react-hot-toast";
 import DatePicker from "react-datepicker";
@@ -24,7 +24,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
   });
 
   // Check if any field differs from original
-  const checkForUnsavedChanges = () => {
+  const checkForUnsavedChanges = useCallback(() => {
     if (!isEditing) return false;
     const original = originalValues.current;
     return (
@@ -32,7 +32,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
       dateTime.getTime() !== original.dateTime.getTime() ||
       description !== original.description
     );
-  };
+  }, [isEditing, title, dateTime, description]);
 
   // Update when a new event prop is passed
   useEffect(() => {
@@ -55,7 +55,7 @@ const EventModal = ({ event, onClose, onUpdate, onDelete }) => {
     } else {
       setHasUnsavedChanges(false);
     }
-  }, [title, dateTime, description, isEditing]);
+  }, [title, dateTime, description, isEditing, checkForUnsavedChanges]);
 
   // Close with unsaved check
   const handleClose = () => {

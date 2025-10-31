@@ -81,7 +81,7 @@ export const cleanupOldMeetingData = (maxAgeHours = 24) => {
           cleanedCount++;
           console.log(`🧹 Cleaned up old meeting data: ${key}`);
         }
-      } catch (error) {
+      } catch {
         // Remove corrupted data
         localStorage.removeItem(key);
         cleanedCount++;
@@ -195,7 +195,7 @@ if (typeof window !== 'undefined') {
   window.checkOnlineUsers = checkOnlineUsers;
   window.checkMeetingMessages = checkMeetingMessages;
   window.testMeetingEndNotification = testMeetingEndNotification;
-  window.simulateMeetingEndNotification = window.simulateMeetingEndNotification;
+
   
   // Add a simple function to simulate receiving a meeting end notification
   window.simulateMeetingEndNotification = (data = {}) => {
@@ -217,7 +217,7 @@ if (typeof window !== 'undefined') {
       
       // Manually trigger the event handler as if it was received from server
       // This simulates what happens when the server sends the notification
-      const event = new CustomEvent('meeting_ended_notification', { detail: testData });
+
       
       // Try to find and call the handler directly
       try {

@@ -5,7 +5,7 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { toast } from "react-hot-toast";
+
 import { useSocket } from "./SocketContext";
 import { useAuth } from "./AuthContext";
 import { useToast } from "./ToastContext";

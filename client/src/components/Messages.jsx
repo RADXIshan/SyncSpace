@@ -570,7 +570,7 @@ const Messages = () => {
   useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
-      const wasMobile = isMobile;
+
       setIsMobile(mobile);
       
       // On mobile, hide sidebar when conversation is selected, show when no conversation
@@ -846,12 +846,11 @@ const Messages = () => {
     if (!selectedConversation) return;
 
     const uploadPromises = files.map(async (file) => {
-      try {
-        const fileName = file.name || "Unknown file";
-        const uploadToast = toast.loading(`Uploading ${fileName}...`);
+      const fileName = file.name || "Unknown file";
+      const uploadToast = toast.loading(`Uploading ${fileName}...`);
 
-        // Create optimistic file message for immediate UI feedback
-        const optimisticFileMessage = {
+      // Create optimistic file message for immediate UI feedback
+      const optimisticFileMessage = {
           message_id: `temp-file-${Date.now()}-${Math.random()}`,
           sender_id: user.user_id,
           sender_name: user.name,
@@ -869,14 +868,15 @@ const Messages = () => {
           reactions: [],
         };
 
-        // Add optimistic message immediately for instant feedback
-        setMessages((prev) => [...prev, optimisticFileMessage]);
+      // Add optimistic message immediately for instant feedback
+      setMessages((prev) => [...prev, optimisticFileMessage]);
 
-        // Immediate instant scroll for file uploads
-        requestAnimationFrame(() => {
-          scrollToBottom(true); // Instant scroll for file messages
-        });
+      // Immediate instant scroll for file uploads
+      requestAnimationFrame(() => {
+        scrollToBottom(true); // Instant scroll for file messages
+      });
 
+      try {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("receiver_id", selectedConversation.other_user_id);
@@ -1025,12 +1025,13 @@ const Messages = () => {
 
   // Handle message deletion with smooth optimistic updates
   const handleDeleteMessage = async (messageId) => {
+    // Store original message for potential revert
+    const originalMessage = messages.find(
+      (msg) => msg.message_id === messageId
+    );
+    if (!originalMessage) return;
+
     try {
-      // Store original message for potential revert
-      const originalMessage = messages.find(
-        (msg) => msg.message_id === messageId
-      );
-      if (!originalMessage) return;
 
       // Optimistically update the message to show as deleted immediately
       setMessages((prev) =>
@@ -1268,14 +1269,7 @@ const Messages = () => {
     }
   };
 
-  // Get status icon
-  const getStatusIcon = (isRead) => {
-    return isRead ? (
-      <CheckCheck size={14} className="text-blue-500" />
-    ) : (
-      <CheckCheck size={14} className="text-gray-400" />
-    );
-  };
+
 
   if (loading) {
     return (

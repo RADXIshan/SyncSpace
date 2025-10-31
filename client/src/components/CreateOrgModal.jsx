@@ -361,7 +361,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                     { value: "public", label: "Public", desc: "Anyone can send invites", icon: Globe },
                     { value: "invite-only", label: "Invite Only", desc: "Members can send invites", icon: Users },
                     { value: "admin-only", label: "Admin Only", desc: "Only admins send invites", icon: Lock },
-                  ].map(({ value, label, desc, icon: Icon }) => (
+                  ].map(({ value, label, desc, icon: IconComponent }) => (
                     <label key={value} className="relative cursor-pointer">
                       <input
                         type="radio"
@@ -379,7 +379,7 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <Icon
+                          <IconComponent
                             size={20}
                             className={
                               accessLevel === value

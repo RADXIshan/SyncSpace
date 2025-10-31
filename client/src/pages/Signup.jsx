@@ -44,7 +44,7 @@ const Signup = () => {
           message = "Name looks good";
         }
         break;
-      case "email":
+      case "email": {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value.trim()) {
           message = "Email is required";
@@ -55,9 +55,10 @@ const Signup = () => {
           message = "Valid email format";
         }
         break;
-      case "password":
+      }
+      case "password": {
         // Backend regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-        requirements = {
+        const requirements = {
           length: value.length >= 8,
           uppercase: /[A-Z]/.test(value),
           lowercase: /[a-z]/.test(value),
@@ -76,6 +77,7 @@ const Signup = () => {
           message = "Strong password";
         }
         break;
+      }
     }
     
     return { isValid, message, requirements };

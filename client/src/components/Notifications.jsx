@@ -112,7 +112,7 @@ const Notifications = () => {
   const handleDeleteNotification = async (id) => {
     try {
       await deleteNotification(id);
-    } catch (error) {
+    } catch {
       // Error is already logged in the context
       // You could show a toast notification here if needed
     }
@@ -125,7 +125,7 @@ const Notifications = () => {
   const handleDeleteAllNotifications = async () => {
     try {
       await deleteAllNotifications();
-    } catch (error) {
+    } catch {
       // Error is already logged in the context
       // You could show a toast notification here if needed
     }

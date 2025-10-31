@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import {
   Calendar,
@@ -39,7 +39,7 @@ const Sidebar = ({
   const { directMessagesCount, getChannelUnreadCount } = useUnread();
   const navigate = useNavigate();
   const [organization, setOrganization] = useState(null);
-  const [loadingOrg, setLoadingOrg] = useState(false);
+  const [, setLoadingOrg] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [userPermissions, setUserPermissions] = useState(null);
   const [showLeaveOrgConfirm, setShowLeaveOrgConfirm] = useState(false);
@@ -69,7 +69,7 @@ const Sidebar = ({
   };
 
   // Fetch organization data
-  const fetchOrganization = async () => {
+  const fetchOrganization = useCallback(async () => {
     if (!user?.org_id) {
       setOrganization(null);
       setUserRole(null);
@@ -108,7 +108,7 @@ const Sidebar = ({
     } finally {
       setLoadingOrg(false);
     }
-  };
+  }, [user?.org_id]);
 
   // Leave organization
   const handleLeaveOrg = () => {
@@ -260,7 +260,7 @@ const Sidebar = ({
 
   // Listen for global organization updates to refresh sidebar data
   useEffect(() => {
-    const handleOrgUpdate = (e) => {
+    const handleOrgUpdate = () => {
       // we could optimistically update but simplest is refetch
       fetchOrganization();
     };

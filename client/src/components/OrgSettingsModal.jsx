@@ -34,7 +34,7 @@ const OrgSettingsModal = ({
   onSuccess,
 }) => {
   const isOwner = userPermissions?.isOwner || false;
-  const { isUserOnline, onlineUsers } = useSocket();
+  const { isUserOnline } = useSocket();
   const [orgName, setOrgName] = useState(organization?.name || "");
   const [accessLevel, setAccessLevel] = useState(
     organization?.accessLevel || "invite-only"

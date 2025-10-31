@@ -7,7 +7,7 @@ import {
   Crown,
   Users,
   Rocket,
-  Infinity,
+  Infinity as InfinityIcon,
   Brain,
 } from "lucide-react";
 import { useState } from "react";
@@ -64,7 +64,7 @@ const LandingPricing = () => {
     {
       name: "Infinite",
       description: "For organizations building the future",
-      icon: Infinity,
+      icon: InfinityIcon,
       monthlyPrice: 99,
       annualPrice: 79,
       popular: false,

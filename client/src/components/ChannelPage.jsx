@@ -24,7 +24,7 @@ import {
   Eye,
 } from "lucide-react";
 import { toast as hotToast } from "react-hot-toast";
-import { useToast } from "../context/ToastContext";
+
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 import NoteInputModal from "./NoteInputModal";
 import NoteEditModal from "./NoteEditModal";
@@ -40,15 +40,15 @@ import MeetingReports from "./MeetingReports";
 const ChannelPage = () => {
   const { channelId } = useParams();
   const { user } = useAuth();
-  const { joinChannel, leaveChannel, isUserOnline, onlineUsers } = useSocket();
-  const { showError, showSuccess } = useToast();
+  const { joinChannel, leaveChannel, isUserOnline } = useSocket();
+
   const navigate = useNavigate();
   const [channel, setChannel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [sending, setSending] = useState(false);
+
+
   const [activeTab, setActiveTab] = useState("home");
   const [members, setMembers] = useState([]);
   const [userPermissions, setUserPermissions] = useState(null);
@@ -73,7 +73,7 @@ const ChannelPage = () => {
   const [meetingToDelete, setMeetingToDelete] = useState(null);
   const [meetingDeleteLoading, setMeetingDeleteLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null);
+
 
   // Helper to sort notes (pinned notes first, then by newest)
   const sortNotes = (notesArray) => {
@@ -126,7 +126,7 @@ const ChannelPage = () => {
     if (roleNames.length > 0) {
       initializeRoleColors(roleNames);
     }
-  }, []);
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -249,7 +249,7 @@ const ChannelPage = () => {
             if (isMounted) setUserPermissions(data);
             return;
           }
-        } catch (e) {
+        } catch {
           // Invalid cache, continue with API call
         }
       }
@@ -357,47 +357,7 @@ const ChannelPage = () => {
     fetchMeetings();
   }, [fetchNotes, fetchMeetings]);
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
 
-    setSending(true);
-    try {
-      const tempMessage = {
-        id: Date.now(),
-        userId: user.user_id,
-        userName: user.name,
-        userPhoto: user.photo,
-        content: newMessage,
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages((prev) => [...prev, tempMessage]);
-      setNewMessage("");
-      if (textareaRef.current) textareaRef.current.style.height = "auto";
-    } catch (err) {
-      console.error("Error sending message:", err);
-      showError("Failed to send message");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const handleTextareaChange = (e) => {
-    setNewMessage(e.target.value);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height =
-        Math.min(textareaRef.current.scrollHeight, 150) + "px";
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e);
-    }
-  };
 
   // Note management functions
   const handleCreateNote = async (noteData) => {
@@ -414,10 +374,10 @@ const ChannelPage = () => {
       refreshNotes(); // Refresh notes after creation
       hotToast.success("Note created successfully");
       // Modal closing is handled by NoteInputModal component itself
-    } catch (err) {
-      console.error("Error creating note:", err);
-      hotToast.error(err?.response?.data?.message || "Failed to create note");
-      throw err; // Re-throw to handle in modal
+    } catch (error) {
+      console.error("Error creating note:", error);
+      hotToast.error(error?.response?.data?.message || "Failed to create note");
+      throw error; // Re-throw to handle in modal
     }
   };
 
@@ -438,12 +398,12 @@ const ChannelPage = () => {
       );
       refreshNotes(); // Refresh notes after update
       hotToast.success("Note updated successfully", { id: toastId });
-    } catch (err) {
-      console.error("Error updating note:", err);
-      hotToast.error(err?.response?.data?.message || "Failed to update note", {
+    } catch (error) {
+      console.error("Error updating note:", error);
+      hotToast.error(error?.response?.data?.message || "Failed to update note", {
         id: toastId,
       });
-      throw err;
+      throw error;
     }
   };
 
@@ -455,9 +415,9 @@ const ChannelPage = () => {
       );
       refreshNotes(); // Refresh notes after deletion
       hotToast.success("Note deleted successfully");
-    } catch (err) {
-      console.error("Error deleting note:", err);
-      hotToast.error(err?.response?.data?.message || "Failed to delete note");
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      hotToast.error(error?.response?.data?.message || "Failed to delete note");
     }
   };
 
@@ -470,7 +430,7 @@ const ChannelPage = () => {
     try {
       await handleUpdateNote(selectedNote.note_id, noteData);
       // Modal closing and state reset is handled by NoteEditModal's onClose callback
-    } catch (error) {
+    } catch {
       // Error is already handled in handleUpdateNote
     }
   };
@@ -668,32 +628,7 @@ const ChannelPage = () => {
     }
   };
 
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
 
-    if (diff < 60000) return "Just now";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} minutes ago`;
-    if (date.toDateString() === now.toDateString())
-      return date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-    if (diff < 604800000)
-      return date.toLocaleDateString("en-US", {
-        weekday: "short",
-        hour: "numeric",
-        minute: "2-digit",
-      });
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
 
   if (loading)
     return (

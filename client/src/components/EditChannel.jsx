@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Hash, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
 import ConfirmationModal from "./ConfirmationModal";
@@ -20,19 +20,19 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
   });
 
   // Check for unsaved changes
-  const checkForUnsavedChanges = () => {
+  const checkForUnsavedChanges = useCallback(() => {
     const original = originalValues.current;
     return (
       formData.name.trim() !== original.name.trim() ||
       formData.description.trim() !== original.description.trim()
     );
-  };
+  }, [formData.name, formData.description]);
 
   // Track changes for unsaved changes detection
   useEffect(() => {
     const hasChanges = checkForUnsavedChanges();
     setHasUnsavedChanges(hasChanges);
-  }, [formData]);
+  }, [formData, checkForUnsavedChanges]);
 
   useEffect(() => {
     if (channel && isOpen) {
@@ -60,7 +60,7 @@ const EditChannel = ({ isOpen, onClose, onSubmit, channel }) => {
       // Close modal after successful submission
       setFormData({ name: "", description: "" });
       onClose();
-    } catch (error) {
+    } catch {
       // Error is handled in the parent component
     } finally {
       setIsLoading(false);

@@ -248,7 +248,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
         });
       }
     }
-  }, [messages.length, user.user_id, scrollToBottom, isVisible, isAtBottom]);
+  }, [messages, user.user_id, scrollToBottom, isVisible, isAtBottom]);
 
   // Cleanup typing timeout
   useEffect(() => {
@@ -364,7 +364,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
           { withCredentials: true }
         );
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to send message");
     } finally {
       setSending(false);
@@ -431,7 +431,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
             : msg
         )
       );
-    } catch (error) {
+    } catch {
       toast.error("Failed to add reaction");
 
       // Revert optimistic update
@@ -469,7 +469,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
       );
 
       toast.success("Message deleted", { id: deleteToast });
-    } catch (error) {
+    } catch {
 
       setMessages((prev) =>
         prev.map((msg) =>
@@ -536,7 +536,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
       if (isNaN(date.getTime())) {
         return "Invalid date";
       }
-    } catch (error) {
+    } catch {
       return "Invalid date";
     }
 

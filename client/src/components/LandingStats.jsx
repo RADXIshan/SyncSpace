@@ -7,7 +7,7 @@ import {
   Award,
   Zap,
   Target,
-  Infinity,
+  Infinity as InfinityIcon,
 } from "lucide-react";
 
 const LandingStats = () => {
@@ -20,7 +20,7 @@ const LandingStats = () => {
       color: "from-blue-500 to-indigo-600",
     },
     {
-      icon: Infinity,
+      icon: InfinityIcon,
       value: "99.8%",
       label: "Uptime",
       description: "Quantum-reliable infrastructure",

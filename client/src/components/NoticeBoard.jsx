@@ -11,7 +11,7 @@ const NoticeBoard = ({ orgId, className = "" }) => {
   const { user } = useAuth();
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
 
   // API Functions
   const getNotices = async (orgId) => {
@@ -92,7 +92,7 @@ const NoticeBoard = ({ orgId, className = "" }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [hasNoticeAccess, setHasNoticeAccess] = useState(false);
-  const [userPermissions, setUserPermissions] = useState(null);
+  const [, setUserPermissions] = useState(null);
 
   // Fetch user permissions
   useEffect(() => {

@@ -31,7 +31,7 @@ const Login = () => {
     let message = "";
 
     switch (name) {
-      case "email":
+      case "email": {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!value.trim()) {
           message = "Email is required";
@@ -42,6 +42,7 @@ const Login = () => {
           message = "Valid email format";
         }
         break;
+      }
       case "password":
         if (!value) {
           message = "Password is required";

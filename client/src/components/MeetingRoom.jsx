@@ -142,7 +142,7 @@ const MeetingRoom = () => {
       });
 
       // Handle browser tab close/refresh to clean up data
-      const handleBeforeUnload = async (event) => {
+      const handleBeforeUnload = async () => {
         try {
           // Just clean up localStorage - report will be created server-side when last person leaves
           localStorage.removeItem(`meeting_${roomId}`);

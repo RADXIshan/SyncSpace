@@ -913,9 +913,6 @@ const ChannelPage = () => {
               >
                 <Icon size={18} className="sm:w-[18px] sm:h-[18px]" />
                 <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden text-sm">
-                  {tab.label.split(" ")[0]}
-                </span>
               </button>
             );
           })}

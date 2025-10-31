@@ -21,12 +21,14 @@ import {
   NotebookPen,
   Video,
   FileText,
+  Eye,
 } from "lucide-react";
 import { toast as hotToast } from "react-hot-toast";
 import { useToast } from "../context/ToastContext";
 import { getRoleStyle, initializeRoleColors } from "../utils/roleColors";
 import NoteInputModal from "./NoteInputModal";
 import NoteEditModal from "./NoteEditModal";
+import NoteViewModal from "./NoteViewModal";
 import ConfirmationModal from "./ConfirmationModal";
 import EditChannel from "./EditChannel";
 import MeetingModal from "./MeetingModal";
@@ -54,6 +56,7 @@ const ChannelPage = () => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [notesLoading, setNotesLoading] = useState(false);
@@ -492,6 +495,11 @@ const ChannelPage = () => {
   const handleDeleteNoteClick = (note) => {
     setSelectedNote(note);
     setShowDeleteModal(true);
+  };
+
+  const handleViewNote = (note) => {
+    setSelectedNote(note);
+    setShowViewModal(true);
   };
 
   // Meeting management functions
@@ -996,107 +1004,118 @@ const ChannelPage = () => {
                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
                                 <div className="relative z-10">
-                                  <div className="flex items-start w-full justify-between">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h4 className="font-medium text-sm sm:text-base lg:text-lg text-white group-hover/card:text-purple-100 transition-colors duration-300 truncate">
-                                          {meeting.title}
-                                        </h4>
-                                        <span
-                                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border flex-shrink-0 ${
-                                            status === "upcoming"
-                                              ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                                              : status === "ongoing" ||
-                                                status === "starting-soon"
-                                              ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                              : "bg-gray-500/20 text-gray-300 border-gray-500/30"
-                                          }`}
-                                        >
-                                          {status === "starting-soon"
-                                            ? "Starting Soon"
-                                            : status}
-                                        </span>
-                                      </div>
-                                      {meeting.description && (
-                                        <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 mt-1 line-clamp-2 sm:line-clamp-3 transition-colors duration-300">
-                                          {meeting.description}
-                                        </p>
-                                      )}
-                                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
-                                        <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
-                                          {formatMeetingTime(
-                                            meeting.start_time
-                                          )}
-                                        </span>
-                                        <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
-                                          {meetingDate.toLocaleTimeString(
-                                            "en-US",
-                                            {
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            }
-                                          )}
-                                        </span>
-                                        {meeting.created_by_name && (
-                                          <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
-                                            by {meeting.created_by_name}
+                                  <div className="flex w-full">
+                                    {/* Content Area */}
+                                    <div className="flex-1 min-w-0 pr-2 flex flex-col">
+                                      {/* Title and Status Badge */}
+                                      <div className="mb-2">
+                                        <div className="flex items-start gap-2">
+                                          <h4 className="font-medium text-sm sm:text-base lg:text-lg text-white group-hover/card:text-purple-100 transition-colors duration-300 flex-1 min-w-0 leading-tight">
+                                            {meeting.title}
+                                          </h4>
+                                          <span
+                                            className={`px-2 py-0.5 rounded-full text-xs font-medium border flex-shrink-0 mt-0.5 ${
+                                              status === "upcoming"
+                                                ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                                                : status === "ongoing" ||
+                                                  status === "starting-soon"
+                                                ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                                : "bg-gray-500/20 text-gray-300 border-gray-500/30"
+                                            }`}
+                                          >
+                                            {status === "starting-soon"
+                                              ? "Starting Soon"
+                                              : status}
                                           </span>
-                                        )}
+                                        </div>
                                       </div>
-
-                                      {/* Action buttons for joining/starting */}
-                                      {(status === "ongoing" ||
-                                        status === "starting-soon" ||
-                                        (status === "upcoming" &&
-                                          !meeting.started &&
-                                          userPermissions?.meeting_access)) && (
-                                        <div className="flex items-center gap-2 mt-3">
-                                          {(status === "ongoing" ||
-                                            status === "starting-soon") && (
-                                            <button
-                                              onClick={() =>
-                                                handleJoinMeeting(
-                                                  meeting.meeting_id
-                                                )
-                                              }
-                                              className="px-3 py-1.5 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-green-500/30 cursor-pointer"
-                                            >
-                                              <Video size={12} />
-                                              Join Meeting
-                                            </button>
-                                          )}
-                                          {status === "upcoming" &&
+                                      
+                                      {/* Meeting Description and Action Buttons */}
+                                      <div className="flex-1">
+                                        {meeting.description && (
+                                          <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 mb-3 line-clamp-2 sm:line-clamp-3 transition-colors duration-300">
+                                            {meeting.description}
+                                          </p>
+                                        )}
+                                        
+                                        {/* Action buttons for joining/starting */}
+                                        {(status === "ongoing" ||
+                                          status === "starting-soon" ||
+                                          (status === "upcoming" &&
                                             !meeting.started &&
-                                            userPermissions?.meeting_access && (
+                                            userPermissions?.meeting_access)) && (
+                                          <div className="flex items-center gap-2 mb-2">
+                                            {(status === "ongoing" ||
+                                              status === "starting-soon") && (
                                               <button
                                                 onClick={() =>
-                                                  handleStartMeeting(
+                                                  handleJoinMeeting(
                                                     meeting.meeting_id
                                                   )
                                                 }
-                                                className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-purple-500/30 cursor-pointer"
+                                                className="px-3 py-1.5 bg-green-600/80 hover:bg-green-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-green-500/30 cursor-pointer"
                                               >
                                                 <Video size={12} />
-                                                Start Meeting
+                                                Join Meeting
                                               </button>
                                             )}
+                                            {status === "upcoming" &&
+                                              !meeting.started &&
+                                              userPermissions?.meeting_access && (
+                                                <button
+                                                  onClick={() =>
+                                                    handleStartMeeting(
+                                                      meeting.meeting_id
+                                                    )
+                                                  }
+                                                  className="px-3 py-1.5 bg-purple-600/80 hover:bg-purple-600 text-white text-xs rounded-lg transition-all flex items-center gap-1 border border-purple-500/30 cursor-pointer"
+                                                >
+                                                  <Video size={12} />
+                                                  Start Meeting
+                                                </button>
+                                              )}
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      {/* Date and Time at Bottom Left */}
+                                      <div className="mt-auto pt-2 border-t border-gray-700/30">
+                                        <div className="flex items-center gap-1 sm:gap-2 text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
+                                          <span>
+                                            {formatMeetingTime(meeting.start_time)}
+                                          </span>
+                                          <span>•</span>
+                                          <span>
+                                            {meetingDate.toLocaleTimeString("en-US", {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </span>
+                                          {meeting.created_by_name && (
+                                            <>
+                                              <span>•</span>
+                                              <span>by {meeting.created_by_name}</span>
+                                            </>
+                                          )}
                                         </div>
-                                      )}
+                                      </div>
                                     </div>
+                                    
+                                    {/* Action Buttons - All Vertically Aligned */}
                                     {userPermissions?.meeting_access && (
-                                      <div className="absolute right-0 top-0 flex items-center gap-1 ml-2 flex-shrink-0">
+                                      <div className="flex flex-col items-end gap-1 ml-2 flex-shrink-0">
                                         <button
                                           onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
                                             handleEditMeeting(meeting);
                                           }}
-                                          className="p-2 hover:bg-blue-500/20 rounded-md text-gray-400 hover:text-blue-300 transition-colors duration-300 cursor-pointer group"
+                                          className="p-1.5 hover:bg-blue-500/20 rounded-lg text-gray-400 hover:text-blue-300 transition-all duration-300 cursor-pointer group/btn"
                                           title="Edit meeting"
                                         >
                                           <Edit2
-                                            size={12}
-                                            className="sm:w-[14px] sm:h-[14px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-300"
+                                            size={14}
+                                            className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform duration-300"
                                           />
                                         </button>
                                         <button
@@ -1105,12 +1124,12 @@ const ChannelPage = () => {
                                             e.stopPropagation();
                                             handleDeleteMeetingClick(meeting);
                                           }}
-                                          className="p-2 hover:bg-red-500/20 rounded-md text-gray-400 hover:text-red-300 transition-colors duration-300 cursor-pointer group"
+                                          className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-300 transition-all duration-300 cursor-pointer group/btn"
                                           title="Delete meeting"
                                         >
                                           <Trash2
-                                            size={12}
-                                            className="sm:w-[14px] sm:h-[14px] group-hover:scale-120 duration-300 group-hover:rotate-10"
+                                            size={14}
+                                            className="group-hover/btn:scale-110 group-hover/btn:rotate-12 transition-transform duration-300"
                                           />
                                         </button>
                                       </div>
@@ -1218,86 +1237,119 @@ const ChannelPage = () => {
                               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-lg sm:rounded-xl lg:rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"></div>
 
                               <div className="relative z-10">
-                                <div className="flex items-start w-full justify-between">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <h4 className="font-medium text-sm sm:text-base lg:text-lg text-white group-hover/card:text-purple-100 transition-colors duration-300 truncate">
-                                        {note.title}
-                                      </h4>
-                                      {note.pinned && (
-                                        <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium rounded-full flex-shrink-0">
-                                          Pinned
-                                        </span>
-                                      )}
+                                <div className="flex w-full">
+                                  {/* Content Area */}
+                                  <div className="flex-1 min-w-0 pr-2 flex flex-col">
+                                    {/* Title Section */}
+                                    <div className="mb-2">
+                                      <div className="flex items-start gap-2">
+                                        <h4 className="font-medium text-sm sm:text-base lg:text-lg text-white group-hover/card:text-purple-100 transition-colors duration-300 flex-1 min-w-0 leading-tight">
+                                          {note.title}
+                                        </h4>
+                                        {note.pinned && (
+                                          <span className="px-2 py-0.5 bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-medium rounded-full flex-shrink-0 mt-0.5">
+                                            Pinned
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
-                                    <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 mt-1 line-clamp-2 sm:line-clamp-3 transition-colors duration-300">
-                                      {note.body}
-                                    </p>
-                                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
-                                      <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
-                                        {new Date(
-                                          note.created_at
-                                        ).toLocaleDateString()}
-                                      </span>
-                                      {note.created_by_name && (
-                                        <span className="text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
-                                          by {note.created_by_name}
+                                    
+                                    {/* Note Body */}
+                                    <div className="flex-1">
+                                      <p className="text-xs sm:text-sm lg:text-base text-gray-300 group-hover/card:text-gray-200 line-clamp-2 sm:line-clamp-3 transition-colors duration-300">
+                                        {note.body}
+                                      </p>
+                                    </div>
+                                    
+                                    {/* Date at Bottom Left */}
+                                    <div className="mt-2 pt-2 border-t border-gray-700/30">
+                                      <div className="flex items-center gap-1 sm:gap-2 text-xs text-gray-400 group-hover/card:text-gray-300 transition-colors duration-300">
+                                        <span>
+                                          {new Date(note.created_at).toLocaleDateString()}
                                         </span>
-                                      )}
+                                        {note.created_by_name && (
+                                          <>
+                                            <span>•</span>
+                                            <span>by {note.created_by_name}</span>
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
-                                  {userPermissions?.notes_access && (
-                                    <div className="absolute right-0 top-0 flex items-center gap-1 ml-2 flex-shrink-0">
-                                      <button
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          handleUpdateNote(note.note_id, {
-                                            title: note.title,
-                                            body: note.body,
-                                            pinned: !note.pinned,
-                                          });
-                                        }}
-                                        className={`p-2 hover:bg-purple-500/20 rounded-md transition-colors duration-300 cursor-pointer group ${
-                                          note.pinned
-                                            ? "text-purple-300"
-                                            : "text-gray-400 hover:text-purple-300"
-                                        }`}
-                                        title={note.pinned ? "Unpin" : "Pin"}
-                                      >
-                                        <Pin
-                                          size={12}
-                                          className="sm:w-[14px] sm:h-[14px] duration-300 group-hover:rotate-45"
-                                        />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          handleEditNote(note);
-                                        }}
-                                        className="p-2 hover:bg-blue-500/20 rounded-md text-gray-400 hover:text-blue-300 transition-colors duration-300 cursor-pointer group"
-                                        title="Edit note"
-                                      >
-                                        <Edit2
-                                          size={12}
-                                          className="sm:w-[14px] sm:h-[14px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 duration-300"
-                                        />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleDeleteNoteClick(note)
-                                        }
-                                        className="p-2 hover:bg-red-500/20 rounded-md text-gray-400 hover:text-red-300 transition-colors duration-300 cursor-pointer group"
-                                      >
-                                        <Trash2
-                                          size={12}
-                                          className="sm:w-[14px] sm:h-[14px] group-hover:scale-120 duration-300 group-hover:rotate-10"
-                                        />
-                                      </button>
-                                    </div>
-                                  )}
+                                  
+                                  {/* Action Buttons - All Vertically Aligned */}
+                                  <div className="flex flex-col items-end gap-1 ml-2 flex-shrink-0">
+                                    {/* Always show view button */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleViewNote(note);
+                                      }}
+                                      className="p-1.5 hover:bg-green-500/20 rounded-lg text-gray-400 hover:text-green-300 transition-all duration-300 cursor-pointer group/btn"
+                                      title="View note"
+                                    >
+                                      <Eye
+                                        size={14}
+                                        className="group-hover/btn:scale-110 transition-transform duration-300"
+                                      />
+                                    </button>
+                                    
+                                    {/* Show edit controls for authorized users */}
+                                    {(userPermissions?.notes_access || note.created_by === user?.user_id) && (
+                                      <>
+                                        <button
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleUpdateNote(note.note_id, {
+                                              title: note.title,
+                                              body: note.body,
+                                              pinned: !note.pinned,
+                                            });
+                                          }}
+                                          className={`p-1.5 hover:bg-purple-500/20 rounded-lg transition-all duration-300 cursor-pointer group/btn ${
+                                            note.pinned
+                                              ? "text-purple-300"
+                                              : "text-gray-400 hover:text-purple-300"
+                                          }`}
+                                          title={note.pinned ? "Unpin" : "Pin"}
+                                        >
+                                          <Pin
+                                            size={14}
+                                            className="group-hover/btn:rotate-45 transition-transform duration-300"
+                                          />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleEditNote(note);
+                                          }}
+                                          className="p-1.5 hover:bg-blue-500/20 rounded-lg text-gray-400 hover:text-blue-300 transition-all duration-300 cursor-pointer group/btn"
+                                          title="Edit note"
+                                        >
+                                          <Edit2
+                                            size={14}
+                                            className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform duration-300"
+                                          />
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            handleDeleteNoteClick(note)
+                                          }
+                                          className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-300 transition-all duration-300 cursor-pointer group/btn"
+                                          title="Delete note"
+                                        >
+                                          <Trash2
+                                            size={14}
+                                            className="group-hover/btn:scale-110 group-hover/btn:rotate-12 transition-transform duration-300"
+                                          />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -1477,6 +1529,17 @@ const ChannelPage = () => {
         }}
         onSubmit={handleEditSubmit}
         note={selectedNote}
+      />
+
+      <NoteViewModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedNote(null);
+        }}
+        note={selectedNote}
+        onEdit={handleEditNote}
+        canEdit={userPermissions?.notes_access || selectedNote?.created_by === user?.user_id}
       />
 
       {/* Delete Confirmation Modal */}

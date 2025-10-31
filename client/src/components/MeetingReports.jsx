@@ -12,6 +12,7 @@ import {
   Trash2,
   Search,
   Download,
+  X,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import ConfirmationModal from "./ConfirmationModal";
@@ -682,219 +683,220 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
       {/* Report Details Modal */}
       {showReportModal && selectedReport && (
         <div 
-          className="fixed inset-0 bg-gradient-to-br from-white/30 via-gray-100/20 to-purple-100/30 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300"
           onClick={() => setShowReportModal(false)}
         >
           <div 
-            className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-gray-200 animate-in zoom-in-95 duration-200"
+            className="relative w-full max-w-4xl max-h-[98vh] sm:max-h-[95vh] glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50/50">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  {selectedReport.title}
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  {formatDate(selectedReport.startedAt)} • {formatDuration(selectedReport.durationMinutes)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {canModifyReport(selectedReport) && (
-                  <button
-                    onClick={() => showDeleteConfirmation(selectedReport)}
-                    disabled={deleteLoading}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                    title="Delete report"
-                  >
-                    {deleteLoading ? (
-                      <div className="w-[18px] h-[18px] border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <Trash2 size={18} />
-                    )}
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowReportModal(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                  title="Close modal"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] animate-in slide-in-from-bottom-2 duration-300 delay-100">
-              {/* Meeting Info */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <Users size={16} />
-                    <span className="text-sm">Participants</span>
-                  </div>
-                  <p className="font-semibold">{selectedReport.participants.length}</p>
+            <div className="absolute inset-0 cosmic-bg"></div>
+            <div className="relative overflow-y-auto max-h-[98vh] sm:max-h-[95vh]">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-700/50">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white gradient-text">
+                    {selectedReport.title}
+                  </h2>
+                  <p className="text-gray-300 mt-1 text-sm sm:text-base">
+                    {formatDate(selectedReport.startedAt)} • {formatDuration(selectedReport.durationMinutes)}
+                  </p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <Clock size={16} />
-                    <span className="text-sm">Duration</span>
-                  </div>
-                  <p className="font-semibold">{formatDuration(selectedReport.durationMinutes)}</p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <MessageSquare size={16} />
-                    <span className="text-sm">Messages</span>
-                  </div>
-                  <p className="font-semibold">{selectedReport.messageCount}</p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 text-gray-600 mb-1">
-                    <Calendar size={16} />
-                    <span className="text-sm">Channel</span>
-                  </div>
-                  <p className="font-semibold">{selectedReport.channelName}</p>
-                </div>
-              </div>
-
-              {/* Participants List */}
-              {Array.isArray(selectedReport.participants) && selectedReport.participants.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Participants ({selectedReport.participants.length})
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {selectedReport.participants.map((participant, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200"
-                      >
-                        {participant.photo ? (
-                          <img
-                            src={participant.photo}
-                            alt={participant.name || "Participant"}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                            <span className="text-sm text-white font-medium">
-                              {(participant.name || participant.user_name || "U").charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {participant.name || participant.user_name || "Unknown User"}
-                          </p>
-                          {participant.email && (
-                            <p className="text-xs text-gray-500 truncate">
-                              {participant.email}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Summary Section */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900">Meeting Summary</h3>
+                <div className="flex items-center gap-2">
                   {canModifyReport(selectedReport) && (
                     <button
-                      onClick={() => setEditingSummary(!editingSummary)}
-                      className="flex items-center gap-2 px-3 py-1 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
+                      onClick={() => showDeleteConfirmation(selectedReport)}
+                      disabled={deleteLoading}
+                      className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      title="Delete report"
                     >
-                      <Edit size={16} />
-                      <span>{editingSummary ? "Cancel" : "Edit"}</span>
+                      {deleteLoading ? (
+                        <div className="w-[18px] h-[18px] border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Trash2 size={18} />
+                      )}
                     </button>
                   )}
+                  <button
+                    onClick={() => setShowReportModal(false)}
+                    className="p-2 text-gray-400 hover:text-white transition-all cursor-pointer active:scale-95 rounded-full hover:bg-gray-800/80 hover:rotate-90 transform duration-300"
+                    title="Close modal"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
-                
-                {editingSummary ? (
-                  <div className="space-y-3">
-                    <textarea
-                      value={summaryText}
-                      onChange={(e) => setSummaryText(e.target.value)}
-                      placeholder="Add a meeting summary..."
-                      className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={updateSummary}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer"
-                      >
-                        Save Summary
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingSummary(false);
-                          setSummaryText(selectedReport.summary || "");
-                        }}
-                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    {selectedReport.summary ? (
-                      <p className="text-gray-700 whitespace-pre-wrap">{selectedReport.summary}</p>
-                    ) : (
-                      <p className="text-gray-500 italic">No summary available</p>
-                    )}
-                  </div>
-                )}
               </div>
 
-              {/* Chat Messages */}
-              {selectedReport.messagesData && selectedReport.messagesData.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Chat Messages</h3>
-                  <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                    <div className="space-y-3">
-                      {selectedReport.messagesData.map((message, index) => (
-                        <div key={index} className="flex gap-3">
-                          <div className="flex-shrink-0">
-                            {message.user_photo ? (
-                              <img
-                                src={message.user_photo}
-                                alt={message.user_name}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-                                <span className="text-xs text-white font-medium">
-                                  {message.user_name?.charAt(0).toUpperCase() || "U"}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-gray-900">
-                                {message.user_name || "Unknown User"}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                {new Date(message.created_at).toLocaleTimeString()}
+              {/* Modal Content */}
+              <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
+                {/* Meeting Info */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="glass-effect p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                    <div className="flex items-center gap-2 text-gray-300 mb-1">
+                      <Users size={16} />
+                      <span className="text-sm">Participants</span>
+                    </div>
+                    <p className="font-semibold text-white">{selectedReport.participants.length}</p>
+                  </div>
+                  <div className="glass-effect p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                    <div className="flex items-center gap-2 text-gray-300 mb-1">
+                      <Clock size={16} />
+                      <span className="text-sm">Duration</span>
+                    </div>
+                    <p className="font-semibold text-white">{formatDuration(selectedReport.durationMinutes)}</p>
+                  </div>
+                  <div className="glass-effect p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                    <div className="flex items-center gap-2 text-gray-300 mb-1">
+                      <MessageSquare size={16} />
+                      <span className="text-sm">Messages</span>
+                    </div>
+                    <p className="font-semibold text-white">{selectedReport.messageCount}</p>
+                  </div>
+                  <div className="glass-effect p-3 sm:p-4 rounded-lg sm:rounded-xl">
+                    <div className="flex items-center gap-2 text-gray-300 mb-1">
+                      <Calendar size={16} />
+                      <span className="text-sm">Channel</span>
+                    </div>
+                    <p className="font-semibold text-white">{selectedReport.channelName}</p>
+                  </div>
+                </div>
+
+                {/* Participants List */}
+                {Array.isArray(selectedReport.participants) && selectedReport.participants.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-3">
+                      Participants ({selectedReport.participants.length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {selectedReport.participants.map((participant, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 glass-effect px-3 sm:px-4 py-3 rounded-lg sm:rounded-xl"
+                        >
+                          {participant.photo ? (
+                            <img
+                              src={participant.photo}
+                              alt={participant.name || "Participant"}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
+                              <span className="text-sm text-white font-medium">
+                                {(participant.name || participant.user_name || "U").charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <p className="text-gray-700 text-sm whitespace-pre-wrap">
-                              {message.content}
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">
+                              {participant.name || participant.user_name || "Unknown User"}
                             </p>
+                            {participant.email && (
+                              <p className="text-xs text-gray-400 truncate">
+                                {participant.email}
+                              </p>
+                            )}
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
+                )}
+
+                {/* Summary Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-white">Meeting Summary</h3>
+                    {canModifyReport(selectedReport) && (
+                      <button
+                        onClick={() => setEditingSummary(!editingSummary)}
+                        className="flex items-center gap-2 px-3 py-1 text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <Edit size={16} />
+                        <span>{editingSummary ? "Cancel" : "Edit"}</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {editingSummary ? (
+                    <div className="space-y-3">
+                      <textarea
+                        value={summaryText}
+                        onChange={(e) => setSummaryText(e.target.value)}
+                        placeholder="Add a meeting summary..."
+                        className="w-full h-32 p-3 glass-effect rounded-lg sm:rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-white placeholder-gray-400 bg-gray-800/30"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={updateSummary}
+                          className="px-4 py-2 glass-button-enhanced text-purple-400 hover:text-purple-300 rounded-lg transition-colors cursor-pointer"
+                        >
+                          Save Summary
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingSummary(false);
+                            setSummaryText(selectedReport.summary || "");
+                          }}
+                          className="px-4 py-2 glass-button text-gray-400 hover:text-gray-300 rounded-lg transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="glass-effect p-4 rounded-lg sm:rounded-xl">
+                      {selectedReport.summary ? (
+                        <p className="text-gray-300 whitespace-pre-wrap">{selectedReport.summary}</p>
+                      ) : (
+                        <p className="text-gray-400 italic">No summary available</p>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* Chat Messages */}
+                {selectedReport.messagesData && selectedReport.messagesData.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-3">Chat Messages</h3>
+                    <div className="glass-effect rounded-lg sm:rounded-xl p-4 max-h-96 overflow-y-auto messages-smooth-scroll">
+                      <div className="space-y-3">
+                        {selectedReport.messagesData.map((message, index) => (
+                          <div key={index} className="flex gap-3">
+                            <div className="flex-shrink-0">
+                              {message.user_photo ? (
+                                <img
+                                  src={message.user_photo}
+                                  alt={message.user_name}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
+                                  <span className="text-xs text-white font-medium">
+                                    {message.user_name?.charAt(0).toUpperCase() || "U"}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium text-white">
+                                  {message.user_name || "Unknown User"}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {new Date(message.created_at).toLocaleTimeString()}
+                                </span>
+                              </div>
+                              <p className="text-gray-300 text-sm whitespace-pre-wrap">
+                                {message.content}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

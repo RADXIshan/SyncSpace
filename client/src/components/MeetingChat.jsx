@@ -662,7 +662,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
       {/* Messages */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent"
+        className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-none"
         onScroll={checkIfAtBottom}
       >
         {loading ? (
@@ -814,14 +814,30 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
                   )}
 
                   {/* Reactions */}
-                  {message.reactions && message.reactions.length > 0 && (
-                    <MessageReactions
-                      reactions={message.reactions}
-                      onReactionClick={(emoji) =>
-                        handleReaction(message.message_id, emoji)
-                      }
-                      currentUserId={user.user_id}
-                    />
+                  {!message.isDeleted && (
+                    <div className={`mt-1 ${
+                      message.user_id === user.user_id ? "text-right" : "text-left"
+                    }`}>
+                      <MessageReactions
+                        reactions={message.reactions || []}
+                        onReactionClick={(emoji) =>
+                          handleReaction(message.message_id, emoji)
+                        }
+                        currentUserId={user.user_id}
+                        isOwnMessage={message.user_id === user.user_id}
+                        zIndex={9999}
+                        theme="dark"
+                        useViewportPositioning={true}
+                        containerBounds={{
+                          width: window.innerWidth,
+                          height: window.innerHeight,
+                          left: 0,
+                          top: 0,
+                          right: window.innerWidth,
+                          bottom: window.innerHeight
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
@@ -870,7 +886,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
               placeholder={
                 editingMessage ? "Edit message..." : "Type a message..."
               }
-              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 pr-12 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent max-h-[120px] scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent"
+              className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 pr-12 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent max-h-[120px] scrollbar-none"
               rows={1}
               disabled={sending}
               onKeyDown={(e) => {
@@ -890,7 +906,7 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
                 <Smile size={18} />
               </button>
               {showEmojiPicker && (
-                <div className="absolute bottom-full right-0 mb-2 z-50">
+                <div className="absolute bottom-full right-0 mb-2 z-50 transform -translate-x-1/2">
                   <EmojiPicker onEmojiSelect={handleEmojiSelect} />
                 </div>
               )}

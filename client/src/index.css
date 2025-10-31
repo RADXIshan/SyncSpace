@@ -1448,6 +1448,16 @@ input[type="checkbox"]:disabled:hover {
   border-radius: 3px;
 }
 
+/* Hide scrollbar while keeping functionality */
+.scrollbar-none {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* WebKit */
+}
+
 .messages-smooth-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.5);
 }

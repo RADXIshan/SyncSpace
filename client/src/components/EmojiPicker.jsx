@@ -23,7 +23,7 @@ const EmojiPicker = ({ onEmojiSelect }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-80 max-h-64 overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-80 max-w-[90vw] max-h-64 overflow-hidden">
       {/* Category tabs */}
       <div className="flex gap-1 mb-3 border-b border-gray-200 pb-2">
         {Object.entries(emojiCategories).map(([key, category]) => (

@@ -17,7 +17,7 @@ const LandingHero = () => {
       className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-12 sm:pb-16"
     >
       <div className="relative z-10 max-w-7xl mx-auto w-full">
-        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-start">
           {/* Content Section */}
           <div className="text-center lg:text-left space-y-6 sm:space-y-8">
             <div className="space-y-4 sm:space-y-6">
@@ -86,7 +86,7 @@ const LandingHero = () => {
           </div>
 
           {/* Image Section */}
-          <div className="relative mt-8 sm:mt-12 lg:mt-20">
+          <div className="relative mt-12">
             <div className="relative z-10">
               <div className="glass rounded-2xl sm:rounded-3xl p-1.5 sm:p-2">
                 <img

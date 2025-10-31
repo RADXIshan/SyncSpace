@@ -119,44 +119,64 @@ const LandingNav = () => {
       </div>
 
       {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden glass-dark border-t border-white/20">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="space-y-1 mb-4">
-              {navLinks.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => scrollToSection(item.href)}
-                  className="block w-full text-left px-4 py-2.5 text-white/80 hover:text-white font-medium rounded-lg hover:bg-white/10 transition-all duration-300 text-sm"
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-            <div className="flex flex-col gap-2 pt-3 border-t border-white/20">
+      <div
+        className={`sm:hidden glass-dark border-t border-white/20 overflow-hidden transition-all duration-300 ease-in-out ${
+          isMenuOpen 
+            ? "max-h-96 opacity-100" 
+            : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className={`max-w-7xl mx-auto px-4 py-4 transform transition-transform duration-300 ease-in-out ${
+          isMenuOpen ? "translate-y-0" : "-translate-y-4"
+        }`}>
+          <div className="space-y-1 mb-4">
+            {navLinks.map((item, index) => (
               <button
-                onClick={() => {
-                  window.location.href = "/login";
-                  setIsMenuOpen(false);
+                key={item.name}
+                onClick={() => scrollToSection(item.href)}
+                className={`block w-full text-left px-4 py-2.5 text-white/80 hover:text-white font-medium rounded-lg hover:bg-white/10 transition-all duration-300 text-sm transform ${
+                  isMenuOpen 
+                    ? "translate-x-0 opacity-100" 
+                    : "-translate-x-4 opacity-0"
+                }`}
+                style={{
+                  transitionDelay: isMenuOpen ? `${index * 50}ms` : "0ms"
                 }}
-                className="w-full glass px-4 py-2.5 text-white/90 font-medium rounded-lg hover:text-white transition-colors duration-300 text-sm cursor-pointer"
               >
-                Login
+                {item.name}
               </button>
-              <button
-                onClick={() => {
-                  window.location.href = "/signup";
-                  setIsMenuOpen(false);
-                }}
-                className="w-full glass-button px-4 py-2.5 text-white font-semibold rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                Sign Up
-              </button>
-            </div>
+            ))}
+          </div>
+          <div className={`flex flex-col gap-2 pt-3 border-t border-white/20 transform transition-all duration-300 ${
+            isMenuOpen 
+              ? "translate-x-0 opacity-100" 
+              : "-translate-x-4 opacity-0"
+          }`}
+          style={{
+            transitionDelay: isMenuOpen ? `${navLinks.length * 50}ms` : "0ms"
+          }}>
+            <button
+              onClick={() => {
+                window.location.href = "/login";
+                setIsMenuOpen(false);
+              }}
+              className="w-full glass px-4 py-2.5 text-white/90 font-medium rounded-lg hover:text-white transition-colors duration-300 text-sm cursor-pointer"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => {
+                window.location.href = "/signup";
+                setIsMenuOpen(false);
+              }}
+              className="w-full glass-button px-4 py-2.5 text-white font-semibold rounded-lg flex items-center justify-center gap-2 text-sm cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Sign Up
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };

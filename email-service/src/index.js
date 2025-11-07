@@ -43,6 +43,10 @@ transporter.verify((error, success) => {
   }
 });
 
+app.get("/", (_, res)=>{
+  res.json({ message: "Email Server is live!" })
+})
+
 // Email sending endpoint
 app.post('/api/send-email', async (req, res) => {
   const { to, subject, html, from } = req.body;

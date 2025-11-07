@@ -1373,7 +1373,7 @@ export const sendInvitations = async (req, res) => {
     }
 
     // Create invite link (assuming you have a frontend route for joining)
-    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/join-org?code=${inviteCode}`;
+    const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}`;
 
     try {
       console.log("Sending organization invite emails to:", emails);

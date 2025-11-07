@@ -1,6 +1,6 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
-import emailService from "../services/emailService.js";
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { createNotificationForOrg } from "./notificationControllers.js";
 import {
@@ -8,6 +8,7 @@ import {
   syncMeetingEventsForOrg,
   createMeetingEventsForNewUser,
 } from "./eventControllers.js";
+import generateOrganizationInviteEmail from "../templates/organizationInviteEmail.js";
 
 dotenv.config();
 
@@ -1371,53 +1372,73 @@ export const sendInvitations = async (req, res) => {
       return res.status(404).json({ message: "Inviter not found" });
     }
 
-    // Import the email template
-    const { default: generateOrganizationInviteEmail } = await import("../templates/organizationInviteEmail.js");
-
     // Create invite link (assuming you have a frontend route for joining)
     const inviteLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/join-org?code=${inviteCode}`;
 
-    // Get organization member count for team size
-    const memberCount = await sql`
-      SELECT COUNT(*) as count
-      FROM org_members
-      WHERE org_id = ${org_id}
-    `;
-
     try {
       console.log("Sending organization invite emails to:", emails);
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.APP_PASSWORD,
+        },
+      });
       
-      // Send emails to each recipient individually for better delivery
-      for (const email of emails) {
-        const message = {
-          from: `SyncSpace Team <${process.env.EMAIL}>`,
-          to: email,
-          subject: `Invitation to Join Organization: ${organizationName || org.org_name} on SyncSpace`,
-          html: generateOrganizationInviteEmail({
-            inviteeName: "Team Member",
-            inviterName: inviter.name,
-            orgName: organizationName || org.org_name,
-            inviteCode: inviteCode,
-            inviterRole: member.role,
-            inviteLink: inviteLink
-          }),
-        };
-        
-        await emailService.sendEmail(message);
+      const mailOptions = {
+        from: {
+          name: "SyncSpace Team",
+          address: process.env.EMAIL,
+        },
+        to: emails,
+        subject: `You're invited to join ${organizationName || org?.org_name || 'a team'} on SyncSpace`,
+        html: generateOrganizationInviteEmail({
+          inviteeName: null, // Will show "there" in template
+          inviterName: inviter.name,
+          orgName: organizationName || org?.org_name || 'the organization',
+          inviteCode: inviteCode,
+          inviterRole: member.role,
+          inviteLink: inviteLink,
+        }),
+      };
+
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log("✅ Team invite email sent successfully");
+      } catch (error) {
+        console.error("❌ Failed to send team invite email:", {
+          message: error?.message,
+          code: error?.code,
+          stack: error?.stack,
+        });
+
+        // Don't fail the whole request when invitation emails fail. The
+        // invitations were prepared — return a success response that notes
+        // the email failure so callers can retry or surface a message.
+        return res.status(200).json({
+          success: true,
+          message: "Invitations prepared, but failed to send via email.",
+          emailError: process.env.NODE_ENV === "development" ? error?.message : undefined,
+        });
       }
-      
-      console.log("Organization invite emails sent successfully");
+
+      console.log("Organization invite emails are being sent in the background.");
       res
         .status(200)
-        .json({ success: true, message: "Invitations sent successfully" });
+        .json({ success: true, message: "Invitations are being sent." });
     } catch (emailError) {
-      console.error("Failed to send organization invite emails:", emailError);
+      console.error("Failed to send organization invite emails:", {
+        message: emailError?.message,
+        code: emailError?.code,
+        stack: emailError?.stack,
+      });
       res.status(500).json({
         message: "Failed to send invitations",
-        error:
-          process.env.NODE_ENV === "development"
-            ? emailError.message
-            : undefined,
+        error: process.env.NODE_ENV === "development" ? emailError?.message : undefined,
       });
     }
   } catch (error) {

@@ -1,9 +1,11 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sql from "../database/db.js";
+import nodemailer from "nodemailer";
 import { v2 as cloudinary } from "cloudinary";
-import emailService from "../services/emailService.js";
 import dotenv from "dotenv";
+import generateOtpEmail from "../templates/otpEmail.js";
+import generateForgotPasswordEmail from "../templates/forgotPasswordEmail.js";
 
 dotenv.config();
 
@@ -80,14 +82,41 @@ export const signup = async (req, res) => {
       path: "/",
     });
 
-    try {
-      console.log("Sending signup verification email to:", email);
-      await emailService.sendVerificationEmail(email, name, otpString);
-      console.log("Signup email sent successfully");
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.APP_PASSWORD,
+      },
+    });
 
-      res.status(201).json({
+    const mailOptions = {
+      from: {
+        name: "SyncSpace Security",
+        address: process.env.EMAIL,
+      },
+      to: email,
+      subject: "Account Verification Code - Action Required",
+      html: generateOtpEmail(name, otp),
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("✅ Verification email sent successfully");
+    } catch (error) {
+      console.error("❌ Failed to send verification email:", {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack,
+      });
+
+      return res.status(201).json({
         success: true,
-        message: "User created successfully. Please verify your email.",
+        message:
+          "User created successfully. Failed to send verification email.",
         user: {
           user_id: newUser.user_id,
           name: newUser.name,
@@ -95,17 +124,21 @@ export const signup = async (req, res) => {
         },
         token,
         requiresVerification: true,
-      });
-    } catch (emailError) {
-      console.error("Failed to send signup email:", emailError);
-      res.status(500).json({
-        message: "Failed to send verification email",
-        error:
-          process.env.NODE_ENV === "development"
-            ? emailError.message
-            : undefined,
+        emailError: process.env.NODE_ENV === "development" ? error?.message : undefined,
       });
     }
+
+    res.status(201).json({
+      success: true,
+      message: "User created successfully. A verification email is being sent.",
+      user: {
+        user_id: newUser.user_id,
+        name: newUser.name,
+        email: newUser.email,
+      },
+      token,
+      requiresVerification: true,
+    });
   } catch (error) {
     console.error("Error creating user:", error);
 
@@ -252,26 +285,52 @@ export const forgotPassword = async (req, res) => {
 
     const resetLink = process.env.CLIENT_URL + `/reset-password/${email}`;
 
+     const transporter = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.APP_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: {
+        name: "SyncSpace Security",
+        address: process.env.EMAIL,
+      },
+      to: email,
+      subject: "Password Reset Request - Secure Link Inside",
+      html: generateForgotPasswordEmail(email, resetLink),
+    };
+
     try {
-      console.log("Sending password reset email to:", email);
-      await emailService.sendPasswordResetEmail(email, user.name, resetLink);
-      console.log("Password reset email sent successfully");
+      await transporter.sendMail(mailOptions);
+      console.log("✅ Password reset email sent successfully");
       res
         .status(200)
         .json({
           success: true,
           message: `Password reset link sent to ${email}`,
         });
-    } catch (emailError) {
-      console.error("Failed to send password reset email:", emailError);
-      res.status(500).json({
-        message: "Failed to send reset link",
-        error:
-          process.env.NODE_ENV === "development"
-            ? emailError.message
-            : undefined,
+    } catch (error) {
+      console.error("❌ Failed to send password reset email:", {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack,
+      });
+
+      // Don't return 500 — the request itself (finding the user) succeeded.
+      // Inform the client that the reset link generation succeeded but email failed.
+      return res.status(200).json({
+        success: true,
+        message: "Password reset link generated, but failed to send email.",
+        emailError: process.env.NODE_ENV === "development" ? error?.message : undefined,
       });
     }
+
   } catch (error) {
     console.error("Error in forgot password:", error);
 
@@ -310,12 +369,10 @@ export const resendOtp = async (req, res) => {
   if (!email?.trim()) {
     return res.status(400).json({ message: "Email is required" });
   }
-
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email.trim())) {
     return res.status(400).json({ error: "Invalid email format" });
   }
-
   try {
     const [user] = await Promise.race([
       sql`SELECT user_id, name FROM users WHERE email = ${email}`,
@@ -323,48 +380,89 @@ export const resendOtp = async (req, res) => {
         setTimeout(() => reject(new Error("Database timeout")), 5000)
       ),
     ]);
-
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
-
     const otp = Math.floor(100000 + Math.random() * 900000);
 
     await Promise.race([
+
       sql`UPDATE users SET otp = ${otp} WHERE email = ${email}`,
+
       new Promise((_, reject) =>
+
         setTimeout(() => reject(new Error("Database timeout")), 5000)
+
       ),
+
     ]);
+    
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL,
+        pass: process.env.APP_PASSWORD,
+      },
+    });
 
     try {
       console.log("Sending resend OTP email to:", email);
-      await emailService.sendOtpResendEmail(email, user.name, otp);
+      const mailOptions = {
+        from: {
+          name: "SyncSpace Security",
+          address: process.env.EMAIL,
+        },
+        to: email,
+        subject: "New Verification Code - Please Confirm",
+        html: generateOtpEmail(user.name, otp),
+      };
+
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log("✅ OTP resend email sent successfully");
+      } catch (error) {
+        console.error("❌ Failed to send OTP resend email:", {
+          message: error?.message,
+          code: error?.code,
+          stack: error?.stack,
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: "OTP updated but failed to send via email.",
+          emailError: process.env.NODE_ENV === "development" ? error?.message : undefined,
+        });
+      }
+
       console.log("Resend OTP email sent successfully");
+
       res.status(200).json({ success: true, message: "OTP sent successfully" });
     } catch (emailError) {
-      console.error("Failed to send resend OTP email:", emailError);
+      console.error("Failed to send resend OTP email:", {
+        message: emailError?.message,
+        code: emailError?.code,
+        stack: emailError?.stack,
+      });
       res.status(500).json({
-        message: "Failed to send OTP",
-        error:
-          process.env.NODE_ENV === "development"
-            ? emailError.message
-            : undefined,
+        message: "Failed to resend OTP",
+        error: process.env.NODE_ENV === "development" ? emailError?.message : undefined,
       });
     }
   } catch (error) {
     console.error("Error resending OTP:", error);
-
     if (error.message === "Database timeout") {
       return res.status(504).json({
         message: "Request timeout. Please try again.",
         error: "TIMEOUT",
       });
     }
-
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 export const updateProfile = async (req, res) => {
   const authToken =

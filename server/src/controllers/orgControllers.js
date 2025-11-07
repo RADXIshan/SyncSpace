@@ -1,7 +1,7 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { sendEmailWithRetry } from "../utils/emailUtils.js";
 import { createNotificationForOrg } from "./notificationControllers.js";
 import {
   syncMeetingEventsForUser,
@@ -1378,17 +1378,6 @@ export const sendInvitations = async (req, res) => {
     try {
       console.log("Sending organization invite emails to:", emails);
 
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        host: "smtp.gmail.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: process.env.EMAIL,
-          pass: process.env.APP_PASSWORD,
-        },
-      });
-      
       const mailOptions = {
         from: {
           name: "SyncSpace Team",
@@ -1407,10 +1396,10 @@ export const sendInvitations = async (req, res) => {
       };
 
       try {
-        await transporter.sendMail(mailOptions);
+        await sendEmailWithRetry(mailOptions);
         console.log("✅ Team invite email sent successfully");
       } catch (error) {
-        console.error("❌ Failed to send team invite email:", {
+        console.error("❌ Failed to send team invite email after retries:", {
           message: error?.message,
           code: error?.code,
           stack: error?.stack,
@@ -1421,7 +1410,7 @@ export const sendInvitations = async (req, res) => {
         // the email failure so callers can retry or surface a message.
         return res.status(200).json({
           success: true,
-          message: "Invitations prepared, but failed to send via email.",
+          message: "Invitations prepared, but failed to send via email after multiple attempts.",
           emailError: process.env.NODE_ENV === "development" ? error?.message : undefined,
         });
       }

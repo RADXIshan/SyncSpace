@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sql from "../database/db.js";
-import nodemailer from "nodemailer";
 import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
+import { sendEmailWithRetry } from "../utils/emailUtils.js";
 import generateOtpEmail from "../templates/otpEmail.js";
 import generateForgotPasswordEmail from "../templates/forgotPasswordEmail.js";
 
@@ -82,17 +82,7 @@ export const signup = async (req, res) => {
       path: "/",
     });
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.APP_PASSWORD,
-      },
-    });
-
+    // Create transporter with improved options
     const mailOptions = {
       from: {
         name: "SyncSpace Security",
@@ -104,19 +94,20 @@ export const signup = async (req, res) => {
     };
 
     try {
-      await transporter.sendMail(mailOptions);
+      await sendEmailWithRetry(mailOptions);
       console.log("✅ Verification email sent successfully");
     } catch (error) {
-      console.error("❌ Failed to send verification email:", {
+      console.error("❌ Failed to send verification email after retries:", {
         message: error?.message,
         code: error?.code,
         stack: error?.stack,
+        transporterError: error?.name === 'Error' && error?.message?.includes('ESOCKET'),
       });
 
       return res.status(201).json({
         success: true,
-        message:
-          "User created successfully. Failed to send verification email.",
+        message: 
+          "User created successfully. Failed to send verification email after multiple attempts.",
         user: {
           user_id: newUser.user_id,
           name: newUser.name,
@@ -285,17 +276,6 @@ export const forgotPassword = async (req, res) => {
 
     const resetLink = process.env.CLIENT_URL + `/reset-password/${email}`;
 
-     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.APP_PASSWORD,
-      },
-    });
-
     const mailOptions = {
       from: {
         name: "SyncSpace Security",
@@ -307,7 +287,7 @@ export const forgotPassword = async (req, res) => {
     };
 
     try {
-      await transporter.sendMail(mailOptions);
+      await sendEmailWithRetry(mailOptions);
       console.log("✅ Password reset email sent successfully");
       res
         .status(200)
@@ -326,7 +306,7 @@ export const forgotPassword = async (req, res) => {
       // Inform the client that the reset link generation succeeded but email failed.
       return res.status(200).json({
         success: true,
-        message: "Password reset link generated, but failed to send email.",
+        message: "Password reset link generated, but failed to send email after multiple attempts.",
         emailError: process.env.NODE_ENV === "development" ? error?.message : undefined,
       });
     }
@@ -397,17 +377,6 @@ export const resendOtp = async (req, res) => {
 
     ]);
     
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.APP_PASSWORD,
-      },
-    });
-
     try {
       console.log("Sending resend OTP email to:", email);
       const mailOptions = {
@@ -421,7 +390,7 @@ export const resendOtp = async (req, res) => {
       };
 
       try {
-        await transporter.sendMail(mailOptions);
+        await sendEmailWithRetry(mailOptions);
         console.log("✅ OTP resend email sent successfully");
       } catch (error) {
         console.error("❌ Failed to send OTP resend email:", {
@@ -432,7 +401,7 @@ export const resendOtp = async (req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: "OTP updated but failed to send via email.",
+          message: "OTP updated but failed to send via email after multiple attempts.",
           emailError: process.env.NODE_ENV === "development" ? error?.message : undefined,
         });
       }

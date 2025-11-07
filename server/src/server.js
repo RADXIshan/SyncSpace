@@ -142,7 +142,6 @@ app.use("/api/direct-messages", directMessageRoutes);
 
 connectCloudinary();
 
-// Setup Socket.IO handlers
 setupSocketHandlers(io);
 
 app.get("/", (_, res) => {

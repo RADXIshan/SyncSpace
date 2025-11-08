@@ -12,91 +12,146 @@ const FeatureTour = ({ onClose, onComplete }) => {
       highlight: 'Get ready to transform how your team works together!'
     },
     {
+      title: 'Organizations & Channels 🏢',
+      description: 'Join or create organizations to collaborate with your team. Organize conversations into channels for different topics and projects.',
+      image: '🏢',
+      tip: 'Create channels from the dashboard and invite team members to join'
+    },
+    {
       title: 'Real-Time Messaging 💬',
-      description: 'Chat with your team in channels or direct messages. Send text, files, and more with instant delivery.',
+      description: 'Chat with your team in channels or direct messages. Send text, files, images, and more with instant delivery.',
       image: '💬',
-      tip: 'React to messages with emojis and reply to create threads'
+      tip: 'React to messages with emojis, reply to create threads, and pin important messages'
+    },
+    {
+      title: 'Direct Messages 📨',
+      description: 'Have private one-on-one conversations with team members. Access DMs from the messages icon in the dashboard.',
+      image: '📨',
+      tip: 'Click on any team member to start a direct conversation'
     },
     {
       title: 'Voice Messages 🎤',
       description: 'Record and send voice messages instantly. Perfect for quick updates without typing.',
       image: '🎤',
       shortcut: 'Ctrl+Shift+V',
-      tip: 'Keep messages under 1 minute for best results'
+      tip: 'Access voice recorder from the Feature Hub or message input'
     },
     {
       title: 'Quick Polls 📊',
-      description: 'Create instant polls to make team decisions faster. Get real-time feedback from your team.',
+      description: 'Create instant polls to make team decisions faster. Support for single or multiple choice, anonymous voting.',
       image: '📊',
       shortcut: 'Ctrl+Shift+P',
-      tip: 'Use anonymous voting for sensitive topics'
+      tip: 'Use anonymous voting for sensitive topics and see real-time results'
     },
     {
       title: 'Video Meetings 🎥',
-      description: 'Start HD video calls with screen sharing. Integrated chat and automatic meeting reports.',
+      description: 'Start HD video calls with screen sharing, audio/video controls. Integrated meeting chat and automatic meeting reports.',
       image: '🎥',
-      tip: 'Test your camera and mic in Meeting Prep before joining'
+      tip: 'Use Meeting Prep to test your camera and mic before joining'
+    },
+    {
+      title: 'Meeting Chat 💭',
+      description: 'Chat during meetings without interrupting. All messages are saved in the meeting report for later reference.',
+      image: '💭',
+      tip: 'Toggle chat panel during meetings to stay focused on video'
+    },
+    {
+      title: 'Screen Sharing 🖥️',
+      description: 'Share your screen during meetings for presentations and collaboration. Your camera stays visible in picture-in-picture.',
+      image: '🖥️',
+      tip: 'Click the screen share button in the meeting controls'
+    },
+    {
+      title: 'Meeting Reports 📈',
+      description: 'Automatic reports for every meeting with duration, participants, chat messages, and analytics. Export to CSV.',
+      image: '📈',
+      tip: 'Access reports from the channel menu or view all reports across channels'
     },
     {
       title: 'Smart Calendar 📅',
-      description: 'Schedule events, set reminders, and manage your team\'s time. Sync with your workflow.',
+      description: 'Schedule events, set reminders, and manage your team\'s time. Click any date to create events.',
       image: '📅',
-      tip: 'Create events and invite team members directly'
+      tip: 'Meeting events are automatically added to your calendar'
     },
     {
       title: 'Smart Search 🔍',
-      description: 'Find anything instantly - messages, files, meetings, or people. Lightning-fast results.',
+      description: 'Find anything instantly - messages, files, meetings, or people. Filter by type for precise results.',
       image: '🔍',
       shortcut: 'Ctrl+K',
-      tip: 'Use filters to narrow down results'
+      tip: 'Search across all channels and direct messages at once'
     },
     {
       title: 'Focus Mode 🎯',
-      description: 'Stay productive with our built-in Pomodoro timer. 25-minute focus sessions with breaks.',
+      description: 'Stay productive with our built-in Pomodoro timer. 25-minute focus sessions with 5-minute breaks.',
       image: '🎯',
       shortcut: 'Ctrl+Shift+F',
-      tip: 'Complete 4 sessions before taking a long break'
+      tip: 'Track your daily sessions and take a long break after 4 sessions'
     },
     {
       title: 'Message Pinning 📌',
-      description: 'Pin important messages to keep them easily accessible at the top of channels.',
+      description: 'Pin important messages to keep them easily accessible at the top of channels. Jump to pinned messages anytime.',
       image: '📌',
-      tip: 'Perfect for meeting links and important announcements'
+      tip: 'Perfect for meeting links, important announcements, and key information'
+    },
+    {
+      title: 'Message Reactions ❤️',
+      description: 'React to messages with emojis to show quick feedback. See who reacted and add multiple reactions.',
+      image: '❤️',
+      tip: 'Hover over messages to see reaction options'
+    },
+    {
+      title: 'File Sharing 📎',
+      description: 'Share files, images, and documents in channels and DMs. Preview images directly in chat.',
+      image: '📎',
+      tip: 'Drag and drop files or click the attachment icon'
     },
     {
       title: 'Notifications 🔔',
-      description: 'Stay updated with real-time notifications. Filter by type and never miss important updates.',
+      description: 'Stay updated with real-time notifications for mentions, meetings, new members, and more. Filter by type.',
       image: '🔔',
-      tip: 'Customize notification preferences in settings'
+      tip: 'Access notifications from the bell icon in the dashboard'
     },
     {
       title: 'Notes & Notices 📝',
-      description: 'Create collaborative notes and post important announcements on the notice board.',
+      description: 'Create collaborative notes and post important announcements on the notice board visible to all members.',
       image: '📝',
       tip: 'Share notes with specific channels or the entire organization'
     },
     {
-      title: 'Meeting Reports 📈',
-      description: 'Automatic reports for every meeting with analytics, duration, and participant insights.',
-      image: '📈',
-      tip: 'Access reports from the channel menu'
+      title: 'Team Management 👥',
+      description: 'View all organization members, manage roles, and see who\'s online. Invite new members with invite codes.',
+      image: '👥',
+      tip: 'Organization owners can manage member permissions'
+    },
+    {
+      title: 'AI Assistant 🤖',
+      description: 'Get help with summaries, finding information, and answering questions. AI features coming soon!',
+      image: '🤖',
+      shortcut: 'Ctrl+Shift+A',
+      tip: 'Preview feature - full AI capabilities launching in v2.1'
     },
     {
       title: 'Keyboard Shortcuts ⌨️',
       description: 'Master keyboard shortcuts to work faster. Access any feature with a quick key combo.',
       image: '⌨️',
       shortcut: 'Ctrl+/',
-      tip: 'Press Ctrl+/ anytime to view all shortcuts'
+      tip: 'Press Ctrl+/ anytime to view all available shortcuts'
     },
     {
-      title: 'Feature Hub 🎯',
-      description: 'Quick access to all features from the floating hub in the bottom-right corner.',
-      image: '🎯',
-      tip: 'Click the hub icon to access voice messages, polls, and more'
+      title: 'Feature Hub ⚡',
+      description: 'Quick access to all features from the floating hub in the bottom-right corner. Access search, focus mode, shortcuts, and AI.',
+      image: '⚡',
+      tip: 'Click the lightning bolt icon to open the feature menu'
+    },
+    {
+      title: 'Profile & Settings ⚙️',
+      description: 'Customize your profile, update settings, and manage your account. Upload a profile photo and update your information.',
+      image: '⚙️',
+      tip: 'Click your avatar in the dashboard to access settings'
     },
     {
       title: 'You\'re All Set! 🎊',
-      description: 'Start collaborating with your team now. Explore channels, start meetings, and stay connected!',
+      description: 'Start collaborating with your team now. Explore channels, start meetings, send messages, and stay connected!',
       image: '🎊',
       highlight: 'Happy collaborating!'
     }

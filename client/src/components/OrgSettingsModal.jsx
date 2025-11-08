@@ -1816,7 +1816,7 @@ const OrgSettingsModal = ({
                     <div className="flex justify-between items-center">
                       <h3 className="text-xl font-semibold text-red-400 flex items-center gap-2">
                         <AlertTriangle size={20} />
-                        Warning!
+                        Warning
                       </h3>
                     </div>
 

@@ -166,14 +166,27 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 - Quick access panel (Ctrl+/)
 - Shortcut cheat sheet
 
-#### **AI Assistant**
-- Context-aware AI chat assistant
-- Helps with platform features and navigation
-- Answers questions about SyncSpace
-- Best practices and troubleshooting
-- Auto-generates meeting summaries
-- Manual summary generation for reports
-- Accessible via Feature Hub (Ctrl+Shift+A)
+#### **AI Assistant (Powered by Google Gemini)**
+- **Real-time Context Awareness**: AI has live access to your workspace data
+  - Your organizations, channels, and members
+  - Online users and their status
+  - Organization roles and permissions
+  - Active meetings and recent activity
+- **Intelligent Assistance**: 
+  - Answers questions about your specific workspace
+  - "What's my organization name?"
+  - "Who's online right now?"
+  - "What channels do I have?"
+  - "What permissions does the Admin role have?"
+- **Platform Help**:
+  - Feature explanations and navigation
+  - Best practices and troubleshooting
+  - Workflow recommendations
+- **Meeting Summaries**:
+  - Auto-generates meeting summaries with AI
+  - Manual summary generation for reports
+  - Analyzes meeting chat and participants
+- **Accessible via Feature Hub** (Ctrl+Shift+A)
 
 #### **Feature Hub**
 - Floating quick-access menu (⚡ button)

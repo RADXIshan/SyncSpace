@@ -11,15 +11,20 @@ const AIAssistant = ({ onClose }) => {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "👋 Hi! I'm your SyncSpace AI assistant. I can help you with:\n\n✨ Platform Features\n• Video meetings & screen sharing\n• Team chat & direct messages\n• Voice messages & polls\n• Meeting reports & analytics\n• Smart search & focus mode\n\n🎯 Getting Started\n• Creating organizations & channels\n• Inviting team members\n• Managing roles & permissions\n• Scheduling events & meetings\n\n💡 Best Practices\n• Effective collaboration tips\n• Productivity workflows\n• Troubleshooting common issues\n\nWhat would you like to know?"
+      content: "👋 Hi! I'm your SyncSpace AI assistant with real-time access to your workspace.\n\n🔍 I Know About Your Workspace:\n• Your organizations and current org\n• All channels and their descriptions\n• Team members and their roles\n• Organization roles and permissions\n• Who's online right now\n• Active meetings and recent activity\n\n✨ Platform Features:\n• Video meetings & screen sharing\n• Team chat & direct messages\n• Voice messages & polls\n• Meeting reports & analytics\n• Smart search & focus mode\n\n🎯 Ask Me Anything:\n• \"What's my organization name?\"\n• \"List all my channels\"\n• \"Who's online right now?\"\n• \"What roles exist in my org?\"\n• \"What permissions does the Admin role have?\"\n• \"How many members are in my organization?\"\n• \"What channels can I access?\"\n\n💡 I can also help with:\n• Creating organizations & channels\n• Managing roles & permissions\n• Troubleshooting issues\n• Best practices for collaboration\n\nWhat would you like to know?"
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [realtimeContext, setRealtimeContext] = useState({
-    onlineUsers: 0,
-    activeChannels: [],
-    recentActivity: []
+    onlineUsers: [],
+    currentPage: window.location.pathname,
+    userOrganizations: [],
+    userChannels: [],
+    recentMessages: [],
+    activeMeetings: [],
+    userRole: null,
+    lastActivity: null
   });
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -67,27 +72,225 @@ const AIAssistant = ({ onClose }) => {
     }
   }, []);
 
-  // Listen to real-time socket events for context
+  // Gather comprehensive real-time context
+  useEffect(() => {
+    const gatherContext = async () => {
+      try {
+        const baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        
+        console.log('🔍 Starting context gathering for user:', user?.user_id);
+        
+        // Get user's organizations with proper schema fields
+        const orgsResponse = await axios.get(`${baseURL}/api/orgs/user/organizations`, { withCredentials: true });
+        const organizations = orgsResponse.data.organizations || [];
+        
+        console.log('📋 Fetched organizations:', organizations.length);
+        
+        // Get current organization from user.org_id (not localStorage)
+        const currentOrgId = user?.org_id;
+        const currentOrg = currentOrgId ? organizations.find(org => org.org_id === parseInt(currentOrgId)) : null;
+        
+        console.log('🏢 Current org ID:', currentOrgId, 'Found:', currentOrg?.org_name);
+        
+        // Get channels, members, roles, and meetings if in an organization
+        let channels = [];
+        let orgMembers = [];
+        let orgRoles = [];
+        let scheduledMeetings = [];
+        if (currentOrgId) {
+          try {
+            // Get organization details (includes channels and roles)
+            console.log('📡 Fetching organization details for org:', currentOrgId);
+            const orgResponse = await axios.get(`${baseURL}/api/orgs/${currentOrgId}`, { withCredentials: true });
+            channels = orgResponse.data.organization?.channels || [];
+            orgRoles = orgResponse.data.organization?.roles || [];
+            console.log('📺 Fetched channels:', channels.length);
+            console.log('🎭 Fetched roles:', orgRoles.length);
+            
+            // Get organization members
+            console.log('👥 Fetching members for org:', currentOrgId);
+            const membersResponse = await axios.get(`${baseURL}/api/orgs/${currentOrgId}/members`, { withCredentials: true });
+            orgMembers = membersResponse.data.members || [];
+            console.log('👥 Fetched members:', orgMembers.length);
+            
+            // Get scheduled meetings
+            console.log('📅 Fetching meetings for org:', currentOrgId);
+            const meetingsResponse = await axios.get(`${baseURL}/api/meetings?org_id=${currentOrgId}`, { withCredentials: true });
+            scheduledMeetings = meetingsResponse.data.meetings || [];
+            console.log('📅 Fetched meetings:', scheduledMeetings.length);
+          } catch (error) {
+            console.error('❌ Error fetching org data:', error.response?.data || error.message);
+          }
+        } else {
+          console.log('⚠️ No current organization - user may not be in an org yet');
+        }
+        
+        const contextData = {
+          userOrganizations: organizations.map(org => ({
+            id: org.org_id,
+            name: org.org_name,
+            role: org.role,
+            isOwner: org.created_by === user?.user_id,
+            memberCount: org.member_count,
+            channelCount: org.channel_count,
+            joinedAt: org.joined_at
+          })),
+          currentOrganization: currentOrg ? {
+            id: currentOrg.org_id,
+            name: currentOrg.org_name,
+            role: currentOrg.role,
+            memberCount: currentOrg.member_count,
+            channelCount: currentOrg.channel_count,
+            isOwner: currentOrg.created_by === user?.user_id
+          } : null,
+          userChannels: channels.map(ch => ({
+            id: ch.id || ch.channel_id,
+            name: ch.name || ch.channel_name,
+            description: ch.description || ch.channel_description
+          })),
+          organizationMembers: orgMembers.map(m => ({
+            id: m.user_id,
+            name: m.name,
+            email: m.email,
+            role: m.role,
+            joinedAt: m.joined_at
+          })),
+          organizationRoles: orgRoles.map(r => ({
+            id: r.id || r.role_id,
+            name: r.name || r.role_name,
+            permissions: {
+              manageChannels: r.manageChannels || r.manage_channels,
+              manageUsers: r.manageUsers || r.manage_users,
+              settingsAccess: r.settingsAccess || r.settings_access,
+              notesAccess: r.notesAccess || r.notes_access,
+              meetingAccess: r.meetingAccess || r.meeting_access,
+              noticeboardAccess: r.noticeboardAccess || r.noticeboard_access,
+              rolesAccess: r.rolesAccess || r.roles_access,
+              inviteAccess: r.inviteAccess || r.invite_access
+            },
+            accessibleTeams: r.accessibleTeams || r.accessible_teams || []
+          })),
+          scheduledMeetings: scheduledMeetings.map(m => ({
+            id: m.meeting_id,
+            title: m.title,
+            description: m.description,
+            channelId: m.channel_id,
+            channelName: m.channel_name,
+            startTime: m.start_time,
+            meetingLink: m.meeting_link,
+            started: m.started,
+            createdBy: m.created_by,
+            createdByName: m.created_by_name
+          })),
+          currentPage: window.location.pathname,
+          onlineUsers: [], // Will be populated by socket
+          recentMessages: [],
+          activeMeetings: [],
+          lastActivity: null
+        };
+        
+        console.log('✅ Context gathered successfully:', {
+          orgs: contextData.userOrganizations.length,
+          currentOrg: contextData.currentOrganization?.name || 'none',
+          channels: contextData.userChannels.length,
+          members: contextData.organizationMembers.length,
+          roles: contextData.organizationRoles.length,
+          meetings: contextData.scheduledMeetings.length
+        });
+        
+        setRealtimeContext(contextData);
+      } catch (error) {
+        console.error('❌ Error gathering context:', error.response?.data || error.message);
+        // Set empty context on error
+        setRealtimeContext({
+          userOrganizations: [],
+          currentOrganization: null,
+          userChannels: [],
+          organizationMembers: [],
+          currentPage: window.location.pathname,
+          onlineUsers: [],
+          recentMessages: [],
+          activeMeetings: [],
+          lastActivity: null
+        });
+      }
+    };
+    
+    if (user) {
+      gatherContext();
+    }
+  }, [user, user?.org_id]); // Re-fetch when user or org_id changes
+
+  // Listen to real-time socket events for context (same as org settings members tab)
   useEffect(() => {
     if (!socket) return;
 
-    // Listen for online users updates
-    const handleOnlineUsers = (users) => {
+    // Listen for online users list (initial load)
+    const handleOnlineUsersList = (users) => {
+      console.log('Received online users list:', users);
       setRealtimeContext(prev => ({
         ...prev,
-        onlineUsers: users?.length || 0
+        onlineUsers: Array.isArray(users) ? users.map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          photo: u.photo,
+          status: u.status || 'online',
+          customStatus: u.customStatus,
+          lastSeen: u.lastSeen
+        })) : []
       }));
+    };
+
+    // Listen for user status changes (online/offline/away/busy)
+    const handleUserStatusChanged = (data) => {
+      console.log('User status changed:', data);
+      setRealtimeContext(prev => {
+        const existingUser = prev.onlineUsers.find(u => u.id === data.userId);
+        
+        if (data.status === 'offline') {
+          // Remove user from online list
+          return {
+            ...prev,
+            onlineUsers: prev.onlineUsers.filter(u => u.id !== data.userId)
+          };
+        } else if (existingUser) {
+          // Update existing user status
+          return {
+            ...prev,
+            onlineUsers: prev.onlineUsers.map(u => 
+              u.id === data.userId 
+                ? { ...u, status: data.status, customStatus: data.customStatus }
+                : u
+            )
+          };
+        } else {
+          // Add new online user
+          return {
+            ...prev,
+            onlineUsers: [...prev.onlineUsers, {
+              id: data.userId,
+              name: data.user?.name || 'Unknown',
+              email: data.user?.email || '',
+              photo: data.user?.photo || null,
+              status: data.status,
+              customStatus: data.customStatus
+            }]
+          };
+        }
+      });
     };
 
     // Listen for new messages
     const handleNewMessage = (message) => {
       setRealtimeContext(prev => ({
         ...prev,
-        recentActivity: [...prev.recentActivity.slice(-9), {
-          type: 'message',
+        recentMessages: [...prev.recentMessages.slice(-4), {
           channelId: message.channelId,
+          userName: message.userName,
           timestamp: Date.now()
-        }]
+        }],
+        lastActivity: 'message_received'
       }));
     };
 
@@ -95,24 +298,51 @@ const AIAssistant = ({ onClose }) => {
     const handleMeetingStart = (data) => {
       setRealtimeContext(prev => ({
         ...prev,
-        recentActivity: [...prev.recentActivity.slice(-9), {
-          type: 'meeting_started',
+        activeMeetings: [...prev.activeMeetings, {
           channelId: data.channelId,
-          timestamp: Date.now()
-        }]
+          roomId: data.roomId,
+          startedAt: Date.now()
+        }],
+        lastActivity: 'meeting_started'
       }));
     };
 
-    socket.on('onlineUsers', handleOnlineUsers);
+    const handleMeetingEnd = (data) => {
+      setRealtimeContext(prev => ({
+        ...prev,
+        activeMeetings: prev.activeMeetings.filter(m => m.roomId !== data.roomId),
+        lastActivity: 'meeting_ended'
+      }));
+    };
+
+    // Register socket listeners
+    socket.on('online_users_list', handleOnlineUsersList);
+    socket.on('user_status_changed', handleUserStatusChanged);
     socket.on('newMessage', handleNewMessage);
     socket.on('meetingStarted', handleMeetingStart);
+    socket.on('meetingEnded', handleMeetingEnd);
+
+    // Request current online users when component mounts
+    const currentOrgId = user?.org_id;
+    if (currentOrgId && user) {
+      console.log('🔌 Emitting user_online for org:', currentOrgId);
+      socket.emit('user_online', {
+        name: user.name,
+        photo: user.user_photo,
+        org_id: parseInt(currentOrgId)
+      });
+    } else {
+      console.log('⚠️ Not emitting user_online - no org_id on user');
+    }
 
     return () => {
-      socket.off('onlineUsers', handleOnlineUsers);
+      socket.off('online_users_list', handleOnlineUsersList);
+      socket.off('user_status_changed', handleUserStatusChanged);
       socket.off('newMessage', handleNewMessage);
       socket.off('meetingStarted', handleMeetingStart);
+      socket.off('meetingEnded', handleMeetingEnd);
     };
-  }, [socket]);
+  }, [socket, user]);
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
@@ -137,19 +367,33 @@ const AIAssistant = ({ onClose }) => {
         content: msg.content
       }));
 
-      // Add real-time context to the message
-      const contextualMessage = userMessage + `\n\n[Real-time Context: ${realtimeContext.onlineUsers} users online, ${realtimeContext.recentActivity.length} recent activities]`;
+      const contextToSend = {
+        user: {
+          id: user?.user_id,
+          name: user?.name,
+          email: user?.email
+        },
+        onlineUsers: realtimeContext.onlineUsers || [],
+        currentPage: realtimeContext.currentPage || window.location.pathname,
+        currentOrganization: realtimeContext.currentOrganization || null,
+        userOrganizations: realtimeContext.userOrganizations || [],
+        userChannels: realtimeContext.userChannels || [],
+        organizationMembers: realtimeContext.organizationMembers || [],
+        organizationRoles: realtimeContext.organizationRoles || [],
+        scheduledMeetings: realtimeContext.scheduledMeetings || [],
+        recentMessages: realtimeContext.recentMessages || [],
+        activeMeetings: realtimeContext.activeMeetings || [],
+        lastActivity: realtimeContext.lastActivity || null
+      };
+      
+      console.log('Sending context to AI:', contextToSend);
 
       const response = await axios.post(
         `${baseURL}/api/ai/chat`,
         {
-          message: contextualMessage,
+          message: userMessage,
           conversationHistory,
-          realtimeContext: {
-            onlineUsers: realtimeContext.onlineUsers,
-            userName: user?.name,
-            userEmail: user?.email
-          }
+          realtimeContext: contextToSend
         },
         { withCredentials: true }
       );

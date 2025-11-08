@@ -777,6 +777,35 @@ export const deleteConversation = async (req, res) => {
          OR (sender_id = ${otherUserIdInt} AND receiver_id = ${userId})
     `;
 
+    // Get the deleter's name and org_id for the notification
+    const [deleterUser] = await sql`
+      SELECT name, org_id FROM users WHERE user_id = ${userId}
+    `;
+    const deleterName = deleterUser?.name || "Someone";
+    const orgId = deleterUser?.org_id;
+
+    // Create notification for the other user
+    if (orgId) {
+      try {
+        const { createNotification } = await import('./notificationControllers.js');
+        await createNotification(
+          otherUserIdInt,
+          orgId,
+          'conversation_deleted',
+          'Conversation Deleted',
+          `${deleterName} deleted your conversation`,
+          {
+            relatedId: userId,
+            relatedType: 'direct_message',
+            link: '/home/messages'
+          }
+        );
+      } catch (notifError) {
+        console.error("Error creating conversation deletion notification:", notifError);
+        // Don't fail the deletion if notification fails
+      }
+    }
+
     // Emit conversation deletion to both users
     const io = req.app.get("io");
     if (io) {
@@ -784,9 +813,20 @@ export const deleteConversation = async (req, res) => {
       
       const otherUserSocketId = getUserSocketId(otherUserIdInt);
       if (otherUserSocketId) {
+        // Emit conversation deleted event
         io.to(otherUserSocketId).emit("conversation_deleted", {
           deletedBy: userId,
+          deletedByName: deleterName,
           otherUserId: userId
+        });
+        
+        // Emit notification event for the notification system
+        io.to(otherUserSocketId).emit("new_notification", {
+          type: "conversation_deleted",
+          title: "Conversation Deleted",
+          message: `${deleterName} deleted your conversation`,
+          priority: "high",
+          actionUrl: "/home/messages"
         });
       }
 
@@ -794,6 +834,7 @@ export const deleteConversation = async (req, res) => {
       if (userSocketId) {
         io.to(userSocketId).emit("conversation_deleted", {
           deletedBy: userId,
+          deletedByName: deleterName,
           otherUserId: otherUserIdInt
         });
       }

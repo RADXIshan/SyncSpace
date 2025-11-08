@@ -392,12 +392,12 @@ const Messages = () => {
 
     // Listen for conversation deletions
     const handleConversationDeleted = (data) => {
-      // Remove the conversation from the list
+      // Remove the conversation from the list (outer sidebar)
       setConversations((prev) =>
         prev.filter((conv) => conv.other_user_id !== data.otherUserId)
       );
 
-      // If the deleted conversation is currently selected, clear it
+      // If the deleted conversation is currently selected, clear it (inner sidebar)
       if (selectedConversation?.other_user_id === data.otherUserId) {
         setSelectedConversation(null);
         setMessages([]);
@@ -408,14 +408,14 @@ const Messages = () => {
       if (data.deletedBy === user.user_id) {
         toast.success("Conversation deleted successfully");
       } else {
-        // Find the user who deleted the conversation
-        const deletedByUser = conversations.find(
-          (conv) => conv.other_user_id === data.deletedBy
-        );
-        toast.info(
-          `Conversation with ${
-            deletedByUser?.other_user_name || "someone"
-          } was deleted`
+        // The other person deleted the conversation - show a more prominent notification
+        const deletedByName = data.deletedByName || "The other user";
+        toast.error(
+          `${deletedByName} deleted your conversation`,
+          {
+            duration: 5000,
+            icon: '🗑️',
+          }
         );
       }
     };
@@ -1117,15 +1117,22 @@ const Messages = () => {
         { withCredentials: true }
       );
 
+      // Remove from conversations list immediately (outer sidebar)
+      setConversations((prev) =>
+        prev.filter((conv) => conv.other_user_id !== conversationToDelete.other_user_id)
+      );
+
+      // If this was the selected conversation, clear it (inner sidebar)
+      if (selectedConversation?.other_user_id === conversationToDelete.other_user_id) {
+        setSelectedConversation(null);
+        setMessages([]);
+        setSearchParams({});
+      }
+
       // Close modal and show success message
       setShowDeleteModal(false);
       setConversationToDelete(null);
       toast.success("Conversation deleted successfully");
-      
-      // Refresh the page to update the UI
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       console.error("Error deleting conversation:", error);
       toast.error("Failed to delete conversation");

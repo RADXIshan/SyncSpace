@@ -56,6 +56,7 @@ const Notifications = () => {
     if (type === "task") return "border-emerald-400/40 bg-emerald-50/80";
     if (type === "channel_update")
       return "border-indigo-400/40 bg-indigo-50/80";
+    if (type === "conversation_deleted") return "border-red-400/40 bg-red-50/80";
     if (type === "system") return "border-gray-400/40 bg-gray-50/80";
     if (type === "success") return "border-green-400/40 bg-green-50/80";
     if (type === "alert") return "border-red-400/40 bg-red-50/80";
@@ -71,6 +72,7 @@ const Notifications = () => {
     if (type === "notice") return "text-orange-500";
     if (type === "task") return "text-emerald-500";
     if (type === "channel_update") return "text-indigo-500";
+    if (type === "conversation_deleted") return "text-red-500";
     if (type === "system") return "text-gray-500";
     if (type === "success") return "text-green-500";
     if (type === "alert") return "text-red-500";
@@ -92,6 +94,8 @@ const Notifications = () => {
         return CheckCircle;
       case "channel_update":
         return Settings;
+      case "conversation_deleted":
+        return Trash2;
       case "system":
         return Settings;
       case "success":

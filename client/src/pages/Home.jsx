@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router'
 import Sidebar from '../components/Sidebar'
 import Dashboard from '../components/Dashboard'
 import Calendar from '../components/Calendar'
@@ -12,9 +12,18 @@ import JoinOrgModal from '../components/JoinOrgModal'
 import CreateOrgModal from '../components/CreateOrgModal'
 import OrgSettingsModal from '../components/OrgSettingsModal'
 import InviteModal from '../components/InviteModal'
+import FeatureHub from '../components/FeatureHub'
+import FeatureTour from '../components/FeatureTour'
+import SmartSearch from '../components/SmartSearch'
+import FocusMode from '../components/FocusMode'
+import KeyboardShortcuts from '../components/KeyboardShortcuts'
+import AIAssistant from '../components/AIAssistant'
+import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
+import { toast } from 'react-hot-toast'
 
 const Home = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showSettings, setShowSettings] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -23,6 +32,42 @@ const Home = () => {
   const [orgSettingsData, setOrgSettingsData] = useState({ organization: null, userRole: null, userPermissions: null });
   const [inviteOrganization, setInviteOrganization] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [showFeatureTour, setShowFeatureTour] = useState(false);
+  const [currentChannelId, setCurrentChannelId] = useState(null);
+  
+  // Global feature modals state
+  const [activeFeature, setActiveFeature] = useState(null);
+
+  // Show feature tour for first-time users
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('hasSeenFeatureTour');
+    if (!hasSeenTour) {
+      setTimeout(() => setShowFeatureTour(true), 1000);
+    }
+  }, []);
+
+  // Global keyboard shortcuts - work everywhere
+  useKeyboardShortcuts([
+    { key: 'k', ctrl: true, callback: () => setActiveFeature('search') },
+    { key: 'f', ctrl: true, shift: true, callback: () => setActiveFeature('focus') },
+    { key: '/', ctrl: true, callback: () => setActiveFeature('shortcuts') },
+    { key: 'a', ctrl: true, shift: true, callback: () => setActiveFeature('ai') },
+    { key: 'Escape', callback: () => {
+      if (activeFeature) {
+        setActiveFeature(null);
+      }
+    }, allowInInput: true },
+  ]);
+
+  // Extract channel ID from URL
+  useEffect(() => {
+    const match = location.pathname.match(/\/channels\/(\d+)/);
+    if (match) {
+      setCurrentChannelId(match[1]);
+    } else {
+      setCurrentChannelId(null);
+    }
+  }, [location]);
   
   const handleOrgSettings = (organization, userRole, userPermissions) => {
     setOrgSettingsData({ organization, userRole, userPermissions });
@@ -103,6 +148,57 @@ const Home = () => {
           />
         )}
       </main>
+
+      {/* Feature Hub - Hide only on direct messages page */}
+      {!location.pathname.includes('/messages') && (
+        <FeatureHub 
+          channelId={currentChannelId}
+          onFeatureAction={(action, data) => {
+            switch(action) {
+              case 'voice-send':
+                toast.success('Voice message feature ready!');
+                break;
+              case 'poll-created':
+                toast.success('Poll created successfully!');
+                break;
+              case 'status-updated':
+                toast.success('Status updated!');
+                break;
+              default:
+                break;
+            }
+          }}
+        />
+      )}
+
+      {/* Feature Tour for new users */}
+      {showFeatureTour && (
+        <FeatureTour 
+          onClose={() => setShowFeatureTour(false)}
+          onComplete={() => {
+            localStorage.setItem('hasSeenFeatureTour', 'true');
+            setShowFeatureTour(false);
+            toast.success('Welcome to SyncSpace! 🎉');
+          }}
+        />
+      )}
+
+      {/* Global Feature Modals - Work everywhere via keyboard shortcuts */}
+      {activeFeature === 'search' && (
+        <SmartSearch onClose={() => setActiveFeature(null)} />
+      )}
+      
+      {activeFeature === 'focus' && (
+        <FocusMode onClose={() => setActiveFeature(null)} />
+      )}
+      
+      {activeFeature === 'shortcuts' && (
+        <KeyboardShortcuts onClose={() => setActiveFeature(null)} />
+      )}
+
+      {activeFeature === 'ai' && (
+        <AIAssistant onClose={() => setActiveFeature(null)} />
+      )}
     </div>
   )
 }

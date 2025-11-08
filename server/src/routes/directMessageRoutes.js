@@ -12,6 +12,8 @@ import {
   markMessagesAsRead,
   getUnreadCounts,
   deleteConversation,
+  pinDirectMessage,
+  unpinDirectMessage,
 } from "../controllers/directMessageControllers.js";
 import { authenticateToken } from "../middleware/auth.js";
 
@@ -95,6 +97,10 @@ router.post(
 
 // Reactions
 router.post("/messages/:messageId/reactions", addDirectMessageReaction);
+
+// Pin/Unpin messages
+router.post("/messages/:messageId/pin", pinDirectMessage);
+router.delete("/messages/:messageId/pin", unpinDirectMessage);
 
 // Organization members (for finding users to message)
 router.get("/organization/members", getOrganizationMembers);

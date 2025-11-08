@@ -363,8 +363,9 @@ export const uploadDirectMessageFile = async (req, res) => {
       const fs = await import('fs');
       const path = await import('path');
       
-      // Create uploads directory if it doesn't exist
       const uploadsDir = path.join(process.cwd(), 'uploads', 'direct-messages');
+      
+      // Create uploads directory on-demand if it doesn't exist
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
@@ -905,5 +906,136 @@ const checkChannelAccess = async (userId, channelId) => {
   } catch (error) {
     console.error("Error checking channel access:", error);
     return false;
+  }
+};
+
+
+// Pin a direct message
+export const pinDirectMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user.userId;
+    const { receiver_id } = req.body;
+
+    // Verify the message exists and user is part of the conversation
+    const [message] = await sql`
+      SELECT * FROM direct_messages 
+      WHERE message_id = ${messageId}
+        AND (sender_id = ${userId} OR receiver_id = ${userId})
+    `;
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found or access denied" });
+    }
+
+    // Update message to be pinned
+    await sql`
+      UPDATE direct_messages 
+      SET is_pinned = true 
+      WHERE message_id = ${messageId}
+    `;
+
+    // Add to pinned_direct_messages table
+    await sql`
+      INSERT INTO pinned_direct_messages (message_id, user_id, pinned_by)
+      VALUES (${messageId}, ${userId}, ${userId})
+      ON CONFLICT (message_id, user_id) DO NOTHING
+    `;
+
+    // Emit socket event to both users
+    const io = req.app.get("io");
+    if (io) {
+      const { getUserSocketId } = await import('../configs/socket.js');
+      
+      const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+      
+      const userSocketId = getUserSocketId(userId);
+      const otherUserSocketId = getUserSocketId(otherUserId);
+      
+      const pinEvent = {
+        messageId: parseInt(messageId),
+        isPinned: true,
+        pinnedBy: userId
+      };
+      
+      if (userSocketId) {
+        io.to(userSocketId).emit("direct_message_pinned", pinEvent);
+      }
+      if (otherUserSocketId) {
+        io.to(otherUserSocketId).emit("direct_message_pinned", pinEvent);
+      }
+    }
+
+    res.json({ 
+      message: "Message pinned successfully",
+      is_pinned: true
+    });
+  } catch (error) {
+    console.error("Error pinning message:", error);
+    res.status(500).json({ message: "Failed to pin message" });
+  }
+};
+
+// Unpin a direct message
+export const unpinDirectMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user.userId;
+
+    // Verify the message exists and user is part of the conversation
+    const [message] = await sql`
+      SELECT * FROM direct_messages 
+      WHERE message_id = ${messageId}
+        AND (sender_id = ${userId} OR receiver_id = ${userId})
+    `;
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found or access denied" });
+    }
+
+    // Update message to be unpinned
+    await sql`
+      UPDATE direct_messages 
+      SET is_pinned = false 
+      WHERE message_id = ${messageId}
+    `;
+
+    // Remove from pinned_direct_messages table
+    await sql`
+      DELETE FROM pinned_direct_messages 
+      WHERE message_id = ${messageId} AND user_id = ${userId}
+    `;
+
+    // Emit socket event to both users
+    const io = req.app.get("io");
+    if (io) {
+      const { getUserSocketId } = await import('../configs/socket.js');
+      
+      const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+      
+      const userSocketId = getUserSocketId(userId);
+      const otherUserSocketId = getUserSocketId(otherUserId);
+      
+      const unpinEvent = {
+        messageId: parseInt(messageId),
+        isPinned: false,
+        unpinnedBy: userId
+      };
+      
+      if (userSocketId) {
+        io.to(userSocketId).emit("direct_message_unpinned", unpinEvent);
+      }
+      if (otherUserSocketId) {
+        io.to(otherUserSocketId).emit("direct_message_unpinned", unpinEvent);
+      }
+    }
+
+    res.json({ 
+      message: "Message unpinned successfully",
+      is_pinned: false
+    });
+  } catch (error) {
+    console.error("Error unpinning message:", error);
+    res.status(500).json({ message: "Failed to unpin message" });
   }
 };

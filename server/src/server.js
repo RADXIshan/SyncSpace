@@ -20,6 +20,8 @@ import directMessageRoutes from "./routes/directMessageRoutes.js";
 import meetingChatRoutes from "./routes/meetingChatRoutes.js";
 import meetingReportRoutes from "./routes/meetingReportRoutes.js";
 import debugRoutes from "./routes/debugRoutes.js";
+import pollRoutes from "./routes/pollRoutes.js";
+import searchRoutes from "./routes/searchRoutes.js";
 import { setupSocketHandlers } from "./configs/socket.js";
 import sql from "./database/db.js";
 import fs from "fs";
@@ -31,20 +33,6 @@ const __dirname = dirname(__filename);
 
 // Load .env from the server root directory
 dotenv.config({ path: join(__dirname, "../.env") });
-
-// Create uploads directories if they don't exist
-const uploadsDir = path.join(process.cwd(), "uploads", "chat-files");
-const dmUploadsDir = path.join(process.cwd(), "uploads", "direct-messages");
-const meetingUploadsDir = path.join(process.cwd(), "uploads", "meeting-files");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-if (!fs.existsSync(dmUploadsDir)) {
-  fs.mkdirSync(dmUploadsDir, { recursive: true });
-}
-if (!fs.existsSync(meetingUploadsDir)) {
-  fs.mkdirSync(meetingUploadsDir, { recursive: true });
-}
 
 const app = express();
 const server = createServer(app);
@@ -139,6 +127,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api", messageRoutes);
 app.use("/api/direct-messages", directMessageRoutes);
+app.use("/api/polls", pollRoutes);
+app.use("/api/search", searchRoutes);
 
 connectCloudinary();
 

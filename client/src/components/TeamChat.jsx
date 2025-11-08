@@ -16,6 +16,9 @@ import {
   X,
   Heart,
   ThumbsUp,
+  Mic,
+  BarChart3,
+  Pin,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -48,11 +51,14 @@ const safeToast = {
 };
 import EmojiPicker from "./EmojiPicker";
 import MessageReactions from "./MessageReactions";
+import PollDisplay from "./PollDisplay";
 import TypingIndicator from "./TypingIndicator";
 import MentionsList from "./MentionsList";
 import FileUpload from "./FileUpload";
+import VoiceRecorder from "./VoiceRecorder";
+import QuickPoll from "./QuickPoll";
 
-const TeamChat = ({ channelId, channelName }) => {
+const TeamChat = ({ channelId, channelName, onScrollToMessage }) => {
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
   const { markChannelAsRead } = useUnread();
@@ -70,6 +76,9 @@ const TeamChat = ({ channelId, channelName }) => {
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const [channelMembers, setChannelMembers] = useState([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [polls, setPolls] = useState([]);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [showPollModal, setShowPollModal] = useState(false);
 
   const [dragOver, setDragOver] = useState(false);
 
@@ -79,6 +88,7 @@ const TeamChat = ({ channelId, channelName }) => {
   const fileInputRef = useRef(null);
   const emojiPickerRef = useRef(null);
   const mentionsRef = useRef(null);
+  const messageRefs = useRef({});
 
   // Optimized scroll to bottom for WhatsApp-like experience
   const scrollToBottom = useCallback((instant = false) => {
@@ -91,6 +101,42 @@ const TeamChat = ({ channelId, channelName }) => {
         messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
       }
     }
+  }, []);
+
+  // Scroll to a specific message
+  const scrollToMessage = useCallback((messageId) => {
+    const messageElement = messageRefs.current[messageId];
+    if (messageElement) {
+      messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Highlight the message briefly
+      messageElement.classList.add("highlight-message");
+      setTimeout(() => {
+        messageElement.classList.remove("highlight-message");
+      }, 2000);
+    }
+  }, []);
+
+  // Hide FeatureHub when TeamChat is active
+  useEffect(() => {
+    // Find and hide the FeatureHub button
+    const featureHubButton = document.querySelector('[title="Open features"], [title="Close features"]');
+    if (featureHubButton) {
+      const parentDiv = featureHubButton.closest('div');
+      if (parentDiv) {
+        parentDiv.style.display = 'none';
+      }
+    }
+
+    // Show it again when component unmounts
+    return () => {
+      const featureHubButton = document.querySelector('[title="Open features"], [title="Close features"]');
+      if (featureHubButton) {
+        const parentDiv = featureHubButton.closest('div');
+        if (parentDiv) {
+          parentDiv.style.display = '';
+        }
+      }
+    };
   }, []);
 
   // Fetch messages
@@ -128,6 +174,22 @@ const TeamChat = ({ channelId, channelName }) => {
       toast.error("Failed to load channel members");
     }
   }, [channelId, user?.org_id]);
+
+  // Fetch polls for channel
+  const fetchPolls = useCallback(async () => {
+    if (!channelId) return;
+
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/api/polls/channel/${channelId}`,
+        { withCredentials: true }
+      );
+      setPolls(response.data.polls || []);
+    } catch (error) {
+      console.error("Error fetching polls:", error);
+      // Silently fail if polls endpoint doesn't exist yet
+    }
+  }, [channelId]);
 
   // Socket event handlers
   useEffect(() => {
@@ -170,9 +232,10 @@ const TeamChat = ({ channelId, channelName }) => {
 
     // Listen for message deletions
     const handleMessageDelete = (messageId) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.message_id === messageId
+      console.log('Socket event: message_deleted', messageId);
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
+          msg.message_id === messageId && !msg.isDeleted
             ? {
                 ...msg,
                 isDeleted: true,
@@ -180,8 +243,10 @@ const TeamChat = ({ channelId, channelName }) => {
                 content: "This message was deleted",
               }
             : msg
-        )
-      );
+        );
+        console.log('Messages after socket delete:', updated.find(m => m.message_id === messageId));
+        return updated;
+      });
     };
 
     // Listen for typing indicators
@@ -235,6 +300,43 @@ const TeamChat = ({ channelId, channelName }) => {
     socket.on("user_stopped_typing", handleUserStoppedTyping);
     socket.on("reaction_updated", handleReactionUpdate);
 
+    // Listen for pin/unpin events
+    socket.on("message_pinned", (data) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === data.messageId
+            ? { ...msg, is_pinned: true }
+            : msg
+        )
+      );
+    });
+
+    socket.on("message_unpinned", (data) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === data.messageId
+            ? { ...msg, is_pinned: false }
+            : msg
+        )
+      );
+    });
+
+    // Listen for poll events
+    socket.on("new_poll", (poll) => {
+      setPolls((prev) => [poll, ...prev]);
+      // Don't show toast here - creator already sees it from QuickPoll component
+    });
+
+    socket.on("poll_updated", (updatedPoll) => {
+      setPolls((prev) =>
+        prev.map((p) => (p.poll_id === updatedPoll.poll_id ? updatedPoll : p))
+      );
+    });
+
+    socket.on("poll_deleted", (data) => {
+      setPolls((prev) => prev.filter((p) => p.poll_id !== data.pollId));
+    });
+
     // Listen for mention notifications
     socket.on("user_mentioned", (data) => {
       if (data.mentionedUserId === user.user_id) {
@@ -257,6 +359,11 @@ const TeamChat = ({ channelId, channelName }) => {
       socket.off("user_typing", handleUserTyping);
       socket.off("user_stopped_typing", handleUserStoppedTyping);
       socket.off("reaction_updated", handleReactionUpdate);
+      socket.off("message_pinned");
+      socket.off("message_unpinned");
+      socket.off("new_poll");
+      socket.off("poll_updated");
+      socket.off("poll_deleted");
       socket.off("user_mentioned");
       socket.emit("leave_channel", channelId);
     };
@@ -266,12 +373,13 @@ const TeamChat = ({ channelId, channelName }) => {
   useEffect(() => {
     fetchMessages();
     fetchChannelMembers();
+    fetchPolls();
 
     // Mark channel as read when user opens it
     if (channelId) {
       markChannelAsRead(channelId);
     }
-  }, [fetchMessages, fetchChannelMembers, channelId, markChannelAsRead]);
+  }, [fetchMessages, fetchChannelMembers, fetchPolls, channelId, markChannelAsRead]);
 
   // Ensure members are fetched when channel changes
   useEffect(() => {
@@ -348,6 +456,19 @@ const TeamChat = ({ channelId, channelName }) => {
 
     return () => clearInterval(interval);
   }, [messages.length]); // Only depend on messages length, not the entire messages array
+
+  // Listen for scroll to message events
+  useEffect(() => {
+    const handleScrollToMessage = (event) => {
+      const { messageId } = event.detail;
+      scrollToMessage(messageId);
+    };
+
+    window.addEventListener('scrollToMessage', handleScrollToMessage);
+    return () => {
+      window.removeEventListener('scrollToMessage', handleScrollToMessage);
+    };
+  }, [scrollToMessage]);
 
   // Cleanup typing timeout on unmount or channel change
   useEffect(() => {
@@ -549,6 +670,32 @@ const TeamChat = ({ channelId, channelName }) => {
     textareaRef.current?.focus();
   };
 
+  // Handle voice message
+  const handleVoiceMessage = async (audioFile) => {
+    const uploadToast = safeToast.loading("Uploading voice message...");
+    
+    try {
+      const formData = new FormData();
+      formData.append("file", audioFile);
+      formData.append("channel_id", channelId);
+      formData.append("is_voice", "true");
+
+      await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/messages/file`,
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      safeToast.success("Voice message sent!", { id: uploadToast });
+    } catch (error) {
+      console.error("Error sending voice message:", error);
+      safeToast.error("Failed to send voice message", { id: uploadToast });
+    }
+  };
+
   // Handle file upload
   const handleFileUpload = async (files) => {
     const uploadPromises = files.map(async (file) => {
@@ -698,15 +845,65 @@ const TeamChat = ({ channelId, channelName }) => {
     }
   };
 
+  // Handle message pinning
+  const handlePinMessage = async (messageId) => {
+    try {
+      const message = messages.find(m => m.message_id === messageId);
+      const isPinned = message?.is_pinned;
+
+      if (isPinned) {
+        // Unpin message
+        await axios.delete(
+          `${import.meta.env.VITE_BASE_URL}/api/messages/${messageId}/pin`,
+          { withCredentials: true }
+        );
+        
+        // Update local state
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === messageId
+              ? { ...msg, is_pinned: false }
+              : msg
+          )
+        );
+        
+        toast.success("Message unpinned");
+      } else {
+        // Pin message
+        await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/api/messages/${messageId}/pin`,
+          { channel_id: channelId },
+          { withCredentials: true }
+        );
+        
+        // Update local state
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === messageId
+              ? { ...msg, is_pinned: true }
+              : msg
+          )
+        );
+        
+        toast.success("Message pinned");
+      }
+    } catch (error) {
+      console.error("Error pinning/unpinning message:", error);
+      toast.error("Failed to pin/unpin message");
+    }
+  };
+
   // Handle message deletion
   const handleDeleteMessage = async (messageId) => {
     // Show loading toast
     const deleteToast = safeToast.loading("Deleting message...");
 
+    console.log('Deleting message in TeamChat:', messageId);
+
     try {
       // Optimistically update the message to show as deleted
-      setMessages((prev) =>
-        prev.map((msg) =>
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
           msg.message_id === messageId
             ? {
                 ...msg,
@@ -715,8 +912,10 @@ const TeamChat = ({ channelId, channelName }) => {
                 content: "This message was deleted",
               }
             : msg
-        )
-      );
+        );
+        console.log('Messages after optimistic delete:', updated.find(m => m.message_id === messageId));
+        return updated;
+      });
 
       await axios.delete(
         `${import.meta.env.VITE_BASE_URL}/api/messages/${messageId}`,
@@ -1169,15 +1368,59 @@ const TeamChat = ({ channelId, channelName }) => {
           </p>
         </div>
 
-        {/* Messages */}
-        {messages.map((message, index) => {
+        {/* Messages and Polls Combined */}
+        {[...messages, ...polls.map(poll => ({ ...poll, isPoll: true, created_at: poll.created_at, user_id: poll.created_by }))]
+          .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+          .map((item, index, sortedItems) => {
+          
+          // Handle polls
+          if (item.isPoll) {
+            const isOwnPoll = item.created_by === user.user_id;
+            return (
+              <div key={`poll-${item.poll_id}`} className="mb-4">
+                <PollDisplay
+                  poll={item}
+                  onVote={(updatedPoll) => {
+                    setPolls((prev) =>
+                      prev.map((p) =>
+                        p.poll_id === updatedPoll.poll_id ? updatedPoll : p
+                      )
+                    );
+                  }}
+                  onDelete={isOwnPoll ? async () => {
+                    try {
+                      await axios.delete(
+                        `${import.meta.env.VITE_BASE_URL}/api/polls/${item.poll_id}`,
+                        { withCredentials: true }
+                      );
+                      setPolls((prev) => prev.filter((p) => p.poll_id !== item.poll_id));
+                      toast.success("Poll deleted");
+                    } catch (error) {
+                      console.error("Error deleting poll:", error);
+                      toast.error("Failed to delete poll");
+                    }
+                  } : null}
+                  currentUserId={user.user_id}
+                  onReaction={null}
+                  onReply={null}
+                  reactions={[]}
+                />
+              </div>
+            );
+          }
+          
+          // Handle messages
+          const message = item;
           const showAvatar =
-            index === 0 || messages[index - 1].user_id !== message.user_id;
+            index === 0 || sortedItems[index - 1].user_id !== message.user_id;
           const isOwnMessage = message.user_id === user.user_id;
 
           return (
             <div
               key={message.message_id}
+              ref={(el) => {
+                if (el) messageRefs.current[message.message_id] = el;
+              }}
               className={`group transition-all duration-200 hover:bg-gray-50 rounded-lg p-2 -m-2 ${
                 showAvatar ? "mt-4" : "mt-1"
               } ${
@@ -1262,6 +1505,21 @@ const TeamChat = ({ channelId, channelName }) => {
                             >
                               <Reply size={14} />
                             </button>
+                            {!message.isDeleted && (
+                              <>
+                                <button
+                                  onClick={() => handlePinMessage(message.message_id)}
+                                  className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer ${
+                                    message.is_pinned 
+                                      ? 'text-purple-600' 
+                                      : 'text-gray-500 hover:text-purple-600'
+                                  }`}
+                                  title={message.is_pinned ? "Unpin message" : "Pin message"}
+                                >
+                                  <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
+                                </button>
+                              </>
+                            )}
                             {isOwnMessage && !message.isDeleted && (
                               <>
                                 <div className="w-px h-6 bg-gray-200 mx-1"></div>
@@ -1323,14 +1581,34 @@ const TeamChat = ({ channelId, channelName }) => {
                     }`}
                   >
                     <div className="min-w-0">
-                      {message.file_url ? (
+                      {message.isDeleted ? (
                         <div
-                          className={`rounded-2xl p-4 inline-block max-w-xs sm:max-w-md shadow-sm ${
+                          className={`text-sm italic p-3 rounded-2xl ${
+                            isOwnMessage
+                              ? "bg-gray-200 text-gray-500"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {message.content}
+                        </div>
+                      ) : message.file_url ? (
+                        <div
+                          className={`relative rounded-2xl p-4 inline-block max-w-xs sm:max-w-md shadow-sm ${
                             isOwnMessage
                               ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md"
                               : "bg-white border border-gray-200 rounded-bl-md"
                           }`}
                         >
+                          {/* Pinned indicator badge for files */}
+                          {message.is_pinned && (
+                            <div className={`absolute -top-2 -left-2 ${
+                              isOwnMessage ? '-right-2 -left-auto' : ''
+                            }`}>
+                              <div className="bg-purple-600 text-white rounded-full p-1 shadow-lg">
+                                <Pin size={10} className="fill-current" />
+                              </div>
+                            </div>
+                          )}
                           {message.file_type?.startsWith("image/") ? (
                             <div className="relative group">
                               <img
@@ -1470,29 +1748,40 @@ const TeamChat = ({ channelId, channelName }) => {
                                     </div>
                                   </div>
                                 </div>
-                                <button
-                                  onClick={() =>
-                                    handleFileDownload(
-                                      message.file_url,
-                                      message.file_name
-                                    )
-                                  }
-                                  className={`p-1 rounded cursor-pointer ${
-                                    isOwnMessage
-                                      ? "hover:bg-blue-600"
-                                      : "hover:bg-gray-200"
-                                  }`}
-                                  title="Download audio"
-                                >
-                                  <Download
-                                    size={16}
-                                    className={
-                                      isOwnMessage
-                                        ? "text-white"
-                                        : "text-gray-600"
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() =>
+                                      handleFileDownload(
+                                        message.file_url,
+                                        message.file_name
+                                      )
                                     }
-                                  />
-                                </button>
+                                    className={`p-1 rounded cursor-pointer ${
+                                      isOwnMessage
+                                        ? "hover:bg-blue-600"
+                                        : "hover:bg-gray-200"
+                                    }`}
+                                    title="Download audio"
+                                  >
+                                    <Download
+                                      size={16}
+                                      className={
+                                        isOwnMessage
+                                          ? "text-white"
+                                          : "text-gray-600"
+                                      }
+                                    />
+                                  </button>
+                                  {isOwnMessage && (
+                                    <button
+                                      onClick={() => handleDeleteMessage(message.message_id)}
+                                      className="p-1 rounded cursor-pointer hover:bg-red-600 text-white"
+                                      title="Delete audio message"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           ) : (
@@ -1603,20 +1892,32 @@ const TeamChat = ({ channelId, channelName }) => {
                           )}
                         </div>
                       ) : (
-                        <div
-                          className={`text-sm leading-relaxed break-words p-4 rounded-2xl shadow-sm transition-all duration-200 inline-block max-w-xs sm:max-w-md lg:max-w-lg ${
-                            message.isDeleted
-                              ? "message-deleted message-delete-animation"
-                              : isOwnMessage
-                              ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md hover:shadow-md"
-                              : "bg-white text-gray-800 rounded-bl-md border border-gray-200 hover:shadow-md hover:border-gray-300"
-                          }`}
-                          dangerouslySetInnerHTML={{
-                            __html: message.isDeleted
-                              ? message.content
-                              : renderMessageContent(message.content),
-                          }}
-                        />
+                        <div className="relative inline-block">
+                          <div
+                            className={`text-sm leading-relaxed break-words p-4 rounded-2xl shadow-sm transition-all duration-200 inline-block max-w-xs sm:max-w-md lg:max-w-lg ${
+                              message.isDeleted
+                                ? "message-deleted message-delete-animation"
+                                : isOwnMessage
+                                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white ml-auto rounded-br-md hover:shadow-md"
+                                : "bg-white text-gray-800 rounded-bl-md border border-gray-200 hover:shadow-md hover:border-gray-300"
+                            }`}
+                            dangerouslySetInnerHTML={{
+                              __html: message.isDeleted
+                                ? message.content
+                                : renderMessageContent(message.content),
+                            }}
+                          />
+                          {/* Pinned indicator badge for text messages */}
+                          {message.is_pinned && !message.isDeleted && (
+                            <div className={`absolute -top-2 -left-2 ${
+                              isOwnMessage ? '-right-2 -left-auto' : ''
+                            }`}>
+                              <div className="bg-purple-600 text-white rounded-full p-1 shadow-lg">
+                                <Pin size={10} className="fill-current" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
 
                       {/* Reactions */}
@@ -1769,11 +2070,31 @@ const TeamChat = ({ channelId, channelName }) => {
 
             <div className="flex items-center justify-between px-2 sm:px-4 pb-3 sm:pb-4">
               <div className="flex items-center gap-1 sm:gap-3">
+                {/* Voice Message Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowVoiceRecorder(true)}
+                  className="p-1.5 sm:p-2 hover:bg-blue-100 rounded-xl text-gray-600 hover:text-blue-600 transition-all duration-200 cursor-pointer group"
+                  title="Record voice message"
+                >
+                  <Mic size={18} className="sm:w-5 sm:h-5" />
+                </button>
+
+                {/* Poll Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowPollModal(true)}
+                  className="p-1.5 sm:p-2 hover:bg-green-100 rounded-xl text-gray-600 hover:text-green-600 transition-all duration-200 cursor-pointer group"
+                  title="Create poll"
+                >
+                  <BarChart3 size={18} className="sm:w-5 sm:h-5" />
+                </button>
+
                 <div className="relative" ref={emojiPickerRef}>
                   <button
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="p-1.5 sm:p-2 hover:bg-purple-100 rounded-xl text-gray-600 hover:text-purple-600 transition-all duration-200 cursor-pointer"
+                    className="p-1.5 sm:p-2 hover:bg-yellow-100 rounded-xl text-gray-600 hover:text-yellow-600 transition-all duration-200 cursor-pointer"
                     title="Add emoji"
                   >
                     <Smile size={18} className="sm:w-5 sm:h-5" />
@@ -1860,6 +2181,27 @@ const TeamChat = ({ channelId, channelName }) => {
           onClose={() => setShowFileUpload(false)}
           maxFiles={5}
           maxSize={10 * 1024 * 1024} // 10MB
+        />
+      )}
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceRecorder
+          onSend={handleVoiceMessage}
+          onCancel={() => setShowVoiceRecorder(false)}
+        />
+      )}
+
+      {/* Poll Creation Modal */}
+      {showPollModal && (
+        <QuickPoll
+          channelId={channelId}
+          onClose={() => setShowPollModal(false)}
+          onPollCreated={(poll) => {
+            // Don't add poll here - socket event will handle it for everyone including creator
+            setShowPollModal(false);
+            // Toast is already shown in QuickPoll component
+          }}
         />
       )}
     </div>

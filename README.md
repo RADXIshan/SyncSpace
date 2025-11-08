@@ -1,10 +1,10 @@
-# 🚀 SyncSpace - Team Collaboration Platform
+# 🚀 SyncSpace - Modern Team Collaboration Platform
 
 <div align="center">
 
 ![SyncSpace Logo](client/public/icon.png)
 
-**A comprehensive real-time team collaboration platform with video conferencing, messaging, and productivity tools**
+**A comprehensive real-time team collaboration platform with video conferencing, messaging, polls, voice messages, and advanced productivity tools**
 
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-Latest-green.svg)](https://nodejs.org/)
@@ -12,717 +12,1245 @@
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-black.svg)](https://socket.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-blue.svg)](https://neon.tech/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.12-38B2AC.svg)](https://tailwindcss.com/)
-[![Vite](https://img.shields.io/badge/Vite-7.1.2-646CFF.svg)](https://vitejs.dev/)
 
 **🚀 <a href="https://syncspace-client.vercel.app" target="_blank">Live Demo</a> | 📖 [Documentation](#-table-of-contents) | 🛠 [Setup Guide](#-installation)**
 
 </div>
 
+---
+
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [API Documentation](#api-documentation)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Usage](#-usage)
+- [API Documentation](#-api-documentation)
+- [Project Structure](#-project-structure)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
 
 ## 🌟 Overview
 
-SyncSpace is a comprehensive team collaboration platform that combines real-time messaging, video conferencing, project management, and organizational tools in one seamless application. Built with cutting-edge web technologies, it provides teams with everything they need to stay connected and productive.
+SyncSpace is a cutting-edge team collaboration platform that seamlessly integrates real-time messaging, HD video conferencing, interactive polls, voice messages, and comprehensive project management tools. Built with modern web technologies and designed for scalability, it empowers teams to communicate, collaborate, and stay productive from anywhere.
 
-## 🆕 Recent Updates
+### Platform Statistics
 
-### Latest Features & Improvements
+- **65+ React Components**: Comprehensive UI component library
+- **15+ API Routes**: RESTful API endpoints
+- **13+ Controllers**: Business logic handlers
+- **5 Context Providers**: Global state management
+- **Real-time WebSocket**: Instant bidirectional communication
+- **3-Tier Architecture**: Client, Server, Email Service
+- **PostgreSQL Database**: Reliable data persistence
+- **Cloud Storage**: Cloudinary integration for media
 
-- **Enhanced Meeting Reports System**: Server-side report generation with improved reliability and performance
-- **Advanced Analytics Dashboard**: Comprehensive meeting analytics with participant engagement metrics
-- **Improved Video Conferencing**: Better connection handling and meeting preparation workflow
-- **Role-Based Permissions**: Granular access control for meeting reports and organization management
-- **Pagination Support**: Efficient handling of large datasets in meeting reports and notifications
-- **Debug & Development Tools**: Built-in debugging utilities for troubleshooting and system monitoring
-- **Export Functionality**: CSV export capabilities for meeting reports and analytics data
-- **Enhanced UI/UX**: Improved responsive design and accessibility features
+### What Makes SyncSpace Special?
 
-### Key Highlights
+- **🎯 All-in-One Solution**: Everything your team needs in one platform
+- **⚡ Real-Time Everything**: Instant updates, live presence, typing indicators
+- **🎨 Modern UI/UX**: Beautiful, responsive design with smooth animations
+- **🔒 Enterprise-Grade Security**: JWT authentication, role-based access control
+- **📊 Advanced Analytics**: Meeting reports, engagement metrics, insights
+- **🌐 Cloud-Native**: Serverless architecture, auto-scaling, global CDN
+- **📱 Mobile-First**: Optimized for all devices and screen sizes
+- **🎭 Interactive UI**: Custom cursor, particle effects, scroll progress, scramble text animations
 
-- **Advanced Video Conferencing**: HD video meetings with screen sharing, meeting prep, and real-time chat
-- **Smart Meeting Reports**: Automatic report generation with participant tracking and chat archival
-- **Multi-Channel Communication**: Team chat, direct messages, and meeting-specific chat rooms
-- **Smart Notifications**: Comprehensive notification system with filtering and real-time updates
-- **Organization Management**: Multi-organization support with role-based access and member management
-- **Productivity Suite**: Integrated calendar, notes system, and notice boards
-- **Real-time Features**: Live typing indicators, online status, and instant message reactions
-- **Modern Architecture**: Built with React 19, Vite 7, and latest web standards
-- **Secure & Scalable**: JWT authentication, email verification, and cloud-ready infrastructure
-- **Performance Optimized**: Server-side rendering, efficient pagination, and optimized database queries
-- **Cloud-Native**: Serverless deployment with automatic scaling and global CDN
+### Landing Page Features
 
-## ✨ Features
+- **Hero Section**: Eye-catching hero with animated elements
+- **Feature Showcase**: Comprehensive feature highlights
+- **Statistics Display**: Real-time platform statistics
+- **Testimonials**: User reviews and feedback
+- **Pricing Plans**: Transparent pricing information
+- **Feature Comparison**: Compare plans side-by-side
+- **FAQ Section**: Common questions answered
+- **Responsive Navigation**: Mobile-friendly navigation
 
-### 🔐 Authentication & Security
+### UI/UX Enhancements
 
-- **User Registration**: Email verification with OTP system
-- **Secure Authentication**: JWT-based token system with refresh tokens
-- **Password Management**: Forgot password and reset functionality
-- **Role-based Access**: Admin, moderator, and member permissions
-- **Protected Routes**: Client-side route protection and middleware
+- **Custom Cursor**: Interactive cursor effects
+- **Particle System**: Dynamic background particles
+- **Scroll Progress**: Visual scroll indicators
+- **Scramble Text**: Animated text effects
+- **Animated Buttons**: Smooth button interactions
+- **Error Boundaries**: Graceful error handling
+- **Loading States**: Skeleton screens and spinners
+- **Toast Notifications**: Non-intrusive alerts
+- **Modal Dialogs**: Confirmation and input modals
+- **Route Guards**: Protected and public route handling
 
-### 💬 Advanced Communication System
+---
 
-- **Multi-Channel Chat**: Organization-based channel system with real-time messaging
-- **Direct Messages**: Private one-on-one conversations
-- **Meeting Chat**: Dedicated chat rooms for video meetings
-- **Message Features**:
-  - Reply to messages with threading
-  - Edit and delete messages
-  - Emoji reactions (Heart, ThumbsUp, etc.)
-  - File attachments with cloud storage
-  - Typing indicators
-  - Message search and filtering
-- **Online Presence**: Real-time online/offline status tracking
-- **Unread Management**: Smart unread message counting and tracking
+## ✨ Key Features
 
-### 🎥 Professional Video Conferencing
+### 🎤 Communication Suite
 
-- **HD Video Meetings**: High-quality video calls with WebRTC
-- **Advanced Controls**:
-  - Camera on/off toggle
-  - Microphone mute/unmute
-  - Screen sharing capabilities
-  - Meeting settings panel
-- **Meeting Preparation**: Pre-meeting setup page with device testing
-- **Real-time Participants**: Live participant list and management
-- **Meeting Chat**: Integrated chat during video calls
-- **Connection Status**: Real-time connection monitoring
-- **Smart Meeting Reports**: 
-  - Automatic report generation for meetings lasting 30+ seconds
-  - Participant tracking and duration recording
-  - Meeting chat message archival
-  - Export capabilities for meeting data
-  - Report management and overview dashboard
+#### **Real-Time Messaging**
+- Multi-channel team chat with threading
+- Private direct messages
+- Message reactions (👍, ❤️, and more)
+- Reply and quote functionality
+- Edit and delete messages
+- File attachments with preview
+- Typing indicators
+- Read receipts
+
+#### **Voice Messages** 🆕
+- WhatsApp-style voice recording
+- Audio playback with controls
+- Voice message reactions and replies
+- Download voice messages
+- Duration tracking
+
+#### **Quick Polls** 🆕
+- Create instant polls with multiple options
+- Real-time voting and results
+- Single or multiple choice
+- Anonymous voting option
+- Poll reactions and replies
+- Visual progress bars
+- Vote count tracking
+
+#### **Message Pinning** 🆕
+- Pin important messages to channel top
+- Quick access to pinned content
+- Jump to pinned message
+- Unpin functionality
+- Visual pin indicators
+
+#### **Direct Messaging**
+- Private 1-on-1 conversations
+- Real-time message delivery
+- File sharing in DMs
+- Message history
+- Unread message tracking
+
+### 🎥 Video Conferencing
+
+- **HD Video Calls**: Crystal-clear video with WebRTC
+- **Screen Sharing**: Share your screen with participants
+- **Meeting Preparation**: Test camera/mic before joining
+- **Real-Time Chat**: Integrated chat during meetings
+- **Participant Management**: See who's in the meeting
+- **Connection Monitoring**: Real-time connection status
+- **Meeting Reports**: Automatic report generation with analytics
+- **Meeting Settings**: Customize audio/video preferences
+- **Meeting Modal**: Quick meeting creation interface
+
+
+### 🔍 Smart Features
+
+#### **Smart Search** 🆕
+- Search across messages, files, and people
+- Advanced filters and sorting
+- Real-time search results
+- Search history
+- Keyboard shortcuts
+
+#### **Focus Mode** 🆕
+- Built-in Pomodoro timer
+- Distraction-free interface
+- Productivity tracking
+- Custom work/break intervals
+
+#### **Keyboard Shortcuts** 🆕
+- Power user shortcuts for all features
+- Customizable key bindings
+- Quick access panel
+- Shortcut cheat sheet
+
+#### **Feature Hub** 🆕
+- Floating quick-access menu
+- One-click feature activation
+- Customizable layout
+- Drag-and-drop positioning
 
 ### 🏢 Organization Management
 
-- **Multi-Organization Support**: Users can join and manage multiple organizations
-- **Advanced Role System**: Granular permissions for different user types
-- **Channel Management**: Create, edit, and manage team channels
-- **Member Management**:
-  - Invite members via email
-  - Role assignment and modification
-  - Member activity tracking
-- **Organization Settings**: Customizable organization preferences and branding
+- **Multi-Organization Support**: Join and manage multiple orgs
+- **Role-Based Access Control**: Admin, moderator, member roles
+- **Channel Management**: Create and organize team channels
+- **Member Invitations**: Email-based invite system
+- **Activity Tracking**: Monitor member engagement
+- **Custom Branding**: Organization-specific settings
+- **Organization Settings**: Customize org preferences
+- **Member Management**: Add, remove, and manage members
+- **Channel Editing**: Modify channel details and permissions
 
-### 📝 Comprehensive Productivity Suite
+### 📊 Productivity Tools
 
-- **Smart Calendar**:
-  - FullCalendar integration with day/week/month views
-  - Event creation and management
-  - Meeting scheduling
-  - Mobile-responsive calendar interface
-- **Notes System**:
-  - Create, edit, and manage team notes
-  - Rich text editing capabilities
-  - Note sharing and collaboration
-- **Notice Board**:
-  - Important announcements and updates
-  - Pinned notices for visibility
-  - Role-based notice creation
-- **Advanced Notifications**:
-  - Real-time notification system
-  - Categorized notifications (mentions, meetings, system)
-  - Notification filtering and search
-  - Mark as read/unread functionality
-  - Bulk notification management
+- **Smart Calendar**: FullCalendar integration with event management
+- **Notes System**: Collaborative note-taking and sharing
+- **Notice Board**: Important announcements and updates
+- **Meeting Reports**: Comprehensive analytics and insights
+- **Notification Center**: Categorized, filterable notifications
+- **File Management**: Cloud storage with Cloudinary
+- **Direct Messaging**: Private 1-on-1 conversations
+- **User Status**: Online/offline/away presence indicators
+- **Mentions System**: @mention users in messages
+- **Typing Indicators**: See when others are typing
+- **Connection Status**: Real-time connection monitoring
+- **Unread Tracking**: Track unread messages across channels
 
-### 🎨 Modern User Experience
 
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
-- **Advanced Animations**: GSAP-powered smooth transitions and effects
-- **Interactive Elements**:
-  - Custom cursor effects
-  - Particle systems
-  - Scroll progress indicators
-  - Scramble text animations
-- **Accessibility**: Screen reader support and keyboard navigation
-- **Performance**: Optimized with React 19 and Vite 7 for fast loading
-- **Error Handling**: Comprehensive error boundaries and user feedback
+---
 
-### 🔔 Smart Notification System
+## 🏗 Architecture
 
-- **Real-time Notifications**: Instant updates for all activities
-- **Notification Categories**: Mentions, meetings, member activities, system alerts
-- **Advanced Filtering**: Filter by type, read status, and search
-- **Bulk Actions**: Mark all as read, delete all notifications
-- **Priority Levels**: High, medium, low priority notifications
-- **Notification History**: Complete notification timeline and management
+### System Architecture Diagram
 
-### 📊 Meeting Reports & Analytics
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         CLIENT LAYER (React 19)                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
+│  │   Pages      │  │  Components  │  │   Context    │              │
+│  │              │  │              │  │              │              │
+│  │ • Landing    │  │ • TeamChat   │  │ • Auth       │              │
+│  │ • Dashboard  │  │ • Messages   │  │ • Socket     │              │
+│  │ • Meeting    │  │ • Polls      │  │ • Notif      │              │
+│  │ • Calendar   │  │ • Voice      │  │ • Unread     │              │
+│  └──────────────┘  └──────────────┘  └──────────────┘              │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │              Vite 7 + Tailwind CSS 4                         │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                                  │
+                                  │ HTTPS/WSS
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      API LAYER (Express.js)                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
+│  │   Routes     │  │ Controllers  │  │  Middleware  │              │
+│  │              │  │              │  │              │              │
+│  │ • Auth       │  │ • Messages   │  │ • JWT Auth   │              │
+│  │ • Messages   │  │ • Meetings   │  │ • Multer     │              │
+│  │ • Meetings   │  │ • Polls      │  │ • CORS       │              │
+│  │ • Polls      │  │ • Reports    │  │ • Error      │              │
+│  └──────────────┘  └──────────────┘  └──────────────┘              │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │              Socket.IO Server (WebSocket)                     │  │
+│  │  • Real-time messaging  • Presence  • Typing indicators       │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                                  │
+                    ┌─────────────┼─────────────┐
+                    │             │             │
+                    ▼             ▼             ▼
+         ┌──────────────┐ ┌──────────┐ ┌──────────────┐
+         │  PostgreSQL  │ │Cloudinary│ │   Nodemailer │
+         │    (Neon)    │ │  Media   │ │    Email     │
+         │              │ │ Storage  │ │   Service    │
+         └──────────────┘ └──────────┘ └──────────────┘
+```
 
-- **Automatic Report Generation**: 
-  - Reports created automatically for meetings lasting 30+ seconds
-  - Participant tracking with join/leave timestamps
-  - Meeting duration and engagement metrics
-  - Server-side report creation for reliability
-- **Comprehensive Data Collection**:
-  - Chat message archival during meetings
-  - Participant list with roles and details
-  - Meeting metadata (title, channel, organization)
-  - Real-time participant activity tracking
-- **Report Management**:
-  - View, edit, and delete meeting reports
-  - Export reports to CSV format
-  - Search and filter reports by date, channel, or participants
-  - Role-based permissions for report access
-- **Analytics Dashboard**:
-  - Meeting frequency and duration statistics
-  - Participant engagement metrics
-  - Channel-wise meeting analytics
-  - Organization-wide meeting insights
-- **Smart Features**:
-  - Browser close protection (reports created even if tab is closed)
-  - Duplicate prevention system
-  - Debugging utilities for troubleshooting
-  - Minimum duration validation (30-second threshold)
-  - Pagination for large report datasets
+
+### Data Flow Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          USER ACTIONS                                │
+└─────────────────────────────────────────────────────────────────────┘
+                                  │
+                    ┌─────────────┼─────────────┐
+                    │             │             │
+                    ▼             ▼             ▼
+         ┌──────────────┐ ┌──────────┐ ┌──────────────┐
+         │   REST API   │ │ WebSocket│ │  File Upload │
+         │   (Axios)    │ │(Socket.IO)│ │   (Multer)   │
+         └──────────────┘ └──────────┘ └──────────────┘
+                    │             │             │
+                    └─────────────┼─────────────┘
+                                  ▼
+                    ┌──────────────────────────┐
+                    │   Express Middleware     │
+                    │  • JWT Verification      │
+                    │  • Request Validation    │
+                    │  • Error Handling        │
+                    └──────────────────────────┘
+                                  │
+                    ┌─────────────┼─────────────┐
+                    │             │             │
+                    ▼             ▼             ▼
+         ┌──────────────┐ ┌──────────┐ ┌──────────────┐
+         │  Controller  │ │  Socket  │ │   Service    │
+         │    Logic     │ │ Handlers │ │    Layer     │
+         └──────────────┘ └──────────┘ └──────────────┘
+                    │             │             │
+                    └─────────────┼─────────────┘
+                                  ▼
+                    ┌──────────────────────────┐
+                    │    Database Queries      │
+                    │  • PostgreSQL (Neon)     │
+                    │  • Optimized Queries     │
+                    │  • Transaction Support   │
+                    └──────────────────────────┘
+                                  │
+                    ┌─────────────┼─────────────┐
+                    │             │             │
+                    ▼             ▼             ▼
+         ┌──────────────┐ ┌──────────┐ ┌──────────────┐
+         │   Response   │ │  Socket  │ │  File URLs   │
+         │     JSON     │ │  Emit    │ │ (Cloudinary) │
+         └──────────────┘ └──────────┘ └──────────────┘
+                    │             │             │
+                    └─────────────┼─────────────┘
+                                  ▼
+                    ┌──────────────────────────┐
+                    │    React State Update    │
+                    │  • Context Providers     │
+                    │  • Component Re-render   │
+                    │  • UI Update             │
+                    └──────────────────────────┘
+```
+
+
+### User Flow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      NEW USER JOURNEY                                │
+└─────────────────────────────────────────────────────────────────────┘
+
+    Landing Page
+         │
+         ▼
+    Sign Up ──────► Email Verification (OTP)
+         │                    │
+         │                    ▼
+         │              Verify Email
+         │                    │
+         └────────────────────┘
+                    │
+                    ▼
+         Create/Join Organization
+                    │
+         ┌──────────┼──────────┐
+         │          │          │
+         ▼          ▼          ▼
+    Dashboard   Channels   Calendar
+         │          │          │
+         └──────────┼──────────┘
+                    │
+         ┌──────────┼──────────┬──────────┐
+         │          │          │          │
+         ▼          ▼          ▼          ▼
+    Team Chat  Meetings   Polls    Voice Msgs
+         │          │          │          │
+         └──────────┼──────────┴──────────┘
+                    │
+                    ▼
+         Collaborate & Communicate
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                    MESSAGING FLOW                                    │
+└─────────────────────────────────────────────────────────────────────┘
+
+    Select Channel/User
+           │
+           ▼
+    ┌──────────────────┐
+    │  Message Input   │
+    └──────────────────┘
+           │
+    ┌──────┼──────┬──────┬──────┐
+    │      │      │      │      │
+    ▼      ▼      ▼      ▼      ▼
+  Text   File  Voice  Poll  Reply
+    │      │      │      │      │
+    └──────┼──────┴──────┴──────┘
+           │
+           ▼
+    Send via Socket.IO
+           │
+           ▼
+    Server Processing
+           │
+    ┌──────┼──────┐
+    │      │      │
+    ▼      ▼      ▼
+   Save   Emit  Notify
+    │      │      │
+    └──────┼──────┘
+           │
+           ▼
+    Real-time Update
+           │
+    ┌──────┼──────┬──────┐
+    │      │      │      │
+    ▼      ▼      ▼      ▼
+  React  Reply  Pin  Delete
+```
+
+
+
+---
 
 ## 🛠 Tech Stack
 
 ### Frontend
-
-- **React 19.1.1** - Latest React with concurrent features and improved performance
-- **Vite 7.1.2** - Next-generation frontend build tool with HMR
-- **Tailwind CSS 4.1.12** - Utility-first CSS framework with latest features
+- **React 19.1.1** - Latest React with concurrent features
+- **Vite 7.1.2** - Lightning-fast build tool
+- **Tailwind CSS 4.1.12** - Utility-first CSS framework
 - **Socket.IO Client 4.8.1** - Real-time bidirectional communication
-- **React Router 7.8.1** - Declarative routing for React applications
-- **Axios 1.11.0** - Promise-based HTTP client
-- **GSAP 3.13.0** - Professional-grade animation library
-- **FullCalendar 6.1.19** - Full-featured calendar component
-- **Lucide React 0.541.0** - Beautiful & consistent icon library
-- **React Hot Toast 2.6.0** - Elegant toast notifications
-- **React DatePicker 8.7.0** - Flexible date picker component
-- **Date-fns 4.1.0** - Modern JavaScript date utility library
+- **Axios 1.11.0** - HTTP client for API requests
+- **React Router 7.8.1** - Client-side routing
+- **FullCalendar 6.1.19** - Calendar and scheduling
+- **Lucide React 0.541.0** - Beautiful icon library
+- **React Hot Toast 2.6.0** - Elegant notifications
+- **React DatePicker 8.7.0** - Date selection component
+- **date-fns 4.1.0** - Modern date utility library
 
 ### Backend
-
-- **Node.js (ES Modules)** - Modern JavaScript runtime with ES6+ support
-- **Express.js 4.19.2** - Fast, unopinionated web framework
-- **Socket.IO 4.8.1** - Real-time bidirectional event-based communication
-- **PostgreSQL with Neon** - Serverless PostgreSQL database
-- **@neondatabase/serverless 1.0.1** - Neon database driver optimized for serverless
-- **JWT (jsonwebtoken 9.0.2)** - Secure authentication tokens
-- **Bcrypt 6.0.0** - Password hashing and security
-- **Nodemailer 7.0.6** - Email sending functionality
-- **Cloudinary 2.8.0** - Cloud-based media management and optimization
-- **Multer 2.0.2** - Multipart/form-data file upload handling
+- **Node.js** - JavaScript runtime
+- **Express.js 4.19.2** - Web application framework
+- **Socket.IO 4.8.1** - WebSocket server
+- **PostgreSQL (Neon 1.0.1)** - Serverless Postgres database
+- **JWT 9.0.2** - JSON Web Token authentication
+- **Bcrypt 6.0.0** - Password hashing
+- **Multer 2.0.2** - File upload handling
+- **Nodemailer 7.0.6** - Email service
+- **Cloudinary 2.8.0** - Media storage and CDN
 - **Cookie Parser 1.4.7** - Cookie parsing middleware
 - **CORS 2.8.5** - Cross-origin resource sharing
-- **Axios 1.12.2** - HTTP client for server-side requests
+- **Dotenv 17.2.1** - Environment variable management
 
-### Development & Deployment
+### Email Service (Microservice)
+- **Express.js 4.18.2** - Lightweight web framework
+- **Nodemailer 7.0.6** - Email sending service
+- **CORS 2.8.5** - Cross-origin support
+- **Dotenv 16.3.1** - Environment configuration
 
-- **Vercel** - Serverless deployment platform for frontend and backend
-- **dotenv 17.2.1** - Environment variable management
-- **ESLint 9.33.0** - Code linting and formatting
-- **Nodemon 3.1.10** - Development server with auto-restart
-- **Git** - Version control system
+### DevOps & Deployment
+- **Vercel** - Serverless deployment platform
+- **GitHub** - Version control
+- **Environment Variables** - Secure configuration management
+- **Nodemon 3.1.10** - Development auto-reload
 
-## 🌐 Live Demo
+---
 
-**🚀 <a href="https://syncspace-client.vercel.app" target="_blank">Try SyncSpace Live</a>**
+## 📦 Installation
 
-### Deployment Information
-
-- **Frontend**: Deployed on [Vercel](https://vercel.com)
-  - URL: `https://syncspace-client.vercel.app`
-  - Auto-deployment from main branch
-- **Backend**: Deployed on [Vercel](https://vercel.com)
-  - API URL: `https://syncspace-server.vercel.app`
-  - Serverless functions with Express.js
-- **Database**: [Neon PostgreSQL](https://neon.tech)
-  - Serverless PostgreSQL with auto-scaling
-- **Media Storage**: [Cloudinary](https://cloudinary.com)
-  - Optimized image and file delivery
-- **dotenv** - Environment variable management
-- **ESLint** - Code linting and formatting
-
-## 📋 Prerequisites
+### Prerequisites
 
 Before you begin, ensure you have the following installed:
-
-- **Node.js** (v18.0.0 or higher)
-- **npm** or **yarn** package manager
-- **Git** for version control
+- **Node.js** (v18 or higher)
+- **npm** or **yarn**
 - **PostgreSQL** database (or Neon account)
-- **Cloudinary** account for media storage
-- **Email service** (Gmail recommended) for notifications
+- **Cloudinary** account
+- **Git**
 
-## 🚀 Installation
-
-### 1. Clone the Repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/yourusername/syncspace.git
 cd syncspace
 ```
 
-### 2. Install Dependencies
+### Install Dependencies
 
-#### Backend Setup
-
+#### Client Setup
 ```bash
-cd server
+cd client
 npm install
 ```
 
-#### Frontend Setup
-
+#### Server Setup
 ```bash
-cd ../client
+cd ../server
 npm install
 ```
+
+#### Email Service Setup
+```bash
+cd ../email-service
+npm install
+```
+
+---
 
 ## ⚙️ Configuration
 
-### 1. Server Environment Variables
+### Environment Variables
 
-Create a `.env` file in the `server` directory:
+Create `.env` files in each directory with the following variables:
 
+#### Client `.env` (`client/.env`)
+```env
+VITE_API_URL=http://localhost:3000
+VITE_SOCKET_URL=http://localhost:3000
+VITE_EMAIL_SERVICE_URL=http://localhost:3001
+```
+
+#### Server `.env` (`server/.env`)
 ```env
 # Server Configuration
 PORT=3000
-CLIENT_URL=http://localhost:5173
+NODE_ENV=development
 
-# Database Configuration
-DATABASE_URL=postgresql://username:password@host:port/database?sslmode=require
+# Database (Neon PostgreSQL)
+DATABASE_URL=postgresql://username:password@host/database?sslmode=require
 
-# JWT Configuration
-JWT_SECRET_KEY=your-super-secret-jwt-key-here
-
-# Email Configuration (Gmail example)
-EMAIL=your-email@gmail.com
-APP_PASSWORD=your-app-specific-password
+# JWT Secret
+JWT_SECRET=your_super_secret_jwt_key_here
 
 # Cloudinary Configuration
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Email Service
+EMAIL_SERVICE_URL=http://localhost:3001
+
+# CORS
+CLIENT_URL=http://localhost:5173
+
+# Production URLs (for deployment)
+# CLIENT_URL=https://syncspace-client.vercel.app
 ```
 
-### 2. Client Environment Variables
-
-Create a `.env` file in the `client` directory:
-
+#### Email Service `.env` (`email-service/.env`)
 ```env
-# API Configuration
-VITE_BASE_URL=http://localhost:3000
-VITE_FRONTEND_URL=http://localhost:5173
+# Email Configuration
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_specific_password
+
+# Server Configuration
+PORT=3001
 ```
 
-### 3. Database Setup
+### Database Setup
 
-#### Using Neon Database (Recommended)
+1. Create a PostgreSQL database (recommended: [Neon](https://neon.tech))
+2. Run the database schema (tables will be created automatically on first run)
+3. Update `DATABASE_URL` in server `.env`
 
-1. Sign up at [Neon.tech](https://neon.tech/)
-2. Create a new project
-3. Copy the connection string to your server `.env` file
+### Cloudinary Setup
 
-#### Using Local PostgreSQL
+1. Sign up at [Cloudinary](https://cloudinary.com)
+2. Get your Cloud Name, API Key, and API Secret
+3. Update the Cloudinary variables in server `.env`
 
-1. Install PostgreSQL locally
-2. Create a new database
-3. Update the `DATABASE_URL` in your `.env` file
+### Email Setup
 
-### 4. Email Configuration
+For Gmail:
+1. Enable 2-Factor Authentication
+2. Generate an App Password
+3. Use the App Password in `EMAIL_PASS`
 
-#### Gmail Setup
+---
 
-1. Enable 2-factor authentication on your Gmail account
-2. Generate an app-specific password
-3. Use your Gmail address and app password in the `.env` file
-
-### 5. Cloudinary Setup
-
-1. Sign up at [Cloudinary](https://cloudinary.com/)
-2. Get your cloud name, API key, and API secret
-3. Add them to your server `.env` file
-
-## 🎯 Usage
+## 🚀 Usage
 
 ### Development Mode
 
-#### Start the Backend Server
+Run all services concurrently:
 
-```bash
-cd server
-npm run start:dev
-```
-
-The server will start on `http://localhost:3000`
-
-#### Start the Frontend Development Server
-
+#### Terminal 1 - Client
 ```bash
 cd client
 npm run dev
 ```
+Client will run on `http://localhost:5173`
 
-The client will start on `http://localhost:5173`
+#### Terminal 2 - Server
+```bash
+cd server
+npm start
+```
+Server will run on `http://localhost:3000`
+
+#### Terminal 3 - Email Service
+```bash
+cd email-service
+npm start
+```
+Email service will run on `http://localhost:3001`
 
 ### Production Build
 
-#### Build the Frontend
-
+#### Build Client
 ```bash
 cd client
 npm run build
 ```
 
-#### Start Production Server
-
+#### Start Server
 ```bash
 cd server
 npm start
 ```
 
-### First-Time Setup
+### Access the Application
 
-1. **Register an Account**: Visit the application and create your first user account
-2. **Verify Email**: Check your email for the OTP verification code
-3. **Create Organization**: Set up your first organization with custom settings
-4. **Invite Team Members**: Send email invitations to your team members
-5. **Create Channels**: Organize your team communication by topics
-6. **Set Up Calendar**: Configure your team calendar and schedule events
-7. **Configure Notifications**: Customize your notification preferences
-8. **Start Collaborating**: Begin chatting, sharing files, scheduling meetings, and using video conferencing
+Open your browser and navigate to:
+- **Client**: `http://localhost:5173`
+- **API**: `http://localhost:3000`
+- **Email Service**: `http://localhost:3001`
+- **Health Check**: `http://localhost:3000/health`
 
-### Key Features to Explore
-
-- **Video Meetings**: Use the meeting prep page to test your camera and microphone before joining calls
-- **Real-time Chat**: Experience instant messaging with typing indicators and message reactions
-- **File Sharing**: Upload and share files directly in chat channels and meetings
-- **Calendar Integration**: Schedule events and meetings using the integrated calendar
-- **Notice Board**: Create important announcements for your organization
-- **Notes System**: Collaborate on team notes and documentation
-- **Smart Notifications**: Stay updated with categorized and filterable notifications
-- **Meeting Reports**: Automatic generation and management of meeting analytics and reports
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### Meeting Reports Not Generating
-- Ensure meetings last at least 30 seconds for automatic report creation
-- Check browser console for any JavaScript errors
-- Verify WebSocket connection is stable
-- Use debug endpoints (`/api/debug/reports`) to troubleshoot
-
-#### Video/Audio Issues
-- Grant camera and microphone permissions in your browser
-- Test devices on the meeting preparation page
-- Check if other applications are using your camera/microphone
-- Ensure you're using a supported browser (Chrome, Firefox, Safari, Edge)
-
-#### Connection Problems
-- Verify your internet connection is stable
-- Check if firewall or corporate network is blocking WebSocket connections
-- Try refreshing the page or clearing browser cache
-- Contact your network administrator if issues persist
-
-#### Email Verification Issues
-- Check spam/junk folder for verification emails
-- Ensure email address is entered correctly
-- Try requesting a new verification code
-- Contact support if emails are not being received
-
-### Debug Tools
-
-The application includes built-in debugging tools accessible via:
-- `/api/debug/reports` - Meeting reports system status
-- Browser developer console for client-side debugging
-- Network tab to monitor API requests and WebSocket connections
+---
 
 ## 📚 API Documentation
 
 ### Authentication Endpoints
 
-- `POST /api/auth/register` - Register new user with email verification
-- `POST /api/auth/login` - User login with JWT token generation
-- `POST /api/auth/logout` - User logout and token invalidation
-- `POST /api/auth/verify-email` - Verify email address with OTP
-- `POST /api/auth/forgot-password` - Request password reset email
-- `POST /api/auth/reset-password` - Reset password with token
-- `GET /api/auth/me` - Get current user profile
+#### Register User
+```http
+POST /api/auth/register
+Content-Type: application/json
 
-### Organization Management
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securePassword123"
+}
+```
 
-- `GET /api/orgs` - Get user organizations with member counts
-- `POST /api/orgs` - Create new organization
-- `GET /api/orgs/:id` - Get organization details and channels
-- `PUT /api/orgs/:id` - Update organization settings
-- `DELETE /api/orgs/:id` - Delete organization (admin only)
-- `POST /api/orgs/:id/invite` - Invite members via email
-- `POST /api/orgs/:id/join` - Join organization with invite code
-- `GET /api/orgs/:id/members` - Get organization members
-- `PUT /api/orgs/:id/members/:userId` - Update member role
+#### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
 
-### Messaging System
+{
+  "email": "john@example.com",
+  "password": "securePassword123"
+}
+```
 
-- `GET /api/messages/:channelId` - Get channel messages with pagination
-- `POST /api/messages` - Send new message with file support
-- `PUT /api/messages/:id` - Edit message content
-- `DELETE /api/messages/:id` - Delete message
-- `POST /api/messages/:id/react` - Add/remove message reaction
-- `POST /api/messages/:id/reply` - Reply to specific message
+#### Verify Email
+```http
+POST /api/auth/verify-email
+Content-Type: application/json
 
-### Direct Messages
+{
+  "email": "john@example.com",
+  "otp": "123456"
+}
+```
 
-- `GET /api/direct-messages` - Get direct message conversations
-- `GET /api/direct-messages/:userId` - Get messages with specific user
-- `POST /api/direct-messages` - Send direct message
-- `PUT /api/direct-messages/:id` - Edit direct message
-- `DELETE /api/direct-messages/:id` - Delete direct message
+#### Forgot Password
+```http
+POST /api/auth/forgot-password
+Content-Type: application/json
 
-### Meeting System
+{
+  "email": "john@example.com"
+}
+```
 
-- `GET /api/meetings` - Get user meetings
-- `POST /api/meetings` - Create new meeting
-- `GET /api/meetings/:id` - Get meeting details
-- `PUT /api/meetings/:id` - Update meeting
-- `DELETE /api/meetings/:id` - Delete meeting
-- `POST /api/meetings/:id/join` - Join meeting room
+#### Reset Password
+```http
+POST /api/auth/reset-password
+Content-Type: application/json
 
-### Meeting Reports
+{
+  "token": "reset_token",
+  "newPassword": "newSecurePassword123"
+}
+```
 
-- `GET /api/meeting-reports/channel/:channelId` - Get meeting reports for a channel with pagination
-- `GET /api/meeting-reports/organization/:orgId` - Get meeting reports for an organization
-- `GET /api/meeting-reports/:reportId` - Get detailed meeting report with participants and chat
-- `POST /api/meeting-reports` - Create meeting report (auto-generated server-side)
-- `PUT /api/meeting-reports/:reportId` - Update meeting report summary
-- `DELETE /api/meeting-reports/:reportId` - Delete meeting report (role-based permissions)
-- `GET /api/meeting-reports/export/:reportId` - Export meeting report as CSV
+### Organization Endpoints
 
-### Debug & Development
+#### Create Organization
+```http
+POST /api/organizations
+Authorization: Bearer <token>
+Content-Type: application/json
 
-- `GET /api/debug/reports` - Debug meeting reports system
-- `POST /api/debug/cleanup` - Clean up duplicate or invalid reports
-- `GET /api/debug/meeting-reports/:channelId` - Debug channel-specific meeting reports
+{
+  "name": "My Team",
+  "description": "Our awesome team workspace"
+}
+```
 
-### Meeting Chat
+#### Get User Organizations
+```http
+GET /api/organizations/user
+Authorization: Bearer <token>
+```
 
-- `GET /api/meeting-chat/:roomId` - Get meeting chat messages
-- `POST /api/meeting-chat` - Send message in meeting chat
-- `PUT /api/meeting-chat/:id` - Edit meeting chat message
-- `DELETE /api/meeting-chat/:id` - Delete meeting chat message
-- `POST /api/meeting-chat/:id/react` - React to meeting chat message
+### Channel Endpoints
 
-### Calendar & Events
+#### Create Channel
+```http
+POST /api/channels
+Authorization: Bearer <token>
+Content-Type: application/json
 
-- `GET /api/events` - Get user calendar events
-- `POST /api/events` - Create new calendar event
-- `GET /api/events/:id` - Get event details
-- `PUT /api/events/:id` - Update event
-- `DELETE /api/events/:id` - Delete event
+{
+  "name": "general",
+  "organizationId": 1,
+  "isPrivate": false
+}
+```
 
-### Notes Management
+#### Get Channel Messages
+```http
+GET /api/channels/:channelId/messages
+Authorization: Bearer <token>
+```
 
-- `GET /api/notes` - Get organization notes
-- `POST /api/notes` - Create new note
-- `GET /api/notes/:id` - Get note details
-- `PUT /api/notes/:id` - Update note
-- `DELETE /api/notes/:id` - Delete note
+### Message Endpoints
 
-### Notice Board
+#### Send Message
+```http
+POST /api/messages
+Authorization: Bearer <token>
+Content-Type: application/json
 
-- `GET /api/notices` - Get organization notices
-- `POST /api/notices` - Create new notice
-- `GET /api/notices/:id` - Get notice details
-- `PUT /api/notices/:id` - Update notice
-- `DELETE /api/notices/:id` - Delete notice
+{
+  "channelId": 1,
+  "content": "Hello team!",
+  "type": "text"
+}
+```
 
-### Notifications
+#### React to Message
+```http
+POST /api/messages/:messageId/reactions
+Authorization: Bearer <token>
+Content-Type: application/json
 
-- `GET /api/notifications` - Get user notifications with filtering
-- `PUT /api/notifications/:id/read` - Mark notification as read
-- `PUT /api/notifications/read-all` - Mark all notifications as read
-- `DELETE /api/notifications/:id` - Delete notification
-- `DELETE /api/notifications/all` - Delete all notifications
+{
+  "emoji": "👍"
+}
+```
 
-### User Management
+#### Pin Message
+```http
+POST /api/messages/:messageId/pin
+Authorization: Bearer <token>
+```
 
-- `GET /api/users/profile` - Get user profile
-- `PUT /api/users/profile` - Update user profile
-- `GET /api/users/online` - Get online users in organization
-- `PUT /api/users/status` - Update user online status
+### Poll Endpoints
+
+#### Create Poll
+```http
+POST /api/polls
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "channelId": 1,
+  "question": "What's for lunch?",
+  "options": ["Pizza", "Burgers", "Salad"],
+  "allowMultiple": false,
+  "anonymous": false
+}
+```
+
+#### Vote on Poll
+```http
+POST /api/polls/:pollId/vote
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "optionIndex": 0
+}
+```
+
+### Meeting Endpoints
+
+#### Create Meeting Report
+```http
+POST /api/meeting-reports
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "organizationId": 1,
+  "title": "Weekly Standup",
+  "duration": 1800,
+  "participants": ["user1@example.com", "user2@example.com"]
+}
+```
+
+#### Get Meeting Reports
+```http
+GET /api/meeting-reports?organizationId=1
+Authorization: Bearer <token>
+```
+
+### Search Endpoints
+
+#### Smart Search
+```http
+GET /api/search?q=project&type=messages&organizationId=1
+Authorization: Bearer <token>
+```
+
+### Event/Calendar Endpoints
+
+#### Create Event
+```http
+POST /api/events
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Team Meeting",
+  "start": "2024-01-15T10:00:00Z",
+  "end": "2024-01-15T11:00:00Z",
+  "organizationId": 1
+}
+```
+
+#### Get Events
+```http
+GET /api/events?organizationId=1
+Authorization: Bearer <token>
+```
+
+### Note Endpoints
+
+#### Create Note
+```http
+POST /api/notes
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Meeting Notes",
+  "content": "Discussion points...",
+  "organizationId": 1
+}
+```
+
+#### Get Notes
+```http
+GET /api/notes?organizationId=1
+Authorization: Bearer <token>
+```
+
+### Notice Endpoints
+
+#### Create Notice
+```http
+POST /api/notices
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Important Announcement",
+  "content": "Please read...",
+  "organizationId": 1
+}
+```
+
+#### Get Notices
+```http
+GET /api/notices?organizationId=1
+Authorization: Bearer <token>
+```
+
+### Notification Endpoints
+
+#### Get Notifications
+```http
+GET /api/notifications
+Authorization: Bearer <token>
+```
+
+#### Mark as Read
+```http
+PUT /api/notifications/:notificationId/read
+Authorization: Bearer <token>
+```
+
+### User Endpoints
+
+#### Get User Profile
+```http
+GET /api/users/profile
+Authorization: Bearer <token>
+```
+
+#### Update User Status
+```http
+PUT /api/users/status
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "status": "online"
+}
+```
+
+### Direct Message Endpoints
+
+#### Send Direct Message
+```http
+POST /api/direct-messages
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "recipientId": 2,
+  "content": "Hello!",
+  "type": "text"
+}
+```
+
+#### Get Direct Messages
+```http
+GET /api/direct-messages/:userId
+Authorization: Bearer <token>
+```
+
+### WebSocket Events
+
+#### Connect to Organization
+```javascript
+socket.emit('join', { userId, organizationId });
+```
+
+#### Send Message
+```javascript
+socket.emit('sendMessage', { channelId, content, type });
+```
+
+#### Typing Indicator
+```javascript
+socket.emit('typing', { channelId, isTyping: true });
+```
+
+#### User Status Update
+```javascript
+socket.emit('statusUpdate', { status: 'online' });
+```
+
+#### Listen for Messages
+```javascript
+socket.on('newMessage', (message) => {
+  // Handle new message
+});
+```
+
+#### Listen for Typing
+```javascript
+socket.on('userTyping', ({ userId, channelId, isTyping }) => {
+  // Show typing indicator
+});
+```
+
+#### Listen for User Status
+```javascript
+socket.on('userStatusChanged', ({ userId, status }) => {
+  // Update user status
+});
+```
+
+#### Listen for Reactions
+```javascript
+socket.on('messageReaction', ({ messageId, emoji, userId }) => {
+  // Update message reactions
+});
+```
+
+#### Listen for Polls
+```javascript
+socket.on('newPoll', (poll) => {
+  // Display new poll
+});
+
+socket.on('pollVote', ({ pollId, optionIndex, userId }) => {
+  // Update poll results
+});
+```
+
+---
 
 ## 📁 Project Structure
 
 ```
 syncspace/
-├── client/                          # Frontend React Application
-│   ├── public/                      # Static assets and icons
+├── client/                      # React frontend
+│   ├── public/                  # Static assets
+│   │   └── icon.png            # App icon
 │   ├── src/
-│   │   ├── components/              # Reusable UI Components
-│   │   │   ├── AnimatedButton.jsx   # Custom animated buttons
-│   │   │   ├── Calendar.jsx         # FullCalendar integration
-│   │   │   ├── ChannelPage.jsx      # Channel messaging interface
-│   │   │   ├── ConnectionStatus.jsx # Real-time connection monitoring
-│   │   │   ├── CustomCursor.jsx     # Interactive cursor effects
-│   │   │   ├── Dashboard.jsx        # Main dashboard layout
-│   │   │   ├── EmojiPicker.jsx      # Emoji selection component
-│   │   │   ├── ErrorBoundary.jsx    # Error handling wrapper
-│   │   │   ├── FileUpload.jsx       # File upload with drag & drop
-│   │   │   ├── MeetingRoom.jsx      # Video conferencing interface
-│   │   │   ├── MeetingChat.jsx      # Meeting-specific chat
-│   │   │   ├── MeetingSettings.jsx  # Meeting configuration panel
-│   │   │   ├── MeetingReports.jsx   # Meeting reports management with pagination
-│   │   │   ├── MeetingReportsOverview.jsx # Reports dashboard and analytics
-│   │   │   ├── Messages.jsx         # Message display component
-│   │   │   ├── MessageReactions.jsx # Message reaction system
-│   │   │   ├── NoticeBoard.jsx      # Organization announcements
-│   │   │   ├── Notifications.jsx    # Notification management
-│   │   │   ├── OnlineStatus.jsx     # User presence indicators
-│   │   │   ├── ParticleSystem.jsx   # Visual effects system
-│   │   │   ├── ScrambleText.jsx     # Text animation effects
-│   │   │   ├── Sidebar.jsx          # Navigation sidebar
-│   │   │   ├── TeamChat.jsx         # Team messaging interface
-│   │   │   ├── TypingIndicator.jsx  # Real-time typing status
-│   │   │   └── ... (40+ components)
-│   │   ├── context/                 # React Context Providers
-│   │   │   ├── AuthContext.jsx      # Authentication state
-│   │   │   ├── NotificationContext.jsx # Notification management
-│   │   │   ├── SocketContext.jsx    # WebSocket connections
-│   │   │   ├── ToastContext.jsx     # Toast notifications
-│   │   │   └── UnreadContext.jsx    # Unread message tracking
-│   │   ├── pages/                   # Page Components
-│   │   │   ├── Home.jsx             # Main application page
-│   │   │   ├── Landing.jsx          # Landing page with features
-│   │   │   ├── Login.jsx            # User authentication
-│   │   │   ├── Signup.jsx           # User registration
-│   │   │   ├── MeetingPrep.jsx      # Pre-meeting setup
-│   │   │   ├── ForgotPassword.jsx   # Password recovery
-│   │   │   ├── ResetPassword.jsx    # Password reset
-│   │   │   └── VerifyMail.jsx       # Email verification
-│   │   ├── utils/                   # Utility Functions
-│   │   │   ├── axiosConfig.js       # HTTP client configuration
-│   │   │   ├── gsapAnimations.js    # Animation utilities
-│   │   │   ├── meetingReports.js    # Meeting report utilities and analytics
-│   │   │   ├── meetingDebug.js      # Meeting debugging and troubleshooting tools
-│   │   │   ├── roleColors.js        # User role styling
-│   │   │   ├── scrollUtils.js       # Scroll behavior utilities
-│   │   │   └── tokenUtils.js        # JWT token management
-│   │   ├── assets/                  # Images and media files
-│   │   ├── App.jsx                  # Main application component
-│   │   ├── main.jsx                 # Application entry point
-│   │   └── index.css                # Global styles
-│   ├── .env                         # Environment variables
-│   ├── package.json                 # Dependencies and scripts
-│   ├── vite.config.js               # Vite build configuration
-│   └── tailwind.config.js           # Tailwind CSS configuration
+│   │   ├── assets/             # Images, fonts, etc.
+│   │   ├── components/         # React components (65+ components)
+│   │   │   ├── AIAssistant.jsx          # AI-powered chat assistant
+│   │   │   ├── AnimatedButton.jsx       # Animated UI button
+│   │   │   ├── Calendar.jsx             # Event calendar
+│   │   │   ├── ChannelPage.jsx          # Channel view
+│   │   │   ├── ConfirmationModal.jsx    # Confirmation dialogs
+│   │   │   ├── ConnectionStatus.jsx     # Network status indicator
+│   │   │   ├── CreateOrgModal.jsx       # Organization creation
+│   │   │   ├── CustomCursor.jsx         # Custom cursor effect
+│   │   │   ├── Dashboard.jsx            # Main dashboard
+│   │   │   ├── EditChannel.jsx          # Channel editing
+│   │   │   ├── EmojiPicker.jsx          # Emoji selection
+│   │   │   ├── ErrorBoundary.jsx        # Error handling
+│   │   │   ├── EventInputForm.jsx       # Event creation form
+│   │   │   ├── EventModal.jsx           # Event details modal
+│   │   │   ├── FAQList.jsx              # FAQ section
+│   │   │   ├── FeatureHub.jsx           # Feature quick access
+│   │   │   ├── FeatureTour.jsx          # Onboarding tour
+│   │   │   ├── FileUpload.jsx           # File upload component
+│   │   │   ├── FocusMode.jsx            # Pomodoro timer
+│   │   │   ├── Footer.jsx               # Page footer
+│   │   │   ├── InviteModal.jsx          # Member invitation
+│   │   │   ├── JoinedOrgDash.jsx        # Org dashboard view
+│   │   │   ├── JoinOrgModal.jsx         # Join organization
+│   │   │   ├── KeyboardShortcuts.jsx    # Shortcuts panel
+│   │   │   ├── LandingComparison.jsx    # Feature comparison
+│   │   │   ├── LandingFeatures.jsx      # Features showcase
+│   │   │   ├── LandingHero.jsx          # Landing hero section
+│   │   │   ├── LandingNav.jsx           # Landing navigation
+│   │   │   ├── LandingPricing.jsx       # Pricing section
+│   │   │   ├── LandingStats.jsx         # Statistics display
+│   │   │   ├── LandingTestimonials.jsx  # User testimonials
+│   │   │   ├── MeetingChat.jsx          # In-meeting chat
+│   │   │   ├── MeetingModal.jsx         # Meeting creation
+│   │   │   ├── MeetingReports.jsx       # Meeting analytics
+│   │   │   ├── MeetingReportsOverview.jsx # Reports overview
+│   │   │   ├── MeetingRoom.jsx          # Video conference room
+│   │   │   ├── MeetingSettings.jsx      # Meeting preferences
+│   │   │   ├── MentionsList.jsx         # User mentions
+│   │   │   ├── MessageReactions.jsx     # Message reactions
+│   │   │   ├── Messages.jsx             # Message display
+│   │   │   ├── NoteEditModal.jsx        # Note editing
+│   │   │   ├── NoteInputModal.jsx       # Note creation
+│   │   │   ├── NoteViewModal.jsx        # Note viewing
+│   │   │   ├── NoticeBoard.jsx          # Announcements board
+│   │   │   ├── NoticeModal.jsx          # Notice creation
+│   │   │   ├── NoticeViewModal.jsx      # Notice viewing
+│   │   │   ├── Notifications.jsx        # Notification center
+│   │   │   ├── OnlineCounter.jsx        # Online users count
+│   │   │   ├── OnlineStatus.jsx         # User status indicator
+│   │   │   ├── OnlineUsersList.jsx      # Online users list
+│   │   │   ├── OrgSettingsModal.jsx     # Org settings
+│   │   │   ├── ParticleSystem.jsx       # Particle effects
+│   │   │   ├── PinnedMessages.jsx       # Pinned messages view
+│   │   │   ├── PollDisplay.jsx          # Poll results display
+│   │   │   ├── ProtectedRoute.jsx       # Auth route guard
+│   │   │   ├── PublicRoute.jsx          # Public route guard
+│   │   │   ├── QuickPoll.jsx            # Poll creation
+│   │   │   ├── ScrambleText.jsx         # Text animation effect
+│   │   │   ├── ScrollProgress.jsx       # Scroll indicator
+│   │   │   ├── Settings.jsx             # User settings
+│   │   │   ├── Sidebar.jsx              # Navigation sidebar
+│   │   │   ├── SmartSearch.jsx          # Advanced search
+│   │   │   ├── StatusSelector.jsx       # Status selection
+│   │   │   ├── TeamChat.jsx             # Team messaging
+│   │   │   ├── TypingIndicator.jsx      # Typing status
+│   │   │   └── VoiceRecorder.jsx        # Voice messages
+│   │   ├── context/            # React Context providers
+│   │   │   ├── AuthContext.jsx
+│   │   │   ├── NotificationContext.jsx
+│   │   │   ├── SocketContext.jsx
+│   │   │   ├── ToastContext.jsx
+│   │   │   └── UnreadContext.jsx
+│   │   ├── hooks/              # Custom React hooks
+│   │   │   └── useKeyboardShortcuts.js
+│   │   ├── pages/              # Page components
+│   │   │   ├── ForgotPassword.jsx
+│   │   │   ├── Home.jsx
+│   │   │   ├── Landing.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── MeetingPrep.jsx
+│   │   │   ├── MeetingReportsPage.jsx
+│   │   │   ├── ResetPassword.jsx
+│   │   │   ├── Signup.jsx
+│   │   │   └── VerifyMail.jsx
+│   │   ├── styles/             # CSS modules
+│   │   ├── utils/              # Utility functions
+│   │   │   ├── meetingDebug.js
+│   │   │   └── meetingReports.js
+│   │   ├── App.jsx             # Main App component
+│   │   ├── index.css           # Global styles
+│   │   └── main.jsx            # Entry point
+│   ├── .env                    # Environment variables
+│   ├── index.html              # HTML template
+│   ├── package.json            # Dependencies
+│   ├── vite.config.js          # Vite configuration
+│   └── vercel.json             # Vercel deployment config
 │
-├── server/                          # Backend Node.js Application
+├── server/                      # Express backend
 │   ├── src/
-│   │   ├── configs/                 # Configuration Files
-│   │   │   ├── cloudinary.js        # Media storage configuration
-│   │   │   ├── multer.js            # File upload middleware
-│   │   │   └── socket.js            # WebSocket event handlers
-│   │   ├── controllers/             # Route Controllers
-│   │   │   ├── authControllers.js   # Authentication logic
-│   │   │   ├── directMessageControllers.js # DM functionality
-│   │   │   ├── eventControllers.js  # Calendar events
-│   │   │   ├── meetingControllers.js # Meeting management
-│   │   │   ├── meetingChatControllers.js # Meeting chat
-│   │   │   ├── meetingReportControllers.js # Meeting reports with analytics
-│   │   │   ├── messageControllers.js # Channel messaging
-│   │   │   ├── noteController.js    # Notes management
-│   │   │   ├── noticeControllers.js # Notice board
-│   │   │   ├── notificationControllers.js # Notifications
-│   │   │   └── orgControllers.js    # Organization management
-│   │   ├── database/                # Database Configuration
-│   │   │   └── db.js                # Neon PostgreSQL connection
-│   │   ├── middleware/              # Custom Middleware
-│   │   │   └── auth.js              # JWT authentication middleware
-│   │   ├── routes/                  # API Routes
-│   │   │   ├── authRoutes.js        # Authentication endpoints
-│   │   │   ├── directMessageRoutes.js # Direct message API
-│   │   │   ├── eventRoutes.js       # Calendar event API
-│   │   │   ├── meetingRoutes.js     # Meeting API
-│   │   │   ├── meetingChatRoutes.js # Meeting chat API
-│   │   │   ├── meetingReportRoutes.js # Meeting reports API
-│   │   │   ├── debugRoutes.js       # Debug and development endpoints
-│   │   │   ├── messageRoutes.js     # Channel message API
-│   │   │   ├── noteRoutes.js        # Notes API
-│   │   │   ├── noticeRoutes.js      # Notice board API
-│   │   │   ├── notificationRoutes.js # Notification API
-│   │   │   ├── orgRoutes.js         # Organization API
-│   │   │   └── userRoutes.js        # User management API
-│   │   ├── services/                # Business Logic Services
-│   │   │   └── emailService.js      # Email sending functionality
-│   │   ├── templates/               # Email Templates
-│   │   │   ├── forgotPasswordEmail.js # Password reset emails
-│   │   │   ├── organizationInviteEmail.js # Org invitations
-│   │   │   └── otpEmail.js          # OTP verification emails
-│   │   └── server.js                # Server entry point
-│   ├── uploads/                     # File Upload Storage
-│   │   ├── chat-files/              # Channel file uploads
-│   │   ├── direct-messages/         # DM file uploads
-│   │   └── meeting-files/           # Meeting file uploads
-│   ├── .env                         # Environment variables
-│   ├── package.json                 # Dependencies and scripts
-│   └── vercel.json                  # Vercel deployment configuration
+│   │   ├── configs/            # Configuration files
+│   │   │   └── socket.js       # Socket.IO setup
+│   │   ├── controllers/        # Route controllers
+│   │   │   ├── authControllers.js
+│   │   │   ├── directMessageControllers.js
+│   │   │   ├── eventControllers.js
+│   │   │   ├── meetingChatControllers.js
+│   │   │   ├── meetingControllers.js
+│   │   │   ├── meetingReportControllers.js
+│   │   │   ├── messageControllers.js
+│   │   │   ├── noteController.js
+│   │   │   ├── noticeControllers.js
+│   │   │   ├── notificationControllers.js
+│   │   │   ├── orgControllers.js
+│   │   │   ├── pollControllers.js
+│   │   │   └── searchControllers.js
+│   │   ├── database/           # Database models & queries
+│   │   ├── middleware/         # Express middleware
+│   │   ├── routes/             # API routes
+│   │   │   ├── authRoutes.js
+│   │   │   ├── debugRoutes.js
+│   │   │   ├── directMessageRoutes.js
+│   │   │   ├── eventRoutes.js
+│   │   │   ├── meetingChatRoutes.js
+│   │   │   ├── meetingReportRoutes.js
+│   │   │   ├── meetingRoutes.js
+│   │   │   ├── messageRoutes.js
+│   │   │   ├── noteRoutes.js
+│   │   │   ├── noticeRoutes.js
+│   │   │   ├── notificationRoutes.js
+│   │   │   ├── orgRoutes.js
+│   │   │   ├── pollRoutes.js
+│   │   │   ├── searchRoutes.js
+│   │   │   └── userRoutes.js
+│   │   ├── templates/          # Email templates
+│   │   ├── utils/              # Utility functions
+│   │   └── server.js           # Server entry point
+│   ├── .env                    # Environment variables
+│   ├── package.json            # Dependencies
+│   └── vercel.json             # Vercel deployment config
 │
-├── .gitignore                       # Git ignore rules
-└── README.md                        # Project documentation
+├── email-service/               # Email microservice
+│   ├── src/
+│   │   └── index.js            # Email service logic
+│   ├── .env                    # Environment variables
+│   ├── package.json            # Dependencies
+│   └── vercel.json             # Vercel deployment config
+│
+├── .gitignore                   # Git ignore rules
+└── README.md                    # This file
 ```
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions to SyncSpace! Here's how you can help:
+I welcome contributions! Here's how you can help:
 
 ### Getting Started
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+1. **Fork the repository**
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/yourusername/syncspace.git
+   ```
+3. **Create a feature branch**
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+4. **Make your changes**
+5. **Commit your changes**
+   ```bash
+   git commit -m "Add amazing feature"
+   ```
+6. **Push to your branch**
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+7. **Open a Pull Request**
 
-### Development Guidelines
+### Contribution Guidelines
 
-- Follow the existing code style
-- Write clear commit messages
-- Add tests for new features
+- Follow the existing code style and conventions
+- Write clear, descriptive commit messages
+- Add comments for complex logic
 - Update documentation as needed
-- Ensure all tests pass before submitting
+- Test your changes thoroughly
+- Ensure all existing tests pass
+- Add new tests for new features
+
+### Code Style
+
+- **JavaScript/React**: Use ES6+ syntax, functional components with hooks
+- **CSS**: Use Tailwind utility classes, avoid custom CSS when possible
+- **Naming**: Use camelCase for variables/functions, PascalCase for components
+- **Files**: One component per file, named after the component
 
 ### Reporting Issues
 
-- Use the GitHub issue tracker
-- Provide detailed reproduction steps
-- Include system information
-- Add screenshots if applicable
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **React Team** for the amazing framework and React 19 improvements
-- **Socket.IO** for reliable real-time communication
-- **Tailwind CSS** for the utility-first CSS framework and v4 features
-- **Vite Team** for the lightning-fast build tool
-- **Neon** for serverless PostgreSQL with excellent performance
-- **Cloudinary** for comprehensive media management and optimization
-- **Vercel** for seamless deployment and serverless functions
-- **GSAP** for professional-grade animations
-- **FullCalendar** for the robust calendar component
-- **Open Source Community** for the incredible ecosystem of tools and libraries
+Found a bug or have a feature request? Please open an issue with:
+- Clear description of the problem/feature
+- Steps to reproduce (for bugs)
+- Expected vs actual behavior
+- Screenshots (if applicable)
+- Environment details (browser, OS, etc.)
 
 ---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Port Already in Use
+```bash
+# Kill process on port 3000 (server)
+lsof -ti:3000 | xargs kill -9
+
+# Kill process on port 5173 (client)
+lsof -ti:5173 | xargs kill -9
+
+# Kill process on port 3001 (email service)
+lsof -ti:3001 | xargs kill -9
+```
+
+#### Database Connection Issues
+- Verify `DATABASE_URL` is correct in server `.env`
+- Check Neon database is active and accessible
+- Ensure SSL mode is enabled: `?sslmode=require`
+
+#### CORS Errors
+- Verify `CLIENT_URL` matches your frontend URL
+- Check allowed origins in `server/src/server.js`
+- Clear browser cache and cookies
+
+#### Socket.IO Connection Failed
+- Ensure `VITE_SOCKET_URL` matches server URL
+- Check firewall settings
+- Verify WebSocket support in your environment
+
+#### Email Not Sending
+- Verify email credentials in `email-service/.env`
+- For Gmail, use App Password (not regular password)
+- Check `EMAIL_SERVICE_URL` in server `.env`
+
+#### File Upload Issues
+- Verify Cloudinary credentials
+- Check file size limits (default: 10MB)
+- Ensure proper MIME types
+
+### Development Tips
+
+- Use `npm run start:dev` for auto-reload with nodemon
+- Check browser console for client-side errors
+- Monitor server logs for backend issues
+- Use `/health` endpoint to verify server status
+- Clear localStorage if experiencing auth issues
+
+---
+
+## 👥 Authors
+
+Built with ❤️ by the Ishan Roy
+
+---
+
+<div align="center">
+
+**⭐ Star this repo if you find it helpful!**
+
+Made with 💙 by developers, for developers
+
+</div>

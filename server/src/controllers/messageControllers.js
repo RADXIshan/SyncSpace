@@ -334,8 +334,9 @@ export const uploadFile = async (req, res) => {
       const fs = await import('fs');
       const path = await import('path');
       
-      // Create uploads directory if it doesn't exist
       const uploadsDir = path.join(process.cwd(), 'uploads', 'chat-files');
+      
+      // Create uploads directory on-demand if it doesn't exist
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
@@ -660,6 +661,147 @@ export const markChannelAsRead = async (req, res) => {
   } catch (error) {
     console.error("Error marking channel as read:", error);
     res.status(500).json({ message: "Failed to mark channel as read" });
+  }
+};
+
+// Pin a channel message
+export const pinChannelMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user.userId;
+
+    // Get message and verify it exists
+    const [message] = await sql`
+      SELECT * FROM channel_messages WHERE message_id = ${messageId}
+    `;
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Verify user has access to the channel
+    const hasAccess = await checkChannelAccess(userId, message.channel_id);
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied to this channel" });
+    }
+
+    // Check if already pinned
+    const [existing] = await sql`
+      SELECT * FROM pinned_channel_messages 
+      WHERE message_id = ${messageId} AND channel_id = ${message.channel_id}
+    `;
+
+    if (existing) {
+      return res.status(400).json({ message: "Message already pinned" });
+    }
+
+    // Pin the message
+    await sql`
+      INSERT INTO pinned_channel_messages (message_id, channel_id, pinned_by)
+      VALUES (${messageId}, ${message.channel_id}, ${userId})
+    `;
+
+    // Update is_pinned flag
+    await sql`
+      UPDATE channel_messages SET is_pinned = true WHERE message_id = ${messageId}
+    `;
+
+    // Emit socket event
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`channel_${message.channel_id}`).emit("message_pinned", {
+        messageId: parseInt(messageId),
+        channelId: message.channel_id
+      });
+    }
+
+    res.json({ message: "Message pinned successfully" });
+  } catch (error) {
+    console.error("Error pinning message:", error);
+    res.status(500).json({ message: "Failed to pin message" });
+  }
+};
+
+// Unpin a channel message
+export const unpinChannelMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user.userId;
+
+    // Get message and verify it exists
+    const [message] = await sql`
+      SELECT * FROM channel_messages WHERE message_id = ${messageId}
+    `;
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Verify user has access to the channel
+    const hasAccess = await checkChannelAccess(userId, message.channel_id);
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied to this channel" });
+    }
+
+    // Unpin the message
+    await sql`
+      DELETE FROM pinned_channel_messages 
+      WHERE message_id = ${messageId} AND channel_id = ${message.channel_id}
+    `;
+
+    // Update is_pinned flag
+    await sql`
+      UPDATE channel_messages SET is_pinned = false WHERE message_id = ${messageId}
+    `;
+
+    // Emit socket event
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`channel_${message.channel_id}`).emit("message_unpinned", {
+        messageId: parseInt(messageId),
+        channelId: message.channel_id
+      });
+    }
+
+    res.json({ message: "Message unpinned successfully" });
+  } catch (error) {
+    console.error("Error unpinning message:", error);
+    res.status(500).json({ message: "Failed to unpin message" });
+  }
+};
+
+// Get pinned messages for a channel
+export const getPinnedChannelMessages = async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const userId = req.user.userId;
+
+    // Verify user has access to the channel
+    const hasAccess = await checkChannelAccess(userId, channelId);
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Access denied to this channel" });
+    }
+
+    // Get pinned messages
+    const pinnedMessages = await sql`
+      SELECT 
+        m.*,
+        u.name as user_name,
+        u.user_photo,
+        p.pinned_at,
+        pu.name as pinned_by_name
+      FROM pinned_channel_messages p
+      JOIN channel_messages m ON p.message_id = m.message_id
+      JOIN users u ON m.user_id = u.user_id
+      JOIN users pu ON p.pinned_by = pu.user_id
+      WHERE p.channel_id = ${channelId}
+      ORDER BY p.pinned_at DESC
+    `;
+
+    res.json({ pinnedMessages });
+  } catch (error) {
+    console.error("Error fetching pinned messages:", error);
+    res.status(500).json({ message: "Failed to fetch pinned messages" });
   }
 };
 

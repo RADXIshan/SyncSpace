@@ -9,6 +9,9 @@ import {
   addReaction,
   getChannelMembers,
   markChannelAsRead,
+  pinChannelMessage,
+  unpinChannelMessage,
+  getPinnedChannelMessages,
 } from "../controllers/messageControllers.js";
 import { authenticateToken } from "../middleware/auth.js";
 
@@ -95,6 +98,11 @@ router.get("/channels/:channelId/members", getChannelMembers);
 
 // Mark channel messages as read
 router.post("/channels/:channelId/read", markChannelAsRead);
+
+// Pin/Unpin channel messages
+router.post("/messages/:messageId/pin", pinChannelMessage);
+router.delete("/messages/:messageId/pin", unpinChannelMessage);
+router.get("/channels/:channelId/pinned", getPinnedChannelMessages);
 
 // File viewer proxy (for viewing files like PDFs in browser)
 router.get("/files/view", async (req, res) => {

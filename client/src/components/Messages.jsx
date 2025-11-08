@@ -23,13 +23,15 @@ import {
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
-  AlertTriangle,
+  Pin,
+  Mic,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import EmojiPicker from "./EmojiPicker";
 import MessageReactions from "./MessageReactions";
 import TypingIndicator from "./TypingIndicator";
 import FileUpload from "./FileUpload";
+import VoiceRecorder from "./VoiceRecorder";
 import ConfirmationModal from "./ConfirmationModal";
 
 const Messages = () => {
@@ -56,6 +58,7 @@ const Messages = () => {
   const [editingMessage, setEditingMessage] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
   // State for new conversation
@@ -333,9 +336,10 @@ const Messages = () => {
 
     // Listen for message deletions - same as TeamChat
     const handleDirectMessageDelete = (messageId) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.message_id === messageId
+      console.log('Socket event: direct_message_deleted', messageId);
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
+          msg.message_id === messageId && !msg.isDeleted
             ? {
                 ...msg,
                 isDeleted: true,
@@ -343,8 +347,10 @@ const Messages = () => {
                 content: "This message was deleted",
               }
             : msg
-        )
-      );
+        );
+        console.log('Messages after socket delete:', updated.find(m => m.message_id === messageId));
+        return updated;
+      });
     };
 
     // Listen for typing indicators - Optimized for instant WhatsApp-like response
@@ -385,6 +391,27 @@ const Messages = () => {
         prev.map((msg) =>
           msg.message_id === data.messageId
             ? { ...msg, reactions: data.reactions || [] }
+            : msg
+        )
+      );
+    };
+
+    // Listen for pin/unpin events
+    const handleMessagePinned = (data) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === data.messageId
+            ? { ...msg, is_pinned: true }
+            : msg
+        )
+      );
+    };
+
+    const handleMessageUnpinned = (data) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === data.messageId
+            ? { ...msg, is_pinned: false }
             : msg
         )
       );
@@ -441,6 +468,8 @@ const Messages = () => {
     socket.on("dm_user_typing", handleUserTyping);
     socket.on("dm_user_stopped_typing", handleUserStoppedTyping);
     socket.on("direct_message_reaction_updated", handleReactionUpdate);
+    socket.on("direct_message_pinned", handleMessagePinned);
+    socket.on("direct_message_unpinned", handleMessageUnpinned);
     socket.on("conversation_deleted", handleConversationDeleted);
     socket.on("chat_history_cleared", handleChatHistoryCleared);
 
@@ -451,6 +480,8 @@ const Messages = () => {
       socket.off("dm_user_typing", handleUserTyping);
       socket.off("dm_user_stopped_typing", handleUserStoppedTyping);
       socket.off("direct_message_reaction_updated", handleReactionUpdate);
+      socket.off("direct_message_pinned", handleMessagePinned);
+      socket.off("direct_message_unpinned", handleMessageUnpinned);
       socket.off("conversation_deleted", handleConversationDeleted);
       socket.off("chat_history_cleared", handleChatHistoryCleared);
     };
@@ -951,6 +982,80 @@ const Messages = () => {
     }
   };
 
+  // Handle voice message upload
+  const handleVoiceUpload = async (audioBlob, duration) => {
+    if (!selectedConversation) return;
+
+    // Create optimistic message for immediate UI update
+    const optimisticMessage = {
+      message_id: `temp-voice-${Date.now()}-${Math.random()}`,
+      content: "Voice message",
+      sender_id: user.user_id,
+      sender_name: user.name,
+      sender_photo: user.user_photo,
+      receiver_id: selectedConversation.other_user_id,
+      created_at: new Date().toISOString(),
+      file_url: URL.createObjectURL(audioBlob), // Temporary local URL
+      file_name: "voice-message.webm",
+      file_type: "audio/webm",
+      file_size: audioBlob.size,
+      isOptimistic: true,
+      reactions: [],
+      status: "sending",
+    };
+
+    try {
+      // Add optimistic message immediately
+      setMessages((prev) => [...prev, optimisticMessage]);
+      
+      // Scroll to bottom
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+
+      const formData = new FormData();
+      formData.append("file", audioBlob, "voice-message.webm");
+      formData.append("receiver_id", selectedConversation.other_user_id);
+      formData.append("is_voice", "true");
+      formData.append("voice_duration", duration.toString());
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages/file`,
+        formData,
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      // Replace optimistic message with real message from server
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.message_id === optimisticMessage.message_id
+            ? {
+                ...response.data.message,
+                isNew: true,
+                status: "sent",
+                isOptimistic: false,
+              }
+            : msg
+        )
+      );
+
+      setShowVoiceRecorder(false);
+      toast.success("Voice message sent");
+    } catch (error) {
+      console.error("Error uploading voice message:", error);
+      
+      // Remove optimistic message on error
+      setMessages((prev) =>
+        prev.filter((msg) => msg.message_id !== optimisticMessage.message_id)
+      );
+      
+      toast.error("Failed to send voice message");
+    }
+  };
+
   // Handle message reactions
   const handleReaction = async (messageId, emoji) => {
     // Optimistic update - update UI immediately like TeamChat
@@ -1029,13 +1134,18 @@ const Messages = () => {
     const originalMessage = messages.find(
       (msg) => msg.message_id === messageId
     );
-    if (!originalMessage) return;
+    if (!originalMessage) {
+      console.error('Message not found for deletion:', messageId);
+      return;
+    }
+
+    console.log('Deleting message:', messageId, originalMessage);
 
     try {
 
       // Optimistically update the message to show as deleted immediately
-      setMessages((prev) =>
-        prev.map((msg) =>
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
           msg.message_id === messageId
             ? {
                 ...msg,
@@ -1045,8 +1155,10 @@ const Messages = () => {
                 isDeleting: true, // Add deleting state for smooth animation
               }
             : msg
-        )
-      );
+        );
+        console.log('Messages after optimistic delete:', updated.find(m => m.message_id === messageId));
+        return updated;
+      });
 
       // Remove deleting state after animation
       setTimeout(() => {
@@ -1064,7 +1176,7 @@ const Messages = () => {
         { withCredentials: true }
       );
 
-      // Success - no need for toast, the UI already shows the deletion
+      toast.success("Message deleted");
     } catch (error) {
       console.error("Error deleting message:", error);
 
@@ -1095,6 +1207,56 @@ const Messages = () => {
   const handleReply = (message) => {
     setReplyingTo(message);
     textareaRef.current?.focus();
+  };
+
+  // Handle message pinning
+  const handlePinMessage = async (messageId) => {
+    try {
+      const message = messages.find(m => m.message_id === messageId);
+      const isPinned = message?.is_pinned;
+
+      if (isPinned) {
+        // Unpin message
+        await axios.delete(
+          `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages/${messageId}/pin`,
+          { withCredentials: true }
+        );
+        
+        // Update local state
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === messageId
+              ? { ...msg, is_pinned: false }
+              : msg
+          )
+        );
+        
+        toast.success("Message unpinned");
+      } else {
+        // Pin message
+        await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/api/direct-messages/messages/${messageId}/pin`,
+          { 
+            receiver_id: selectedConversation.other_user_id 
+          },
+          { withCredentials: true }
+        );
+        
+        // Update local state
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.message_id === messageId
+              ? { ...msg, is_pinned: true }
+              : msg
+          )
+        );
+        
+        toast.success("Message pinned");
+      }
+    } catch (error) {
+      console.error("Error pinning/unpinning message:", error);
+      toast.error("Failed to pin/unpin message");
+    }
   };
 
   // Handle emoji selection
@@ -1644,6 +1806,17 @@ const Messages = () => {
                                   >
                                     <Reply size={14} />
                                   </button>
+                                  <button
+                                    onClick={() => handlePinMessage(message.message_id)}
+                                    className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer ${
+                                      message.is_pinned 
+                                        ? 'text-purple-600 hover:text-purple-700' 
+                                        : 'text-gray-500 hover:text-purple-600'
+                                    }`}
+                                    title={message.is_pinned ? "Unpin message" : "Pin message"}
+                                  >
+                                    <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
+                                  </button>
                                   {isOwnMessage && (
                                     <>
                                       <div className="w-px h-6 bg-gray-200 mx-1"></div>
@@ -1697,7 +1870,17 @@ const Messages = () => {
                             isOwnMessage ? "items-end" : "items-start"
                           }`}
                         >
-                          {message.file_url ? (
+                          {message.isDeleted ? (
+                            <div
+                              className={`text-sm italic p-3 rounded-2xl ${
+                                isOwnMessage
+                                  ? "bg-gray-200 text-gray-500"
+                                  : "bg-gray-100 text-gray-500"
+                              }`}
+                            >
+                              {message.content}
+                            </div>
+                          ) : message.file_url ? (
                             <div
                               className={`rounded-2xl p-2.5 sm:p-4 inline-block max-w-[280px] sm:max-w-xs md:max-w-md shadow-sm relative transition-all duration-200 ${
                                 isOwnMessage
@@ -1714,6 +1897,17 @@ const Messages = () => {
                                   : ""
                               }`}
                             >
+                              {/* Pinned indicator badge for files */}
+                              {message.is_pinned && (
+                                <div className={`absolute -top-2 -left-2 ${
+                                  isOwnMessage ? '-right-2 -left-auto' : ''
+                                }`}>
+                                  <div className="bg-purple-600 text-white rounded-full p-1 shadow-lg">
+                                    <Pin size={10} className="fill-current" />
+                                  </div>
+                                </div>
+                              )}
+
                               {/* Upload progress overlay */}
                               {message.isUploading && (
                                 <div className="absolute inset-0 bg-black bg-opacity-20 rounded-2xl flex items-center justify-center">
@@ -1740,6 +1934,79 @@ const Messages = () => {
                                       {message.file_name}
                                     </div>
                                   )}
+                                </div>
+                              ) : message.file_type?.startsWith("audio/") ? (
+                                <div className="space-y-2 min-w-[250px]">
+                                  <audio
+                                    src={message.file_url}
+                                    controls
+                                    className="w-full"
+                                    preload="metadata"
+                                  >
+                                    Your browser does not support the audio tag.
+                                  </audio>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-lg">🎵</span>
+                                      <div className="flex-1 min-w-0">
+                                        <div
+                                          className={`text-sm font-medium truncate ${
+                                            isOwnMessage
+                                              ? "text-white"
+                                              : "text-gray-900"
+                                          }`}
+                                        >
+                                          {message.file_name || "Voice message"}
+                                        </div>
+                                        {message.file_size && (
+                                          <div
+                                            className={`text-xs ${
+                                              isOwnMessage
+                                                ? "text-blue-100"
+                                                : "text-gray-500"
+                                            }`}
+                                          >
+                                            {(message.file_size / 1024).toFixed(1)} KB
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      {!message.isUploading && (
+                                        <button
+                                          onClick={() =>
+                                            window.open(message.file_url, "_blank")
+                                          }
+                                          className={`p-1 rounded cursor-pointer ${
+                                            isOwnMessage
+                                              ? "hover:bg-blue-600"
+                                              : "hover:bg-gray-200"
+                                          }`}
+                                          title="Download audio"
+                                        >
+                                          <Download
+                                            size={16}
+                                            className={
+                                              isOwnMessage
+                                                ? "text-white"
+                                                : "text-gray-600"
+                                            }
+                                          />
+                                        </button>
+                                      )}
+                                      {isOwnMessage && !message.isUploading && (
+                                        <button
+                                          onClick={() =>
+                                            handleDeleteMessage(message.message_id)
+                                          }
+                                          className="p-1 rounded cursor-pointer hover:bg-red-600 text-white"
+                                          title="Delete audio message"
+                                        >
+                                          <Trash2 size={16} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                               ) : (
                                 <div className="flex items-center gap-2 sm:gap-3">
@@ -1812,6 +2079,17 @@ const Messages = () => {
                               }`}
                             >
                               {message.content}
+
+                              {/* Pinned indicator badge */}
+                              {message.is_pinned && (
+                                <div className={`absolute -top-2 -left-2 ${
+                                  isOwnMessage ? '-right-2 -left-auto' : ''
+                                }`}>
+                                  <div className="bg-purple-600 text-white rounded-full p-1 shadow-lg">
+                                    <Pin size={10} className="fill-current" />
+                                  </div>
+                                </div>
+                              )}
 
                               {/* Status indicators for own messages */}
                               {isOwnMessage && !message.isDeleted && (
@@ -1941,11 +2219,21 @@ const Messages = () => {
 
                 <div className="flex items-center justify-between px-2 sm:px-4 pb-2 sm:pb-4">
                   <div className="flex items-center gap-1.5 sm:gap-3">
+
+                    <button
+                      type="button"
+                      onClick={() => setShowVoiceRecorder(true)}
+                      className="cursor-pointer p-1.5 sm:p-2 hover:bg-blue-100 active:bg-blue-200 rounded-xl text-gray-600 hover:text-blue-600 transition-all touch-manipulation"
+                      title="Record voice message"
+                    >
+                      <Mic size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    </button>
+
                     <div className="relative" ref={emojiPickerRef}>
                       <button
                         type="button"
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className="p-1.5 sm:p-2 hover:bg-purple-100 active:bg-purple-200 rounded-xl text-gray-600 hover:text-purple-600 transition-colors touch-manipulation"
+                        className="cursor-pointer p-1.5 sm:p-2 hover:bg-yellow-100 active:bg-yellow-200 rounded-xl text-gray-600 hover:text-yellow-600 transition-colors touch-manipulation"
                         title="Add emoji"
                       >
                         <Smile size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -1967,7 +2255,7 @@ const Messages = () => {
                           e.preventDefault();
                           fileInputRef.current?.click();
                         }}
-                        className="p-1.5 sm:p-2 hover:bg-purple-100 active:bg-purple-200 rounded-xl text-gray-600 hover:text-purple-600 transition-colors touch-manipulation"
+                        className="cursor-pointer p-1.5 sm:p-2 hover:bg-purple-100 active:bg-purple-200 rounded-xl text-gray-600 hover:text-purple-600 transition-colors touch-manipulation"
                         title="Attach files"
                       >
                         <Paperclip size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -2191,6 +2479,14 @@ const Messages = () => {
           onClose={() => setShowFileUpload(false)}
           maxFiles={5}
           maxSize={10 * 1024 * 1024}
+        />
+      )}
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <VoiceRecorder
+          onSend={handleVoiceUpload}
+          onClose={() => setShowVoiceRecorder(false)}
         />
       )}
 

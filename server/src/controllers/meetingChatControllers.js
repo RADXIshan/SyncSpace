@@ -305,8 +305,9 @@ export const uploadMeetingFile = async (req, res) => {
       const fs = await import('fs');
       const path = await import('path');
       
-      // Create uploads directory if it doesn't exist
       const uploadsDir = path.join(process.cwd(), 'uploads', 'meeting-files');
+      
+      // Create uploads directory on-demand if it doesn't exist
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }

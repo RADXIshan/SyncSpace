@@ -36,6 +36,7 @@ import OnlineStatus from "./OnlineStatus";
 import OnlineCounter from "./OnlineCounter";
 import TeamChat from "./TeamChat";
 import MeetingReports from "./MeetingReports";
+import PinnedMessages from "./PinnedMessages";
 
 const ChannelPage = () => {
   const { channelId } = useParams();
@@ -1325,7 +1326,17 @@ const ChannelPage = () => {
 
         {/* CHATS TAB */}
         {activeTab === "chats" && (
-          <TeamChat channelId={channelId} channelName={channel.name} />
+          <div className="h-full flex flex-col">
+            <PinnedMessages 
+              channelId={channelId} 
+              onScrollToMessage={(messageId) => {
+                // The scroll will be handled by TeamChat's internal scrollToMessage
+                const event = new CustomEvent('scrollToMessage', { detail: { messageId } });
+                window.dispatchEvent(event);
+              }}
+            />
+            <TeamChat channelId={channelId} channelName={channel.name} />
+          </div>
         )}
 
         {/* MEETING REPORTS TAB */}

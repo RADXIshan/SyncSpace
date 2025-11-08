@@ -1866,3 +1866,50 @@ ting Chat Animations */
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+/* 
+Highlight message animation */
+@keyframes highlight-pulse {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(168, 85, 247, 0.15);
+  }
+}
+
+.highlight-message {
+  animation: highlight-pulse 2s ease-in-out;
+  border-radius: 0.5rem;
+}
+
+.dark .highlight-message {
+  animation: highlight-pulse-dark 2s ease-in-out;
+}
+
+@keyframes highlight-pulse-dark {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(168, 85, 247, 0.25);
+  }
+}
+
+/* Custom scrollbar for pinned messages */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.5);
+}

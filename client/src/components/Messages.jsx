@@ -1951,7 +1951,7 @@ const Messages = () => {
                         <Smile size={16} className="sm:w-[18px] sm:h-[18px]" />
                       </button>
                       {showEmojiPicker && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
+                        <div className="absolute bottom-full left-0 mb-2 z-50">
                           <EmojiPicker
                             onEmojiSelect={handleEmojiSelect}
                           />

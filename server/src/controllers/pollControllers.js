@@ -103,7 +103,8 @@ export const votePoll = async (req, res) => {
         COALESCE(
           json_agg(
             json_build_object(
-              'user_id', pv.user_id, 
+              'user_id', pv.user_id,
+              'user_name', vu.name,
               'selected_options', pv.selected_options
             )
           ) FILTER (WHERE pv.vote_id IS NOT NULL),
@@ -112,6 +113,7 @@ export const votePoll = async (req, res) => {
       FROM polls p
       LEFT JOIN users u ON p.created_by = u.user_id
       LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
+      LEFT JOIN users vu ON pv.user_id = vu.user_id
       WHERE p.poll_id = ${pollId}
       GROUP BY p.poll_id, u.name
     `;
@@ -154,7 +156,8 @@ export const getChannelPolls = async (req, res) => {
         COALESCE(
           json_agg(
             json_build_object(
-              'user_id', pv.user_id, 
+              'user_id', pv.user_id,
+              'user_name', vu.name,
               'selected_options', pv.selected_options
             )
           ) FILTER (WHERE pv.vote_id IS NOT NULL),
@@ -163,6 +166,7 @@ export const getChannelPolls = async (req, res) => {
       FROM polls p
       LEFT JOIN users u ON p.created_by = u.user_id
       LEFT JOIN poll_votes pv ON p.poll_id = pv.poll_id
+      LEFT JOIN users vu ON pv.user_id = vu.user_id
       WHERE p.channel_id = ${channelId}
       GROUP BY p.poll_id, u.name
       ORDER BY p.created_at DESC

@@ -99,7 +99,7 @@ const QuickPoll = ({ channelId, onClose, onPollCreated }) => {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="What's your question?"
-              className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+              className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:focus:border-purple-500 focus:bg-purple-50 dark:focus:bg-purple-900/10 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 focus:shadow-lg focus:shadow-purple-500/20"
               maxLength={200}
             />
           </div>
@@ -112,7 +112,7 @@ const QuickPoll = ({ channelId, onClose, onPollCreated }) => {
               {options.map((option, index) => (
                 <div key={index} className="flex gap-2 group">
                   <div className="flex-1 relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400 dark:text-gray-500">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400 dark:text-gray-500 transition-colors duration-200 peer-focus:text-purple-600 dark:peer-focus:text-purple-400 pointer-events-none">
                       {index + 1}.
                     </span>
                     <input
@@ -120,7 +120,7 @@ const QuickPoll = ({ channelId, onClose, onPollCreated }) => {
                       value={option}
                       onChange={(e) => updateOption(index, e.target.value)}
                       placeholder={`Option ${index + 1}`}
-                      className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                      className="peer w-full pl-10 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:focus:border-purple-500 focus:bg-purple-50 dark:focus:bg-purple-900/10 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 focus:shadow-lg focus:shadow-purple-500/20"
                       maxLength={100}
                     />
                   </div>

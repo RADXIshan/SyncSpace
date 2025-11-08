@@ -64,13 +64,6 @@ const FeatureTour = ({ onClose, onComplete }) => {
       tip: 'Perfect for meeting links and important announcements'
     },
     {
-      title: 'Custom Status ✨',
-      description: 'Let your team know what you\'re up to with custom emoji status and text.',
-      image: '✨',
-      shortcut: 'Ctrl+Shift+S',
-      tip: 'Set auto-clear times to update status automatically'
-    },
-    {
       title: 'Notifications 🔔',
       description: 'Stay updated with real-time notifications. Filter by type and never miss important updates.',
       image: '🔔',
@@ -134,21 +127,21 @@ const FeatureTour = ({ onClose, onComplete }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative overflow-hidden">
+      <div className="glass-dark rounded-3xl p-8 max-w-2xl w-full shadow-2xl relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-full blur-3xl -z-10" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-pink-500/10 to-purple-500/10 rounded-full blur-3xl -z-10" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-pink-500/10 to-purple-500/10 rounded-full blur-3xl" />
 
         {/* Close button */}
         <button
           onClick={handleSkip}
-          className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          className="absolute top-4 right-4 p-2 glass-button hover:glass-button-enhanced rounded-lg transition-all duration-300 z-10"
         >
-          <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          <X className="w-5 h-5 text-white/80" />
         </button>
 
         {/* Progress bar */}
-        <div className="mb-8">
+        <div className="mb-8 relative z-10">
           <div className="flex gap-1">
             {steps.map((_, idx) => (
               <div
@@ -156,49 +149,49 @@ const FeatureTour = ({ onClose, onComplete }) => {
                 className={`h-1 flex-1 rounded-full transition-all duration-300 ${
                   idx <= currentStep
                     ? 'bg-gradient-to-r from-purple-600 to-blue-600'
-                    : 'bg-gray-200 dark:bg-gray-700'
+                    : 'bg-white/20'
                 }`}
               />
             ))}
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
+          <div className="text-sm text-white/60 mt-2 text-center">
             Step {currentStep + 1} of {steps.length}
           </div>
         </div>
 
         {/* Content */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 relative z-10">
           <div className="text-7xl mb-6 animate-bounce">
             {currentStepData.image}
           </div>
           
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+          <h2 className="text-3xl font-bold gradient-text-purple mb-4">
             {currentStepData.title}
           </h2>
           
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+          <p className="text-lg text-white/80 mb-6 leading-relaxed">
             {currentStepData.description}
           </p>
 
           {currentStepData.shortcut && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg mb-4">
-              <span className="text-sm text-purple-700 dark:text-purple-300 font-medium">
+            <div className="inline-flex items-center gap-2 px-4 py-2 glass-button rounded-lg mb-4">
+              <span className="text-sm text-purple-300 font-medium">
                 Shortcut:
               </span>
-              <kbd className="px-3 py-1 bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-400 rounded font-mono text-sm shadow">
+              <kbd className="px-3 py-1 glass-button-enhanced text-purple-300 rounded font-mono text-sm shadow">
                 {currentStepData.shortcut}
               </kbd>
             </div>
           )}
 
           {currentStepData.tip && (
-            <div className="flex items-start gap-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-left max-w-md mx-auto">
-              <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 p-4 glass-button rounded-xl text-left max-w-md mx-auto">
+              <Sparkles className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">
+                <div className="text-sm font-medium text-blue-300 mb-1">
                   Pro Tip
                 </div>
-                <div className="text-sm text-blue-700 dark:text-blue-400">
+                <div className="text-sm text-white/70">
                   {currentStepData.tip}
                 </div>
               </div>
@@ -206,18 +199,18 @@ const FeatureTour = ({ onClose, onComplete }) => {
           )}
 
           {currentStepData.highlight && (
-            <div className="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mt-4">
+            <div className="text-xl font-semibold gradient-text-purple mt-4">
               {currentStepData.highlight}
             </div>
           )}
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 relative z-10">
           <button
             onClick={handlePrev}
             disabled={isFirstStep}
-            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 dark:disabled:bg-gray-800 text-gray-800 dark:text-white rounded-xl font-medium transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
+            className="px-6 py-3 glass-button hover:glass-button-enhanced disabled:opacity-50 disabled:cursor-not-allowed text-white/80 hover:text-purple-300 rounded-xl font-medium transition-all duration-300 flex items-center gap-2"
           >
             <ChevronLeft className="w-5 h-5" />
             Previous
@@ -225,14 +218,14 @@ const FeatureTour = ({ onClose, onComplete }) => {
 
           <button
             onClick={handleSkip}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors"
+            className="text-white/60 hover:text-white/90 font-medium transition-colors"
           >
             Skip Tour
           </button>
 
           <button
             onClick={handleNext}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
           >
             {isLastStep ? 'Get Started' : 'Next'}
             {!isLastStep && <ChevronRight className="w-5 h-5" />}

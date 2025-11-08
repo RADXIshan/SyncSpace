@@ -72,6 +72,13 @@ const PollDisplay = ({ poll, onVote, onDelete, currentUserId, onReaction, onRepl
     ).length;
   };
 
+  const getOptionVoters = (optionIndex) => {
+    if (!poll.votes || poll.anonymous) return [];
+    return poll.votes
+      .filter(v => v.selected_options && v.selected_options.includes(optionIndex))
+      .map(v => v.user_name || 'Unknown User');
+  };
+
   const getOptionPercentage = (optionIndex) => {
     const total = getTotalVotes();
     if (total === 0) return 0;
@@ -169,8 +176,16 @@ const PollDisplay = ({ poll, onVote, onDelete, currentUserId, onReaction, onRepl
                     />
                   </div>
                   {!poll.anonymous && votes > 0 && (
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-2 font-medium">
-                      {votes} {votes === 1 ? 'vote' : 'votes'}
+                    <div className="mt-2">
+                      <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                        {votes} {votes === 1 ? 'vote' : 'votes'}
+                      </div>
+                      {getOptionVoters(index).length > 0 && (
+                        <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          {getOptionVoters(index).slice(0, 3).join(', ')}
+                          {getOptionVoters(index).length > 3 && ` +${getOptionVoters(index).length - 3} more`}
+                        </div>
+                      )}
                     </div>
                   )}
                 </>

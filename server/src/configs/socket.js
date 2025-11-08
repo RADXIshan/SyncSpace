@@ -769,7 +769,7 @@ const handleMeetingEnd = async (roomID, io) => {
     
     console.log(`🔍 Database query result for meeting ${roomID}:`, meeting ? 'Found' : 'Not found');
     if (meeting) {
-      console.log(`📋 Meeting details: ${meeting.meeting_title} in #${meeting.channel_name} (org: ${meeting.org_id})`);
+      console.log(`📋 Meeting details: ${meeting.title} in #${meeting.channel_name} (org: ${meeting.org_id})`);
     }
     
     if (!meeting) {
@@ -978,7 +978,7 @@ const createMeetingReportFromServer = async (roomID, meeting, meetingData, start
         message_count, summary, messages_data
       )
       VALUES (
-        ${roomID}, ${meeting.meeting_title || `Meeting ${roomID}`}, ${meeting.channel_id}, ${meeting.org_id}, ${meetingData.startedBy},
+        ${roomID}, ${meeting.title || `Meeting ${roomID}`}, ${meeting.channel_id}, ${meeting.org_id}, ${meetingData.startedBy},
         ${startTime.toISOString()}, ${endTime.toISOString()}, ${JSON.stringify(participants)}, ${Math.max(durationMinutes, 0)},
         ${messages.length}, '', ${JSON.stringify(messages)}
       )
@@ -1005,7 +1005,7 @@ const sendMeetingEndNotifications = async (roomID, meeting, io) => {
       channel_id: meeting.channel_id,
       channel_name: meeting.channel_name,
       org_id: meeting.org_id,
-      meeting_title: meeting.meeting_title
+      meeting_title: meeting.title
     });
     
     // Get all users with access to this channel

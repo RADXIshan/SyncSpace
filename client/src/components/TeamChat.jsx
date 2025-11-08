@@ -1779,7 +1779,7 @@ const TeamChat = ({ channelId, channelName }) => {
                     <Smile size={18} className="sm:w-5 sm:h-5" />
                   </button>
                   {showEmojiPicker && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
+                    <div className="absolute bottom-full left-0 mb-2 z-50">
                       <EmojiPicker onEmojiSelect={handleEmojiSelect} />
                     </div>
                   )}

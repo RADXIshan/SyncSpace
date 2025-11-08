@@ -22,6 +22,7 @@ import meetingReportRoutes from "./routes/meetingReportRoutes.js";
 import debugRoutes from "./routes/debugRoutes.js";
 import pollRoutes from "./routes/pollRoutes.js";
 import searchRoutes from "./routes/searchRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 import { setupSocketHandlers } from "./configs/socket.js";
 import sql from "./database/db.js";
 import fs from "fs";
@@ -129,6 +130,7 @@ app.use("/api", messageRoutes);
 app.use("/api/direct-messages", directMessageRoutes);
 app.use("/api/polls", pollRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/ai", aiRoutes);
 
 connectCloudinary();
 

@@ -30,6 +30,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
   const [reportToDelete, setReportToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [organizationData, setOrganizationData] = useState(null);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -807,13 +808,61 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold text-white">Meeting Summary</h3>
                     {canModifyReport(selectedReport) && (
-                      <button
-                        onClick={() => setEditingSummary(!editingSummary)}
-                        className="flex items-center gap-2 px-3 py-1 text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <Edit size={16} />
-                        <span>{editingSummary ? "Cancel" : "Edit"}</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {!selectedReport.summary && !editingSummary && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                setAiSummaryLoading(true);
+                                const baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+                                const response = await axios.post(
+                                  `${baseURL}/api/ai/generate-summary`,
+                                  {
+                                    meetingData: {
+                                      title: selectedReport.title,
+                                      participants: selectedReport.participants,
+                                      duration_minutes: selectedReport.durationMinutes,
+                                      messages: selectedReport.messagesData || [],
+                                      started_at: selectedReport.startedAt,
+                                      ended_at: selectedReport.endedAt
+                                    }
+                                  },
+                                  { withCredentials: true }
+                                );
+                                setSummaryText(response.data.summary);
+                                setEditingSummary(true);
+                                toast.success("AI summary generated!");
+                              } catch (error) {
+                                console.error("Error generating summary:", error);
+                                toast.error("Failed to generate summary");
+                              } finally {
+                                setAiSummaryLoading(false);
+                              }
+                            }}
+                            disabled={aiSummaryLoading}
+                            className="flex items-center gap-2 px-3 py-1 text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {aiSummaryLoading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                                <span>Generating...</span>
+                              </>
+                            ) : (
+                              <>
+                                <MessageSquare size={16} />
+                                <span>Generate with AI</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setEditingSummary(!editingSummary)}
+                          className="flex items-center gap-2 px-3 py-1 text-purple-400 hover:text-purple-300 hover:bg-purple-900/20 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Edit size={16} />
+                          <span>{editingSummary ? "Cancel" : "Edit"}</span>
+                        </button>
+                      </div>
                     )}
                   </div>
                   

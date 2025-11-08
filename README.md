@@ -101,14 +101,14 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 - Typing indicators
 - Read receipts
 
-#### **Voice Messages** 🆕
+#### **Voice Messages**
 - WhatsApp-style voice recording
 - Audio playback with controls
 - Voice message reactions and replies
 - Download voice messages
 - Duration tracking
 
-#### **Quick Polls** 🆕
+#### **Quick Polls**
 - Create instant polls with multiple options
 - Real-time voting and results
 - Single or multiple choice
@@ -117,7 +117,7 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 - Visual progress bars
 - Vote count tracking
 
-#### **Message Pinning** 🆕
+#### **Message Pinning**
 - Pin important messages to channel top
 - Quick access to pinned content
 - Jump to pinned message
@@ -146,30 +146,42 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 
 ### 🔍 Smart Features
 
-#### **Smart Search** 🆕
+#### **Smart Search**
 - Search across messages, files, and people
 - Advanced filters and sorting
 - Real-time search results
 - Search history
-- Keyboard shortcuts
+- Keyboard shortcuts (Ctrl+K)
 
-#### **Focus Mode** 🆕
+#### **Focus Mode**
 - Built-in Pomodoro timer
 - Distraction-free interface
 - Productivity tracking
 - Custom work/break intervals
+- Keyboard shortcut (Ctrl+Shift+F)
 
-#### **Keyboard Shortcuts** 🆕
+#### **Keyboard Shortcuts**
 - Power user shortcuts for all features
 - Customizable key bindings
-- Quick access panel
+- Quick access panel (Ctrl+/)
 - Shortcut cheat sheet
 
-#### **Feature Hub** 🆕
-- Floating quick-access menu
+#### **AI Assistant**
+- Context-aware AI chat assistant
+- Helps with platform features and navigation
+- Answers questions about SyncSpace
+- Best practices and troubleshooting
+- Auto-generates meeting summaries
+- Manual summary generation for reports
+- Accessible via Feature Hub (Ctrl+Shift+A)
+
+#### **Feature Hub**
+- Floating quick-access menu (⚡ button)
 - One-click feature activation
-- Customizable layout
-- Drag-and-drop positioning
+- Smart Search (Ctrl+K)
+- Focus Mode with Pomodoro timer (Ctrl+Shift+F)
+- Keyboard Shortcuts panel (Ctrl+/)
+- AI Assistant integration (Ctrl+Shift+A)
 
 ### 🏢 Organization Management
 
@@ -425,6 +437,7 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 - **Cookie Parser 1.4.7** - Cookie parsing middleware
 - **CORS 2.8.5** - Cross-origin resource sharing
 - **Dotenv 17.2.1** - Environment variable management
+- **Google Generative AI 0.24.1** - Gemini AI integration
 
 ### Email Service (Microservice)
 - **Express.js 4.18.2** - Lightweight web framework
@@ -512,6 +525,9 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 # Email Service
 EMAIL_SERVICE_URL=http://localhost:3001
+
+# AI Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
 
 # CORS
 CLIENT_URL=http://localhost:5173
@@ -790,6 +806,38 @@ Authorization: Bearer <token>
 ```http
 GET /api/search?q=project&type=messages&organizationId=1
 Authorization: Bearer <token>
+```
+
+### AI Endpoints
+
+#### Chat with AI Assistant
+```http
+POST /api/ai/chat
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "message": "How do I create a meeting?",
+  "conversationHistory": []
+}
+```
+
+#### Generate Meeting Summary
+```http
+POST /api/ai/generate-summary
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "meetingData": {
+    "title": "Team Standup",
+    "participants": [...],
+    "duration_minutes": 30,
+    "messages": [...],
+    "started_at": "2024-01-01T10:00:00Z",
+    "ended_at": "2024-01-01T10:30:00Z"
+  }
+}
 ```
 
 ### Event/Calendar Endpoints

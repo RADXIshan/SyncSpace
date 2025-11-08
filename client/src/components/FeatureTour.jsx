@@ -138,8 +138,15 @@ const FeatureTour = ({ onClose, onComplete }) => {
       tip: 'Press Ctrl+/ anytime to view all available shortcuts'
     },
     {
+      title: 'AI Assistant 🤖',
+      description: 'Get instant help with our AI-powered assistant. Ask questions about features, get guidance, and receive auto-generated meeting summaries.',
+      image: '✨',
+      shortcut: 'Ctrl+Shift+A',
+      tip: 'Access from Feature Hub or use the keyboard shortcut for instant help'
+    },
+    {
       title: 'Feature Hub ⚡',
-      description: 'Quick access to all features from the floating hub in the bottom-right corner. Access search, focus mode, shortcuts, and AI.',
+      description: 'Quick access to all productivity features from the floating hub in the bottom-right corner. Includes Smart Search, Focus Mode, Keyboard Shortcuts, and AI Assistant.',
       image: '⚡',
       tip: 'Click the lightning bolt icon to open the feature menu'
     },

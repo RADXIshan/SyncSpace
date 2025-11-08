@@ -1,5 +1,6 @@
 import sql from "../database/db.js";
 import jwt from "jsonwebtoken";
+import { generateMeetingSummary } from "../utils/geminiService.js";
 
 // Helper function to verify JWT token
 const verifyToken = (req) => {
@@ -113,6 +114,26 @@ export const createMeetingReport = async (req, res) => {
 
     console.log(`Found ${messages.length} messages for meeting ${room_id}`);
 
+    // Auto-generate meeting summary using AI if not provided
+    let finalSummary = summary || '';
+    if (!finalSummary && messages.length > 0) {
+      try {
+        console.log('Auto-generating meeting summary with AI...');
+        finalSummary = await generateMeetingSummary({
+          title: meeting_title,
+          participants: participants || [],
+          duration_minutes: duration_minutes || 0,
+          messages: messages,
+          started_at,
+          ended_at
+        });
+        console.log('AI summary generated successfully');
+      } catch (error) {
+        console.error('Failed to auto-generate summary:', error);
+        // Continue without summary if AI generation fails
+      }
+    }
+
     // Create the meeting report
     const [report] = await sql`
       INSERT INTO meeting_reports (
@@ -123,7 +144,7 @@ export const createMeetingReport = async (req, res) => {
       VALUES (
         ${room_id}, ${meeting_title}, ${channel_id}, ${org_id}, ${userId},
         ${started_at}, ${ended_at}, ${JSON.stringify(participants || [])}, ${duration_minutes || 0},
-        ${messages.length}, ${summary || ''}, ${JSON.stringify(messages)}
+        ${messages.length}, ${finalSummary}, ${JSON.stringify(messages)}
       )
       RETURNING *
     `;

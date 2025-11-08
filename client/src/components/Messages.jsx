@@ -1117,9 +1117,15 @@ const Messages = () => {
         { withCredentials: true }
       );
 
-      // The socket event will handle UI updates
+      // Close modal and show success message
       setShowDeleteModal(false);
       setConversationToDelete(null);
+      toast.success("Conversation deleted successfully");
+      
+      // Refresh the page to update the UI
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (error) {
       console.error("Error deleting conversation:", error);
       toast.error("Failed to delete conversation");

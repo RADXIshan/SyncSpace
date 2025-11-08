@@ -141,7 +141,7 @@ const FeatureTour = ({ onClose, onComplete }) => {
         </button>
 
         {/* Progress bar */}
-        <div className="mb-8 relative z-10">
+        <div className="mb-8 relative z-10 pr-12">
           <div className="flex gap-1">
             {steps.map((_, idx) => (
               <div
@@ -154,7 +154,7 @@ const FeatureTour = ({ onClose, onComplete }) => {
               />
             ))}
           </div>
-          <div className="text-sm text-white/60 mt-2 text-center">
+          <div className="text-sm text-white/60 mt-2 text-left">
             Step {currentStep + 1} of {steps.length}
           </div>
         </div>

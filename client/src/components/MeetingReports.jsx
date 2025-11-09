@@ -1,4 +1,31 @@
 import { useState, useEffect, useCallback } from "react";
+// Function to strip markdown formatting from text
+const stripMarkdown = (text) => {
+  if (!text) return text;
+  return text
+    // Remove bold/italic markers
+    .replace(/\*\*\*(.+?)\*\*\*/g, '$1')  // Bold + Italic
+    .replace(/\*\*(.+?)\*\*/g, '$1')      // Bold
+    .replace(/\*(.+?)\*/g, '$1')          // Italic
+    .replace(/__(.+?)__/g, '$1')          // Bold (underscore)
+    .replace(/_(.+?)_/g, '$1')            // Italic (underscore)
+    // Remove headers
+    .replace(/^#{1,6}\s+(.+)$/gm, '$1')   // Headers
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, '')       // Code blocks
+    .replace(/`(.+?)`/g, '$1')            // Inline code
+    // Remove links but keep text
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')   // Links
+    // Remove images
+    .replace(/!\[.*?\]\(.+?\)/g, '')      // Images
+    // Remove horizontal rules
+    .replace(/^[-*_]{3,}$/gm, '')         // Horizontal rules
+    // Remove blockquotes
+    .replace(/^>\s+(.+)$/gm, '$1')        // Blockquotes
+    // Clean up extra whitespace
+    .replace(/\n{3,}/g, '\n\n')           // Multiple newlines
+    .trim();
+};
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import {
@@ -829,7 +856,7 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                                   },
                                   { withCredentials: true }
                                 );
-                                setSummaryText(response.data.summary);
+                                setSummaryText(stripMarkdown(response.data.summary));
                                 setEditingSummary(true);
                                 toast.success("AI summary generated!");
                               } catch (error) {

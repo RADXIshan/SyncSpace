@@ -361,40 +361,43 @@ const CreateOrgModal = ({ onClose, onSuccess }) => {
                     { value: "public", label: "Public", desc: "Anyone can send invites", icon: Globe },
                     { value: "invite-only", label: "Invite Only", desc: "Members can send invites", icon: Users },
                     { value: "admin-only", label: "Admin Only", desc: "Only admins send invites", icon: Lock },
-                  ].map(({ value, label, desc, icon: IconComponent }) => (
-                    <label key={value} className="relative cursor-pointer">
-                      <input
-                        type="radio"
-                        name="accessLevel"
-                        value={value}
-                        checked={accessLevel === value}
-                        onChange={(e) => setAccessLevel(e.target.value)}
-                        className="sr-only"
-                      />
-                      <div
-                        className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                          accessLevel === value
-                            ? "border-violet-500 glass-button-enhanced shadow-lg shadow-violet-500/20"
-                            : "glass-effect hover:border-white/20"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <IconComponent
-                            size={20}
-                            className={
-                              accessLevel === value
-                                ? "text-violet-400"
-                                : "text-gray-400"
-                            }
-                          />
-                          <div>
-                            <div className="font-medium text-white">{label}</div>
-                            <div className="text-sm text-gray-400">{desc}</div>
+                  ].map(({ value, label, desc, icon }) => {
+                    const Icon = icon;
+                    return (
+                      <label key={value} className="relative cursor-pointer">
+                        <input
+                          type="radio"
+                          name="accessLevel"
+                          value={value}
+                          checked={accessLevel === value}
+                          onChange={(e) => setAccessLevel(e.target.value)}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                            accessLevel === value
+                              ? "border-violet-500 glass-button-enhanced shadow-lg shadow-violet-500/20"
+                              : "glass-effect hover:border-white/20"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon
+                              size={20}
+                              className={
+                                accessLevel === value
+                                  ? "text-violet-400"
+                                  : "text-gray-400"
+                              }
+                            />
+                            <div>
+                              <div className="font-medium text-white">{label}</div>
+                              <div className="text-sm text-gray-400">{desc}</div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </label>
-                  ))}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </div>

@@ -153,7 +153,7 @@ const Home = () => {
       {!location.pathname.includes('/messages') && (
         <FeatureHub 
           channelId={currentChannelId}
-          onFeatureAction={(action, data) => {
+          onFeatureAction={(action) => {
             switch(action) {
               case 'voice-send':
                 toast.success('Voice message feature ready!');

@@ -58,7 +58,7 @@ import FileUpload from "./FileUpload";
 import VoiceRecorder from "./VoiceRecorder";
 import QuickPoll from "./QuickPoll";
 
-const TeamChat = ({ channelId, channelName, onScrollToMessage }) => {
+const TeamChat = ({ channelId, channelName }) => {
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
   const { markChannelAsRead } = useUnread();
@@ -2197,7 +2197,7 @@ const TeamChat = ({ channelId, channelName, onScrollToMessage }) => {
         <QuickPoll
           channelId={channelId}
           onClose={() => setShowPollModal(false)}
-          onPollCreated={(poll) => {
+          onPollCreated={() => {
             // Don't add poll here - socket event will handle it for everyone including creator
             setShowPollModal(false);
             // Toast is already shown in QuickPoll component

@@ -59,7 +59,6 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 - **📊 Advanced Analytics**: Meeting reports, engagement metrics, insights
 - **🌐 Cloud-Native**: Serverless architecture, auto-scaling, global CDN
 - **📱 Mobile-First**: Optimized for all devices and screen sizes
-- **🎭 Interactive UI**: Custom cursor, particle effects, scroll progress, scramble text animations
 
 ### Landing Page Features
 
@@ -77,7 +76,6 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 - **Custom Cursor**: Interactive cursor effects
 - **Particle System**: Dynamic background particles
 - **Scroll Progress**: Visual scroll indicators
-- **Scramble Text**: Animated text effects
 - **Animated Buttons**: Smooth button interactions
 - **Error Boundaries**: Graceful error handling
 - **Loading States**: Skeleton screens and spinners

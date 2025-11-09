@@ -1077,8 +1077,9 @@ const OrgSettingsModal = ({
                         Access Level
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                        {accessLevelOptions.map(
-                          ({ value, label, desc, icon: Icon }) => (
+                        {accessLevelOptions.map(({ value, label, desc, icon }) => {
+                          const Icon = icon;
+                          return (
                             <div
                               key={value}
                               onClick={() => setAccessLevel(value)}
@@ -1111,8 +1112,8 @@ const OrgSettingsModal = ({
                                 {desc}
                               </p>
                             </div>
-                          )
-                        )}
+                          );
+                        })}
                       </div>
                     </div>
 

@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import MessageReactions from './MessageReactions';
 
-const PollDisplay = ({ poll, onVote, onDelete, currentUserId, onReaction, onReply, reactions = [] }) => {
+const PollDisplay = ({ poll, onVote, onDelete, onReaction, onReply, reactions = [] }) => {
   const { user } = useAuth();
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [hasVoted, setHasVoted] = useState(false);

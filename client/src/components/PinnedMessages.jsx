@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 const PinnedMessages = ({ channelId, onScrollToMessage }) => {
   const [pinnedMessages, setPinnedMessages] = useState([]);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (channelId) {

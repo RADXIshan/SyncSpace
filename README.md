@@ -1099,7 +1099,6 @@ syncspace/
 │   │   │   ├── ProtectedRoute.jsx       # Auth route guard
 │   │   │   ├── PublicRoute.jsx          # Public route guard
 │   │   │   ├── QuickPoll.jsx            # Poll creation
-│   │   │   ├── ScrambleText.jsx         # Text animation effect
 │   │   │   ├── ScrollProgress.jsx       # Scroll indicator
 │   │   │   ├── Settings.jsx             # User settings
 │   │   │   ├── Sidebar.jsx              # Navigation sidebar

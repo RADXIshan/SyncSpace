@@ -345,10 +345,19 @@ export const generateAIResponse = async (userMessage, conversationHistory = [], 
       return await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: fullPrompt,
+        generationConfig: {
+          maxOutputTokens: 8192, // Increased from default ~2048 to maximum
+          temperature: 0.7,
+          topP: 0.95,
+          topK: 40,
+        },
       });
     });
 
-    return response.text;
+    const responseText = response.text;
+    console.log(`✅ AI response generated: ${responseText.length} characters`);
+    
+    return responseText;
   } catch (error) {
     console.error("Error generating AI response:", error);
     
@@ -428,6 +437,12 @@ Keep the summary professional, concise (3-5 paragraphs), and focused on the most
       return await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
+        generationConfig: {
+          maxOutputTokens: 8192, // Increased for comprehensive summaries
+          temperature: 0.7,
+          topP: 0.95,
+          topK: 40,
+        },
       });
     });
 

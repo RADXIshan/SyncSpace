@@ -11,7 +11,7 @@ const AIAssistant = ({ onClose }) => {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "👋 Hi! I'm your SyncSpace AI assistant with real-time access to your workspace.\n\n🔍 I Know About Your Workspace:\n• Your organizations and current org\n• All channels and their descriptions\n• Team members and their roles\n• Organization roles and permissions\n• Who's online right now\n• Active meetings and recent activity\n\n✨ Platform Features:\n• Video meetings & screen sharing\n• Team chat & direct messages\n• Voice messages & polls\n• Meeting reports & analytics\n• Smart search & focus mode\n\n🎯 Ask Me Anything:\n• \"What's my organization name?\"\n• \"List all my channels\"\n• \"Who's online right now?\"\n• \"What roles exist in my org?\"\n• \"What permissions does the Admin role have?\"\n• \"How many members are in my organization?\"\n• \"What channels can I access?\"\n\n💡 I can also help with:\n• Creating organizations & channels\n• Managing roles & permissions\n• Troubleshooting issues\n• Best practices for collaboration\n\nWhat would you like to know?"
+      content: "👋 Hi! I'm your SyncSpace AI assistant with comprehensive real-time access to your entire workspace.\n\n🔍 I Have Full Access To:\n• Your organizations and current org\n• All channels and their descriptions\n• Team members, roles, and permissions\n• Who's online right now\n• Scheduled meetings and active meetings\n• Meeting reports with summaries\n• Notes and documents\n• Notices and announcements\n• Calendar events\n• Recent activity and messages\n\n✨ Platform Features I Can Help With:\n• Video meetings & screen sharing\n• Team chat & direct messages\n• Voice messages & polls\n• Meeting reports & analytics\n• Notes & collaborative documents\n• Notice board & announcements\n• Smart search & focus mode\n• Calendar & event management\n\n🎯 Ask Me Anything:\n• \"What's my organization name?\"\n• \"List all my channels\"\n• \"Who's online right now?\"\n• \"Show me recent meeting reports\"\n• \"What notes do we have?\"\n• \"What notices were posted recently?\"\n• \"What events are coming up?\"\n• \"What roles exist in my org?\"\n• \"What permissions does the Admin role have?\"\n• \"How many members are in my organization?\"\n• \"Summarize our last meeting\"\n\n💡 I can also help with:\n• Creating organizations & channels\n• Managing roles & permissions\n• Understanding meeting reports\n• Finding notes and documents\n• Checking upcoming events\n• Troubleshooting issues\n• Best practices for collaboration\n\nWhat would you like to know?"
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
@@ -97,6 +97,11 @@ const AIAssistant = ({ onClose }) => {
         let orgMembers = [];
         let orgRoles = [];
         let scheduledMeetings = [];
+        let meetingReports = [];
+        let notes = [];
+        let notices = [];
+        let events = [];
+        
         if (currentOrgId) {
           try {
             // Get organization details (includes channels and roles)
@@ -118,6 +123,54 @@ const AIAssistant = ({ onClose }) => {
             const meetingsResponse = await axios.get(`${baseURL}/api/meetings?org_id=${currentOrgId}`, { withCredentials: true });
             scheduledMeetings = meetingsResponse.data.meetings || [];
             console.log('📅 Fetched meetings:', scheduledMeetings.length);
+            
+            // Get meeting reports
+            try {
+              console.log('📊 Fetching meeting reports for org:', currentOrgId);
+              const reportsResponse = await axios.get(`${baseURL}/api/meeting-reports/organization/${currentOrgId}`, { withCredentials: true });
+              meetingReports = reportsResponse.data.reports || [];
+              console.log('📊 Fetched meeting reports:', meetingReports.length);
+              if (meetingReports.length > 0) {
+                console.log('📊 Sample report:', meetingReports[0]);
+              }
+            } catch (reportError) {
+              console.error('❌ Error fetching meeting reports:', reportError.response?.status, reportError.response?.data || reportError.message);
+              meetingReports = [];
+            }
+            
+            // Get notes
+            try {
+              console.log('📝 Fetching notes for org:', currentOrgId);
+              const notesResponse = await axios.get(`${baseURL}/api/notes?org_id=${currentOrgId}`, { withCredentials: true });
+              notes = notesResponse.data.notes || [];
+              console.log('📝 Fetched notes:', notes.length);
+            } catch (notesError) {
+              console.error('❌ Error fetching notes:', notesError.response?.status, notesError.response?.data || notesError.message);
+              notes = [];
+            }
+            
+            // Get notices
+            try {
+              console.log('📢 Fetching notices for org:', currentOrgId);
+              const noticesResponse = await axios.get(`${baseURL}/api/notices?org_id=${currentOrgId}`, { withCredentials: true });
+              notices = noticesResponse.data.notices || [];
+              console.log('📢 Fetched notices:', notices.length);
+            } catch (noticesError) {
+              console.error('❌ Error fetching notices:', noticesError.response?.status, noticesError.response?.data || noticesError.message);
+              notices = [];
+            }
+            
+            // Get events
+            try {
+              console.log('📆 Fetching events for org:', currentOrgId);
+              const eventsResponse = await axios.get(`${baseURL}/api/events?org_id=${currentOrgId}`, { withCredentials: true });
+              events = eventsResponse.data.events || [];
+              console.log('📆 Fetched events:', events.length);
+            } catch (eventsError) {
+              console.error('❌ Error fetching events:', eventsError.response?.status, eventsError.response?.data || eventsError.message);
+              events = [];
+            }
+            
           } catch (error) {
             console.error('❌ Error fetching org data:', error.response?.data || error.message);
           }
@@ -125,6 +178,7 @@ const AIAssistant = ({ onClose }) => {
           console.log('⚠️ No current organization - user may not be in an org yet');
         }
         
+        // Build context data with all information
         const contextData = {
           userOrganizations: organizations.map(org => ({
             id: org.org_id,
@@ -186,7 +240,47 @@ const AIAssistant = ({ onClose }) => {
           onlineUsers: [], // Will be populated by socket
           recentMessages: [],
           activeMeetings: [],
-          lastActivity: null
+          lastActivity: null,
+          meetingReports: (meetingReports || []).map(r => ({
+            id: r.id,
+            title: r.title,
+            channelId: r.channelId,
+            channelName: r.channelName,
+            createdBy: r.createdBy?.name || 'Unknown',
+            startedAt: r.startedAt,
+            endedAt: r.endedAt,
+            durationMinutes: r.durationMinutes,
+            participantCount: r.participants?.length || 0,
+            messageCount: r.messageCount,
+            summary: r.summary,
+            createdAt: r.createdAt
+          })),
+          notes: (notes || []).map(n => ({
+            id: n.note_id,
+            title: n.title,
+            body: n.body?.substring(0, 200), // First 200 chars for context
+            pinned: n.pinned,
+            channelId: n.channel_id,
+            channelName: n.channel_name,
+            createdBy: n.created_by_name,
+            createdAt: n.created_at,
+            updatedAt: n.updated_at
+          })),
+          notices: (notices || []).map(n => ({
+            id: n.notice_id,
+            title: n.title,
+            body: n.body?.substring(0, 200), // First 200 chars for context
+            createdBy: n.created_by_name,
+            createdAt: n.created_at
+          })),
+          events: (events || []).map(e => ({
+            id: e.event_id,
+            title: e.event_title,
+            description: e.event_description,
+            time: e.event_time,
+            meetingId: e.meeting_id,
+            isMeetingEvent: e.is_meeting_event
+          }))
         };
         
         console.log('✅ Context gathered successfully:', {
@@ -195,7 +289,11 @@ const AIAssistant = ({ onClose }) => {
           channels: contextData.userChannels.length,
           members: contextData.organizationMembers.length,
           roles: contextData.organizationRoles.length,
-          meetings: contextData.scheduledMeetings.length
+          meetings: contextData.scheduledMeetings.length,
+          reports: contextData.meetingReports?.length || 0,
+          notes: contextData.notes?.length || 0,
+          notices: contextData.notices?.length || 0,
+          events: contextData.events?.length || 0
         });
         
         setRealtimeContext(contextData);
@@ -211,7 +309,11 @@ const AIAssistant = ({ onClose }) => {
           onlineUsers: [],
           recentMessages: [],
           activeMeetings: [],
-          lastActivity: null
+          lastActivity: null,
+          meetingReports: [],
+          notes: [],
+          notices: [],
+          events: []
         });
       }
     };
@@ -381,6 +483,10 @@ const AIAssistant = ({ onClose }) => {
         organizationMembers: realtimeContext.organizationMembers || [],
         organizationRoles: realtimeContext.organizationRoles || [],
         scheduledMeetings: realtimeContext.scheduledMeetings || [],
+        meetingReports: realtimeContext.meetingReports || [],
+        notes: realtimeContext.notes || [],
+        notices: realtimeContext.notices || [],
+        events: realtimeContext.events || [],
         recentMessages: realtimeContext.recentMessages || [],
         activeMeetings: realtimeContext.activeMeetings || [],
         lastActivity: realtimeContext.lastActivity || null

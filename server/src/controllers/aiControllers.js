@@ -34,6 +34,10 @@ export const chatWithAI = async (req, res) => {
     console.log('  - Members:', realtimeContext?.organizationMembers?.length || 0);
     console.log('  - Roles:', realtimeContext?.organizationRoles?.length || 0);
     console.log('  - Scheduled Meetings:', realtimeContext?.scheduledMeetings?.length || 0);
+    console.log('  - Meeting Reports:', realtimeContext?.meetingReports?.length || 0);
+    console.log('  - Notes:', realtimeContext?.notes?.length || 0);
+    console.log('  - Notices:', realtimeContext?.notices?.length || 0);
+    console.log('  - Events:', realtimeContext?.events?.length || 0);
     console.log('  - Online Users:', realtimeContext?.onlineUsers?.length || 0);
     
     // Build comprehensive context string with proper schema alignment
@@ -168,6 +172,100 @@ export const chatWithAI = async (req, res) => {
         }
       } else {
         ctx.push(`\nONLINE USERS: No users currently online in this organization`);
+      }
+      
+      // Meeting Reports
+      if (realtimeContext.meetingReports && realtimeContext.meetingReports.length > 0) {
+        ctx.push(`\nMEETING REPORTS (${realtimeContext.meetingReports.length} total):`);
+        realtimeContext.meetingReports.slice(0, 10).forEach((r, i) => {
+          ctx.push(`${i + 1}. "${r.title}"`);
+          ctx.push(`   - Channel: #${r.channelName || 'Unknown'}`);
+          ctx.push(`   - Date: ${new Date(r.startedAt).toLocaleDateString()}`);
+          ctx.push(`   - Duration: ${r.durationMinutes} minutes`);
+          ctx.push(`   - Participants: ${r.participantCount}`);
+          ctx.push(`   - Messages: ${r.messageCount}`);
+          ctx.push(`   - Created by: ${r.createdBy}`);
+          if (r.summary) {
+            // Include more of the summary (up to 500 chars) for better context
+            const summaryPreview = r.summary.length > 500 ? r.summary.substring(0, 500) + '...' : r.summary;
+            ctx.push(`   - Summary: ${summaryPreview}`);
+          }
+        });
+        if (realtimeContext.meetingReports.length > 10) {
+          ctx.push(`... and ${realtimeContext.meetingReports.length - 10} more reports`);
+        }
+        ctx.push(`\nNOTE: When user asks for full meeting report details, provide the complete summary without truncation.`);
+      } else {
+        ctx.push(`\nMEETING REPORTS: No meeting reports yet`);
+      }
+      
+      // Notes
+      if (realtimeContext.notes && realtimeContext.notes.length > 0) {
+        ctx.push(`\nNOTES (${realtimeContext.notes.length} total):`);
+        realtimeContext.notes.slice(0, 10).forEach((n, i) => {
+          ctx.push(`${i + 1}. "${n.title}"${n.pinned ? ' 📌 (Pinned)' : ''}`);
+          if (n.channelName) {
+            ctx.push(`   - Channel: #${n.channelName}`);
+          }
+          ctx.push(`   - Created by: ${n.createdBy || 'Unknown'}`);
+          ctx.push(`   - Last updated: ${new Date(n.updatedAt).toLocaleDateString()}`);
+          if (n.body) {
+            // Include full note body (already limited to 200 chars in frontend)
+            ctx.push(`   - Content: ${n.body}`);
+          }
+        });
+        if (realtimeContext.notes.length > 10) {
+          ctx.push(`... and ${realtimeContext.notes.length - 10} more notes`);
+        }
+      } else {
+        ctx.push(`\nNOTES: No notes created yet`);
+      }
+      
+      // Notices
+      if (realtimeContext.notices && realtimeContext.notices.length > 0) {
+        ctx.push(`\nNOTICES (${realtimeContext.notices.length} total):`);
+        realtimeContext.notices.slice(0, 10).forEach((n, i) => {
+          ctx.push(`${i + 1}. "${n.title}"`);
+          ctx.push(`   - Posted by: ${n.createdBy || 'Unknown'}`);
+          ctx.push(`   - Date: ${new Date(n.createdAt).toLocaleDateString()}`);
+          if (n.body) {
+            // Include full notice body (already limited to 200 chars in frontend)
+            ctx.push(`   - Content: ${n.body}`);
+          }
+        });
+        if (realtimeContext.notices.length > 10) {
+          ctx.push(`... and ${realtimeContext.notices.length - 10} more notices`);
+        }
+      } else {
+        ctx.push(`\nNOTICES: No notices posted yet`);
+      }
+      
+      // Calendar Events
+      if (realtimeContext.events && realtimeContext.events.length > 0) {
+        ctx.push(`\nCALENDAR EVENTS (${realtimeContext.events.length} total):`);
+        const upcomingEvents = realtimeContext.events.filter(e => new Date(e.time) > new Date());
+        const pastEvents = realtimeContext.events.filter(e => new Date(e.time) <= new Date());
+        
+        if (upcomingEvents.length > 0) {
+          ctx.push(`\nUpcoming Events (${upcomingEvents.length}):`);
+          upcomingEvents.slice(0, 5).forEach((e, i) => {
+            const eventTime = new Date(e.time);
+            ctx.push(`${i + 1}. "${e.title}"`);
+            ctx.push(`   - Date: ${eventTime.toLocaleString()}`);
+            if (e.description) {
+              ctx.push(`   - Description: ${e.description}`);
+            }
+            if (e.isMeetingEvent) {
+              ctx.push(`   - Type: Meeting Event`);
+            }
+          });
+        }
+        
+        if (pastEvents.length > 0) {
+          ctx.push(`\nPast Events: ${pastEvents.length} events`);
+        }
+      } else {
+        ctx.push(`\nCALENDAR EVENTS: No events scheduled`);
       }
       
       // Active meetings

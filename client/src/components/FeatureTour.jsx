@@ -75,10 +75,10 @@ const FeatureTour = ({ onClose, onComplete }) => {
     },
     {
       title: 'Smart Search 🔍',
-      description: 'Find anything instantly - messages, files, meetings, or people. Filter by type for precise results.',
+      description: 'Universal search across all content - messages, DMs, files, meetings, reports, notes, channels, users, notices, and events. Click any category to browse all items, or type to search.',
       image: '🔍',
       shortcut: 'Ctrl+K',
-      tip: 'Search across all channels and direct messages at once'
+      tip: 'Click results to navigate directly to their location. Works with single character searches!'
     },
     {
       title: 'Focus Mode 🎯',
@@ -125,10 +125,10 @@ const FeatureTour = ({ onClose, onComplete }) => {
     },
     {
       title: 'AI Assistant 🤖',
-      description: 'Get help with summaries, finding information, and answering questions. AI features coming soon!',
+      description: 'Powered by Google Gemini AI with real-time workspace awareness. Ask about your organizations, channels, online users, roles, and get instant help with features.',
       image: '🤖',
       shortcut: 'Ctrl+Shift+A',
-      tip: 'Preview feature - full AI capabilities launching in v2.1'
+      tip: 'AI knows your workspace context and can answer specific questions about your team'
     },
     {
       title: 'Keyboard Shortcuts ⌨️',
@@ -138,17 +138,16 @@ const FeatureTour = ({ onClose, onComplete }) => {
       tip: 'Press Ctrl+/ anytime to view all available shortcuts'
     },
     {
-      title: 'AI Assistant 🤖',
-      description: 'Get instant help with our AI-powered assistant. Ask questions about features, get guidance, and receive auto-generated meeting summaries.',
-      image: '✨',
-      shortcut: 'Ctrl+Shift+A',
-      tip: 'Access from Feature Hub or use the keyboard shortcut for instant help'
+      title: 'Meeting Reports 📊',
+      description: 'Automatic comprehensive reports for every meeting with duration, participants, chat transcript, and analytics. Export to CSV for documentation.',
+      image: '📊',
+      tip: 'AI-powered summaries analyze meeting content and generate insights automatically'
     },
     {
       title: 'Feature Hub ⚡',
-      description: 'Quick access to all productivity features from the floating hub in the bottom-right corner. Includes Smart Search, Focus Mode, Keyboard Shortcuts, and AI Assistant.',
+      description: 'Floating quick-access menu with all productivity tools: Smart Search (Ctrl+K), Focus Mode (Ctrl+Shift+F), Keyboard Shortcuts (Ctrl+/), and AI Assistant (Ctrl+Shift+A).',
       image: '⚡',
-      tip: 'Click the lightning bolt icon to open the feature menu'
+      tip: 'Click the lightning bolt icon in bottom-right or use keyboard shortcuts for instant access'
     },
     {
       title: 'Profile & Settings ⚙️',

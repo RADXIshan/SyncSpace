@@ -461,16 +461,17 @@ const AIAssistant = ({ onClose }) => {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300"
         onClick={onClose}
       >
         {/* Chat Window */}
         <div 
-          className="w-full max-w-3xl h-[650px] bg-gradient-to-br from-slate-50 to-gray-100 dark:from-gray-900 dark:to-slate-900 rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-purple-200/20 dark:border-purple-500/20 animate-in zoom-in-95 duration-300"
+          className="relative w-full max-w-3xl h-[650px] glass-dark rounded-2xl sm:rounded-3xl flex flex-col overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform"
           onClick={(e) => e.stopPropagation()}
         >
+          <div className="absolute inset-0 cosmic-bg"></div>
           {/* Header */}
-          <div className="relative bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white p-5 flex items-center justify-between overflow-hidden">
+          <div className="relative bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white p-4 sm:p-5 flex items-center justify-between overflow-hidden z-10">
             {/* Animated background effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-indigo-400/20 animate-pulse"></div>
             
@@ -520,7 +521,7 @@ const AIAssistant = ({ onClose }) => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-transparent to-purple-50/30 dark:to-purple-900/10">
+          <div className="relative flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gradient-to-b from-transparent to-purple-50/30 dark:to-purple-900/10 z-10">
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -565,7 +566,7 @@ const AIAssistant = ({ onClose }) => {
           </div>
 
           {/* Input */}
-          <div className="p-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-t border-purple-200/30 dark:border-purple-500/20">
+          <div className="relative p-4 sm:p-5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-t border-purple-200/30 dark:border-purple-500/20 z-10">
             <div className="flex items-end gap-3">
               <div className="flex-1 relative">
                 <textarea

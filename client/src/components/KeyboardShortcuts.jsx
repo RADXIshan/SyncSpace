@@ -22,9 +22,11 @@ const KeyboardShortcuts = ({ onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700 animate-in slide-in-from-bottom-8 duration-500">
-        <div className="flex items-center justify-between mb-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
+      <div className="relative w-full max-w-2xl max-h-[90vh] glass-dark rounded-2xl sm:rounded-3xl overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 cosmic-bg"></div>
+        <div className="relative overflow-y-auto max-h-[90vh] p-6 sm:p-8 z-10">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl shadow-lg">
               <Command className="w-6 h-6 text-white" />
@@ -60,6 +62,7 @@ const KeyboardShortcuts = ({ onClose }) => {
               </div>
             </div>
           ))}
+        </div>
         </div>
       </div>
     </div>

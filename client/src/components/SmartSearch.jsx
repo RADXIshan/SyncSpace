@@ -62,9 +62,10 @@ const SmartSearch = ({ onClose, onNavigate }) => {
   const filteredResults = getFilteredResults();
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-start justify-center p-4 pt-20 animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-3xl shadow-2xl max-h-[80vh] flex flex-col animate-in slide-in-from-top-4 duration-500 border border-gray-200 dark:border-gray-700">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 pt-20 transition-all duration-300">
+      <div className="relative w-full max-w-3xl max-h-[80vh] glass-dark rounded-2xl sm:rounded-3xl flex flex-col overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 cosmic-bg"></div>
+        <div className="relative p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 z-10">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl shadow-lg">
               <Search className="w-5 h-5 text-white" />
@@ -87,7 +88,7 @@ const SmartSearch = ({ onClose, onNavigate }) => {
           </div>
         </div>
 
-        <div className="flex gap-2 px-6 py-3 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <div className="relative flex gap-2 px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-700 overflow-x-auto z-10">
           {tabs.map(tab => {
             const Icon = tab.icon;
             return (
@@ -114,7 +115,7 @@ const SmartSearch = ({ onClose, onNavigate }) => {
           })}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="relative flex-1 overflow-y-auto p-4 sm:p-6 z-10">
           {query.length < 2 ? (
             <div className="text-center py-16">
               <Search className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />

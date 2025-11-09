@@ -727,6 +727,17 @@
   }
 }
 
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Ensure hamburger button doesn't stretch */
 button[aria-label="Open menu"],
 button[aria-label="Close menu"] {

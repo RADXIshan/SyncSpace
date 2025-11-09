@@ -89,36 +89,37 @@ const FocusMode = ({ onClose }) => {
   const ModeIcon = modes[mode].icon;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-gray-700 animate-in slide-in-from-bottom-8 duration-500">
-        <div className="flex justify-between items-center mb-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-2 sm:p-4 transition-all duration-300">
+      <div className="relative w-full max-w-md glass-dark rounded-2xl sm:rounded-3xl p-6 sm:p-8 overflow-hidden animate-fadeIn hover:scale-[1.01] transition-transform">
+        <div className="absolute inset-0 cosmic-bg"></div>
+        <div className="relative flex justify-between items-center mb-6 sm:mb-8 z-10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl">
               <Target className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-white">Focus Mode</h2>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-700 rounded-lg transition-all hover:scale-105">
-            <X className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
+          <button onClick={onClose} className="cursor-pointer p-2.5 hover:bg-white/20 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 hover:rotate-90">
+            <X className="w-5.5 h-5.5 text-gray-400 hover:text-white transition-colors" />
           </button>
         </div>
 
-        <div className="flex gap-2 mb-8">
+        <div className="relative flex gap-2 mb-6 sm:mb-8 z-10">
           {Object.entries(modes).map(([key, { label, color }]) => (
             <button key={key} onClick={() => switchMode(key)}
-              className={`flex-1 py-3 px-3 rounded-xl text-sm font-semibold transition-all hover:scale-105 ${
+              className={`flex-1 px-2.5 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center glass-button text-white-400 hover:text-violet-400 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed ${
                 mode === key 
-                  ? color === 'purple' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50' 
-                  : color === 'green' ? 'bg-green-600 text-white shadow-lg shadow-green-500/50'
-                  : 'bg-blue-600 text-white shadow-lg shadow-blue-500/50'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  ? color === 'purple' ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50 glass-button-enhanced' 
+                  : color === 'green' ? 'bg-green-600 text-white shadow-lg shadow-green-500/50 glass-button-enhanced'
+                  : 'bg-blue-600 text-white shadow-lg shadow-blue-500/50 glass-button-enhanced'
+                  : 'bg-gray-700 text-gray-400/60 hover:bg-gray-600 glass-button'
               }`}>
               {label}
             </button>
           ))}
         </div>
 
-        <div className="relative mb-8">
+        <div className="relative mb-6 sm:mb-8 z-10">
           <svg className="w-full h-64" viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="90" fill="none" stroke="#374151" strokeWidth="8" />
             <circle cx="100" cy="100" r="90" fill="none" stroke={`rgb(${mode === 'work' ? '147, 51, 234' : mode === 'shortBreak' ? '34, 197, 94' : '59, 130, 246'})`}
@@ -137,7 +138,7 @@ const FocusMode = ({ onClose }) => {
 
         {/* Session Stats */}
         {sessions > 0 && (
-          <div className="mb-6 p-4 bg-gray-700/50 rounded-xl border border-gray-600">
+          <div className="relative mb-6 p-4 bg-gray-700/50 rounded-xl border border-gray-600 z-10">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm text-gray-400 mb-1">Today's Progress</div>
@@ -165,19 +166,19 @@ const FocusMode = ({ onClose }) => {
           </div>
         )}
 
-        <div className="flex gap-3">
+        <div className="relative flex gap-3 z-10">
           <button onClick={toggleTimer}
             className={`flex-1 py-4 rounded-xl font-semibold text-white transition-all hover:scale-105 shadow-lg ${
               isRunning 
-                ? 'bg-red-600 hover:bg-red-700 shadow-red-500/50' 
-                : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-purple-500/50'
+                ? 'px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center btn-glass-primary text-red-400 hover:text-red-400 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed' 
+                : 'px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center btn-glass-primary text-violet-400 hover:text-violet-400 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed'
             }`}>
             {isRunning ? <><Pause className="w-5 h-5 inline mr-2" />Pause</> : <><Play className="w-5 h-5 inline mr-2" />Start</>}
           </button>
           <button onClick={resetTimer}
-            className="px-6 py-4 bg-gray-700 hover:bg-gray-600 rounded-xl transition-all hover:scale-105"
+            className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 cursor-pointer active:scale-95 flex items-center gap-2 justify-center btn-glass-primary text-white hover:text-violet-400 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
             title="Reset timer">
-            <RotateCcw className="w-5 h-5 text-white" />
+            <RotateCcw className="w-5 h-5 group-hover:text-violet-400" />
           </button>
         </div>
       </div>

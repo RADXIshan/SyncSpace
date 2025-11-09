@@ -44,6 +44,27 @@ const SmartSearch = ({ onClose, onNavigate }) => {
     inputRef.current?.focus();
   }, []);
 
+  // Fetch category data when tab is clicked without search query
+  useEffect(() => {
+    if (query.length === 0 && activeTab !== "all") {
+      fetchCategoryData(activeTab);
+    } else if (query.length === 0 && activeTab === "all") {
+      // Reset results when switching back to "all" tab without query
+      setResults({
+        messages: [],
+        files: [],
+        meetings: [],
+        meetingReports: [],
+        users: [],
+        notes: [],
+        channels: [],
+        notices: [],
+        events: [],
+        directMessages: [],
+      });
+    }
+  }, [activeTab, query]);
+
   useEffect(() => {
     // Don't trigger for very short queries
     if (query.length < 1) {
@@ -79,6 +100,51 @@ const SmartSearch = ({ onClose, onNavigate }) => {
 
     return () => clearTimeout(debounceRef.current);
   }, [query]);
+
+  const fetchCategoryData = async (category) => {
+    setLoading(true);
+
+    // Cancel previous request if any
+    if (controllerRef.current) {
+      try {
+        controllerRef.current.abort();
+      } catch (e) {}
+    }
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/api/search/category/${category}`,
+        {
+          withCredentials: true,
+          signal: controller.signal,
+          timeout: 8000,
+        }
+      );
+
+      console.log(`Category ${category} data:`, response.data);
+
+      // Update only the specific category
+      setResults((prev) => ({
+        ...prev,
+        [category]: response.data.items || [],
+      }));
+    } catch (error) {
+      if (error.name === "CanceledError" || error.name === "AbortError") {
+        return;
+      }
+
+      console.error(`Error fetching ${category} data:`, error);
+      toast.error(`Failed to load ${category}`);
+    } finally {
+      if (controllerRef.current === controller) {
+        setLoading(false);
+        controllerRef.current = null;
+      }
+    }
+  };
 
   const performSearch = async (q) => {
     if (!q) return;
@@ -453,11 +519,14 @@ const SmartSearch = ({ onClose, onNavigate }) => {
           </div>
 
           <div className="relative flex-1 overflow-y-auto p-4 sm:p-6 z-10">
-            {query.length < 1 ? (
+            {query.length < 1 && activeTab === "all" ? (
               <div className="text-center py-16">
                 <Search className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400 font-medium">
                   Start typing to search across your organization
+                </p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
+                  Or click a category to browse all items
                 </p>
               </div>
             ) : loading ? (
@@ -480,7 +549,9 @@ const SmartSearch = ({ onClose, onNavigate }) => {
               <div className="text-center py-16">
                 <Search className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400 font-medium">
-                  No results found for "{query}"
+                  {query.length > 0
+                    ? `No results found for "${query}"`
+                    : `No ${activeTab} found`}
                 </p>
               </div>
             ) : (

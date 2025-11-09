@@ -1,5 +1,153 @@
 import sql from '../database/db.js';
 
+// Fetch all items for a specific category
+export const getCategoryData = async (req, res) => {
+  try {
+    const { category } = req.params;
+    const userId = req.user.userId;
+    const limit = 50; // Limit results for performance
+
+    let items = [];
+
+    switch (category) {
+      case 'messages':
+        items = await sql`
+          SELECT m.*, c.channel_name, u.name as user_name
+          FROM channel_messages m
+          JOIN org_channels c ON m.channel_id = c.channel_id
+          JOIN users u ON m.user_id = u.user_id
+          JOIN org_members om ON om.org_id = c.org_id AND om.user_id = ${userId}
+          ORDER BY m.created_at DESC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'directMessages':
+        items = await sql`
+          SELECT dm.*, 
+            sender.name as sender_name, 
+            receiver.name as receiver_name,
+            CASE 
+              WHEN dm.sender_id = ${userId} THEN receiver.name
+              ELSE sender.name
+            END as other_user_name,
+            CASE 
+              WHEN dm.sender_id = ${userId} THEN dm.receiver_id
+              ELSE dm.sender_id
+            END as other_user_id
+          FROM direct_messages dm
+          JOIN users sender ON dm.sender_id = sender.user_id
+          JOIN users receiver ON dm.receiver_id = receiver.user_id
+          WHERE (dm.sender_id = ${userId} OR dm.receiver_id = ${userId})
+          ORDER BY dm.created_at DESC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'files':
+        items = await sql`
+          SELECT m.*, c.channel_name, u.name as user_name
+          FROM channel_messages m
+          JOIN org_channels c ON m.channel_id = c.channel_id
+          JOIN users u ON m.user_id = u.user_id
+          JOIN org_members om ON om.org_id = c.org_id AND om.user_id = ${userId}
+          WHERE m.file_url IS NOT NULL
+          ORDER BY m.created_at DESC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'meetings':
+        items = await sql`
+          SELECT m.*, c.channel_name
+          FROM org_meetings m
+          LEFT JOIN org_channels c ON m.channel_id = c.channel_id
+          JOIN org_members om ON om.org_id = m.org_id AND om.user_id = ${userId}
+          ORDER BY m.start_time DESC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'meetingReports':
+        items = await sql`
+          SELECT mr.*, c.channel_name, u.name as created_by_name
+          FROM meeting_reports mr
+          LEFT JOIN org_channels c ON mr.channel_id = c.channel_id
+          LEFT JOIN users u ON mr.created_by = u.user_id
+          JOIN org_members om ON om.org_id = mr.org_id AND om.user_id = ${userId}
+          ORDER BY mr.created_at DESC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'notes':
+        items = await sql`
+          SELECT n.note_id, n.title, n.body, n.pinned, n.created_at, n.updated_at,
+            u.name as created_by_name, c.channel_name
+          FROM org_notes n
+          LEFT JOIN users u ON n.created_by = u.user_id
+          LEFT JOIN org_channels c ON n.channel_id = c.channel_id
+          JOIN org_members om ON om.org_id = n.org_id AND om.user_id = ${userId}
+          ORDER BY n.pinned DESC, n.updated_at DESC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'channels':
+        items = await sql`
+          SELECT c.channel_id, c.channel_name, c.channel_description
+          FROM org_channels c
+          JOIN org_members om ON om.org_id = c.org_id AND om.user_id = ${userId}
+          ORDER BY c.channel_name ASC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'notices':
+        items = await sql`
+          SELECT n.notice_id, n.title, n.body, n.created_at, u.name as created_by_name
+          FROM org_notices n
+          LEFT JOIN users u ON n.created_by = u.user_id
+          JOIN org_members om ON om.org_id = n.org_id AND om.user_id = ${userId}
+          ORDER BY n.created_at DESC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'events':
+        items = await sql`
+          SELECT e.event_id, e.event_title, e.event_description, e.event_time, e.meeting_id
+          FROM events e
+          JOIN org_members om ON om.org_id = e.org_id AND om.user_id = ${userId}
+          ORDER BY e.event_time DESC
+          LIMIT ${limit}
+        `;
+        break;
+
+      case 'users':
+        items = await sql`
+          SELECT DISTINCT u.user_id, u.name, u.email, u.user_photo
+          FROM users u
+          JOIN org_members om1 ON om1.user_id = u.user_id
+          JOIN org_members om2 ON om2.org_id = om1.org_id AND om2.user_id = ${userId}
+          WHERE u.user_id != ${userId}
+          ORDER BY u.name ASC
+          LIMIT ${limit}
+        `;
+        break;
+
+      default:
+        return res.status(400).json({ message: 'Invalid category' });
+    }
+
+    console.log(`Category ${category} fetched: ${items.length} items`);
+    res.json({ items });
+  } catch (error) {
+    console.error('Category fetch error:', error);
+    res.status(500).json({ message: 'Failed to fetch category data' });
+  }
+};
+
 export const searchAll = async (req, res) => {
   try {
     const { q } = req.query;

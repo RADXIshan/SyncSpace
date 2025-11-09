@@ -842,6 +842,9 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                               try {
                                 setAiSummaryLoading(true);
                                 const baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+                                // Request a detailed overview from the AI. The server
+                                // will generate a longer, structured meeting overview
+                                // when `options.detailLevel === 'detailed'` is passed.
                                 const response = await axios.post(
                                   `${baseURL}/api/ai/generate-summary`,
                                   {
@@ -852,6 +855,12 @@ const MeetingReports = ({ channelId, channelName, orgId, showAll = false }) => {
                                       messages: selectedReport.messagesData || [],
                                       started_at: selectedReport.startedAt,
                                       ended_at: selectedReport.endedAt
+                                    },
+                                    // Explicit instruction for the server to return
+                                    // a detailed, comprehensive overview instead
+                                    // of a short/concise summary.
+                                    options: {
+                                      detailLevel: "detailed"
                                     }
                                   },
                                   { withCredentials: true }

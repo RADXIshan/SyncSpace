@@ -218,15 +218,19 @@ export const chatWithAI = async (req, res) => {
 export const generateMeetingSummaryController = async (req, res) => {
   try {
     const userId = verifyToken(req);
-    const { meetingData } = req.body;
+    const { meetingData, options } = req.body;
 
     if (!meetingData) {
       return res.status(400).json({ message: "Meeting data is required" });
     }
 
     console.log(`Generating meeting summary for user ${userId}`);
+    console.log('AI summary options:', options || {});
 
-    const summary = await generateMeetingSummary(meetingData);
+    // Pass options through to the generator so the backend can produce
+    // either a concise summary (default) or a more detailed overview
+    // when requested by the client.
+    const summary = await generateMeetingSummary(meetingData, options || {});
 
     res.json({
       message: "Meeting summary generated successfully",

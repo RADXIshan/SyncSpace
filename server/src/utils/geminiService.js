@@ -362,25 +362,54 @@ export const generateAIResponse = async (userMessage, conversationHistory = [], 
 };
 
 // Generate meeting summary from meeting data
-export const generateMeetingSummary = async (meetingData) => {
+export const generateMeetingSummary = async (meetingData, options = {}) => {
   try {
     const { title, participants, duration_minutes, messages, started_at } = meetingData;
 
     // Format participants
-    const participantNames = participants.map(p => p.name || p.user_name || "Unknown").join(", ");
+    const participantNames = (participants || []).map(p => p.name || p.user_name || "Unknown").join(", ");
     
     // Format messages for context
     const chatContext = messages && messages.length > 0
       ? messages.map(msg => `${msg.user_name || "Unknown"}: ${msg.content || ""}`).join("\n")
       : "No chat messages during this meeting.";
 
-    const prompt = `
+    // If the client requests a detailed overview, ask the AI to provide a
+    // comprehensive, structured meeting overview (agenda, detailed key points,
+    // decisions, action items with owners if detectable, notable quotes, and
+    // suggested next steps). Otherwise, fall back to the concise default.
+    let prompt;
+    if (options.detailLevel === 'detailed') {
+      prompt = `
+Generate a DETAILED and STRUCTURED meeting overview based on the information below. Use clear sections and bullet points where helpful. Include the following where possible:
+
+- Meeting metadata (title, date/time, duration, participants count)
+- Agenda or main topics discussed
+- Detailed key discussion points (who said what when relevant)
+- Decisions made (explicit or implied)
+- Action items with possible owners or assignees (if mentioned in chat)
+- Important quotes or highlights from participants
+- Any unresolved questions and suggested next steps
+- Brief summary of meeting outcome
+
+Meeting Title: ${title}
+Date: ${new Date(started_at).toLocaleString()}
+Duration: ${duration_minutes} minutes
+Participants: ${participantNames} (${(participants || []).length} total)
+
+Chat Messages:
+${chatContext}
+
+Please produce a thorough overview (longer than a short summary) that could be used as a handover note. Avoid markdown formatting like code blocks; plain text with headings and bullet points is preferred.
+`;
+    } else {
+      prompt = `
 Generate a concise, professional meeting summary based on the following information:
 
 Meeting Title: ${title}
 Date: ${new Date(started_at).toLocaleString()}
 Duration: ${duration_minutes} minutes
-Participants: ${participantNames} (${participants.length} total)
+Participants: ${participantNames} (${(participants || []).length} total)
 
 Chat Messages:
 ${chatContext}
@@ -393,6 +422,7 @@ Please provide a well-structured summary that includes:
 
 Keep the summary professional, concise (3-5 paragraphs), and focused on the most important information. If the chat messages don't provide much context, create a general summary based on the meeting metadata.
 `;
+    }
 
     const response = await retryWithBackoff(async () => {
       return await ai.models.generateContent({

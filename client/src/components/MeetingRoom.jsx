@@ -16,6 +16,7 @@ import { io } from "socket.io-client";
 // Meeting reports are now handled server-side
 import MeetingSettings from "./MeetingSettings";
 import MeetingChat from "./MeetingChat";
+import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
 
 const MeetingRoom = () => {
   const { roomId } = useParams();
@@ -61,6 +62,13 @@ const MeetingRoom = () => {
   const cameraVideoRef = useRef();
   const peersRef = useRef([]);
   const socketRef = useRef();
+
+  // Keyboard shortcuts for meeting controls
+  useKeyboardShortcuts([
+    { key: 'd', ctrl: true, callback: () => toggleVideo() },
+    { key: 'm', ctrl: true, callback: () => toggleAudio() },
+    { key: 'e', ctrl: true, callback: () => leaveMeeting() },
+  ]);
 
   const iceServers = {
     iceServers: [

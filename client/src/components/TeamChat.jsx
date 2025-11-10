@@ -1464,109 +1464,111 @@ const TeamChat = ({ channelId, channelName }) => {
                   }`}
                 >
                   {/* Header with action buttons */}
-                  {showAvatar && (
+                  {(showAvatar || !message.isDeleted) && (
                     <div
                       className={`flex items-center gap-2 mb-1 justify-start ${
                         isOwnMessage ? "flex-row-reverse" : ""
                       }`}
                     >
-                      <div
-                        className={`flex items-center gap-2 ${
-                          isOwnMessage ? "flex-row-reverse" : ""
-                        }`}
-                      >
-                        <span className="font-semibold text-gray-900 text-sm">
-                          {isOwnMessage ? "You" : message.user_name}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {formatTime(message.created_at)}
-                        </span>
-                      </div>
+                      {showAvatar && (
+                        <div
+                          className={`flex items-center gap-2 ${
+                            isOwnMessage ? "flex-row-reverse" : ""
+                          }`}
+                        >
+                          <span className="font-semibold text-gray-900 text-sm">
+                            {isOwnMessage ? "You" : message.user_name}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {formatTime(message.created_at)}
+                          </span>
+                        </div>
+                      )}
 
                       {/* Message actions in header */}
                       {!message.isDeleted && (
                         <div className="opacity-0 group-hover:opacity-100 transition-all duration-200">
                           <div className="bg-white border border-gray-200 rounded-lg shadow-lg flex items-center gap-1 p-1">
-                            <button
-                              onClick={() =>
-                                handleReaction(message.message_id, "👍")
-                              }
-                              className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                              title="Like"
-                            >
-                              <ThumbsUp size={14} />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleReaction(message.message_id, "❤️")
-                              }
-                              className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
-                              title="Love"
-                            >
-                              <Heart size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleReply(message)}
-                              className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                              title="Reply"
-                            >
-                              <Reply size={14} />
-                            </button>
-                            {!message.isDeleted && (
-                              <>
-                                <button
-                                  onClick={() => handlePinMessage(message.message_id)}
-                                  disabled={pinningMessageId === message.message_id}
-                                  className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                                    message.is_pinned 
-                                      ? 'text-purple-600' 
-                                      : 'text-gray-500 hover:text-purple-600'
-                                  }`}
-                                  title={message.is_pinned ? "Unpin message" : "Pin message"}
-                                >
-                                  {pinningMessageId === message.message_id ? (
-                                    <Loader2 size={14} className="animate-spin" />
-                                  ) : (
-                                    <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
-                                  )}
-                                </button>
-                              </>
-                            )}
-                            {isOwnMessage && !message.isDeleted && (
-                              <>
-                                <div className="w-px h-6 bg-gray-200 mx-1"></div>
-                                <button
-                                  onClick={() => handleEditMessage(message)}
-                                  className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                                  title="Edit"
-                                >
-                                  <Edit2 size={14} />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    // Store original content before deletion for potential recovery
-                                    setMessages((prev) =>
-                                      prev.map((msg) =>
-                                        msg.message_id === message.message_id
-                                          ? {
-                                              ...msg,
-                                              originalContent: msg.content,
-                                            }
-                                          : msg
-                                      )
-                                    );
-                                    handleDeleteMessage(message.message_id);
-                                  }}
-                                  className="p-2 hover:bg-red-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
-                                  title="Delete"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </>
-                            )}
-                          </div>
+                          <button
+                            onClick={() =>
+                              handleReaction(message.message_id, "👍")
+                            }
+                            className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                            title="Like"
+                          >
+                            <ThumbsUp size={14} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleReaction(message.message_id, "❤️")
+                            }
+                            className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+                            title="Love"
+                          >
+                            <Heart size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleReply(message)}
+                            className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                            title="Reply"
+                          >
+                            <Reply size={14} />
+                          </button>
+                          {!message.isDeleted && (
+                            <>
+                              <button
+                                onClick={() => handlePinMessage(message.message_id)}
+                                disabled={pinningMessageId === message.message_id}
+                                className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                                  message.is_pinned 
+                                    ? 'text-purple-600' 
+                                    : 'text-gray-500 hover:text-purple-600'
+                                }`}
+                                title={message.is_pinned ? "Unpin message" : "Pin message"}
+                              >
+                                {pinningMessageId === message.message_id ? (
+                                  <Loader2 size={14} className="animate-spin" />
+                                ) : (
+                                  <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
+                                )}
+                              </button>
+                            </>
+                          )}
+                          {isOwnMessage && !message.isDeleted && (
+                            <>
+                              <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                              <button
+                                onClick={() => handleEditMessage(message)}
+                                className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                                title="Edit"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  // Store original content before deletion for potential recovery
+                                  setMessages((prev) =>
+                                    prev.map((msg) =>
+                                      msg.message_id === message.message_id
+                                        ? {
+                                            ...msg,
+                                            originalContent: msg.content,
+                                          }
+                                        : msg
+                                    )
+                                  );
+                                  handleDeleteMessage(message.message_id);
+                                }}
+                                className="p-2 hover:bg-red-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+                                title="Delete"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </>
+                          )}
                         </div>
-                      )}
+                      </div>
+                    )}
                     </div>
                   )}
 

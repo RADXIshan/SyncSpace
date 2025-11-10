@@ -1776,89 +1776,91 @@ const Messages = () => {
                         }`}
                       >
                         {/* Header with actions */}
-                        {showAvatar && (
+                        {(showAvatar || !message.isDeleted) && (
                           <div
                             className={`flex items-center gap-1.5 sm:gap-2 mb-1 ${
                               isOwnMessage ? "flex-row-reverse" : ""
                             }`}
                           >
-                            <span className="text-xs text-gray-500">
-                              {formatTime(message.created_at)}
-                            </span>
+                            {showAvatar && (
+                              <span className="text-xs text-gray-500">
+                                {formatTime(message.created_at)}
+                              </span>
+                            )}
 
                             {/* Message actions - Hidden on mobile, shown on hover on desktop */}
                             {!message.isDeleted && (
                               <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 hidden sm:block">
                                 <div className="bg-white border border-gray-200 rounded-lg shadow-lg flex items-center gap-1 p-1">
-                                  <button
-                                    onClick={() =>
-                                      handleReaction(message.message_id, "👍")
-                                    }
-                                    className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                                    title="Like"
-                                  >
-                                    <ThumbsUp size={14} />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleReaction(message.message_id, "❤️")
-                                    }
-                                    className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
-                                    title="Love"
-                                  >
-                                    <Heart size={14} />
-                                  </button>
-                                  <button
-                                    onClick={() => handleReply(message)}
-                                    className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                                    title="Reply"
-                                  >
-                                    <Reply size={14} />
-                                  </button>
-                                  <button
-                                    onClick={() => handlePinMessage(message.message_id)}
-                                    disabled={pinningMessageId === message.message_id}
-                                    className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                                      message.is_pinned 
-                                        ? 'text-purple-600 hover:text-purple-700' 
-                                        : 'text-gray-500 hover:text-purple-600'
-                                    }`}
-                                    title={message.is_pinned ? "Unpin message" : "Pin message"}
-                                  >
-                                    {pinningMessageId === message.message_id ? (
-                                      <Loader2 size={14} className="animate-spin" />
-                                    ) : (
-                                      <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
-                                    )}
-                                  </button>
-                                  {isOwnMessage && (
-                                    <>
-                                      <div className="w-px h-6 bg-gray-200 mx-1"></div>
-                                      <button
-                                        onClick={() =>
-                                          handleEditMessage(message)
-                                        }
-                                        className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-                                        title="Edit"
-                                      >
-                                        <Edit2 size={14} />
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleDeleteMessage(
-                                            message.message_id
-                                          )
-                                        }
-                                        className="p-2 hover:bg-red-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
-                                        title="Delete"
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    </>
+                                <button
+                                  onClick={() =>
+                                    handleReaction(message.message_id, "👍")
+                                  }
+                                  className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                                  title="Like"
+                                >
+                                  <ThumbsUp size={14} />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleReaction(message.message_id, "❤️")
+                                  }
+                                  className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+                                  title="Love"
+                                >
+                                  <Heart size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleReply(message)}
+                                  className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                                  title="Reply"
+                                >
+                                  <Reply size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handlePinMessage(message.message_id)}
+                                  disabled={pinningMessageId === message.message_id}
+                                  className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    message.is_pinned 
+                                      ? 'text-purple-600 hover:text-purple-700' 
+                                      : 'text-gray-500 hover:text-purple-600'
+                                  }`}
+                                  title={message.is_pinned ? "Unpin message" : "Pin message"}
+                                >
+                                  {pinningMessageId === message.message_id ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : (
+                                    <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
                                   )}
-                                </div>
+                                </button>
+                                {isOwnMessage && (
+                                  <>
+                                    <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                                    <button
+                                      onClick={() =>
+                                        handleEditMessage(message)
+                                      }
+                                      className="p-2 hover:bg-blue-50 rounded-md text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+                                      title="Edit"
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteMessage(
+                                          message.message_id
+                                        )
+                                      }
+                                      className="p-2 hover:bg-red-50 rounded-md text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+                                      title="Delete"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </>
+                                )}
                               </div>
-                            )}
+                            </div>
+                          )}
                           </div>
                         )}
 

@@ -249,7 +249,13 @@ const FeatureHub = ({ channelId, onFeatureAction }) => {
       )}
 
       {activeFeature === 'ai' && (
-        <AIAssistant onClose={closeFeature} />
+        <AIAssistant 
+          onClose={closeFeature}
+          context={{
+            page: 'channel',
+            channelId: channelId,
+          }}
+        />
       )}
     </>
   );

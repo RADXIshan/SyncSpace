@@ -18,6 +18,7 @@ import MeetingSettings from "./MeetingSettings";
 import MeetingChat from "./MeetingChat";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
 import { useAuth } from "../context/AuthContext";
+import AIAssistant from "./AIAssistant";
 
 const MeetingRoom = () => {
   const { roomId } = useParams();
@@ -38,6 +39,17 @@ const MeetingRoom = () => {
   const [savedSettings, setSavedSettings] = useState({ videoEnabled: true, audioEnabled: true });
   const [cameraStream, setCameraStream] = useState(null);
   const [showChat, setShowChat] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [meetingChatMessages, setMeetingChatMessages] = useState([]);
+
+  // Debug: Log chat messages when they change
+  useEffect(() => {
+    if (meetingChatMessages.length > 0) {
+      console.log('💬 MeetingRoom - Chat messages updated:', meetingChatMessages.length, 'messages');
+      console.log('💬 Sample message:', meetingChatMessages[0]);
+      console.log('💬 Last message:', meetingChatMessages[meetingChatMessages.length - 1]);
+    }
+  }, [meetingChatMessages]);
 
   // Load settings from URL params on component mount
   useEffect(() => {
@@ -70,6 +82,7 @@ const MeetingRoom = () => {
     { key: 'd', ctrl: true, callback: () => toggleVideo() },
     { key: 'm', ctrl: true, callback: () => toggleAudio() },
     { key: 'e', ctrl: true, callback: () => leaveMeeting() },
+    { key: 'a', ctrl: true, shift: true, callback: () => setShowAIAssistant(prev => !prev) },
   ]);
 
   // Update currentUser when authUser changes (to get fresh photo data)
@@ -408,9 +421,6 @@ const MeetingRoom = () => {
 
     socket.on("existing-users", (users) => {
       console.log("Existing users:", users);
-      users.forEach(user => {
-        console.log('📸 Existing user photo:', user.userName, user.userPhoto);
-      });
 
       peersRef.current.forEach((peerObj) => {
         if (peerObj.peer) {
@@ -445,7 +455,6 @@ const MeetingRoom = () => {
 
     socket.on("user-joined", (payload) => {
       console.log("User joined:", payload);
-      console.log('📸 User joined photo:', payload.userName, payload.userPhoto);
 
       if (payload.signal && payload.signal.type === "offer") {
         const existingPeer = peersRef.current.find((p) => p.peerID === payload.callerID);
@@ -1785,7 +1794,52 @@ const MeetingRoom = () => {
         isVisible={showChat}
         onToggle={() => setShowChat(!showChat)}
         participantCount={totalParticipants}
+        onMessagesChange={setMeetingChatMessages}
       />
+
+      {showAIAssistant && (
+        <AIAssistant
+          onClose={() => setShowAIAssistant(false)}
+          context={{
+            page: 'meeting',
+            meetingId: roomId,
+            totalParticipants,
+            currentUser: {
+              name: currentUser?.name,
+              email: currentUser?.email,
+              id: currentUser?.id,
+            },
+            peers: peers.map(peer => ({
+              name: peer.userName,
+              email: peer.userEmail,
+              id: peer.userId,
+              videoEnabled: peer.videoEnabled,
+              audioEnabled: peer.audioEnabled,
+              isScreenSharing: peer.isScreenSharing,
+            })),
+            localSettings: {
+              videoEnabled: isVideoEnabled,
+              audioEnabled: isAudioEnabled,
+              isScreenSharing,
+              screenSharingUser: screenSharingUser === socket?.id ? 'You' : 
+                peers.find(p => p.peerID === screenSharingUser)?.userName || 'Unknown',
+            },
+            chatMessages: (() => {
+              const mapped = meetingChatMessages.map(msg => ({
+                user: msg.user_name,
+                message: msg.content,
+                timestamp: msg.created_at,
+              }));
+              console.log('💬 Passing to AI Assistant:', mapped.length, 'messages');
+              if (mapped.length > 0) {
+                console.log('💬 First mapped message:', mapped[0]);
+                console.log('💬 Last mapped message:', mapped[mapped.length - 1]);
+              }
+              return mapped;
+            })(),
+          }}
+        />
+      )}
     </div>
   );
 };

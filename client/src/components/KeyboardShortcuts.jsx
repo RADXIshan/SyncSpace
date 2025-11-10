@@ -17,6 +17,7 @@ const KeyboardShortcuts = ({ onClose }) => {
         { keys: ["Ctrl", "D"], description: "Toggle video" },
         { keys: ["Ctrl", "M"], description: "Toggle audio" },
         { keys: ["Ctrl", "E"], description: "End call" },
+        { keys: ["Ctrl", "Shift", "A"], description: "AI Assistant" },
       ],
     },
   ];

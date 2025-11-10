@@ -25,6 +25,7 @@ import {
   PanelLeftOpen,
   Pin,
   Mic,
+  Loader2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import EmojiPicker from "./EmojiPicker";
@@ -77,6 +78,9 @@ const Messages = () => {
 
   // State for navigation control
   const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+  
+  // State for pinning messages
+  const [pinningMessageId, setPinningMessageId] = useState(null);
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -1211,7 +1215,10 @@ const Messages = () => {
 
   // Handle message pinning
   const handlePinMessage = async (messageId) => {
+    if (pinningMessageId) return; // Prevent multiple simultaneous pin operations
+    
     try {
+      setPinningMessageId(messageId);
       const message = messages.find(m => m.message_id === messageId);
       const isPinned = message?.is_pinned;
 
@@ -1256,6 +1263,8 @@ const Messages = () => {
     } catch (error) {
       console.error("Error pinning/unpinning message:", error);
       toast.error("Failed to pin/unpin message");
+    } finally {
+      setPinningMessageId(null);
     }
   };
 
@@ -1808,14 +1817,19 @@ const Messages = () => {
                                   </button>
                                   <button
                                     onClick={() => handlePinMessage(message.message_id)}
-                                    className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer ${
+                                    disabled={pinningMessageId === message.message_id}
+                                    className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                                       message.is_pinned 
                                         ? 'text-purple-600 hover:text-purple-700' 
                                         : 'text-gray-500 hover:text-purple-600'
                                     }`}
                                     title={message.is_pinned ? "Unpin message" : "Pin message"}
                                   >
-                                    <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
+                                    {pinningMessageId === message.message_id ? (
+                                      <Loader2 size={14} className="animate-spin" />
+                                    ) : (
+                                      <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
+                                    )}
                                   </button>
                                   {isOwnMessage && (
                                     <>

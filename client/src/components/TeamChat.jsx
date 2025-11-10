@@ -19,6 +19,7 @@ import {
   Mic,
   BarChart3,
   Pin,
+  Loader2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -79,6 +80,7 @@ const TeamChat = ({ channelId, channelName }) => {
   const [polls, setPolls] = useState([]);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showPollModal, setShowPollModal] = useState(false);
+  const [pinningMessageId, setPinningMessageId] = useState(null);
 
   const [dragOver, setDragOver] = useState(false);
 
@@ -847,7 +849,10 @@ const TeamChat = ({ channelId, channelName }) => {
 
   // Handle message pinning
   const handlePinMessage = async (messageId) => {
+    if (pinningMessageId) return; // Prevent multiple simultaneous pin operations
+    
     try {
+      setPinningMessageId(messageId);
       const message = messages.find(m => m.message_id === messageId);
       const isPinned = message?.is_pinned;
 
@@ -890,6 +895,8 @@ const TeamChat = ({ channelId, channelName }) => {
     } catch (error) {
       console.error("Error pinning/unpinning message:", error);
       toast.error("Failed to pin/unpin message");
+    } finally {
+      setPinningMessageId(null);
     }
   };
 
@@ -1509,14 +1516,19 @@ const TeamChat = ({ channelId, channelName }) => {
                               <>
                                 <button
                                   onClick={() => handlePinMessage(message.message_id)}
-                                  className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer ${
+                                  disabled={pinningMessageId === message.message_id}
+                                  className={`p-2 hover:bg-purple-50 rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                                     message.is_pinned 
                                       ? 'text-purple-600' 
                                       : 'text-gray-500 hover:text-purple-600'
                                   }`}
                                   title={message.is_pinned ? "Unpin message" : "Pin message"}
                                 >
-                                  <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
+                                  {pinningMessageId === message.message_id ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : (
+                                    <Pin size={14} className={message.is_pinned ? 'fill-current' : ''} />
+                                  )}
                                 </button>
                               </>
                             )}

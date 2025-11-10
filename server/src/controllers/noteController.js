@@ -165,7 +165,7 @@ export const getNotes = async (req, res) => {
       query = sql`
         SELECT n.note_id, n.title, n.body, n.pinned, n.created_at, n.updated_at,
                u.name as created_by_name, u.user_photo as created_by_photo,
-               c.name as channel_name
+               c.channel_name
         FROM org_notes n
         LEFT JOIN users u ON n.created_by = u.user_id
         LEFT JOIN org_channels c ON n.channel_id = c.channel_id

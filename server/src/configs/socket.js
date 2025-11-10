@@ -61,7 +61,6 @@ export const setupSocketHandlers = (io) => {
           `;
           if (user && user.user_photo) {
             socket.userPhoto = user.user_photo;
-            console.log(`📸 Fetched user photo from DB for ${socket.userName}:`, socket.userPhoto);
           }
         } catch (dbError) {
           console.error('Error fetching user photo from database:', dbError);
@@ -385,15 +384,13 @@ export const setupSocketHandlers = (io) => {
           if (socketId !== socket.id) {
             const participantSocket = io.sockets.sockets.get(socketId);
             if (participantSocket) {
-              const userData = {
+              usersInThisRoom.push({
                 socketId: socketId,
                 userName: participantSocket.userName || 'Unknown User',
                 userEmail: participantSocket.userEmail || 'unknown@email.com',
                 userId: participantSocket.userId || socketId,
                 userPhoto: participantSocket.userPhoto || null
-              };
-              console.log('📸 Sending existing user data:', userData);
-              usersInThisRoom.push(userData);
+              });
             }
           }
         });
@@ -484,15 +481,13 @@ export const setupSocketHandlers = (io) => {
       socket.join(roomID);
       
       // Notify existing users about the new user (without signal - just notification)
-      const newUserData = {
+      socket.to(roomID).emit('user-joined', {
         callerID: socket.id,
         userName: socket.userName || 'Unknown User',
         userEmail: socket.userEmail || 'unknown@email.com',
         userId: socket.userId || socket.id,
         userPhoto: socket.userPhoto || null
-      };
-      console.log('📸 Broadcasting new user joined:', newUserData);
-      socket.to(roomID).emit('user-joined', newUserData);
+      });
 
       // Store room association for this socket
       socket.currentRoom = roomID;
@@ -500,16 +495,14 @@ export const setupSocketHandlers = (io) => {
 
     socket.on('sending-signal', (payload) => {
       console.log(`Sending signal from ${socket.id} to ${payload.userToSignal}`);
-      const signalData = {
+      io.to(payload.userToSignal).emit('user-joined', {
         signal: payload.signal,
         callerID: payload.callerID,
         userName: socket.userName || 'Unknown User',
         userEmail: socket.userEmail || 'unknown@email.com',
         userId: socket.userId || socket.id,
         userPhoto: socket.userPhoto || null
-      };
-      console.log('📸 Sending signal with user data:', signalData);
-      io.to(payload.userToSignal).emit('user-joined', signalData);
+      });
     });
 
     socket.on('returning-signal', (payload) => {

@@ -13,7 +13,6 @@ import CreateOrgModal from '../components/CreateOrgModal'
 import OrgSettingsModal from '../components/OrgSettingsModal'
 import InviteModal from '../components/InviteModal'
 import FeatureHub from '../components/FeatureHub'
-import FeatureTour from '../components/FeatureTour'
 import SmartSearch from '../components/SmartSearch'
 import FocusMode from '../components/FocusMode'
 import KeyboardShortcuts from '../components/KeyboardShortcuts'
@@ -32,19 +31,10 @@ const Home = () => {
   const [orgSettingsData, setOrgSettingsData] = useState({ organization: null, userRole: null, userPermissions: null });
   const [inviteOrganization, setInviteOrganization] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [showFeatureTour, setShowFeatureTour] = useState(false);
   const [currentChannelId, setCurrentChannelId] = useState(null);
   
   // Global feature modals state
   const [activeFeature, setActiveFeature] = useState(null);
-
-  // Show feature tour for first-time users
-  useEffect(() => {
-    const hasSeenTour = localStorage.getItem('hasSeenFeatureTour');
-    if (!hasSeenTour) {
-      setTimeout(() => setShowFeatureTour(true), 1000);
-    }
-  }, []);
 
   // Global keyboard shortcuts - work everywhere
   useKeyboardShortcuts([
@@ -171,18 +161,6 @@ const Home = () => {
         />
       )}
 
-      {/* Feature Tour for new users */}
-      {showFeatureTour && (
-        <FeatureTour 
-          onClose={() => setShowFeatureTour(false)}
-          onComplete={() => {
-            localStorage.setItem('hasSeenFeatureTour', 'true');
-            setShowFeatureTour(false);
-            toast.success('Welcome to SyncSpace! 🎉');
-          }}
-        />
-      )}
-
       {/* Global Feature Modals - Work everywhere via keyboard shortcuts */}
       {activeFeature === 'search' && (
         <SmartSearch onClose={() => setActiveFeature(null)} />
@@ -197,7 +175,14 @@ const Home = () => {
       )}
 
       {activeFeature === 'ai' && (
-        <AIAssistant onClose={() => setActiveFeature(null)} />
+        <AIAssistant 
+          onClose={() => setActiveFeature(null)} 
+          context={{
+            page: location.pathname.split('/')[2] || 'dashboard',
+            currentPath: location.pathname,
+            channelId: currentChannelId,
+          }}
+        />
       )}
     </div>
   )

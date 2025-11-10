@@ -18,7 +18,7 @@ import EmojiPicker from "./EmojiPicker";
 import MessageReactions from "./MessageReactions";
 import TypingIndicator from "./TypingIndicator";
 
-const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
+const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0, onMessagesChange }) => {
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
   const [messages, setMessages] = useState([]);
@@ -82,6 +82,13 @@ const MeetingChat = ({ roomId, isVisible, onToggle, participantCount = 0 }) => {
       setLoading(false);
     }
   }, [roomId]);
+
+  // Notify parent component when messages change
+  useEffect(() => {
+    if (onMessagesChange) {
+      onMessagesChange(messages);
+    }
+  }, [messages, onMessagesChange]);
 
   // Socket event handlers
   useEffect(() => {

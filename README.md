@@ -4,7 +4,7 @@
 
 ![SyncSpace Logo](client/public/icon.png)
 
-**A comprehensive real-time team collaboration platform with video conferencing, messaging, polls, voice messages, and advanced productivity tools**
+**A comprehensive real-time team collaboration platform with video conferencing, messaging, polls, voice messages, AI assistance, and advanced productivity tools**
 
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-Latest-green.svg)](https://nodejs.org/)
@@ -12,6 +12,7 @@
 [![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.1-black.svg)](https://socket.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-blue.svg)](https://neon.tech/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1.12-38B2AC.svg)](https://tailwindcss.com/)
+[![Google Gemini](https://img.shields.io/badge/AI-Google_Gemini-4285F4.svg)](https://ai.google.dev/)
 
 **🚀 <a href="https://syncspace-client.vercel.app" target="_blank">Live Demo</a> | 📖 [Documentation](#-table-of-contents) | 🛠 [Setup Guide](#-installation)**
 
@@ -37,11 +38,19 @@
 
 ## 🌟 Overview
 
-SyncSpace is a cutting-edge team collaboration platform that seamlessly integrates real-time messaging, HD video conferencing, interactive polls, voice messages, and comprehensive project management tools. Built with modern web technologies and designed for scalability, it empowers teams to communicate, collaborate, and stay productive from anywhere.
+SyncSpace is a cutting-edge team collaboration platform that seamlessly integrates real-time messaging, HD video conferencing, interactive polls, voice messages, AI-powered assistance, and comprehensive project management tools. Built with modern web technologies and designed for scalability, it empowers teams to communicate, collaborate, and stay productive from anywhere.
+
+**Key Highlights:**
+- 🎯 **All-in-One Platform**: Messaging, video calls, polls, notes, calendar, and more
+- 🤖 **AI-Powered**: Google Gemini integration with real-time workspace awareness
+- ⚡ **Real-Time Everything**: Instant updates via WebSocket connections
+- 🔍 **Universal Search**: Search across 10+ content types with instant navigation
+- 🎨 **Modern Design**: Beautiful glass-morphism UI with smooth animations
+- 🔒 **Secure**: JWT authentication, role-based access control, encrypted connections
 
 ### Platform Statistics
 
-- **65+ React Components**: Comprehensive UI component library
+- **64+ React Components**: Comprehensive UI component library
 - **16+ API Routes**: RESTful API endpoints with full CRUD operations
 - **15+ Controllers**: Business logic handlers for all features
 - **5 Context Providers**: Global state management (Auth, Socket, Notifications, Toast, Unread)
@@ -64,29 +73,31 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 - **🤖 AI-Powered**: Google Gemini integration for intelligent assistance and auto-summaries
 - **🔍 Universal Search**: Search across 10+ content types with instant navigation
 - **⚡ Feature Hub**: Quick access to all productivity tools with keyboard shortcuts
+- **🎯 Productivity Tools**: Built-in Pomodoro timer, keyboard shortcuts, and AI assistant
 
 ### Landing Page Features
 
-- **Hero Section**: Eye-catching hero with animated elements
-- **Feature Showcase**: Comprehensive feature highlights
-- **Statistics Display**: Real-time platform statistics
-- **Testimonials**: User reviews and feedback
-- **Pricing Plans**: Transparent pricing information
-- **Feature Comparison**: Compare plans side-by-side
-- **FAQ Section**: Common questions answered
-- **Responsive Navigation**: Mobile-friendly navigation
+- **Hero Section**: Eye-catching hero with animated elements and call-to-action
+- **Feature Showcase**: Comprehensive feature highlights with visual demonstrations
+- **Statistics Display**: Real-time platform statistics and metrics
+- **Testimonials**: User reviews and feedback from satisfied teams
+- **Pricing Plans**: Transparent pricing information with feature breakdown
+- **Feature Comparison**: Compare plans side-by-side to find the best fit
+- **FAQ Section**: Common questions answered with detailed explanations
+- **Responsive Navigation**: Mobile-friendly navigation with smooth scrolling
 
 ### UI/UX Enhancements
 
-- **Custom Cursor**: Interactive cursor effects
-- **Particle System**: Dynamic background particles
-- **Scroll Progress**: Visual scroll indicators
-- **Animated Buttons**: Smooth button interactions
-- **Error Boundaries**: Graceful error handling
-- **Loading States**: Skeleton screens and spinners
-- **Toast Notifications**: Non-intrusive alerts
-- **Modal Dialogs**: Confirmation and input modals
-- **Route Guards**: Protected and public route handling
+- **Custom Cursor**: Interactive cursor effects for enhanced user experience
+- **Particle System**: Dynamic background particles for visual appeal
+- **Scroll Progress**: Visual scroll indicators to track page position
+- **Animated Buttons**: Smooth button interactions with hover effects
+- **Error Boundaries**: Graceful error handling to prevent app crashes
+- **Loading States**: Skeleton screens and spinners for better UX
+- **Toast Notifications**: Non-intrusive alerts for user feedback
+- **Modal Dialogs**: Confirmation and input modals for user actions
+- **Route Guards**: Protected and public route handling for security
+- **Glass-morphism Design**: Modern frosted glass effect throughout the UI
 
 ---
 
@@ -187,16 +198,32 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
   - Online users and their status
   - Organization roles and permissions
   - Active meetings and recent activity
+  - Meeting chat transcripts and participants
+  - Channel messages and discussions
 - **Intelligent Assistance**: 
   - Answers questions about your specific workspace
   - "What's my organization name?"
   - "Who's online right now?"
   - "What channels do I have?"
   - "What permissions does the Admin role have?"
+  - "Summarize the chat so far" (in meetings)
+  - "What did [name] say about [topic]?"
+- **Meeting Context**:
+  - Full access to meeting participants and their settings
+  - Real-time chat transcript analysis
+  - Meeting notes and action items extraction
+  - Audio/video troubleshooting assistance
+  - Screen sharing tips and controls
+- **Channel Context**:
+  - Access to channel messages and history
+  - Member lists and roles
+  - Pinned messages and important discussions
+  - Channel-specific insights and summaries
 - **Platform Help**:
   - Feature explanations and navigation
   - Best practices and troubleshooting
   - Workflow recommendations
+  - Keyboard shortcuts and tips
 - **Meeting Summaries**:
   - Auto-generates meeting summaries with AI
   - Manual summary generation for reports
@@ -204,7 +231,7 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
   - Extracts key discussion points and action items
 - **Accessible via Feature Hub** (Ctrl+Shift+A)
 - **Conversational Interface**: Natural language understanding
-- **Context Retention**: Remembers conversation history
+- **Context Retention**: Remembers conversation history within session
 
 #### **Feature Hub**
 - Floating quick-access menu (⚡ button)
@@ -1166,7 +1193,6 @@ syncspace/
 │   │   │   ├── EventModal.jsx           # Event details modal
 │   │   │   ├── FAQList.jsx              # FAQ section
 │   │   │   ├── FeatureHub.jsx           # Feature quick access
-│   │   │   ├── FeatureTour.jsx          # Onboarding tour
 │   │   │   ├── FileUpload.jsx           # File upload component
 │   │   │   ├── FocusMode.jsx            # Pomodoro timer
 │   │   │   ├── Footer.jsx               # Page footer

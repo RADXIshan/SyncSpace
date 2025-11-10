@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, X, Sparkles, Loader2, Trash2, Bot } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -73,24 +73,23 @@ const AIAssistant = ({ onClose }) => {
   }, []);
 
   // Gather comprehensive real-time context
-  useEffect(() => {
-    const gatherContext = async () => {
-      try {
-        const baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-        
-        console.log('🔍 Starting context gathering for user:', user?.user_id);
-        
-        // Get user's organizations with proper schema fields
-        const orgsResponse = await axios.get(`${baseURL}/api/orgs/user/organizations`, { withCredentials: true });
-        const organizations = orgsResponse.data.organizations || [];
-        
-        console.log('📋 Fetched organizations:', organizations.length);
-        
-        // Get current organization from user.org_id (not localStorage)
-        const currentOrgId = user?.org_id;
-        const currentOrg = currentOrgId ? organizations.find(org => org.org_id === parseInt(currentOrgId)) : null;
-        
-        console.log('🏢 Current org ID:', currentOrgId, 'Found:', currentOrg?.org_name);
+  const gatherContext = useCallback(async () => {
+    try {
+      const baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+      
+      console.log('🔍 Starting context gathering for user:', user?.user_id);
+      
+      // Get user's organizations with proper schema fields
+      const orgsResponse = await axios.get(`${baseURL}/api/orgs/user/organizations`, { withCredentials: true });
+      const organizations = orgsResponse.data.organizations || [];
+      
+      console.log('📋 Fetched organizations:', organizations.length);
+      
+      // Get current organization from user.org_id (not localStorage)
+      const currentOrgId = user?.org_id;
+      const currentOrg = currentOrgId ? organizations.find(org => org.org_id === parseInt(currentOrgId)) : null;
+      
+      console.log('🏢 Current org ID:', currentOrgId, 'Found:', currentOrg?.org_name);
         
         // Get channels, members, roles, and meetings if in an organization
         let channels = [];
@@ -163,7 +162,7 @@ const AIAssistant = ({ onClose }) => {
             // Get events
             try {
               console.log('📆 Fetching events for org:', currentOrgId);
-              const eventsResponse = await axios.get(`${baseURL}/api/events?org_id=${currentOrgId}`, { withCredentials: true });
+              const eventsResponse = await axios.get(`${baseURL}/api/events?user_id=${user?.user_id}&org_id=${currentOrgId}`, { withCredentials: true });
               events = eventsResponse.data.events || [];
               console.log('📆 Fetched events:', events.length);
             } catch (eventsError) {
@@ -297,31 +296,32 @@ const AIAssistant = ({ onClose }) => {
         });
         
         setRealtimeContext(contextData);
-      } catch (error) {
-        console.error('❌ Error gathering context:', error.response?.data || error.message);
-        // Set empty context on error
-        setRealtimeContext({
-          userOrganizations: [],
-          currentOrganization: null,
-          userChannels: [],
-          organizationMembers: [],
-          currentPage: window.location.pathname,
-          onlineUsers: [],
-          recentMessages: [],
-          activeMeetings: [],
-          lastActivity: null,
-          meetingReports: [],
-          notes: [],
-          notices: [],
-          events: []
-        });
-      }
-    };
-    
+    } catch (error) {
+      console.error('❌ Error gathering context:', error.response?.data || error.message);
+      // Set empty context on error
+      setRealtimeContext({
+        userOrganizations: [],
+        currentOrganization: null,
+        userChannels: [],
+        organizationMembers: [],
+        currentPage: window.location.pathname,
+        onlineUsers: [],
+        recentMessages: [],
+        activeMeetings: [],
+        lastActivity: null,
+        meetingReports: [],
+        notes: [],
+        notices: [],
+        events: []
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
     if (user) {
       gatherContext();
     }
-  }, [user, user?.org_id]); // Re-fetch when user or org_id changes
+  }, [user, user?.org_id, gatherContext]); // Re-fetch when user or org_id changes
 
   // Listen to real-time socket events for context (same as org settings members tab)
   useEffect(() => {
@@ -398,6 +398,8 @@ const AIAssistant = ({ onClose }) => {
 
     // Listen for meeting events
     const handleMeetingStart = (data) => {
+      console.log('🎥 Meeting started, refreshing context...');
+      gatherContext(); // Refresh full context
       setRealtimeContext(prev => ({
         ...prev,
         activeMeetings: [...prev.activeMeetings, {
@@ -410,11 +412,37 @@ const AIAssistant = ({ onClose }) => {
     };
 
     const handleMeetingEnd = (data) => {
+      console.log('🎥 Meeting ended, refreshing context...');
+      gatherContext(); // Refresh full context to get new meeting report
       setRealtimeContext(prev => ({
         ...prev,
         activeMeetings: prev.activeMeetings.filter(m => m.roomId !== data.roomId),
         lastActivity: 'meeting_ended'
       }));
+    };
+
+    // Listen for new notes
+    const handleNewNote = (data) => {
+      console.log('📝 New note created, refreshing context...', data);
+      gatherContext(); // Refresh full context
+    };
+
+    // Listen for new notices
+    const handleNewNotice = (data) => {
+      console.log('📢 New notice posted, refreshing context...', data);
+      gatherContext(); // Refresh full context
+    };
+
+    // Listen for new meetings scheduled
+    const handleNewMeeting = (data) => {
+      console.log('📅 New meeting scheduled, refreshing context...', data);
+      gatherContext(); // Refresh full context
+    };
+
+    // Listen for meeting updates
+    const handleMeetingUpdate = (data) => {
+      console.log('📅 Meeting updated, refreshing context...', data);
+      gatherContext(); // Refresh full context
     };
 
     // Register socket listeners
@@ -423,6 +451,10 @@ const AIAssistant = ({ onClose }) => {
     socket.on('newMessage', handleNewMessage);
     socket.on('meetingStarted', handleMeetingStart);
     socket.on('meetingEnded', handleMeetingEnd);
+    socket.on('new_note', handleNewNote);
+    socket.on('new_notice', handleNewNotice);
+    socket.on('new_meeting', handleNewMeeting);
+    socket.on('meeting_updated', handleMeetingUpdate);
 
     // Request current online users when component mounts
     const currentOrgId = user?.org_id;
@@ -443,8 +475,12 @@ const AIAssistant = ({ onClose }) => {
       socket.off('newMessage', handleNewMessage);
       socket.off('meetingStarted', handleMeetingStart);
       socket.off('meetingEnded', handleMeetingEnd);
+      socket.off('new_note', handleNewNote);
+      socket.off('new_notice', handleNewNotice);
+      socket.off('new_meeting', handleNewMeeting);
+      socket.off('meeting_updated', handleMeetingUpdate);
     };
-  }, [socket, user]);
+  }, [socket, user, gatherContext]);
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;

@@ -53,7 +53,7 @@ const KeyboardShortcuts = ({ onClose }) => {
                   {section.items.map((item, i) => (
                     <div
                       key={i}
-                      className="group flex items-center justify-between py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all hover:shadow-md hover:scale-[1.02] border border-transparent hover:border-gray-200 dark:hover:border-gray-600"
+                      className="group flex items-center justify-between py-3 px-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all hover:shadow-md hover:scale-[1.02] border border-transparent hover:border-gray-200 dark:hover:border-gray-600 duration-300"
                     >
                       <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                         {item.description}
@@ -62,7 +62,7 @@ const KeyboardShortcuts = ({ onClose }) => {
                         {item.keys.map((key, k) => (
                           <kbd
                             key={k}
-                            className="px-2.5 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs font-mono shadow-sm group-hover:bg-purple-100 dark:group-hover:bg-purple-900/30 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors"
+                            className="px-2.5 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs font-mono shadow-sm group-hover:bg-purple-100 dark:group-hover:bg-purple-900/30 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-all duration-300"
                           >
                             {key}
                           </kbd>

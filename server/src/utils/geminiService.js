@@ -210,8 +210,6 @@ SyncSpace is an all-in-one workspace that combines video conferencing, team mess
 - Ctrl+Shift+F: Open Focus Mode
 - Ctrl+/: View all shortcuts
 - Ctrl+Shift+A: Open AI Assistant
-- Ctrl+Shift+V: Voice recorder
-- Ctrl+Shift+P: Create poll
 - Escape: Close modals
 
 ## COMMON USER WORKFLOWS:

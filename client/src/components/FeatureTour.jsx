@@ -40,7 +40,6 @@ const FeatureTour = ({ onClose, onComplete }) => {
       title: 'Quick Polls 📊',
       description: 'Create instant polls to make team decisions faster. Support for single or multiple choice, anonymous voting.',
       image: '📊',
-      shortcut: 'Ctrl+Shift+P',
       tip: 'Use anonymous voting for sensitive topics and see real-time results'
     },
     {

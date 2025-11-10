@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import sql from '../database/db.js';
 import { createNotification, createNotificationForOrg } from '../controllers/notificationControllers.js';
 
 // Store online users with their socket IDs and user info
@@ -26,7 +27,7 @@ const getUserIdentifier = (socket) => {
 
 export const setupSocketHandlers = (io) => {
   // Middleware to authenticate socket connections
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
       
@@ -50,7 +51,22 @@ export const setupSocketHandlers = (io) => {
       socket.userId = decoded.userId;
       socket.userEmail = decoded.email || 'Unknown';
       socket.userName = decoded.name || 'Unknown User';
+      socket.userPhoto = decoded.photo || null;
       
+      // If photo is not in token, fetch from database
+      if (!socket.userPhoto && decoded.userId) {
+        try {
+          const [user] = await sql`
+            SELECT user_photo FROM users WHERE user_id = ${decoded.userId}
+          `;
+          if (user && user.user_photo) {
+            socket.userPhoto = user.user_photo;
+            console.log(`📸 Fetched user photo from DB for ${socket.userName}:`, socket.userPhoto);
+          }
+        } catch (dbError) {
+          console.error('Error fetching user photo from database:', dbError);
+        }
+      }
 
       next();
     } catch (err) {
@@ -369,12 +385,15 @@ export const setupSocketHandlers = (io) => {
           if (socketId !== socket.id) {
             const participantSocket = io.sockets.sockets.get(socketId);
             if (participantSocket) {
-              usersInThisRoom.push({
+              const userData = {
                 socketId: socketId,
                 userName: participantSocket.userName || 'Unknown User',
                 userEmail: participantSocket.userEmail || 'unknown@email.com',
-                userId: participantSocket.userId || socketId
-              });
+                userId: participantSocket.userId || socketId,
+                userPhoto: participantSocket.userPhoto || null
+              };
+              console.log('📸 Sending existing user data:', userData);
+              usersInThisRoom.push(userData);
             }
           }
         });
@@ -465,12 +484,15 @@ export const setupSocketHandlers = (io) => {
       socket.join(roomID);
       
       // Notify existing users about the new user (without signal - just notification)
-      socket.to(roomID).emit('user-joined', {
+      const newUserData = {
         callerID: socket.id,
         userName: socket.userName || 'Unknown User',
         userEmail: socket.userEmail || 'unknown@email.com',
-        userId: socket.userId || socket.id
-      });
+        userId: socket.userId || socket.id,
+        userPhoto: socket.userPhoto || null
+      };
+      console.log('📸 Broadcasting new user joined:', newUserData);
+      socket.to(roomID).emit('user-joined', newUserData);
 
       // Store room association for this socket
       socket.currentRoom = roomID;
@@ -478,13 +500,16 @@ export const setupSocketHandlers = (io) => {
 
     socket.on('sending-signal', (payload) => {
       console.log(`Sending signal from ${socket.id} to ${payload.userToSignal}`);
-      io.to(payload.userToSignal).emit('user-joined', {
+      const signalData = {
         signal: payload.signal,
         callerID: payload.callerID,
         userName: socket.userName || 'Unknown User',
         userEmail: socket.userEmail || 'unknown@email.com',
-        userId: socket.userId || socket.id
-      });
+        userId: socket.userId || socket.id,
+        userPhoto: socket.userPhoto || null
+      };
+      console.log('📸 Sending signal with user data:', signalData);
+      io.to(payload.userToSignal).emit('user-joined', signalData);
     });
 
     socket.on('returning-signal', (payload) => {

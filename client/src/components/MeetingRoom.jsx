@@ -17,10 +17,12 @@ import { io } from "socket.io-client";
 import MeetingSettings from "./MeetingSettings";
 import MeetingChat from "./MeetingChat";
 import useKeyboardShortcuts from "../hooks/useKeyboardShortcuts";
+import { useAuth } from "../context/AuthContext";
 
 const MeetingRoom = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
 
   // State management
   const [peers, setPeers] = useState([]);
@@ -70,6 +72,17 @@ const MeetingRoom = () => {
     { key: 'e', ctrl: true, callback: () => leaveMeeting() },
   ]);
 
+  // Update currentUser when authUser changes (to get fresh photo data)
+  useEffect(() => {
+    if (authUser && currentUser) {
+      setCurrentUser(prev => ({
+        ...prev,
+        user_photo: authUser.user_photo || authUser.photo,
+        photo: authUser.photo || authUser.user_photo,
+      }));
+    }
+  }, [authUser]);
+
   const iceServers = {
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
@@ -117,11 +130,23 @@ const MeetingRoom = () => {
 
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
-      setCurrentUser({
+      
+      // Use authUser if available (has fresh data from server), otherwise use JWT payload
+      const userData = authUser ? {
+        id: authUser.user_id,
+        name: authUser.name,
+        email: authUser.email,
+        user_photo: authUser.user_photo || authUser.photo,
+        photo: authUser.photo || authUser.user_photo,
+      } : {
         id: payload.userId,
         name: payload.name,
         email: payload.email,
-      });
+        user_photo: payload.photo,
+        photo: payload.photo,
+      };
+      
+      setCurrentUser(userData);
 
       const socketInstance = io(
         import.meta.env.VITE_BASE_URL || "http://localhost:3000",
@@ -383,6 +408,9 @@ const MeetingRoom = () => {
 
     socket.on("existing-users", (users) => {
       console.log("Existing users:", users);
+      users.forEach(user => {
+        console.log('📸 Existing user photo:', user.userName, user.userPhoto);
+      });
 
       peersRef.current.forEach((peerObj) => {
         if (peerObj.peer) {
@@ -400,6 +428,7 @@ const MeetingRoom = () => {
           userName: user.userName,
           userEmail: user.userEmail,
           userId: user.userId,
+          userPhoto: user.userPhoto,
           videoEnabled: true,
           audioEnabled: true,
         };
@@ -416,6 +445,7 @@ const MeetingRoom = () => {
 
     socket.on("user-joined", (payload) => {
       console.log("User joined:", payload);
+      console.log('📸 User joined photo:', payload.userName, payload.userPhoto);
 
       if (payload.signal && payload.signal.type === "offer") {
         const existingPeer = peersRef.current.find((p) => p.peerID === payload.callerID);
@@ -428,6 +458,7 @@ const MeetingRoom = () => {
             userName: payload.userName,
             userEmail: payload.userEmail,
             userId: payload.userId,
+            userPhoto: payload.userPhoto,
             videoEnabled: true,
             audioEnabled: true,
           };
@@ -1207,6 +1238,7 @@ const MeetingRoom = () => {
     peer,
     userName,
     userEmail,
+    userPhoto,
     videoEnabled,
     audioEnabled,
     isScreenShare = false,
@@ -1347,15 +1379,25 @@ const MeetingRoom = () => {
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
             <div className={isThumbnail ? "mb-1" : "mb-4"}>
-              <div className={`rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20 ${
-                isThumbnail ? "w-8 h-8" : "w-24 h-24"
-              }`}>
-                <span className={`font-bold text-white ${
-                  isThumbnail ? "text-xs" : "text-2xl"
+              {userPhoto ? (
+                <img
+                  src={userPhoto}
+                  alt={userName || userEmail}
+                  className={`rounded-full object-cover border-4 border-white/20 ${
+                    isThumbnail ? "w-8 h-8" : "w-24 h-24"
+                  }`}
+                />
+              ) : (
+                <div className={`rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20 ${
+                  isThumbnail ? "w-8 h-8" : "w-24 h-24"
                 }`}>
-                  {(userName || userEmail || "U").charAt(0).toUpperCase()}
-                </span>
-              </div>
+                  <span className={`font-bold text-white ${
+                    isThumbnail ? "text-xs" : "text-2xl"
+                  }`}>
+                    {(userName || userEmail || "U").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
             {!isThumbnail && (
               <>
@@ -1461,6 +1503,7 @@ const MeetingRoom = () => {
                         peer={peerObj.peer}
                         userName={peerObj.userName}
                         userEmail={peerObj.userEmail}
+                        userPhoto={peerObj.userPhoto}
                         videoEnabled={true}
                         audioEnabled={peerObj.audioEnabled}
                         isScreenShare={true}
@@ -1491,11 +1534,19 @@ const MeetingRoom = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                      <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
-                        <span className="text-sm font-bold text-white">
-                          {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+                      {(currentUser?.user_photo || currentUser?.photo) ? (
+                        <img
+                          src={currentUser.user_photo || currentUser.photo}
+                          alt={currentUser.name || currentUser.email}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">
+                            {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )
                 ) : (
@@ -1510,11 +1561,19 @@ const MeetingRoom = () => {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                      <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
-                        <span className="text-sm font-bold text-white">
-                          {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+                      {(currentUser?.user_photo || currentUser?.photo) ? (
+                        <img
+                          src={currentUser.user_photo || currentUser.photo}
+                          alt={currentUser.name || currentUser.email}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">
+                            {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )
                 )}
@@ -1538,6 +1597,7 @@ const MeetingRoom = () => {
                       peer={peerObj.peer}
                       userName={peerObj.userName}
                       userEmail={peerObj.userEmail}
+                      userPhoto={peerObj.userPhoto}
                       videoEnabled={peerObj.videoEnabled}
                       audioEnabled={peerObj.audioEnabled}
                       isThumbnail={true}
@@ -1581,13 +1641,21 @@ const MeetingRoom = () => {
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
                   <div className="mb-4">
-                    <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20">
-                      <span className="text-2xl font-bold text-white">
-                        {(currentUser?.name || currentUser?.email || "U")
-                          .charAt(0)
-                          .toUpperCase()}
-                      </span>
-                    </div>
+                    {(currentUser?.user_photo || currentUser?.photo) ? (
+                      <img
+                        src={currentUser.user_photo || currentUser.photo}
+                        alt={currentUser.name || currentUser.email}
+                        className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20">
+                        <span className="text-2xl font-bold text-white">
+                          {(currentUser?.name || currentUser?.email || "U")
+                            .charAt(0)
+                            .toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">
                     {currentUser?.name ||
@@ -1631,6 +1699,7 @@ const MeetingRoom = () => {
                 peer={peerObj.peer}
                 userName={peerObj.userName}
                 userEmail={peerObj.userEmail}
+                userPhoto={peerObj.userPhoto}
                 videoEnabled={peerObj.videoEnabled}
                 audioEnabled={peerObj.audioEnabled}
               />

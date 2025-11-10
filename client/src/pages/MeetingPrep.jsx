@@ -714,9 +714,9 @@ const MeetingPrep = () => {
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
                   {/* User Profile Photo */}
                   <div className="mb-4">
-                    {user?.profile_photo ? (
+                    {user?.user_photo ? (
                       <img
-                        src={user.profile_photo}
+                        src={user.user_photo}
                         alt={user.name || user.email}
                         className="w-24 h-24 rounded-full object-cover border-4 border-white/20"
                       />

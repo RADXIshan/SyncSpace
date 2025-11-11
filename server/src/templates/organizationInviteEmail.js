@@ -1,5 +1,5 @@
 const generateOrganizationInviteEmail = ({
-inviteeName, inviterName, orgName, inviteCode, inviterRole, inviteLink,
+inviteeName, inviterName, orgName, inviteCode, inviterRole, inviteLink, customMessage,
 }) => {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -35,6 +35,10 @@ inviteeName, inviterName, orgName, inviteCode, inviterRole, inviteLink,
                     ${inviterName || "A team member"} (${inviterRole || "Member"}) has invited you to join the organization 
                     <strong style="color:#c084fc;">${orgName}</strong> on SyncSpace.
                   </p>
+
+                  ${customMessage ? `<p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,0.8);margin:0 0 20px;padding:16px;background-color:rgba(255,255,255,0.05);border-left:3px solid #a855f7;border-radius:8px;text-align:left;">
+                    ${customMessage}
+                  </p>` : ''}
 
                   <p style="font-size:14px;line-height:1.6;color:rgba(255,255,255,0.75);margin:0 0 20px;">
                     Click the button below to join, or use the invitation code if prompted.

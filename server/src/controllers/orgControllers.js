@@ -1392,6 +1392,7 @@ export const sendInvitations = async (req, res) => {
           inviteCode: inviteCode,
           inviterRole: member.role,
           inviteLink: inviteLink,
+          customMessage: message?.trim() || null,
         }),
       };
 

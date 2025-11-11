@@ -374,6 +374,52 @@ export const NotificationProvider = ({ children }) => {
       });
     };
 
+    // Listen for role created
+    const handleRoleCreated = (data) => {
+      console.log("🔔 NotificationContext received role_created:", data);
+      addNotification({
+        type: "system",
+        title: "New Role Created",
+        message: `Role "${data.roleName}" has been created`,
+        priority: "medium",
+        actionUrl: "/home/dashboard",
+      });
+    };
+
+    // Listen for role deleted
+    const handleRoleDeleted = (data) => {
+      console.log("🔔 NotificationContext received role_deleted:", data);
+      addNotification({
+        type: "system",
+        title: "Role Deleted",
+        message: `Role "${data.roleName}" has been deleted`,
+        priority: "medium",
+        actionUrl: "/home/dashboard",
+      });
+    };
+
+    // Listen for role updated
+    const handleRoleUpdated = (data) => {
+      console.log("🔔 NotificationContext received role_updated:", data);
+      let message = `Role "${data.roleName}" has been updated`;
+      
+      if (data.permissionsChanged && data.teamsChanged) {
+        message = `Role "${data.roleName}" permissions and channel access have been updated`;
+      } else if (data.permissionsChanged) {
+        message = `Role "${data.roleName}" permissions have been updated`;
+      } else if (data.teamsChanged) {
+        message = `Role "${data.roleName}" channel access has been updated`;
+      }
+      
+      addNotification({
+        type: "system",
+        title: "Role Updated",
+        message: message,
+        priority: "medium",
+        actionUrl: "/home/dashboard",
+      });
+    };
+
     // Listen for mentions
     const handleMention = (data) => {
       console.log("NotificationContext received user_mentioned:", data);
@@ -412,6 +458,9 @@ export const NotificationProvider = ({ children }) => {
     socket.on("organization_updated", handleOrgUpdate);
     socket.on("channel_created", handleChannelCreated);
     socket.on("channel_deleted", handleChannelDeleted);
+    socket.on("role_created", handleRoleCreated);
+    socket.on("role_deleted", handleRoleDeleted);
+    socket.on("role_updated", handleRoleUpdated);
 
     return () => {
       socket.off("new_notification", handleNewNotification);
@@ -430,6 +479,9 @@ export const NotificationProvider = ({ children }) => {
       socket.off("organization_updated", handleOrgUpdate);
       socket.off("channel_created", handleChannelCreated);
       socket.off("channel_deleted", handleChannelDeleted);
+      socket.off("role_created", handleRoleCreated);
+      socket.off("role_deleted", handleRoleDeleted);
+      socket.off("role_updated", handleRoleUpdated);
     };
   }, [socket, user, addNotification]);
 

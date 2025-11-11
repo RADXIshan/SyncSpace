@@ -151,6 +151,24 @@ export const SocketProvider = ({ children }) => {
           window.dispatchEvent(new CustomEvent('channelDeleted', { detail: data }));
         });
 
+        // Listen for role created events
+        newSocket.on('role_created', (data) => {
+          // Dispatch custom event for components to handle
+          window.dispatchEvent(new CustomEvent('roleCreated', { detail: data }));
+        });
+
+        // Listen for role deleted events
+        newSocket.on('role_deleted', (data) => {
+          // Dispatch custom event for components to handle
+          window.dispatchEvent(new CustomEvent('roleDeleted', { detail: data }));
+        });
+
+        // Listen for role updated events
+        newSocket.on('role_updated', (data) => {
+          // Dispatch custom event for components to handle
+          window.dispatchEvent(new CustomEvent('roleUpdated', { detail: data }));
+        });
+
         setSocket(newSocket);
 
         // Cleanup on unmount

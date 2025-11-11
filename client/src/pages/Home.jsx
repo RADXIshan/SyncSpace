@@ -122,6 +122,59 @@ const Home = () => {
     };
   }, [currentChannelId, navigate]);
 
+  // Listen for role created/deleted/updated events
+  useEffect(() => {
+    const handleRoleCreated = (event) => {
+      const { roleName } = event.detail;
+      toast.success(`Role "${roleName}" has been created`, {
+        duration: 4000,
+        icon: '👥',
+      });
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event('organizationUpdated'));
+    };
+
+    const handleRoleDeleted = (event) => {
+      const { roleName } = event.detail;
+      toast.error(`Role "${roleName}" has been deleted`, {
+        duration: 4000,
+        icon: '🗑️',
+      });
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event('organizationUpdated'));
+    };
+
+    const handleRoleUpdated = (event) => {
+      const { roleName, permissionsChanged, teamsChanged } = event.detail;
+      let message = `Role "${roleName}" has been updated`;
+      
+      if (permissionsChanged && teamsChanged) {
+        message = `Role "${roleName}" permissions and channel access updated`;
+      } else if (permissionsChanged) {
+        message = `Role "${roleName}" permissions updated`;
+      } else if (teamsChanged) {
+        message = `Role "${roleName}" channel access updated`;
+      }
+      
+      toast(`${message}`, {
+        duration: 4000,
+        icon: '🔄',
+      });
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event('organizationUpdated'));
+    };
+
+    window.addEventListener('roleCreated', handleRoleCreated);
+    window.addEventListener('roleDeleted', handleRoleDeleted);
+    window.addEventListener('roleUpdated', handleRoleUpdated);
+
+    return () => {
+      window.removeEventListener('roleCreated', handleRoleCreated);
+      window.removeEventListener('roleDeleted', handleRoleDeleted);
+      window.removeEventListener('roleUpdated', handleRoleUpdated);
+    };
+  }, []);
+
   return (
     <div className="flex h-screen bg-[var(--color-primary)]">
       <Sidebar 

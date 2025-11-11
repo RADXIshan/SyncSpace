@@ -875,6 +875,84 @@ export const updateOrganization = async (req, res) => {
 
     // Update roles if provided and user has settings or roles access
     if (updatingRoles && (hasSettingsAccess || hasRolesAccess)) {
+      // Get existing roles before deletion
+      const existingRoles = await sql`
+        SELECT role_id, role_name, manage_channels, manage_users,
+               settings_access, notes_access, meeting_access, noticeboard_access, 
+               roles_access, invite_access, accessible_teams
+        FROM org_roles
+        WHERE org_id = ${org_id}
+      `;
+
+      // Create maps for comparison
+      const existingRoleMap = new Map();
+      existingRoles.forEach((r) => {
+        existingRoleMap.set(r.role_name.toLowerCase(), r);
+      });
+
+      const newRoleMap = new Map();
+      roles.forEach((r) => {
+        if (r.name?.trim()) {
+          newRoleMap.set(r.name.trim().toLowerCase(), r);
+        }
+      });
+
+      // Track role changes
+      const createdRoles = [];
+      const deletedRoles = [];
+      const updatedRoles = [];
+
+      // Identify created and updated roles
+      for (const role of roles) {
+        if (role.name?.trim()) {
+          const roleName = role.name.trim();
+          const roleNameLower = roleName.toLowerCase();
+          const existingRole = existingRoleMap.get(roleNameLower);
+
+          if (!existingRole) {
+            createdRoles.push(roleName);
+          } else {
+            // Check if permissions or accessible teams changed
+            const permissionsChanged = 
+              existingRole.manage_channels !== (role.permissions?.manage_channels || false) ||
+              existingRole.manage_users !== (role.permissions?.manage_users || false) ||
+              existingRole.settings_access !== (role.permissions?.settings_access || false) ||
+              existingRole.notes_access !== (role.permissions?.notes_access || false) ||
+              existingRole.meeting_access !== (role.permissions?.meeting_access || false) ||
+              existingRole.noticeboard_access !== (role.permissions?.noticeboard_access || false) ||
+              existingRole.roles_access !== (role.permissions?.roles_access || false) ||
+              existingRole.invite_access !== (role.permissions?.invite_access || false);
+
+            const oldTeams = Array.isArray(existingRole.accessible_teams) 
+              ? existingRole.accessible_teams.sort() 
+              : [];
+            const newTeams = Array.isArray(role.accessible_teams)
+              ? role.accessible_teams.sort()
+              : Array.isArray(role.accessibleChannels)
+              ? role.accessibleChannels.sort()
+              : [];
+            
+            const teamsChanged = JSON.stringify(oldTeams) !== JSON.stringify(newTeams);
+
+            if (permissionsChanged || teamsChanged) {
+              updatedRoles.push({
+                name: roleName,
+                permissionsChanged,
+                teamsChanged
+              });
+            }
+          }
+        }
+      }
+
+      // Identify deleted roles
+      for (const existingRole of existingRoles) {
+        const existingNameLower = existingRole.role_name.toLowerCase();
+        if (!newRoleMap.has(existingNameLower)) {
+          deletedRoles.push(existingRole.role_name);
+        }
+      }
+
       // Delete existing roles
       await sql`DELETE FROM org_roles WHERE org_id = ${org_id}`;
 
@@ -928,6 +1006,94 @@ export const updateOrganization = async (req, res) => {
               ${userId}
             )
           `;
+        }
+      }
+
+      // Send real-time notifications for role changes
+      const io = req.app.get("io");
+      if (io) {
+        // Notify about created roles
+        for (const roleName of createdRoles) {
+          try {
+            await createNotificationForOrg(
+              org_id,
+              "role_created",
+              "New Role Created",
+              `Role "${roleName}" has been created`,
+              {
+                excludeUserId: userId,
+                relatedId: org_id,
+                relatedType: "role",
+                link: "/home/dashboard",
+              }
+            );
+
+            io.to(`org_${org_id}`).emit("role_created", {
+              roleName,
+              orgId: org_id,
+            });
+          } catch (notificationError) {
+            console.error("Failed to send role created notification:", notificationError);
+          }
+        }
+
+        // Notify about deleted roles
+        for (const roleName of deletedRoles) {
+          try {
+            await createNotificationForOrg(
+              org_id,
+              "role_deleted",
+              "Role Deleted",
+              `Role "${roleName}" has been deleted`,
+              {
+                excludeUserId: userId,
+                relatedId: org_id,
+                relatedType: "role",
+              }
+            );
+
+            io.to(`org_${org_id}`).emit("role_deleted", {
+              roleName,
+              orgId: org_id,
+            });
+          } catch (notificationError) {
+            console.error("Failed to send role deleted notification:", notificationError);
+          }
+        }
+
+        // Notify about updated roles
+        for (const roleUpdate of updatedRoles) {
+          try {
+            let message = `Role "${roleUpdate.name}" has been updated`;
+            if (roleUpdate.permissionsChanged && roleUpdate.teamsChanged) {
+              message = `Role "${roleUpdate.name}" permissions and channel access have been updated`;
+            } else if (roleUpdate.permissionsChanged) {
+              message = `Role "${roleUpdate.name}" permissions have been updated`;
+            } else if (roleUpdate.teamsChanged) {
+              message = `Role "${roleUpdate.name}" channel access has been updated`;
+            }
+
+            await createNotificationForOrg(
+              org_id,
+              "role_updated",
+              "Role Updated",
+              message,
+              {
+                excludeUserId: userId,
+                relatedId: org_id,
+                relatedType: "role",
+              }
+            );
+
+            io.to(`org_${org_id}`).emit("role_updated", {
+              roleName: roleUpdate.name,
+              permissionsChanged: roleUpdate.permissionsChanged,
+              teamsChanged: roleUpdate.teamsChanged,
+              orgId: org_id,
+            });
+          } catch (notificationError) {
+            console.error("Failed to send role updated notification:", notificationError);
+          }
         }
       }
 

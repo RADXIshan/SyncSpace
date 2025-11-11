@@ -20,8 +20,8 @@ const LandingNav = () => {
 
   const navLinks = [
     { name: "Features", href: "#features" },
+    { name: "Comparison", href: "#comparison" },
     { name: "Reviews", href: "#testimonials" },
-    { name: "Pricing", href: "#pricing" },
     { name: "FAQ", href: "#faq" },
   ];
 

@@ -1,146 +1,140 @@
-import { Check, X, Star, ArrowRight, Zap, Shield, Users, BarChart3 } from "lucide-react";
+import { Check, X, Sparkles } from "lucide-react";
 
 const LandingComparison = () => {
+  const features = [
+    { name: "Real-time Messaging", syncspace: true, slack: true, teams: true, discord: true },
+    { name: "Video Conferencing", syncspace: true, slack: true, teams: true, discord: true },
+    { name: "AI Assistant", syncspace: true, slack: false, teams: false, discord: false },
+    { name: "Smart Search", syncspace: true, slack: true, teams: true, discord: false },
+    { name: "Meeting Reports", syncspace: true, slack: false, teams: true, discord: false },
+    { name: "Voice Messages", syncspace: true, slack: false, teams: false, discord: true },
+    { name: "Quick Polls", syncspace: true, slack: true, teams: true, discord: true },
+    { name: "Focus Mode", syncspace: true, slack: false, teams: false, discord: false },
+    { name: "Keyboard Shortcuts", syncspace: true, slack: true, teams: true, discord: true },
+    { name: "Free Forever Plan", syncspace: true, slack: false, teams: false, discord: true },
+    { name: "No User Limits", syncspace: true, slack: false, teams: false, discord: false },
+    { name: "Unlimited Storage", syncspace: true, slack: false, teams: false, discord: false },
+  ];
 
-  const comparisonData = [
-    {
-      feature: "Real-time Collaboration",
-      others: false,
-      syncspace: true,
-      icon: Users
-    },
-    {
-      feature: "Advanced Analytics",
-      others: "Limited",
-      syncspace: true,
-      icon: BarChart3
-    },
-    {
-      feature: "Enterprise Security",
-      others: "Basic",
-      syncspace: true,
-      icon: Shield
-    },
-    {
-      feature: "API Integration",
-      others: false,
-      syncspace: true,
-      icon: Zap
-    },
-    {
-      feature: "24/7 Support",
-      others: "Business hours only",
-      syncspace: true,
-      icon: null
-    },
-    {
-      feature: "Custom Workflows",
-      others: false,
-      syncspace: true,
-      icon: null
-    }
+  const platforms = [
+    { name: "SyncSpace", color: "from-purple-500 to-blue-600", highlight: true },
+    { name: "Slack", color: "from-pink-500 to-purple-600", highlight: false },
+    { name: "Teams", color: "from-blue-500 to-indigo-600", highlight: false },
+    { name: "Discord", color: "from-indigo-500 to-purple-600", highlight: false },
   ];
 
   return (
-    <section
-      id="comparison"
-      className="py-10 lg:py-16 px-4 sm:px-6 lg:px-8 bg-slate-50"
-    >
-      <div className="max-w-6xl mx-auto">
+    <section id="comparison" className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-6">
-            <Star className="w-4 h-4" />
-            Why Choose Us
+        <div className="text-center mb-12 sm:mb-16">
+          <div className="inline-flex items-center gap-2 glass-button-enhanced rounded-full px-6 py-3 text-sm font-medium text-white/90 mb-8">
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            Platform Comparison
           </div>
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-            See how we
-            <span className="block bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              stack up
-            </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 px-4">
+            Why Choose{" "}
+            <span className="gradient-text-purple">SyncSpace?</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Compare SyncSpace with traditional collaboration tools and see why 
-            thousands of teams are making the switch.
+          <p className="text-lg sm:text-xl text-white/80 max-w-3xl mx-auto leading-relaxed px-4">
+            See how we stack up against the competition. More features, better value, completely free.
           </p>
         </div>
 
         {/* Comparison Table */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-          {/* Table Header */}
-          <div className="grid grid-cols-3 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-200">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Features</h3>
-            </div>
-            <div className="p-6 text-center border-l border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-600">Other Tools</h3>
-            </div>
-            <div className="p-6 text-center border-l border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-              <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                SyncSpace
-              </h3>
-            </div>
-          </div>
-
-          {/* Table Body */}
-          <div>
-            {comparisonData.map((item, index) => (
-              <div key={index} className="grid grid-cols-3 border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                <div className="p-6 flex items-center gap-3">
-                  {item.icon && <item.icon className="w-5 h-5 text-gray-600" />}
-                  <span className="font-medium text-gray-900">{item.feature}</span>
-                </div>
-                <div className="p-6 text-center border-l border-gray-100 flex items-center justify-center">
-                  {typeof item.others === 'boolean' ? (
-                    item.others ? (
-                      <Check className="w-5 h-5 text-green-500" />
-                    ) : (
-                      <X className="w-5 h-5 text-red-500" />
-                    )
-                  ) : (
-                    <span className="text-sm text-gray-600 px-3 py-1 bg-gray-100 rounded-full">
-                      {item.others}
-                    </span>
-                  )}
-                </div>
-                <div className="p-6 text-center border-l border-gray-100 bg-gradient-to-r from-purple-50/30 to-blue-50/30 flex items-center justify-center">
-                  {typeof item.syncspace === 'boolean' && item.syncspace ? (
-                    <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
+        <div className="glass-button-enhanced rounded-3xl p-4 sm:p-6 lg:p-8 overflow-x-auto">
+          <table className="w-full min-w-[600px]">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="text-left py-4 px-4 text-white/70 font-semibold text-sm sm:text-base">
+                  Feature
+                </th>
+                {platforms.map((platform, index) => (
+                  <th key={index} className="py-4 px-4 text-center">
+                    <div className={`inline-flex items-center gap-2 ${platform.highlight ? 'glass-button-enhanced' : 'glass'} rounded-xl px-4 py-2`}>
+                      <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${platform.color}`}></div>
+                      <span className={`font-bold text-sm sm:text-base ${platform.highlight ? 'text-white' : 'text-white/80'}`}>
+                        {platform.name}
+                      </span>
+                      {platform.highlight && (
+                        <Sparkles className="w-4 h-4 text-purple-400" />
+                      )}
                     </div>
-                  ) : (
-                    <span className="text-sm font-medium text-purple-600">
-                      {item.syncspace}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {features.map((feature, index) => (
+                <tr
+                  key={index}
+                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                >
+                  <td className="py-4 px-4 text-white/90 font-medium text-sm sm:text-base">
+                    {feature.name}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    {feature.syncspace ? (
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg">
+                        <Check className="w-5 h-5 text-white" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10">
+                        <X className="w-5 h-5 text-white/40" />
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    {feature.slack ? (
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10">
+                        <Check className="w-5 h-5 text-white/60" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/5">
+                        <X className="w-5 h-5 text-white/30" />
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    {feature.teams ? (
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10">
+                        <Check className="w-5 h-5 text-white/60" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/5">
+                        <X className="w-5 h-5 text-white/30" />
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    {feature.discord ? (
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10">
+                        <Check className="w-5 h-5 text-white/60" />
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/5">
+                        <X className="w-5 h-5 text-white/30" />
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        {/* CTA Section */}
-        <div className="mt-16 text-center">
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8 lg:p-12 text-white">
-            <h3 className="text-3xl lg:text-4xl font-bold mb-4">
-              Ready to make the switch?
-            </h3>
-            <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
-              Join thousands of teams who've already upgraded their collaboration experience.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => (window.location.href = "/signup")}
-                className="px-8 py-4 bg-white text-purple-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-              >
-                Start Free Trial
-                <ArrowRight className="w-5 h-5" />
-              </button>
-              <button className="px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/10 transition-colors duration-200">
-                Schedule Demo
-              </button>
-            </div>
-          </div>
+        {/* CTA */}
+        <div className="text-center mt-12">
+          <button
+            onClick={() => (window.location.href = "/signup")}
+            className="glass-button-enhanced px-10 py-5 text-white font-bold rounded-2xl inline-flex items-center gap-2 group cursor-pointer text-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
+          >
+            <Sparkles className="w-5 h-5" />
+            Try SyncSpace Free
+          </button>
+          <p className="text-white/60 mt-4 text-sm">
+            No credit card required • Free forever plan available
+          </p>
         </div>
       </div>
     </section>

@@ -19,7 +19,7 @@ const LandingHero = () => {
       <div className="relative z-10 max-w-7xl mx-auto w-full">
         <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-start">
           {/* Content Section */}
-          <div className="text-center lg:text-left space-y-6 sm:space-y-8">
+          <div className="text-center lg:text-left space-y-6 sm:space-y-7">
             <div className="space-y-4 sm:space-y-6">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-white">
                 Connect, <br className="hidden sm:block" /> Create, <br />
@@ -28,8 +28,8 @@ const LandingHero = () => {
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg md:text-xl text-white/80 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Experience the next generation of team collaboration. Our
+              <p className="text-base sm:text-lg md:text-md text-white/80 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                Experience the next generation of team collaboration. <br /> Our
                 AI-powered platform seamlessly integrates communication, project
                 management, and productivity tools in one beautiful workspace.
               </p>
@@ -39,7 +39,7 @@ const LandingHero = () => {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <button
                 onClick={() => (window.location.href = "/signup")}
-                className="glass-button px-6 sm:px-8 py-3 sm:py-4 text-white font-semibold rounded-2xl flex items-center justify-center gap-2 group cursor-pointer text-sm sm:text-base"
+                className="glass-button px-6 sm:px-10 py-3 sm:py-5 text-white font-semibold rounded-2xl flex items-center justify-center gap-2 group cursor-pointer text-xl"
               >
                 Get Started
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />

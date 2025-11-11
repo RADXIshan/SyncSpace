@@ -420,6 +420,30 @@ export const NotificationProvider = ({ children }) => {
       });
     };
 
+    // Listen for member left
+    const handleMemberLeft = (data) => {
+      console.log("🔔 NotificationContext received member_left:", data);
+      addNotification({
+        type: "member_left",
+        title: "Member Left",
+        message: `${data.userName} has left the organization`,
+        priority: "low",
+        actionUrl: "/home/dashboard",
+      });
+    };
+
+    // Listen for member removed
+    const handleMemberRemoved = (data) => {
+      console.log("🔔 NotificationContext received member_removed:", data);
+      addNotification({
+        type: "member_removed",
+        title: "Member Removed",
+        message: `${data.userName} has been removed from the organization`,
+        priority: "medium",
+        actionUrl: "/home/dashboard",
+      });
+    };
+
     // Listen for mentions
     const handleMention = (data) => {
       console.log("NotificationContext received user_mentioned:", data);
@@ -461,6 +485,8 @@ export const NotificationProvider = ({ children }) => {
     socket.on("role_created", handleRoleCreated);
     socket.on("role_deleted", handleRoleDeleted);
     socket.on("role_updated", handleRoleUpdated);
+    socket.on("member_left", handleMemberLeft);
+    socket.on("member_removed", handleMemberRemoved);
 
     return () => {
       socket.off("new_notification", handleNewNotification);
@@ -482,6 +508,8 @@ export const NotificationProvider = ({ children }) => {
       socket.off("role_created", handleRoleCreated);
       socket.off("role_deleted", handleRoleDeleted);
       socket.off("role_updated", handleRoleUpdated);
+      socket.off("member_left", handleMemberLeft);
+      socket.off("member_removed", handleMemberRemoved);
     };
   }, [socket, user, addNotification]);
 

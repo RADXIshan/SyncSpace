@@ -538,10 +538,19 @@ export const leaveOrganization = async (req, res) => {
         });
     }
 
+    // Get user details before leaving
+    const [leavingUser] = await sql`
+      SELECT name, email, user_photo
+      FROM users
+      WHERE user_id = ${userId}
+    `;
+
+    const orgId = currentUser.org_id;
+
     // Remove user from org_members
     await sql`
       DELETE FROM org_members
-      WHERE org_id = ${currentUser.org_id} AND user_id = ${userId}
+      WHERE org_id = ${orgId} AND user_id = ${userId}
     `;
 
     // Update user's org_id to NULL
@@ -550,6 +559,36 @@ export const leaveOrganization = async (req, res) => {
       SET org_id = NULL
       WHERE user_id = ${userId}
     `;
+
+    // Send real-time notifications to remaining org members
+    const io = req.app.get("io");
+    if (io) {
+      try {
+        await createNotificationForOrg(
+          orgId,
+          "member_left",
+          "Member Left Organization",
+          `${leavingUser.name} has left the organization`,
+          {
+            excludeUserId: userId,
+            relatedId: userId,
+            relatedType: "user",
+            link: "/home/dashboard",
+          }
+        );
+
+        // Emit real-time event to all org members
+        io.to(`org_${orgId}`).emit("member_left", {
+          userId: userId,
+          userName: leavingUser.name,
+          userEmail: leavingUser.email,
+          userPhoto: leavingUser.user_photo,
+          orgId: orgId,
+        });
+      } catch (notificationError) {
+        console.error("Failed to send member left notification:", notificationError);
+      }
+    }
 
     res.status(200).json({
       message: "Successfully left organization",
@@ -1391,6 +1430,13 @@ export const removeMember = async (req, res) => {
         .json({ message: "Cannot remove organization owner" });
     }
 
+    // Get removed member details before removal
+    const [removedMember] = await sql`
+      SELECT name, email, user_photo
+      FROM users
+      WHERE user_id = ${member_id}
+    `;
+
     // Clean up meeting events before removing member
     try {
       await sql`
@@ -1417,6 +1463,36 @@ export const removeMember = async (req, res) => {
       SET org_id = NULL
       WHERE user_id = ${targetMember.user_id}
     `;
+
+    // Send real-time notifications to remaining org members
+    const io = req.app.get("io");
+    if (io) {
+      try {
+        await createNotificationForOrg(
+          org_id,
+          "member_removed",
+          "Member Removed",
+          `${removedMember.name} has been removed from the organization`,
+          {
+            excludeUserId: userId,
+            relatedId: member_id,
+            relatedType: "user",
+            link: "/home/dashboard",
+          }
+        );
+
+        // Emit real-time event to all org members
+        io.to(`org_${org_id}`).emit("member_removed", {
+          userId: member_id,
+          userName: removedMember.name,
+          userEmail: removedMember.email,
+          userPhoto: removedMember.user_photo,
+          orgId: org_id,
+        });
+      } catch (notificationError) {
+        console.error("Failed to send member removed notification:", notificationError);
+      }
+    }
 
     res.status(200).json({
       message: "Member removed successfully",

@@ -169,6 +169,18 @@ export const SocketProvider = ({ children }) => {
           window.dispatchEvent(new CustomEvent('roleUpdated', { detail: data }));
         });
 
+        // Listen for member left events
+        newSocket.on('member_left', (data) => {
+          // Dispatch custom event for components to handle
+          window.dispatchEvent(new CustomEvent('memberLeft', { detail: data }));
+        });
+
+        // Listen for member removed events
+        newSocket.on('member_removed', (data) => {
+          // Dispatch custom event for components to handle
+          window.dispatchEvent(new CustomEvent('memberRemoved', { detail: data }));
+        });
+
         setSocket(newSocket);
 
         // Cleanup on unmount

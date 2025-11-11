@@ -11,6 +11,7 @@ import {
   X,
   Trash2,
   Loader2,
+  UserMinus,
 } from "lucide-react";
 import { useNotifications } from "../context/NotificationContext";
 
@@ -52,6 +53,8 @@ const Notifications = () => {
     if (type === "mention") return "border-violet-400/40 bg-violet-50/80";
     if (type === "meeting") return "border-blue-400/40 bg-blue-50/80";
     if (type === "member_joined") return "border-green-400/40 bg-green-50/80";
+    if (type === "member_left") return "border-yellow-400/40 bg-yellow-50/80";
+    if (type === "member_removed") return "border-red-400/40 bg-red-50/80";
     if (type === "notice") return "border-orange-400/40 bg-orange-50/80";
     if (type === "task") return "border-emerald-400/40 bg-emerald-50/80";
     if (type === "channel_update")
@@ -69,6 +72,8 @@ const Notifications = () => {
     if (type === "mention") return "text-violet-500";
     if (type === "meeting") return "text-blue-500";
     if (type === "member_joined") return "text-green-500";
+    if (type === "member_left") return "text-yellow-500";
+    if (type === "member_removed") return "text-red-500";
     if (type === "notice") return "text-orange-500";
     if (type === "task") return "text-emerald-500";
     if (type === "channel_update") return "text-indigo-500";
@@ -88,6 +93,10 @@ const Notifications = () => {
         return Calendar;
       case "member_joined":
         return Users;
+      case "member_left":
+        return UserMinus;
+      case "member_removed":
+        return UserMinus;
       case "notice":
         return AlertTriangle;
       case "task":

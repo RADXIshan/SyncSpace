@@ -175,6 +175,37 @@ const Home = () => {
     };
   }, []);
 
+  // Listen for member left/removed events
+  useEffect(() => {
+    const handleMemberLeft = (event) => {
+      const { userName } = event.detail;
+      toast(`${userName} has left the organization`, {
+        duration: 4000,
+        icon: '👋',
+      });
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event('organizationUpdated'));
+    };
+
+    const handleMemberRemoved = (event) => {
+      const { userName } = event.detail;
+      toast.error(`${userName} has been removed from the organization`, {
+        duration: 4000,
+        icon: '🚫',
+      });
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event('organizationUpdated'));
+    };
+
+    window.addEventListener('memberLeft', handleMemberLeft);
+    window.addEventListener('memberRemoved', handleMemberRemoved);
+
+    return () => {
+      window.removeEventListener('memberLeft', handleMemberLeft);
+      window.removeEventListener('memberRemoved', handleMemberRemoved);
+    };
+  }, []);
+
   return (
     <div className="flex h-screen bg-[var(--color-primary)]">
       <Sidebar 

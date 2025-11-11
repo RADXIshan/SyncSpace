@@ -186,14 +186,7 @@ const LandingFeatures = () => {
                   className="glass-button-enhanced px-10 py-5 text-white font-bold rounded-2xl flex items-center justify-center gap-2 group cursor-pointer text-lg shadow-2xl hover:shadow-purple-500/50 transition-all duration-300"
                 >
                   <Sparkles className="w-5 h-5" />
-                  Start Free Trial
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button
-                  onClick={() => document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="glass px-10 py-5 text-white font-semibold rounded-2xl flex items-center justify-center gap-2 group cursor-pointer text-lg hover:bg-white/10 transition-all duration-300"
-                >
-                  View Pricing
+                  Start Free 
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

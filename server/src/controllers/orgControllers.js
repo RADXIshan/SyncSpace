@@ -765,6 +765,10 @@ export const updateOrganization = async (req, res) => {
         }
       });
 
+      // Track created and deleted channels for notifications
+      const createdChannels = [];
+      const deletedChannels = [];
+
       // Update existing channels or insert new ones
       for (const channel of channels) {
         if (channel.name?.trim()) {
@@ -786,10 +790,12 @@ export const updateOrganization = async (req, res) => {
             }
           } else {
             // Insert new channel
-            await sql`
+            const [newChannel] = await sql`
               INSERT INTO org_channels (org_id, channel_name, channel_description)
               VALUES (${org_id}, ${channelName}, ${channel.description || ""})
+              RETURNING channel_id, channel_name, channel_description
             `;
+            createdChannels.push(newChannel);
           }
         }
       }
@@ -798,11 +804,71 @@ export const updateOrganization = async (req, res) => {
       for (const existingChannel of existingChannels) {
         const existingNameLower = existingChannel.channel_name.toLowerCase();
         if (!newChannelMap.has(existingNameLower)) {
+          deletedChannels.push(existingChannel);
           // Delete the channel (this will handle related data through cascade or manual cleanup)
           await sql`
             DELETE FROM org_channels
             WHERE channel_id = ${existingChannel.channel_id}
           `;
+        }
+      }
+
+      // Send real-time notifications for created channels
+      const io = req.app.get("io");
+      if (io) {
+        for (const channel of createdChannels) {
+          // Create notification for all org members
+          try {
+            await createNotificationForOrg(
+              org_id,
+              "channel_created",
+              "New Channel Created",
+              `Channel #${channel.channel_name} has been created`,
+              {
+                excludeUserId: userId,
+                relatedId: channel.channel_id,
+                relatedType: "channel",
+                link: `/home/channel/${channel.channel_id}`,
+              }
+            );
+
+            // Emit real-time event to all org members
+            io.to(`org_${org_id}`).emit("channel_created", {
+              channelId: channel.channel_id,
+              channelName: channel.channel_name,
+              channelDescription: channel.channel_description,
+              orgId: org_id,
+            });
+          } catch (notificationError) {
+            console.error("Failed to send channel created notification:", notificationError);
+          }
+        }
+
+        // Send real-time notifications for deleted channels
+        for (const channel of deletedChannels) {
+          // Create notification for all org members
+          try {
+            await createNotificationForOrg(
+              org_id,
+              "channel_deleted",
+              "Channel Deleted",
+              `Channel #${channel.channel_name} has been deleted`,
+              {
+                excludeUserId: userId,
+                relatedId: channel.channel_id,
+                relatedType: "channel",
+              }
+            );
+
+            // Emit real-time event to all org members
+            io.to(`org_${org_id}`).emit("channel_deleted", {
+              channelId: channel.channel_id,
+              channelName: channel.channel_name,
+              orgId: org_id,
+            });
+          } catch (notificationError) {
+            console.error("Failed to send channel deleted notification:", notificationError);
+          }
         }
       }
     }
@@ -1801,6 +1867,33 @@ export const deleteChannel = async (req, res) => {
       DELETE FROM org_channels
       WHERE channel_id = ${channel_id} AND org_id = ${org_id}
     `;
+
+    // Send real-time notification for deleted channel
+    const io = req.app.get("io");
+    if (io) {
+      try {
+        await createNotificationForOrg(
+          org_id,
+          "channel_deleted",
+          "Channel Deleted",
+          `Channel #${existingChannel.channel_name} has been deleted`,
+          {
+            excludeUserId: userId,
+            relatedId: channel_id,
+            relatedType: "channel",
+          }
+        );
+
+        // Emit real-time event to all org members
+        io.to(`org_${org_id}`).emit("channel_deleted", {
+          channelId: channel_id,
+          channelName: existingChannel.channel_name,
+          orgId: org_id,
+        });
+      } catch (notificationError) {
+        console.error("Failed to send channel deleted notification:", notificationError);
+      }
+    }
 
     res.status(200).json({
       message: "Channel deleted successfully",

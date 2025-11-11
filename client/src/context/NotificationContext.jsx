@@ -350,6 +350,30 @@ export const NotificationProvider = ({ children }) => {
       });
     };
 
+    // Listen for channel created
+    const handleChannelCreated = (data) => {
+      console.log("🔔 NotificationContext received channel_created:", data);
+      addNotification({
+        type: "channel_update",
+        title: "New Channel Created",
+        message: `Channel #${data.channelName} has been created`,
+        priority: "medium",
+        actionUrl: `/home/channel/${data.channelId}`,
+      });
+    };
+
+    // Listen for channel deleted
+    const handleChannelDeleted = (data) => {
+      console.log("🔔 NotificationContext received channel_deleted:", data);
+      addNotification({
+        type: "channel_update",
+        title: "Channel Deleted",
+        message: `Channel #${data.channelName} has been deleted`,
+        priority: "medium",
+        actionUrl: "/home/dashboard",
+      });
+    };
+
     // Listen for mentions
     const handleMention = (data) => {
       console.log("NotificationContext received user_mentioned:", data);
@@ -386,6 +410,8 @@ export const NotificationProvider = ({ children }) => {
     socket.on("meeting_started_notification", handleMeetingStarted);
     socket.on("meeting_ended_notification", handleMeetingEnded);
     socket.on("organization_updated", handleOrgUpdate);
+    socket.on("channel_created", handleChannelCreated);
+    socket.on("channel_deleted", handleChannelDeleted);
 
     return () => {
       socket.off("new_notification", handleNewNotification);
@@ -402,6 +428,8 @@ export const NotificationProvider = ({ children }) => {
       socket.off("meeting_started_notification", handleMeetingStarted);
       socket.off("meeting_ended_notification", handleMeetingEnded);
       socket.off("organization_updated", handleOrgUpdate);
+      socket.off("channel_created", handleChannelCreated);
+      socket.off("channel_deleted", handleChannelDeleted);
     };
   }, [socket, user, addNotification]);
 

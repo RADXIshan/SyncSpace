@@ -86,6 +86,42 @@ const Home = () => {
     };
   }, []);
 
+  // Listen for channel created/deleted events
+  useEffect(() => {
+    const handleChannelCreated = (event) => {
+      const { channelName } = event.detail;
+      toast.success(`Channel #${channelName} has been created`, {
+        duration: 4000,
+        icon: '🎉',
+      });
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event('organizationUpdated'));
+    };
+
+    const handleChannelDeleted = (event) => {
+      const { channelName, channelId } = event.detail;
+      toast.error(`Channel #${channelName} has been deleted`, {
+        duration: 4000,
+        icon: '🗑️',
+      });
+      // Trigger sidebar refresh
+      window.dispatchEvent(new Event('organizationUpdated'));
+      
+      // If user is currently viewing the deleted channel, redirect to dashboard
+      if (currentChannelId && String(currentChannelId) === String(channelId)) {
+        navigate('/home/dashboard');
+      }
+    };
+
+    window.addEventListener('channelCreated', handleChannelCreated);
+    window.addEventListener('channelDeleted', handleChannelDeleted);
+
+    return () => {
+      window.removeEventListener('channelCreated', handleChannelCreated);
+      window.removeEventListener('channelDeleted', handleChannelDeleted);
+    };
+  }, [currentChannelId, navigate]);
+
   return (
     <div className="flex h-screen bg-[var(--color-primary)]">
       <Sidebar 

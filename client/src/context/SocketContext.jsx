@@ -139,6 +139,18 @@ export const SocketProvider = ({ children }) => {
           });
         });
 
+        // Listen for channel created events
+        newSocket.on('channel_created', (data) => {
+          // Dispatch custom event for components to handle
+          window.dispatchEvent(new CustomEvent('channelCreated', { detail: data }));
+        });
+
+        // Listen for channel deleted events
+        newSocket.on('channel_deleted', (data) => {
+          // Dispatch custom event for components to handle
+          window.dispatchEvent(new CustomEvent('channelDeleted', { detail: data }));
+        });
+
         setSocket(newSocket);
 
         // Cleanup on unmount

@@ -24,7 +24,7 @@ const LandingHero = () => {
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-white">
                 Connect. <br className="hidden sm:block" /> Create. <br />
                 <span className="gradient-text-purple">
-                  Collaborate
+                  Collaborate.
                 </span>
               </h1>
 

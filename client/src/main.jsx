@@ -5,7 +5,6 @@ import App from "./App.jsx";
 import { BrowserRouter } from "react-router";
 import axios from "axios";
 
-// Add axios interceptor to include Authorization header
 axios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");

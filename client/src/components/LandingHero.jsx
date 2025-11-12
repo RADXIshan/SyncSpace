@@ -22,7 +22,7 @@ const LandingHero = () => {
           <div className="text-center lg:text-left space-y-6 sm:space-y-7">
             <div className="space-y-4 sm:space-y-6">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-white">
-                Connect, <br className="hidden sm:block" /> Create, <br />
+                Connect. <br className="hidden sm:block" /> Create. <br />
                 <span className="gradient-text-purple">
                   Collaborate
                 </span>

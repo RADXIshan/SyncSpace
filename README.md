@@ -23,7 +23,9 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [Screenshots](#-screenshots)
 - [Key Features](#-key-features)
+- [Database Schema](#️-database-schema)
 - [Architecture](#-architecture)
 - [Tech Stack](#-tech-stack)
 - [Installation](#-installation)
@@ -32,13 +34,64 @@
 - [API Documentation](#-api-documentation)
 - [Project Structure](#-project-structure)
 - [Contributing](#-contributing)
-- [License](#-license)
+- [Troubleshooting](#-troubleshooting)
+- [Authors](#-authors)
 
 ---
 
 ## 🌟 Overview
 
 SyncSpace is a cutting-edge team collaboration platform that seamlessly integrates real-time messaging, HD video conferencing, interactive polls, voice messages, AI-powered assistance, and comprehensive project management tools. Built with modern web technologies and designed for scalability, it empowers teams to communicate, collaborate, and stay productive from anywhere.
+
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](dashboard.png)
+*Main dashboard with organization overview, quick stats, and navigation*
+
+### Team Chat & Messaging
+![Team Chats](teamchats.png)
+*Real-time team messaging with reactions, replies, and file sharing*
+
+### Messages & Direct Messaging
+![Messages](messages.png)
+*Private 1-on-1 conversations with full message history*
+
+### Meeting Room
+![Meeting Page](meetingpage.png)
+*HD video conferencing with screen sharing and in-meeting chat*
+
+### Meeting Reports & Analytics
+![Meeting Reports](meetingreports.png)
+*AI-powered meeting summaries with participant analytics*
+
+### Calendar & Events
+![Calendar](calendar.png)
+*Integrated calendar with event management and meeting scheduling*
+
+### AI Assistant
+![AI Assistant](aiassistant.png)
+*Google Gemini-powered AI assistant with workspace context awareness*
+
+### Smart Search
+![Smart Search](smartsearch.png)
+*Universal search across all content types with instant navigation*
+
+### Keyboard Shortcuts
+![Shortcuts](shorcuts.png)
+*Power user shortcuts for enhanced productivity*
+
+### Notifications
+![Notification Page](notificationpage.png)
+*Comprehensive notification center with filtering and categorization*
+
+### Create Organization
+![Create Organization](createorg.png)
+*Organization creation with custom roles and channel setup*
+
+### Join Organization
+![Join Organization](joinorg.png)
+*Simple organization joining with access code*
 
 **Key Highlights:**
 - 🎯 **All-in-One Platform**: Messaging, video calls, polls, notes, calendar, and more
@@ -322,6 +375,135 @@ When you click a search result, Smart Search automatically:
 - **Connection Status**: Real-time connection monitoring
 - **Unread Tracking**: Track unread messages across channels
 
+
+---
+
+## 🗄️ Database Schema
+
+SyncSpace uses PostgreSQL (Neon serverless) with a comprehensive relational schema designed for scalability and performance.
+
+### Database Overview
+
+- **18 Tables**: Users, Organizations, Channels, Messages, Meetings, Events, and more
+- **30+ Relationships**: Complex foreign key relationships with cascade behaviors
+- **50+ Indexes**: Optimized for fast queries and full-text search
+- **JSONB Support**: Flexible schema for evolving features
+- **Role-Based Access Control**: Granular permissions system
+
+### Core Tables
+
+#### User Management
+- `users` - User accounts and authentication
+- `org_members` - User-organization memberships
+- `org_roles` - Custom roles with permissions
+
+#### Organization Structure
+- `organisations` - Workspace/team information
+- `org_channels` - Team channels within organizations
+- `org_notes` - Collaborative notes
+- `org_notices` - Announcements and notices
+
+#### Communication
+- `channel_messages` - Team channel messages
+- `direct_messages` - Private 1-on-1 messages
+- `meeting_messages` - In-meeting chat messages
+- `message_reactions` - Emoji reactions
+- `pinned_channel_messages` - Pinned messages
+
+#### Collaboration Tools
+- `polls` - Interactive polls
+- `poll_votes` - Poll voting records
+- `events` - Calendar events
+- `meeting_reports` - Meeting analytics and summaries
+
+#### System
+- `notifications` - User notifications
+- `channel_read_status` - Unread message tracking
+
+### Key Relationships
+
+```
+users (1) ──→ (N) channel_messages
+users (1) ──→ (N) direct_messages
+users (N) ←──→ (N) organisations (via org_members)
+organisations (1) ──→ (N) org_channels
+org_channels (1) ──→ (N) channel_messages
+org_channels (1) ──→ (N) polls
+polls (1) ──→ (N) poll_votes
+channel_messages (1) ──→ (N) message_reactions
+```
+
+### Database Features
+
+- **Full-Text Search**: PostgreSQL `to_tsvector` and `to_tsquery` for instant search
+- **Cascade Deletes**: Automatic cleanup of related records
+- **Unique Constraints**: Prevent duplicate memberships and votes
+- **Timestamp Tracking**: `created_at` and `updated_at` on all tables
+- **JSONB Columns**: Flexible storage for arrays and objects
+- **Indexed Queries**: Optimized for common access patterns
+
+### Security
+
+- **Bcrypt Password Hashing**: 10 salt rounds
+- **JWT Authentication**: 7-day expiration
+- **Role-Based Permissions**: 8 granular permission types
+- **Parameterized Queries**: SQL injection prevention
+- **Email Verification**: OTP-based verification
+
+### Visual Schema Diagram
+
+```
+┌──────────────────────┐         ┌──────────────────────┐         ┌──────────────────────┐
+│       users          │         │    org_members       │         │     org_roles        │
+├──────────────────────┤         ├──────────────────────┤         ├──────────────────────┤
+│ PK user_id          │◄────────│ FK user_id          │────────►│ PK role_id          │
+│    name             │         │ FK org_id           │         │    role_name        │
+│    email            │         │    role             │         │    permissions...   │
+│    password         │         └──────────────────────┘         └──────────────────────┘
+│ FK org_id           │─────┐
+└──────────────────────┘     │
+                             ▼
+                  ┌──────────────────────┐
+                  │   organisations      │
+                  ├──────────────────────┤
+                  │ PK org_id           │
+                  │    org_name         │
+                  │    org_code         │
+                  └──────────────────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        ▼                    ▼                    ▼
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
+│   org_channels       │  │     org_notes        │  │    org_notices       │
+├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤
+│ PK channel_id       │  │ PK note_id          │  │ PK notice_id        │
+│ FK org_id           │  │ FK org_id           │  │ FK org_id           │
+└──────────────────────┘  └──────────────────────┘  └──────────────────────┘
+        │
+        ├──────────────────────┬──────────────────────┐
+        ▼                      ▼                      ▼
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
+│  channel_messages    │  │       polls          │  │  meeting_reports     │
+├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤
+│ PK message_id       │  │ PK poll_id          │  │ PK report_id        │
+│ FK channel_id       │  │ FK channel_id       │  │    room_id          │
+│ FK user_id          │  │    question         │  │    meeting_title    │
+│    content          │  │    options (JSONB)  │  │    summary          │
+└──────────────────────┘  └──────────────────────┘  └──────────────────────┘
+        │                          │
+        ▼                          ▼
+┌──────────────────────┐  ┌──────────────────────┐
+│  message_reactions   │  │    poll_votes        │
+├──────────────────────┤  ├──────────────────────┤
+│ FK message_id       │  │ FK poll_id          │
+│ FK user_id          │  │ FK user_id          │
+│    emoji            │  │    selected_options │
+└──────────────────────┘  └──────────────────────┘
+```
+
+For detailed schema documentation including all columns, constraints, and relationships, see:
+- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Complete schema documentation
+- **[database-schema-diagram.txt](database-schema-diagram.txt)** - Full visual diagram
 
 ---
 

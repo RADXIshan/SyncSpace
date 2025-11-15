@@ -1,0 +1,188 @@
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                    SYNCSPACE DATABASE SCHEMA                                         ║
+║                                  PostgreSQL (Neon Serverless)                                        ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                      USER MANAGEMENT LAYER                                           │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────┐         ┌──────────────────────┐         ┌──────────────────────┐
+│       users          │         │    org_members       │         │     org_roles        │
+├──────────────────────┤         ├──────────────────────┤         ├──────────────────────┤
+│ PK user_id          │◄────┐   │ PK member_id        │    ┌───►│ PK role_id          │
+│    name             │     │   │ FK org_id           │    │    │ FK org_id           │
+│    email (UNIQUE)   │     └───│ FK user_id          │    │    │    role_name        │
+│    password         │         │    role             │────┘    │    manage_channels  │
+│    user_photo       │         │    joined_at        │         │    manage_users     │
+│ FK org_id           │─────┐   └──────────────────────┘         │    settings_access  │
+│    otp              │     │                                     │    notes_access     │
+│    created_at       │     │                                     │    meeting_access   │
+│    updated_at       │     │                                     │    noticeboard_acc  │
+└──────────────────────┘     │                                     │    roles_access     │
+                             │                                     │    invite_access    │
+                             │                                     │    accessible_teams │
+                             │                                     │ FK created_by       │
+                             │                                     └──────────────────────┘
+                             │
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   ORGANIZATION LAYER                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+                  ┌──────────────────────┐
+                  │   organisations      │
+                  ├──────────────────────┤
+                  │ PK org_id           │
+                  │    org_name         │
+                  │    org_code (UNIQUE)│
+                  │    access_level     │
+                  │    channels (JSONB) │
+                  │ FK created_by       │
+                  │    created_at       │
+                  └──────────────────────┘
+                             │
+                             │
+        ┌────────────────────┼────────────────────┬────────────────────┐
+        │                    │                    │                    │
+        ▼                    ▼                    ▼                    ▼
+
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
+│   org_channels       │  │     org_notes        │  │    org_notices       │  │  meeting_reports     │
+├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤
+│ PK channel_id       │  │ PK note_id          │  │ PK notice_id        │  │ PK report_id        │
+│ FK org_id           │  │ FK org_id           │  │ FK org_id           │  │    room_id (UNIQUE) │
+│    channel_name     │  │ FK channel_id       │  │ FK created_by       │  │    meeting_title    │
+│    channel_desc     │  │ FK created_by       │  │    title            │  │ FK channel_id       │
+│    created_at       │  │    title            │  │    body             │  │ FK org_id           │
+└──────────────────────┘  │    body             │  │    created_at       │  │ FK created_by       │
+        │                 │    pinned           │  └──────────────────────┘  │    started_at       │
+        │                 │    created_at       │                            │    ended_at         │
+        │                 └──────────────────────┘                            │    participants     │
+        │                                                                     │    duration_minutes │
+        │                                                                     │    message_count    │
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   MESSAGING LAYER                                                    │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────┘
+        │
+        ├──────────────────────┬──────────────────────┬──────────────────────┐
+        │                      │                      │                      │
+        ▼                      ▼                      ▼                      ▼
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
+│  channel_messages    │  │  direct_messages     │  │  meeting_messages    │  │ channel_read_status  │
+├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤  ├──────────────────────┤
+│ PK message_id       │  │ PK dm_id            │  │ PK message_id       │  │ PK status_id        │
+│ FK channel_id       │  │ FK sender_id        │  │    room_id          │  │ FK user_id          │
+│ FK user_id          │  │ FK receiver_id      │  │ FK user_id          │  │ FK channel_id       │
+│    content          │  │    content          │  │    content          │  │    last_read_at     │
+│    file_url         │  │    file_url         │  │    created_at       │  │ FK last_message_id  │
+│    file_name        │  │    file_name        │  └──────────────────────┘  └──────────────────────┘
+│    file_type        │  │    file_type        │
+│    file_size        │  │    file_size        │
+│ FK reply_to         │──┐│    is_read          │
+│    is_pinned        │  ││    created_at       │
+│    created_at       │  │└──────────────────────┘
+└──────────────────────┘  │
+        │                 │
+        │                 │
+        ├─────────────────┴──────────────────┬──────────────────────┐
+        │                                    │                      │
+        ▼                                    ▼                      ▼
+┌──────────────────────┐          ┌──────────────────────┐  ┌──────────────────────┐
+│  message_reactions   │          │ pinned_channel_msgs  │  │       polls          │
+├──────────────────────┤          ├──────────────────────┤  ├──────────────────────┤
+│ PK reaction_id      │          │ PK pin_id           │  │ PK poll_id          │
+│ FK message_id       │          │ FK message_id       │  │ FK channel_id       │
+│ FK user_id          │          │ FK channel_id       │  │ FK created_by       │
+│    emoji            │          │ FK pinned_by        │  │    question         │
+│    created_at       │          │    pinned_at        │  │    options (JSONB)  │
+└──────────────────────┘          └──────────────────────┘  │    allow_multiple   │
+                                                            │    anonymous        │
+                                                            │    is_closed        │
+                                                            │    created_at       │
+                                                            └──────────────────────┘
+                                                                    │
+                                                                    │
+                                                                    ▼
+                                                            ┌──────────────────────┐
+                                                            │    poll_votes        │
+                                                            ├──────────────────────┤
+                                                            │ PK vote_id          │
+                                                            │ FK poll_id          │
+                                                            │ FK user_id          │
+                                                            │    selected_options │
+                                                            │    created_at       │
+                                                            └──────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   CALENDAR & EVENTS LAYER                                            │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                    ┌──────────────────────┐
+                                    │       events         │
+                                    ├──────────────────────┤
+                                    │ PK event_id         │
+                                    │ FK user_id          │
+                                    │    event_title      │
+                                    │    event_time       │
+                                    │    event_desc       │
+                                    │ FK org_id           │
+                                    │ FK channel_id       │
+                                    │    meeting_id       │
+                                    │    is_meeting_event │
+                                    │    created_at       │
+                                    └──────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   NOTIFICATION LAYER                                                 │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                    ┌──────────────────────┐
+                                    │   notifications      │
+                                    ├──────────────────────┤
+                                    │ PK notification_id  │
+                                    │ FK user_id          │
+                                    │ FK org_id           │
+                                    │    type             │
+                                    │    title            │
+                                    │    message          │
+                                    │    is_read          │
+                                    │    related_id       │
+                                    │    related_type     │
+                                    │    link             │
+                                    │    created_at       │
+                                    └──────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                    KEY RELATIONSHIPS                                                 ║
+╠══════════════════════════════════════════════════════════════════════════════════════════════════════╣
+║                                                                                                      ║
+║  users (1) ──→ (N) channel_messages          │  organisations (1) ──→ (N) org_channels             ║
+║  users (1) ──→ (N) direct_messages           │  organisations (1) ──→ (N) org_members              ║
+║  users (1) ──→ (N) meeting_messages          │  organisations (1) ──→ (N) org_roles                ║
+║  users (1) ──→ (N) notifications             │  organisations (1) ──→ (N) org_notes                ║
+║  users (1) ──→ (N) events                    │  organisations (1) ──→ (N) org_notices              ║
+║  users (N) ←──→ (N) organisations            │  organisations (1) ──→ (N) meeting_reports          ║
+║                                              │                                                      ║
+║  org_channels (1) ──→ (N) channel_messages   │  polls (1) ──→ (N) poll_votes                       ║
+║  org_channels (1) ──→ (N) polls              │  channel_messages (1) ──→ (N) message_reactions     ║
+║  org_channels (1) ──→ (N) org_notes          │  channel_messages (1) ──→ (1) pinned_channel_msgs   ║
+║  org_channels (1) ──→ (N) meeting_reports    │  channel_messages (1) ──→ (N) channel_messages      ║
+║                                              │  (self-referencing for replies)                      ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                    DATABASE STATISTICS                                               ║
+╠══════════════════════════════════════════════════════════════════════════════════════════════════════╣
+║  Total Tables: 18                            │  JSONB Columns: 6                                    ║
+║  Total Relationships: 30+                    │  Full-Text Search: 4 tables                          ║
+║  Indexed Columns: 50+                        │  Cascade Deletes: 10+ relationships                  ║
+║  Unique Constraints: 12                      │  Timestamp Tracking: All tables                      ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+Legend:
+  PK = Primary Key
+  FK = Foreign Key
+  (1) ──→ (N) = One-to-Many Relationship
+  (N) ←──→ (N) = Many-to-Many Relationship
+  JSONB = JSON Binary data type

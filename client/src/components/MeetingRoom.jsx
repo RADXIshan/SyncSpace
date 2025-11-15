@@ -1387,28 +1387,38 @@ const MeetingRoom = () => {
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-            <div className={isThumbnail ? "mb-1" : "mb-4"}>
+            <div className={isThumbnail ? "mb-2" : "mb-4"}>
               {userPhoto ? (
                 <img
                   src={userPhoto}
                   alt={userName || userEmail}
-                  className={`rounded-full object-cover border-4 border-white/20 ${
-                    isThumbnail ? "w-8 h-8" : "w-24 h-24"
-                  }`}
+                  className={`rounded-full object-cover ${
+                    isThumbnail ? "w-16 h-16 border-2" : "w-24 h-24 border-4"
+                  } border-white/20`}
                 />
               ) : (
-                <div className={`rounded-full bg-purple-600 flex items-center justify-center border-4 border-white/20 ${
-                  isThumbnail ? "w-8 h-8" : "w-24 h-24"
-                }`}>
+                <div className={`rounded-full bg-purple-600 flex items-center justify-center ${
+                  isThumbnail ? "w-16 h-16 border-2" : "w-24 h-24 border-4"
+                } border-white/20`}>
                   <span className={`font-bold text-white ${
-                    isThumbnail ? "text-xs" : "text-2xl"
+                    isThumbnail ? "text-xl" : "text-2xl"
                   }`}>
                     {(userName || userEmail || "U").charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
             </div>
-            {!isThumbnail && (
+            {isThumbnail ? (
+              <>
+                <span className="text-sm text-white/80 font-medium text-center px-2">
+                  {userName || userEmail?.split("@")[0] || "User"}
+                </span>
+                <div className="flex items-center gap-1 text-white/50 mt-1">
+                  <VideoOff size={14} />
+                  <span className="text-xs">Camera off</span>
+                </div>
+              </>
+            ) : (
               <>
                 <h3 className="text-xl font-semibold text-white mb-2">
                   {userName || userEmail?.split("@")[0] || "User"}
@@ -1433,19 +1443,19 @@ const MeetingRoom = () => {
         )}
 
         {isThumbnail && (
-          <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
+          <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-xs text-white font-medium">
             {userName || userEmail?.split("@")[0] || "User"}
           </div>
         )}
 
         <div className={`absolute flex gap-2 ${
-          isThumbnail ? "top-1 right-1" : "top-4 right-4"
+          isThumbnail ? "top-2 right-2" : "top-4 right-4"
         }`}>
           {!audioEnabled && (
             <div className={`bg-red-500 rounded-full flex items-center justify-center ${
-              isThumbnail ? "w-4 h-4" : "w-8 h-8"
+              isThumbnail ? "w-5 h-5" : "w-8 h-8"
             }`}>
-              <MicOff size={isThumbnail ? 8 : 16} className="text-white" />
+              <MicOff size={isThumbnail ? 10 : 16} className="text-white" />
             </div>
           )}
           <div
@@ -1525,9 +1535,9 @@ const MeetingRoom = () => {
               )}
             </div>
             
-            <div className="w-64 flex flex-col gap-2 overflow-y-auto">
+            <div className="w-72 flex flex-col gap-3 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
               {/* Always show user's camera video when screen sharing */}
-              <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+              <div className="relative bg-black rounded-lg overflow-hidden flex-shrink-0" style={{ height: '180px' }}>
                 {screenSharingUser === socket.id ? (
                   // Show camera stream when user is screen sharing
                   isVideoEnabled && cameraStream ? (
@@ -1542,20 +1552,29 @@ const MeetingRoom = () => {
                       onPlay={() => console.log("Camera video started playing for screen sharing")}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                      {(currentUser?.user_photo || currentUser?.photo) ? (
-                        <img
-                          src={currentUser.user_photo || currentUser.photo}
-                          alt={currentUser.name || currentUser.email}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">
-                            {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                      <div className="mb-2">
+                        {(currentUser?.user_photo || currentUser?.photo) ? (
+                          <img
+                            src={currentUser.user_photo || currentUser.photo}
+                            alt={currentUser.name || currentUser.email}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center border-2 border-white/20">
+                            <span className="text-xl font-bold text-white">
+                              {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-sm text-white/80 font-medium">
+                        {currentUser?.name || currentUser?.email?.split("@")[0] || "You"}
+                      </span>
+                      <div className="flex items-center gap-1 text-white/50 mt-1">
+                        <VideoOff size={14} />
+                        <span className="text-xs">Camera off</span>
+                      </div>
                     </div>
                   )
                 ) : (
@@ -1569,30 +1588,39 @@ const MeetingRoom = () => {
                       className="w-full h-full object-cover -scale-x-100"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                      {(currentUser?.user_photo || currentUser?.photo) ? (
-                        <img
-                          src={currentUser.user_photo || currentUser.photo}
-                          alt={currentUser.name || currentUser.email}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">
-                            {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                      <div className="mb-2">
+                        {(currentUser?.user_photo || currentUser?.photo) ? (
+                          <img
+                            src={currentUser.user_photo || currentUser.photo}
+                            alt={currentUser.name || currentUser.email}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center border-2 border-white/20">
+                            <span className="text-xl font-bold text-white">
+                              {(currentUser?.name || currentUser?.email || "U").charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-sm text-white/80 font-medium">
+                        {currentUser?.name || currentUser?.email?.split("@")[0] || "You"}
+                      </span>
+                      <div className="flex items-center gap-1 text-white/50 mt-1">
+                        <VideoOff size={14} />
+                        <span className="text-xs">Camera off</span>
+                      </div>
                     </div>
                   )
                 )}
-                <div className="absolute bottom-1 left-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-xs text-white font-medium">
                   You {screenSharingUser === socket.id ? "(Camera)" : ""}
                 </div>
-                <div className="absolute top-1 right-1 flex gap-1">
+                <div className="absolute top-2 right-2 flex gap-1">
                   {!isAudioEnabled && (
-                    <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                      <MicOff size={8} className="text-white" />
+                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                      <MicOff size={10} className="text-white" />
                     </div>
                   )}
                 </div>
@@ -1601,7 +1629,7 @@ const MeetingRoom = () => {
               {peers
                 .filter(peer => peer.peerID !== screenSharingUser)
                 .map((peerObj, index) => (
-                  <div key={`thumb-${peerObj.peerID}-${index}`} className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                  <div key={`thumb-${peerObj.peerID}-${index}`} className="relative bg-black rounded-lg overflow-hidden flex-shrink-0" style={{ height: '180px' }}>
                     <PeerVideo
                       peer={peerObj.peer}
                       userName={peerObj.userName}
@@ -1621,19 +1649,28 @@ const MeetingRoom = () => {
             style={{
               height: "calc(100vh - 200px)",
               gridTemplateColumns:
-                peers.length === 0
+                totalParticipants === 1
                   ? "1fr"
-                  : peers.length === 1
-                  ? "1fr 1fr"
-                  : peers.length <= 4
+                  : totalParticipants === 2
                   ? "repeat(2, 1fr)"
-                  : "repeat(3, 1fr)",
+                  : totalParticipants === 3
+                  ? "repeat(2, 1fr)"
+                  : totalParticipants === 4
+                  ? "repeat(2, 1fr)"
+                  : totalParticipants <= 6
+                  ? "repeat(3, 1fr)"
+                  : totalParticipants <= 9
+                  ? "repeat(3, 1fr)"
+                  : "repeat(4, 1fr)",
               gridTemplateRows:
-                peers.length <= 2
+                totalParticipants <= 2
                   ? "1fr"
-                  : peers.length <= 4
+                  : totalParticipants <= 4
                   ? "repeat(2, 1fr)"
-                  : "repeat(3, 1fr)",
+                  : totalParticipants <= 9
+                  ? "repeat(3, 1fr)"
+                  : "repeat(4, 1fr)",
+              gridAutoRows: "minmax(0, 1fr)",
             }}
           >
             <div className="relative bg-black rounded-2xl overflow-hidden min-h-0">

@@ -46,51 +46,51 @@ SyncSpace is a cutting-edge team collaboration platform that seamlessly integrat
 ## 📸 Screenshots
 
 ### Dashboard
-![Dashboard](dashboard.png)
+![Dashboard](screenshots/dashboard.png)
 *Main dashboard with organization overview, quick stats, and navigation*
 
 ### Team Chat & Messaging
-![Team Chats](teamchats.png)
+![Team Chats](screenshots/teamchats.png)
 *Real-time team messaging with reactions, replies, and file sharing*
 
 ### Messages & Direct Messaging
-![Messages](messages.png)
+![Messages](screenshots/messages.png)
 *Private 1-on-1 conversations with full message history*
 
 ### Meeting Room
-![Meeting Page](meetingpage.png)
+![Meeting Page](screenshots/meetingpage.png)
 *HD video conferencing with screen sharing and in-meeting chat*
 
 ### Meeting Reports & Analytics
-![Meeting Reports](meetingreports.png)
+![Meeting Reports](screenshots/meetingreports.png)
 *AI-powered meeting summaries with participant analytics*
 
 ### Calendar & Events
-![Calendar](calendar.png)
+![Calendar](screenshots/calendar.png)
 *Integrated calendar with event management and meeting scheduling*
 
 ### AI Assistant
-![AI Assistant](aiassistant.png)
+![AI Assistant](screenshots/aiassistant.png)
 *Google Gemini-powered AI assistant with workspace context awareness*
 
 ### Smart Search
-![Smart Search](smartsearch.png)
+![Smart Search](screenshots/smartsearch.png)
 *Universal search across all content types with instant navigation*
 
 ### Keyboard Shortcuts
-![Shortcuts](shorcuts.png)
+![Shortcuts](screenshots/shorcuts.png)
 *Power user shortcuts for enhanced productivity*
 
 ### Notifications
-![Notification Page](notificationpage.png)
+![Notification Page](screenshots/notificationpage.png)
 *Comprehensive notification center with filtering and categorization*
 
 ### Create Organization
-![Create Organization](createorg.png)
+![Create Organization](screenshots/createorg.png)
 *Organization creation with custom roles and channel setup*
 
 ### Join Organization
-![Join Organization](joinorg.png)
+![Join Organization](screenshots/joinorg.png)
 *Simple organization joining with access code*
 
 **Key Highlights:**
